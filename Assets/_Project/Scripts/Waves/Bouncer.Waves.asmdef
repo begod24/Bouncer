@@ -1,0 +1,17 @@
+{
+    "name": "Bouncer.Waves",
+    "rootNamespace": "Bouncer.Waves",
+    "references": [
+        "Bouncer.Core",
+        "Bouncer.Enemies"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

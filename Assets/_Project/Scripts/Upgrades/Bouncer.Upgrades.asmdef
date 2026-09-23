@@ -1,0 +1,17 @@
+{
+    "name": "Bouncer.Upgrades",
+    "rootNamespace": "Bouncer.Upgrades",
+    "references": [
+        "Bouncer.Core",
+        "Bouncer.Ball"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

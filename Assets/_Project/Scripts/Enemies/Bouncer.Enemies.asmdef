@@ -1,0 +1,18 @@
+{
+    "name": "Bouncer.Enemies",
+    "rootNamespace": "Bouncer.Enemies",
+    "references": [
+        "Bouncer.Core",
+        "Bouncer.Ball",
+        "Unity.AI.Navigation"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

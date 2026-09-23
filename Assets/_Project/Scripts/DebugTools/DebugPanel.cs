@@ -24,10 +24,13 @@ namespace Bouncer.DebugTools
         int _tab;
         PlayerController _player;
         SimpleWaveSpawner _spawner;
+        WaveSpawner _waves;
         BallLauncher _launcher;
+        float _frameTime = 1f / 60f;
 
         void Update()
         {
+            _frameTime = Mathf.Lerp(_frameTime, Time.unscaledDeltaTime, 0.05f);
             var keyboard = Keyboard.current;
             if (keyboard != null && (keyboard.f1Key.wasPressedThisFrame || keyboard.backquoteKey.wasPressedThisFrame))
                 visible = !visible;
@@ -38,6 +41,8 @@ namespace Bouncer.DebugTools
                 _player = FindFirstObjectByType<PlayerController>();
             if (_spawner == null)
                 _spawner = FindFirstObjectByType<SimpleWaveSpawner>();
+            if (_waves == null)
+                _waves = FindFirstObjectByType<WaveSpawner>();
             if (_launcher == null)
                 _launcher = FindFirstObjectByType<BallLauncher>();
         }
@@ -152,7 +157,10 @@ namespace Bouncer.DebugTools
 
         void DrawEnemies()
         {
-            var roly = _spawner && _spawner.EnemyPrefab ? _spawner.EnemyPrefab.GetComponent<RolyPolyEnemy>() : null;
+            if (_waves)
+                DrawWaves();
+
+            var roly = FindEnemyPrefab<RolyPolyEnemy>();
             var e = roly ? roly.Definition : null;
             if (e != null)
             {
@@ -168,6 +176,36 @@ namespace Bouncer.DebugTools
                 e.stunTime = Slider("Оглушение", e.stunTime, 0f, 3f);
                 e.uprightStrength = Slider("Равновесие", e.uprightStrength, 0f, 200f, "0");
                 SaveButton(e);
+            }
+
+            var pupsik = FindEnemyPrefab<PupsikEnemy>();
+            var p = pupsik ? pupsik.Definition : null;
+            if (p != null)
+            {
+                Header($"{p.displayName} (для новых врагов)");
+                p.moveSpeed = Slider("Скорость", p.moveSpeed, 1f, 10f);
+                p.hitsToKill = IntSlider("Попаданий до смерти", p.hitsToKill, 1, 5);
+                p.attackRange = Slider("Дальность прыжка", p.attackRange, 0.5f, 4f);
+                p.windupTime = Slider("Присед", p.windupTime, 0f, 1f);
+                p.hopSpeed = Slider("Скорость прыжка", p.hopSpeed, 1f, 12f);
+                p.attackCooldown = Slider("Пауза между прыжками", p.attackCooldown, 0.2f, 4f);
+                p.separationStrength = Slider("Расталкивание", p.separationStrength, 0f, 10f);
+                SaveButton(p);
+            }
+
+            var soldier = FindEnemyPrefab<TinSoldierEnemy>();
+            var s = soldier ? soldier.Definition : null;
+            if (s != null)
+            {
+                Header($"{s.displayName} (для новых врагов)");
+                s.moveSpeed = Slider("Скорость", s.moveSpeed, 0.5f, 6f);
+                s.hitsToKill = IntSlider("Попаданий до смерти", s.hitsToKill, 1, 6);
+                s.preferredDistance = Slider("Дистанция строя", s.preferredDistance, 4f, 20f, "0.0");
+                s.aimTime = Slider("Замах", s.aimTime, 0.2f, 2f);
+                s.volleyStagger = Slider("Пауза в залпе", s.volleyStagger, 0f, 1f);
+                s.reloadTime = Slider("Между залпами", s.reloadTime, 0.5f, 8f);
+                s.ballSpeed = Slider("Скорость мяча", s.ballSpeed, 5f, 30f, "0.0");
+                SaveButton(s);
             }
 
             if (_spawner)
@@ -194,8 +232,49 @@ namespace Bouncer.DebugTools
             }
         }
 
+        void DrawWaves()
+        {
+            Header("Волны");
+            _waves.Spawning = GUILayout.Toggle(_waves.Spawning, " Спавнить врагов");
+            float duration = Mathf.Max(_waves.Wave ? _waves.Wave.duration : 420f, _waves.WaveTime);
+            _waves.WaveTime = Slider("Время волны", _waves.WaveTime, 0f, duration, "0");
+            int seconds = Mathf.FloorToInt(_waves.WaveTime);
+            GUILayout.Label($"Время: {seconds / 60}:{seconds % 60:00}    живых: {_waves.AliveCount} / {_waves.MaxAlive}");
+            var tracks = _waves.Tracks;
+            for (int i = 0; i < tracks.Count; i++)
+            {
+                if (tracks[i].prefab && GUILayout.Button($"Спавн: {tracks[i].name}"))
+                    _waves.SpawnTrackNow(i);
+            }
+            var bursts = _waves.Bursts;
+            for (int i = 0; i < bursts.Count; i++)
+            {
+                if (bursts[i].prefab && GUILayout.Button($"Выход: {bursts[i].name}"))
+                    _waves.SpawnBurstNow(i);
+            }
+            if (GUILayout.Button("Убить всех"))
+                _waves.KillAll();
+        }
+
+        /// <summary>Префаб врага с компонентом T из текущего спавнера — для ползунков его определения.</summary>
+        T FindEnemyPrefab<T>() where T : Component
+        {
+            if (_spawner && _spawner.EnemyPrefab && _spawner.EnemyPrefab.TryGetComponent(out T fromSimple))
+                return fromSimple;
+            if (_waves)
+            {
+                foreach (var track in _waves.Tracks)
+                    if (track.prefab && track.prefab.TryGetComponent(out T found))
+                        return found;
+            }
+            return null;
+        }
+
         void DrawWorld()
         {
+            Header("Производительность");
+            GUILayout.Label($"FPS: {1f / Mathf.Max(1e-4f, _frameTime):0}  ({_frameTime * 1000f:0.0} мс)");
+            GUILayout.Label($"Врагов: {Targetable.CountAlive(Team.Enemy)}    мячей: {Ball.Active.Count}");
             Header("Время");
             GameFeel.DebugTimeScale = Slider("Скорость времени", GameFeel.DebugTimeScale, 0.1f, 2f);
             if (GUILayout.Button("Нормальная скорость"))

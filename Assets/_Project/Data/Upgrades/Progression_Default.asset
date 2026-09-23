@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c128b6cf93e145c6a27cd7b95b69a93, type: 3}
+  m_Name: Progression_Default
+  m_EditorClassIdentifier: Bouncer.Upgrades::Bouncer.Upgrades.ProgressionDefinition
+  experienceBase: 6
+  experienceGrowth: 3
+  offerDelay: 0.35
+  choices: 3
+  deck:
+  - {fileID: 11400000, guid: 898e50f4a3e844b7babc8a3daea984b5, type: 2}
+  - {fileID: 11400000, guid: 1e8a9af6b91a1461083c5613688c03b9, type: 2}
+  - {fileID: 11400000, guid: b3d53c175d041486dbda9b837620c21f, type: 2}
+  - {fileID: 11400000, guid: 31707d12810544f2d8831ef4c57be31e, type: 2}
+  - {fileID: 11400000, guid: 9ea39b7c7b8784a9c83111dce2d17a7b, type: 2}
+  - {fileID: 11400000, guid: e557d031af65246d8860edb44b91f966, type: 2}
+  - {fileID: 11400000, guid: 54939464faea141c694ee1ec5680a7f6, type: 2}
+  - {fileID: 11400000, guid: 3638da5c0073a4169a6279bbe9cb8c7b, type: 2}
+  - {fileID: 11400000, guid: 0c2f61208ac8c4ec8b1d0d7cc1e6a51b, type: 2}
+  - {fileID: 11400000, guid: 428c75300ae3f45b4bff7901f0d1a074, type: 2}
+  filler: {fileID: 11400000, guid: 8debd2ee683184cfea4154b2e606b657, type: 2}

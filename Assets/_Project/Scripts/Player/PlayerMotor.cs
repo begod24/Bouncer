@@ -1,3 +1,4 @@
+using Bouncer.Core;
 using UnityEngine;
 
 namespace Bouncer.Player
@@ -10,6 +11,7 @@ namespace Bouncer.Player
 
         CharacterController _controller;
         PlayerStats _stats;
+        PlayerModifiers _mods;
         Vector3 _velocity;
         Vector3 _knockback;
         float _verticalSpeed;
@@ -26,16 +28,21 @@ namespace Bouncer.Player
         {
             get
             {
-                float total = _stats.dashDuration + _stats.dashCooldown;
+                float total = _stats.dashDuration + DashCooldown;
                 return total <= 0f ? 1f : Mathf.Clamp01(1f - (_dashReadyAt - Time.time) / total);
             }
         }
         public Vector3 Velocity => (IsDashing ? DashVelocity : _velocity) + _knockback;
-        Vector3 DashVelocity => _dashDirection * (_stats.dashDistance / Mathf.Max(0.01f, _stats.dashDuration));
+        float DashCooldown => _stats.dashCooldown * _mods.DashCooldown;
+        Vector3 DashVelocity => _dashDirection * (_stats.dashDistance * _mods.DashDistance / Mathf.Max(0.01f, _stats.dashDuration));
 
         void Awake() => _controller = GetComponent<CharacterController>();
 
-        public void Init(PlayerStats stats) => _stats = stats;
+        public void Init(PlayerStats stats, PlayerModifiers mods)
+        {
+            _stats = stats;
+            _mods = mods;
+        }
 
         public bool TryDash(Vector3 direction)
         {
@@ -48,9 +55,10 @@ namespace Bouncer.Player
             _dashDirection = direction.normalized;
             _dashStart = Time.time;
             _dashEnd = Time.time + _stats.dashDuration;
-            _dashReadyAt = _dashEnd + _stats.dashCooldown;
+            _dashReadyAt = _dashEnd + DashCooldown;
             // После рывка продолжаем бежать в ту же сторону, а не тормозим с нуля.
-            _velocity = _dashDirection * _stats.moveSpeed;
+            _velocity = _dashDirection * (_stats.moveSpeed * _mods.MoveSpeed);
+            GameEvents.PlaySound(SoundCue.Dash, transform.position);
             return true;
         }
 
@@ -59,7 +67,9 @@ namespace Bouncer.Player
             if (dt <= 0f)
                 return;
 
-            Vector3 target = move * (_stats.moveSpeed * speedMultiplier);
+            // Песок замедляет бег, но не рывок — им из песочницы и выбираются.
+            float ground = GroundZone.MoveMultiplierAt(transform.position);
+            Vector3 target = move * (_stats.moveSpeed * _mods.MoveSpeed * speedMultiplier * ground);
             float rate = target.sqrMagnitude >= _velocity.sqrMagnitude ? _stats.acceleration : _stats.deceleration;
             _velocity = Vector3.MoveTowards(_velocity, target, rate * dt);
             _knockback = Vector3.Lerp(_knockback, Vector3.zero, 1f - Mathf.Exp(-_stats.knockbackDamping * dt));

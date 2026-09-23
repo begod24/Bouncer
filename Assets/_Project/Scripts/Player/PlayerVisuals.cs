@@ -49,6 +49,7 @@ namespace Bouncer.Player
         {
             player.Hurt += OnHurt;
             player.Balls.Caught += OnCaught;
+            player.Balls.BallTypeChanged += OnBallTypeChanged;
             player.Health.Died += OnDied;
         }
 
@@ -58,7 +59,20 @@ namespace Bouncer.Player
                 return;
             player.Hurt -= OnHurt;
             player.Balls.Caught -= OnCaught;
+            player.Balls.BallTypeChanged -= OnBallTypeChanged;
             player.Health.Died -= OnDied;
+        }
+
+        /// <summary>В руке — модель того мяча, которым игрок сейчас бросает.</summary>
+        void OnBallTypeChanged()
+        {
+            var prefab = player.Balls.BallPrefab;
+            if (!handBall || !prefab)
+                return;
+            var source = prefab.GetComponentInChildren<MeshFilter>();
+            if (source && handBall.TryGetComponent(out MeshFilter target))
+                target.sharedMesh = source.sharedMesh;
+            _handBallScale = Vector3.one * (prefab.Definition.radius * 2f);
         }
 
         void LateUpdate()
@@ -94,14 +108,14 @@ namespace Bouncer.Player
                 if (!dead && balls.IsCatching)
                 {
                     line.enabled = true;
-                    catchRing.Radius = player.Stats.catchRadius;
+                    catchRing.Radius = balls.CatchRadius;
                     line.startColor = line.endColor = catchActiveColor;
                     line.widthMultiplier = 0.12f;
                 }
                 else if (!dead && balls.CatchOnCooldown)
                 {
                     line.enabled = true;
-                    catchRing.Radius = player.Stats.catchRadius * Mathf.Max(0.15f, balls.CatchCooldown01);
+                    catchRing.Radius = balls.CatchRadius * Mathf.Max(0.15f, balls.CatchCooldown01);
                     line.startColor = line.endColor = catchCooldownColor;
                     line.widthMultiplier = 0.05f;
                 }

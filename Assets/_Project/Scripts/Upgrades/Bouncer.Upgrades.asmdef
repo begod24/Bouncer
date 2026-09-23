@@ -3,7 +3,8 @@
     "rootNamespace": "Bouncer.Upgrades",
     "references": [
         "Bouncer.Core",
-        "Bouncer.Balls"
+        "Bouncer.Balls",
+        "Bouncer.Player"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

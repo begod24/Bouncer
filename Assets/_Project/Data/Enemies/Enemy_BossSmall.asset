@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfd55b4f67a0b4f29bd510dbca836bfa, type: 3}
+  m_Name: Enemy_BossSmall
+  m_EditorClassIdentifier: Bouncer.Enemies::Bouncer.Enemies.EnemyDefinition
+  displayName: "\u0411\u043E\u043B\u044C\u0448\u0430\u044F \u043D\u0435\u0432\u0430\u043B\u044F\u0448\u043A\u0430"
+  hitsToKill: 3
+  comboResetTime: 0
+  moveSpeed: 3.8
+  acceleration: 14
+  stopDistance: 1.1
+  repathInterval: 0.25
+  attackRange: 2
+  windupTime: 0.45
+  windupLean: 6
+  lungeSpeed: 7
+  lungeTip: 3
+  lungeTime: 0.35
+  lungeHitRange: 1.6
+  recoverTime: 0.6
+  attackCooldown: 1.4
+  contactDamage: 1
+  attackKnockback: 10
+  mass: 5
+  centerOfMassHeight: 0.24
+  uprightStrength: 60
+  uprightDamping: 8
+  yawStrength: 25
+  yawDamping: 6
+  waddleStrength: 5
+  waddleFrequency: 8
+  hitLift: 0.25
+  tipPerImpulse: 0.55
+  stunTime: 0.9
+  recoverTilt: 12
+  recoverAngularSpeed: 2
+  chainStunSpeed: 4
+  chainStunTime: 0.6
+  debrisForce: 5

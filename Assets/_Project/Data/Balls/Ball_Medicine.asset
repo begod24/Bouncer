@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb5cac978b2614ffb8e1def74ecedab1, type: 3}
+  m_Name: Ball_Medicine
+  m_EditorClassIdentifier: Bouncer.Balls::Bouncer.Balls.BallDefinition
+  radius: 0.3
+  mass: 3
+  speed: 15
+  chargedSpeed: 25
+  upVelocity: 1.6
+  chargedUpVelocity: 1
+  liveGravity: 4
+  chargedLiveGravity: 2.5
+  damage: 2
+  chargedDamage: 3
+  candleDamage: 4
+  knockback: 10
+  chargedKnockback: 16
+  candleKnockback: 22
+  candleSpeedMultiplier: 1.15
+  maxRicochets: 1
+  wallSpeedKeep: 0.7
+  minLiveSpeed: 5
+  maxLiveTime: 3
+  pierceSpeedKeep: 0.75
+  popUpSpeed: 9
+  popHorizontalKeep: 0.15
+  popGravity: 14
+  poppedWallKeep: 0.5
+  perks:
+    extraShots: 0
+    spreadAngle: 0
+    chainBounces: 0
+    areaRadius: 2.6
+    areaDamage: 1
+    splitOnHit: 0
+    boomerang: 0
+    elastic: 0
+  areaEffect: {fileID: 5376990858673508986, guid: 3c2ae0d44c24e466da724e9dc70a299c, type: 3}
+  chainRange: 9
+  chainSpeedKeep: 0.9
+  splitAngle: 35
+  splitSpeedKeep: 0.8
+  boomerangDelay: 0.35
+  boomerangTurnRate: 540
+  elasticReturnSpeed: 18
+  floorBounceKeep: 0.2
+  looseDamping: 2
+  maxLooseBalls: 14

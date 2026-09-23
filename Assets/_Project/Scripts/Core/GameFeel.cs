@@ -23,6 +23,8 @@ namespace Bouncer.Core
 
         public static float DebugTimeScale { get; set; } = 1f;
         public static bool Paused { get; set; }
+        /// <summary>Время стоит, но это не пауза: открыт выбор карточки и т.п.</summary>
+        public static bool Frozen { get; set; }
         public static float ShakeMultiplier
         {
             get => s_instance ? s_instance.shakeMultiplier : 1f;
@@ -51,7 +53,7 @@ namespace Bouncer.Core
                 scale *= s_slowMoScale;
             if (now < s_hitStopUntil)
                 scale *= hitStopTimeScale;
-            Time.timeScale = Paused ? 0f : scale;
+            Time.timeScale = Paused || Frozen ? 0f : scale;
         }
 
         public static void HitStop(float seconds)
@@ -80,6 +82,7 @@ namespace Bouncer.Core
         {
             DebugTimeScale = 1f;
             Paused = false;
+            Frozen = false;
             s_hitStopUntil = 0f;
             s_slowMoUntil = 0f;
             s_slowMoScale = 1f;

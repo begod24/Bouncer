@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 455dcde8311e346b5bdedb7082262966, type: 3}
+  m_Name: Card_Pas_Speed
+  m_EditorClassIdentifier: Bouncer.Upgrades::Bouncer.Upgrades.StatCard
+  title: "\u041D\u043E\u0432\u044B\u0435 \u043A\u0435\u0434\u044B"
+  description: "\u0411\u0435\u0433\u0430\u0435\u0448\u044C \u043D\u0430 12% \u0431\u044B\u0441\u0442\u0440\u0435\u0435.
+    \u0414\u043E \u0442\u0440\u0451\u0445 \u0440\u0430\u0437."
+  category: 2
+  icon: {fileID: 21300000, guid: 409a8776aa842491783ed55604c60fb0, type: 3}
+  wrapperColor: {r: 0.27450982, g: 0.7137255, b: 0.83137256, a: 1}
+  maxStacks: 3
+  weight: 1
+  moveSpeed: 0.12
+  dashDistance: 0
+  dashCooldown: 0
+  catchWindow: 0
+  catchRadius: 0
+  pickupRadius: 0
+  extraBalls: 0
+  heal: 0

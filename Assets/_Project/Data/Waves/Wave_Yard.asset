@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a3ec48938dc7428eb1bca75c8c72ba9, type: 3}
+  m_Name: Wave_Yard
+  m_EditorClassIdentifier: Bouncer.Waves::Bouncer.Waves.WaveDefinition
+  duration: 420
+  maxAliveStart: 14
+  maxAliveEnd: 36
+  tracks:
+  - name: "\u041D\u0435\u0432\u0430\u043B\u044F\u0448\u043A\u0438"
+    prefab: {fileID: 188804801301329896, guid: c4b9f7220404f4a3481d1c5c9e2173f2, type: 3}
+    from: 0
+    to: 360
+    firstDelay: 1
+    intervalStart: 6.5
+    intervalEnd: 3.2
+    groupStart: 2
+    groupEnd: 2
+    layout: 0
+    maxAlive: 12
+  - name: "\u041F\u0443\u043F\u0441\u044B"
+    prefab: {fileID: 2124556403835334173, guid: c4e890b4fcc064153b2a377a9c3a1ff5, type: 3}
+    from: 40
+    to: 360
+    firstDelay: 0
+    intervalStart: 22
+    intervalEnd: 10
+    groupStart: 5
+    groupEnd: 8
+    layout: 0
+    maxAlive: 24
+  - name: "\u0421\u043E\u043B\u0434\u0430\u0442\u0438\u043A\u0438"
+    prefab: {fileID: 7471714542055159759, guid: 0f3b097281a5942a6abc0e12ce480b0f, type: 3}
+    from: 90
+    to: 360
+    firstDelay: 0
+    intervalStart: 40
+    intervalEnd: 24
+    groupStart: 3
+    groupEnd: 4
+    layout: 1
+    maxAlive: 8
+  bursts:
+  - name: "\u0411\u043E\u043B\u044C\u0448\u0430\u044F \u043D\u0435\u0432\u0430\u043B\u044F\u0448\u043A\u0430"
+    prefab: {fileID: 7330531023709120378, guid: ea04d21d2c32443ce83b93adb57bdd6a, type: 3}
+    time: 360
+    count: 1
+    layout: 0
+    boss: 1

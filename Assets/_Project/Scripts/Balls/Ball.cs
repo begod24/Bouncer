@@ -15,11 +15,15 @@ namespace Bouncer.Balls
         Popped,
         /// <summary>Лежит или катится по полу: можно подобрать.</summary>
         Loose,
+        /// <summary>Мяч на резинке летит обратно в руки бросившему: безопасен, подобрать нельзя.</summary>
+        Returning,
     }
 
     /// <summary>
     /// Мяч. В полёте (Live/Popped) движется сам через SphereCast — так рикошеты точные
     /// и предсказуемые, мяч не пролетает сквозь тонкие стены. Лежащий мяч — обычная физика.
+    /// Эффекты типа мяча и карточек (<see cref="BallPerks"/>) срабатывают здесь же: цепочка, урон по площади,
+    /// раскол на двойников, бумеранг и возврат на резинке.
     /// </summary>
     [RequireComponent(typeof(Rigidbody), typeof(SphereCollider))]
     public sealed class Ball : MonoBehaviour, IPoolable
@@ -27,9 +31,16 @@ namespace Bouncer.Balls
         const float Skin = 0.01f;
         const int MaxSweepIterations = 4;
         const float KillY = -5f;
+        /// <summary>С какого расстояния вернувшийся мяч попадает в руки.</summary>
+        const float ReceiveDistance = 1.2f;
+        /// <summary>На какой высоте над ногами бросившего летит возвращающийся мяч.</summary>
+        const float ReturnHeight = 1.1f;
+        const float MaxReturnTime = 4f;
 
         static readonly List<Ball> s_active = new();
         static readonly List<Ball> s_loose = new();
+        static readonly Collider[] s_area = new Collider[32];
+        static readonly List<IDamageable> s_areaDamaged = new();
 
         public static IReadOnlyList<Ball> Active => s_active;
         public static int LooseCount => s_loose.Count;
@@ -40,11 +51,16 @@ namespace Bouncer.Balls
 
         readonly RaycastHit[] _hits = new RaycastHit[16];
         readonly List<Collider> _ignored = new(4);
+        readonly List<(Collider collider, float until)> _ignoredFor = new(4);
         Rigidbody _rb;
         SphereCollider _collider;
+        IBallReceiver _receiver;
         Vector3 _velocity;
         float _gravity;
         float _stateTime;
+        int _chainsLeft;
+        bool _splitDone;
+        bool _elasticDone;
 
         public BallDefinition Definition => definition;
         public BallState State { get; private set; }
@@ -52,6 +68,11 @@ namespace Bouncer.Balls
         public Team Team { get; private set; }
         public GameObject Thrower { get; private set; }
         public ThrowStats Stats { get; private set; }
+        public BallPerks Perks { get; private set; }
+        /// <summary>Мяч-двойник: исчезает, коснувшись пола, подобрать и поймать нельзя.</summary>
+        public bool IsPhantom { get; private set; }
+        /// <summary>Бумеранг развернулся и летит обратно к бросившему.</summary>
+        public bool IsComingBack { get; private set; }
         public int Ricochets { get; private set; }
         public float Radius => definition.radius;
         public Vector3 Position => _rb.position;
@@ -94,8 +115,13 @@ namespace Bouncer.Balls
         {
             Team = Team.Neutral;
             Thrower = null;
+            _receiver = null;
+            Perks = default;
+            IsPhantom = false;
+            IsComingBack = false;
             Ricochets = 0;
             _velocity = Vector3.zero;
+            _ignoredFor.Clear();
             MakeKinematicAt(transform.position);
             SetState(BallState.Idle);
         }
@@ -112,8 +138,16 @@ namespace Bouncer.Balls
         {
             Team = t.Team;
             Thrower = t.Thrower;
+            _receiver = t.Thrower ? t.Thrower.GetComponent<IBallReceiver>() : null;
             Stats = t.Stats;
+            Perks = t.Perks;
+            IsPhantom = t.Phantom;
+            IsComingBack = false;
             Ricochets = 0;
+            _chainsLeft = t.Perks.chainBounces;
+            _splitDone = false;
+            _elasticDone = false;
+            _ignoredFor.Clear();
 
             Vector3 direction = Flat(t.Direction);
             if (direction.sqrMagnitude < 1e-6f)
@@ -127,14 +161,39 @@ namespace Bouncer.Balls
             SetState(BallState.Live);
         }
 
+        /// <summary>
+        /// Отбить летящий мяч (качели): новая скорость и параметры удара, время полёта считается заново.
+        /// Команда не меняется — мяч игрока остаётся мячом игрока.
+        /// </summary>
+        public void Redirect(Vector3 velocity, in ThrowStats stats)
+        {
+            if (State != BallState.Live)
+                return;
+            Stats = stats;
+            _velocity = velocity;
+            _gravity = stats.Gravity;
+            SetState(BallState.Live);
+        }
+
+        /// <summary>Не сталкиваться с коллайдером столько секунд (двойник вылетает из тела врага).</summary>
+        public void IgnoreFor(Collider other, float seconds)
+        {
+            if (other)
+                _ignoredFor.Add((other, Time.time + seconds));
+        }
+
         /// <summary>Положить мяч на арену (например, если игроку некуда его взять).</summary>
-        public void Drop(Vector3 position, Vector3 velocity) => BecomeLoose(position, velocity);
+        public void Drop(Vector3 position, Vector3 velocity)
+        {
+            _elasticDone = true;
+            BecomeLoose(position, velocity);
+        }
 
         /// <summary>Мяч забрали — вернуть в пул.</summary>
         public void Consume() => PoolService.Despawn(gameObject);
 
         public bool IsCatchableBy(Team catcher) =>
-            State == BallState.Popped || (State == BallState.Live && this.Team.IsHostileTo(catcher));
+            !IsPhantom && (State == BallState.Popped || (State == BallState.Live && this.Team.IsHostileTo(catcher)));
 
         /// <summary>Куда упадёт летящий мяч (пол арены на y = 0).</summary>
         public bool TryPredictLanding(out Vector3 point)
@@ -169,9 +228,17 @@ namespace Bouncer.Balls
                 case BallState.Popped:
                     TickFlight(Time.fixedDeltaTime, live: false);
                     break;
+                case BallState.Returning:
+                    TickReturn(Time.fixedDeltaTime);
+                    break;
                 case BallState.Loose:
                     if (_rb.position.y < KillY)
+                    {
                         Consume();
+                        break;
+                    }
+                    // В песке мяч быстро останавливается.
+                    _rb.linearDamping = definition.looseDamping + GroundZone.BallDampingAt(_rb.position);
                     break;
             }
         }
@@ -179,7 +246,10 @@ namespace Bouncer.Balls
         void TickFlight(float dt, bool live)
         {
             _stateTime += dt;
-            _velocity.y -= _gravity * dt;
+            if (live && Perks.boomerang && _stateTime >= definition.boomerangDelay && CanReturn())
+                SteerBack(dt);
+            else
+                _velocity.y -= _gravity * dt;
 
             Vector3 position = _rb.position;
             float remaining = _velocity.magnitude * dt;
@@ -205,9 +275,23 @@ namespace Bouncer.Balls
                     if (target != null)
                     {
                         var result = target.OnBallContact(this, hit);
-                        if (result == BallContactResult.PassThrough)
+                        if (result is BallContactResult.PassThrough or BallContactResult.Redirected)
                         {
                             _ignored.Add(hit.collider);
+                            continue;
+                        }
+                        if (result == BallContactResult.Pierce)
+                        {
+                            _ignored.Add(hit.collider);
+                            OnTargetHit(hit, position);
+                            _velocity = new Vector3(_velocity.x * definition.pierceSpeedKeep, _velocity.y,
+                                _velocity.z * definition.pierceSpeedKeep);
+                            remaining *= definition.pierceSpeedKeep;
+                            if (Flat(_velocity).magnitude < definition.minLiveSpeed)
+                            {
+                                Pop(position, hit.normal);
+                                return;
+                            }
                             continue;
                         }
                         // Цель забрала мяч или сама сменила ему состояние.
@@ -215,6 +299,9 @@ namespace Bouncer.Balls
                             return;
                         if (result == BallContactResult.Hit)
                         {
+                            OnTargetHit(hit, position);
+                            if (_chainsLeft > 0 && TryChain(hit, position))
+                                continue;
                             Pop(position, hit.normal);
                             return;
                         }
@@ -239,6 +326,7 @@ namespace Bouncer.Balls
                 _velocity = new Vector3(reflected.x * keep, reflected.y, reflected.z * keep);
                 remaining *= keep;
                 Ricocheted?.Invoke(this, hit.point, normal);
+                GameEvents.PlaySound(SoundCue.BallWall, hit.point);
 
                 if (live)
                 {
@@ -256,7 +344,10 @@ namespace Bouncer.Balls
                 Consume();
                 return;
             }
-            if (live && _stateTime > definition.maxLiveTime)
+            if (live && IsComingBack && TryHandBack(position))
+                return;
+            float lifetime = Perks.boomerang ? definition.maxLiveTime + 2f : definition.maxLiveTime;
+            if (live && _stateTime > lifetime)
             {
                 BecomeLoose(position, _velocity * 0.5f);
                 return;
@@ -275,7 +366,7 @@ namespace Bouncer.Balls
             for (int i = 0; i < count; i++)
             {
                 RaycastHit hit = _hits[i];
-                if (hit.collider == _collider || _ignored.Contains(hit.collider))
+                if (hit.collider == _collider || IsIgnored(hit.collider))
                     continue;
 
                 if (hit.distance <= 0f)
@@ -304,8 +395,29 @@ namespace Bouncer.Balls
             return found;
         }
 
+        bool IsIgnored(Collider other)
+        {
+            if (_ignored.Contains(other))
+                return true;
+            for (int i = _ignoredFor.Count - 1; i >= 0; i--)
+            {
+                if (Time.time > _ignoredFor[i].until)
+                    _ignoredFor.RemoveAt(i);
+                else if (_ignoredFor[i].collider == other)
+                    return true;
+            }
+            return false;
+        }
+
         void Pop(Vector3 position, Vector3 hitNormal)
         {
+            // Двойник свечки не даёт — ударил и исчез.
+            if (IsPhantom)
+            {
+                Consume();
+                return;
+            }
+
             Vector3 horizontal = Flat(_velocity);
             Vector3 normal = Flat(hitNormal);
             if (normal.sqrMagnitude < 1e-4f)
@@ -323,6 +435,17 @@ namespace Bouncer.Balls
 
         void BecomeLoose(Vector3 position, Vector3 velocity)
         {
+            if (IsPhantom)
+            {
+                Consume();
+                return;
+            }
+            if (Perks.elastic && !_elasticDone && CanReturn())
+            {
+                StartReturn(position);
+                return;
+            }
+
             _rb.isKinematic = false;
             _rb.position = position;
             _rb.linearVelocity = velocity;
@@ -334,6 +457,182 @@ namespace Bouncer.Balls
             s_loose.Add(this);
             while (s_loose.Count > definition.maxLooseBalls)
                 s_loose[0].Consume();
+        }
+
+        // ---------- Эффекты мяча ----------
+
+        /// <summary>Мяч задел врага: урон по площади и раскол на двойников.</summary>
+        void OnTargetHit(in RaycastHit hit, Vector3 position)
+        {
+            if (Perks.areaRadius > 0f && Perks.areaDamage > 0)
+                DamageArea(hit);
+            if (Perks.splitOnHit && !IsPhantom && !_splitDone)
+                Split(hit, position);
+        }
+
+        void DamageArea(in RaycastHit hit)
+        {
+            int mask = Layers.LiveBallMask(Team) & ~Layers.EnvironmentMask;
+            int count = Physics.OverlapSphereNonAlloc(hit.point, Perks.areaRadius, s_area, mask, QueryTriggerInteraction.Ignore);
+            var direct = hit.collider.GetComponentInParent<IDamageable>();
+            s_areaDamaged.Clear();
+            for (int i = 0; i < count; i++)
+            {
+                var other = s_area[i];
+                var target = other.GetComponentInParent<IDamageable>();
+                if (target == null || target == direct || s_areaDamaged.Contains(target))
+                    continue;
+                s_areaDamaged.Add(target);
+                Vector3 away = Flat(other.transform.position - hit.point);
+                target.ApplyHit(new HitInfo
+                {
+                    Damage = Perks.areaDamage,
+                    Point = other.ClosestPoint(hit.point),
+                    Direction = away.sqrMagnitude > 1e-4f ? away.normalized : Flat(_velocity).normalized,
+                    Force = Stats.Knockback * 0.7f,
+                    SourceTeam = Team,
+                    Source = Thrower,
+                    Flags = HitFlags.Area,
+                });
+            }
+            if (definition.areaEffect)
+            {
+                var ring = PoolService.Spawn(definition.areaEffect, new Vector3(hit.point.x, 0.05f, hit.point.z), Quaternion.identity);
+                if (ring.TryGetComponent(out ExpandingRing expanding))
+                    expanding.Play(Perks.areaRadius);
+            }
+            GameEvents.PlaySound(SoundCue.AreaThud, hit.point);
+        }
+
+        /// <summary>Раскол: два двойника разлетаются в стороны от направления мяча.</summary>
+        void Split(in RaycastHit hit, Vector3 position)
+        {
+            _splitDone = true;
+            if (!TryGetComponent(out PooledObject tag) || tag.Prefab == null)
+                return;
+            Vector3 forward = Flat(_velocity);
+            if (forward.sqrMagnitude < 1e-4f)
+                forward = -Flat(hit.normal);
+            if (forward.sqrMagnitude < 1e-4f)
+                return;
+            forward.Normalize();
+
+            var stats = Stats;
+            stats.Speed = Mathf.Max(Flat(_velocity).magnitude * definition.splitSpeedKeep, definition.minLiveSpeed + 2f);
+            stats.UpVelocity = 1f;
+            for (int side = -1; side <= 1; side += 2)
+            {
+                var twin = PoolService.Spawn(tag.Prefab, position, Quaternion.identity).GetComponent<Ball>();
+                twin.Launch(new BallThrow
+                {
+                    Origin = position,
+                    Direction = Quaternion.Euler(0f, side * definition.splitAngle, 0f) * forward,
+                    Stats = stats,
+                    Team = Team,
+                    Thrower = Thrower,
+                    Perks = Perks.ForTwin(),
+                    Phantom = true,
+                });
+                twin.IgnoreFor(hit.collider, 0.3f);
+            }
+        }
+
+        /// <summary>Цепочка (волейбольный): после попадания мяч перелетает к ближайшему другому врагу.</summary>
+        bool TryChain(in RaycastHit hit, Vector3 position)
+        {
+            var struck = hit.collider.GetComponentInParent<Targetable>();
+            Targetable next = null;
+            float bestSqr = definition.chainRange * definition.chainRange;
+            foreach (var target in Targetable.All)
+            {
+                if (target == struck || !target.IsAlive || !Team.IsHostileTo(target.Team))
+                    continue;
+                float sqr = Flat(target.AimPoint - position).sqrMagnitude;
+                if (sqr > 0.25f && sqr < bestSqr)
+                {
+                    bestSqr = sqr;
+                    next = target;
+                }
+            }
+            if (next == null)
+                return false;
+
+            _chainsLeft--;
+            Vector3 to = next.AimPoint - position;
+            Vector3 flat = Flat(to);
+            float speed = Mathf.Max(Flat(_velocity).magnitude * definition.chainSpeedKeep, definition.minLiveSpeed + 2f);
+            float time = Mathf.Max(0.05f, flat.magnitude / speed);
+            // Вертикальная скорость — чтобы долететь до груди следующего врага.
+            float up = (to.y + 0.5f * _gravity * time * time) / time;
+            _velocity = flat.normalized * speed + Vector3.up * up;
+            _stateTime = 0f;
+            IgnoreFor(hit.collider, 0.25f);
+            return true;
+        }
+
+        bool CanReturn() => !IsPhantom && _receiver != null && Thrower != null && Thrower.activeInHierarchy;
+
+        /// <summary>Бумеранг: плавно разворачивает мяч к бросившему и держит на высоте груди.</summary>
+        void SteerBack(float dt)
+        {
+            IsComingBack = true;
+            Vector3 position = _rb.position;
+            Vector3 target = Thrower.transform.position + Vector3.up * ReturnHeight;
+            Vector3 toTarget = Flat(target - position);
+            Vector3 horizontal = Flat(_velocity);
+            float speed = Mathf.Max(horizontal.magnitude, definition.minLiveSpeed + 1f);
+            Vector3 heading = horizontal.sqrMagnitude > 1e-4f ? horizontal.normalized : toTarget.normalized;
+            if (toTarget.sqrMagnitude > 1e-4f)
+                heading = Vector3.RotateTowards(heading, toTarget.normalized, definition.boomerangTurnRate * Mathf.Deg2Rad * dt, 0f);
+            _velocity = heading * speed + Vector3.up * Mathf.Clamp((target.y - position.y) * 4f, -4f, 4f);
+        }
+
+        /// <summary>Вернувшийся мяч долетел до бросившего: в руки, а если руки заняты — под ноги.</summary>
+        bool TryHandBack(Vector3 position)
+        {
+            if (!CanReturn())
+                return false;
+            Vector3 delta = Thrower.transform.position + Vector3.up * ReturnHeight - position;
+            if (Flat(delta).sqrMagnitude > ReceiveDistance * ReceiveDistance)
+                return false;
+            if (_receiver.TryReceive(this))
+                return true;
+            _elasticDone = true;
+            BecomeLoose(position, Vector3.zero);
+            return true;
+        }
+
+        /// <summary>На резинке: упавший мяч сам летит обратно в руки.</summary>
+        void StartReturn(Vector3 position)
+        {
+            _elasticDone = true;
+            _velocity = Vector3.zero;
+            MakeKinematicAt(position);
+            SetState(BallState.Returning);
+        }
+
+        void TickReturn(float dt)
+        {
+            _stateTime += dt;
+            Vector3 position = _rb.position;
+            if (!CanReturn() || _stateTime > MaxReturnTime)
+            {
+                BecomeLoose(position, Vector3.zero);
+                return;
+            }
+
+            Vector3 delta = Thrower.transform.position + Vector3.up * ReturnHeight - position;
+            float distance = delta.magnitude;
+            if (distance <= ReceiveDistance)
+            {
+                if (!_receiver.TryReceive(this))
+                    BecomeLoose(position, Vector3.zero);
+                return;
+            }
+            // Резинка тянет всё сильнее: мяч разгоняется к рукам.
+            float speed = definition.elasticReturnSpeed * Mathf.Clamp01(0.3f + _stateTime * 3f);
+            _velocity = delta / distance * speed;
+            _rb.MovePosition(position + delta / distance * Mathf.Min(distance, speed * dt));
         }
 
         void MakeKinematicAt(Vector3 position)

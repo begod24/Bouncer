@@ -17,12 +17,14 @@ namespace Bouncer.Player
     /// <summary>
     /// Мячи игрока: запас, заряд и бросок, окно ловли, подбор с пола.
     /// Мячи в руках — просто счётчик, объект мяча появляется только в момент броска.
+    /// Каким мячом бросать (резиновый, волейбольный…), решают карточки — <see cref="SetBallPrefab"/>.
     /// </summary>
     public sealed class PlayerBallHandler : MonoBehaviour
     {
         [SerializeField] Ball ballPrefab;
 
         PlayerStats _stats;
+        PlayerModifiers _mods;
         float _chargeStart;
         float _nextThrowAt;
         float _catchUntil;
@@ -33,7 +35,10 @@ namespace Bouncer.Player
         public Ball BallPrefab => ballPrefab;
         public BallDefinition BallDefinition => ballPrefab ? ballPrefab.Definition : null;
         public int Balls { get; private set; }
-        public int MaxBalls => _stats.maxBalls;
+        public int MaxBalls => _stats.maxBalls + _mods.ExtraBalls;
+        public float CatchRadius => _stats.catchRadius * _mods.CatchRadius;
+        float CatchWindow => _stats.catchWindow * _mods.CatchWindow;
+        float PickupRadius => _stats.pickupRadius * _mods.PickupRadius;
         public bool CandleReady { get; private set; }
         public bool IsCharging { get; private set; }
         public float Charge01 { get; private set; }
@@ -54,11 +59,36 @@ namespace Bouncer.Player
         public event Action CatchStarted;
         public event Action CatchMissed;
         public event Action PickedUp;
+        /// <summary>Мяч сам вернулся в руки (бумеранг, резинка).</summary>
+        public event Action Returned;
+        public event Action BallTypeChanged;
 
-        public void Init(PlayerStats stats)
+        public void Init(PlayerStats stats, PlayerModifiers mods)
         {
             _stats = stats;
-            Balls = Mathf.Min(stats.startBalls, stats.maxBalls);
+            _mods = mods;
+            Balls = Mathf.Min(stats.startBalls, MaxBalls);
+        }
+
+        /// <summary>Сменить тип мяча: следующие броски будут этим мячом. Запас в руках не меняется.</summary>
+        public void SetBallPrefab(Ball prefab)
+        {
+            if (prefab == null || prefab == ballPrefab)
+                return;
+            ballPrefab = prefab;
+            BallTypeChanged?.Invoke();
+        }
+
+        /// <summary>Мяч вернулся сам. false — руки заняты.</summary>
+        public bool TryReceive(Ball ball)
+        {
+            if (Balls >= MaxBalls)
+                return false;
+            Balls++;
+            GameEvents.PlaySound(SoundCue.Pickup, ball.Position);
+            ball.Consume();
+            Returned?.Invoke();
+            return true;
         }
 
         public void Tick(in PlayerIntent intent, PlayerAim aim, bool canAct, bool canCatch)
@@ -140,13 +170,14 @@ namespace Bouncer.Player
             _catchWindowOpen = false;
             _catchUntil = 0f;
             StartCatchCooldown(_stats.catchSuccessCooldown);
+            GameEvents.PlaySound(info.Candle ? SoundCue.CatchCandle : SoundCue.Catch, info.Position);
             Caught?.Invoke(info);
         }
 
         void StartCatch()
         {
             _catchWindowOpen = true;
-            _catchUntil = Time.time + _stats.catchWindow;
+            _catchUntil = Time.time + CatchWindow;
             CatchStarted?.Invoke();
         }
 
@@ -154,6 +185,7 @@ namespace Bouncer.Player
         {
             _catchWindowOpen = false;
             StartCatchCooldown(_stats.catchMissCooldown);
+            GameEvents.PlaySound(SoundCue.CatchMiss, transform.position);
             CatchMissed?.Invoke();
         }
 
@@ -167,7 +199,7 @@ namespace Bouncer.Player
         {
             Vector3 feet = transform.position;
             Vector3 chest = feet + Vector3.up * _stats.throwHeight;
-            float radiusSqr = _stats.catchRadius * _stats.catchRadius;
+            float radiusSqr = CatchRadius * CatchRadius;
             var balls = Ball.Active;
             for (int i = balls.Count - 1; i >= 0; i--)
             {
@@ -199,7 +231,7 @@ namespace Bouncer.Player
         void TryPickup()
         {
             Vector3 feet = transform.position;
-            float radiusSqr = _stats.pickupRadius * _stats.pickupRadius;
+            float radiusSqr = PickupRadius * PickupRadius;
             var balls = Ball.Active;
             for (int i = balls.Count - 1; i >= 0 && Balls < MaxBalls; i--)
             {
@@ -212,6 +244,7 @@ namespace Bouncer.Player
                 delta.y = 0f;
                 if (delta.sqrMagnitude > radiusSqr)
                     continue;
+                GameEvents.PlaySound(SoundCue.Pickup, ball.Position);
                 ball.Consume();
                 Balls++;
                 PickedUp?.Invoke();
@@ -223,8 +256,28 @@ namespace Bouncer.Player
             var definition = BallDefinition;
             bool candle = CandleReady;
             var stats = definition.GetThrowStats(Charge01, candle);
-            Vector3 origin = SafeOrigin(direction, definition.radius);
+            var perks = BallPerks.Combine(definition.perks, _mods.Perks);
 
+            Launch(direction, definition.radius, stats, perks, phantom: false);
+            // Веер (теннисный): двойники по очереди справа и слева от основного мяча.
+            for (int i = 1; i <= perks.extraShots; i++)
+            {
+                float angle = perks.spreadAngle * ((i + 1) / 2) * (i % 2 == 1 ? 1f : -1f);
+                Launch(Quaternion.Euler(0f, angle, 0f) * direction, definition.radius, stats, perks.ForTwin(), phantom: true);
+            }
+
+            Balls--;
+            var cue = candle ? SoundCue.ThrowCandle : stats.Has(HitFlags.Charged) ? SoundCue.ThrowCharged : SoundCue.Throw;
+            GameEvents.PlaySound(cue, transform.position);
+            CandleReady = false;
+            CancelCharge();
+            _nextThrowAt = Time.time + _stats.throwCooldown;
+            Thrown?.Invoke(stats);
+        }
+
+        void Launch(Vector3 direction, float radius, in ThrowStats stats, in BallPerks perks, bool phantom)
+        {
+            Vector3 origin = SafeOrigin(direction, radius);
             var ball = PoolService.Spawn(ballPrefab, origin, Quaternion.identity);
             ball.Launch(new BallThrow
             {
@@ -233,13 +286,9 @@ namespace Bouncer.Player
                 Stats = stats,
                 Team = Team.Player,
                 Thrower = gameObject,
+                Perks = perks,
+                Phantom = phantom,
             });
-
-            Balls--;
-            CandleReady = false;
-            CancelCharge();
-            _nextThrowAt = Time.time + _stats.throwCooldown;
-            Thrown?.Invoke(stats);
         }
 
         /// <summary>Точка вылета перед грудью, но не внутри стены.</summary>

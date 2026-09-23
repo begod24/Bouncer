@@ -235,7 +235,7 @@ namespace Bouncer.Enemies
         void Drive(Vector3 desired)
         {
             desired.y = 0f;
-            desired = Vector3.ClampMagnitude(desired, definition.moveSpeed);
+            desired = Vector3.ClampMagnitude(desired, definition.moveSpeed * GroundZone.MoveMultiplierAt(_rb.position));
             Vector3 velocity = _rb.linearVelocity;
             Vector3 horizontal = new(velocity.x, 0f, velocity.z);
             Vector3 acceleration = Vector3.ClampMagnitude((desired - horizontal) * 10f, definition.acceleration);
@@ -292,10 +292,15 @@ namespace Bouncer.Enemies
             GameFeel.Shake(strong ? 0.5f : 0.25f);
             if (hitFlash)
                 hitFlash.Flash(Color.white, 0.12f);
+            GameEvents.PlaySound(strong ? SoundCue.EnemyHitStrong : SoundCue.EnemyHit, hit.Point);
 
             _health.TryDamage(hit);
             if (!_health.IsDead)
+            {
                 Knock(hit.Direction, hit.Force);
+                // Неваляшка качается — и звенит, как настоящая игрушка.
+                GameEvents.PlaySound(SoundCue.RolyPolyChime, _rb.position);
+            }
             return true;
         }
 
@@ -346,6 +351,7 @@ namespace Bouncer.Enemies
                     debris.Burst(hit.Direction, definition.debrisForce + hit.Force * 0.25f, _rb.linearVelocity);
             }
             GameEvents.RaiseEnemyKilled(gameObject, hit);
+            GameEvents.PlaySound(SoundCue.RolyPolyPop, transform.position);
             GameFeel.HitStop(0.09f);
             GameFeel.Shake(0.8f);
             PoolService.Despawn(gameObject);

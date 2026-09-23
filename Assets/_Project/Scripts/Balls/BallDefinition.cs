@@ -36,12 +36,34 @@ namespace Bouncer.Balls
         [Tooltip("Ниже этой горизонтальной скорости мяч перестаёт быть опасным")]
         public float minLiveSpeed = 7f;
         [Min(0.1f)] public float maxLiveTime = 3f;
+        [Tooltip("Какую долю скорости мяч сохраняет, пробив лёгкого врага насквозь")]
+        [Range(0f, 1f)] public float pierceSpeedKeep = 0.75f;
 
         [Header("«Свечка»: отскок вверх от тела")]
         public float popUpSpeed = 9f;
         [Range(0f, 1f)] public float popHorizontalKeep = 0.15f;
         public float popGravity = 14f;
         [Range(0f, 1f)] public float poppedWallKeep = 0.5f;
+
+        [Header("Свойства этого типа мяча")]
+        public BallPerks perks;
+        [Tooltip("Эффект урона по площади (кольцо на земле), из пула")]
+        public GameObject areaEffect;
+
+        [Header("Эффекты карточек и типов мячей")]
+        [Tooltip("Цепочка: на каком расстоянии мяч ищет следующего врага")]
+        public float chainRange = 9f;
+        [Tooltip("Цепочка: какую долю скорости мяч сохраняет при перелёте")]
+        [Range(0.3f, 1f)] public float chainSpeedKeep = 0.9f;
+        [Tooltip("Раскол: угол разлёта двойников от направления мяча, градусы")]
+        public float splitAngle = 35f;
+        [Range(0.3f, 1f)] public float splitSpeedKeep = 0.8f;
+        [Tooltip("Бумеранг: через сколько секунд полёта мяч разворачивается")]
+        public float boomerangDelay = 0.35f;
+        [Tooltip("Бумеранг: скорость разворота, градусов в секунду")]
+        public float boomerangTurnRate = 540f;
+        [Tooltip("На резинке: скорость, с которой мяч возвращается в руки")]
+        public float elasticReturnSpeed = 18f;
 
         [Header("Лежащий мяч")]
         [Range(0f, 1f)] public float floorBounceKeep = 0.5f;

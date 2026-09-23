@@ -11,13 +11,15 @@ namespace Bouncer.Player
     /// </summary>
     [RequireComponent(typeof(PlayerMotor), typeof(PlayerAim), typeof(PlayerBallHandler))]
     [RequireComponent(typeof(Health), typeof(Targetable))]
-    public sealed class PlayerController : MonoBehaviour, IBallTarget, IDamageable
+    public sealed class PlayerController : MonoBehaviour, IBallTarget, IDamageable, IBallReceiver
     {
         [SerializeField] PlayerStats stats;
 
         IPlayerIntentSource _intentSource;
 
         public PlayerStats Stats => stats;
+        /// <summary>Прибавки от карточек за этот забег.</summary>
+        public PlayerModifiers Modifiers { get; } = new();
         public PlayerMotor Motor { get; private set; }
         public PlayerAim Aim { get; private set; }
         public PlayerBallHandler Balls { get; private set; }
@@ -36,9 +38,9 @@ namespace Bouncer.Player
             Health = GetComponent<Health>();
             _intentSource = GetComponent<IPlayerIntentSource>();
 
-            Motor.Init(stats);
+            Motor.Init(stats, Modifiers);
             Aim.Init(stats);
-            Balls.Init(stats);
+            Balls.Init(stats, Modifiers);
             Health.Configure(stats.maxLives, 0f);
             GetComponent<Targetable>().Team = Team.Player;
 
@@ -123,9 +125,13 @@ namespace Bouncer.Player
             Balls.CancelCharge();
             GameFeel.HitStop(0.1f);
             GameFeel.Shake(0.9f);
+            if (!IsDead)
+                GameEvents.PlaySound(SoundCue.PlayerHurt, transform.position);
             Hurt?.Invoke(hit);
             return true;
         }
+
+        public bool TryReceive(Ball ball) => !IsDead && Balls.TryReceive(ball);
 
         void OnCaught(CatchInfo info)
         {
@@ -140,6 +146,7 @@ namespace Bouncer.Player
             Balls.CancelCharge();
             Balls.CancelCatch();
             Motor.Stop();
+            GameEvents.PlaySound(SoundCue.PlayerKnockedOut, transform.position);
             GameEvents.RaisePlayerDied(gameObject);
         }
     }

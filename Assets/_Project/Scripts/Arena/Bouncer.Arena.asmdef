@@ -1,0 +1,17 @@
+{
+    "name": "Bouncer.Arena",
+    "rootNamespace": "Bouncer.Arena",
+    "references": [
+        "Bouncer.Core",
+        "Bouncer.Balls"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

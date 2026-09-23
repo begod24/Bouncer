@@ -270,6 +270,7 @@ GameObject:
   - component: {fileID: 7657743943722317036}
   - component: {fileID: 1694614332915023353}
   - component: {fileID: 2594801239568258370}
+  - component: {fileID: 4040264963739477248}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -484,6 +485,19 @@ MonoBehaviour:
   candleColor: {r: 1, g: 0.75, b: 0.1, a: 1}
   catchActiveColor: {r: 0.35, g: 1, b: 0.45, a: 0.95}
   catchCooldownColor: {r: 1, g: 1, b: 1, a: 0.25}
+--- !u!114 &4040264963739477248
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3188536810423500941}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36be435369b2645abbcf5a97929affed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Bouncer.Upgrades::Bouncer.Upgrades.PlayerProgression
+  definition: {fileID: 11400000, guid: 8622b5f475740459e99308849bc97c0b, type: 2}
 --- !u!1 &4633267966973068386
 GameObject:
   m_ObjectHideFlags: 0

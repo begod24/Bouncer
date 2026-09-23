@@ -10,6 +10,8 @@ namespace Bouncer.Core
         Charged = 1 << 0,
         Candle = 1 << 1,
         Melee = 1 << 2,
+        /// <summary>Урон по площади (набивной мяч): задевает соседей основной цели.</summary>
+        Area = 1 << 3,
     }
 
     public struct HitInfo

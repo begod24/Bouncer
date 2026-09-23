@@ -76,7 +76,7 @@ namespace Bouncer.Balls
             {
                 if (ball.State == BallState.Idle)
                     trail.Clear();
-                trail.emitting = ball.State is BallState.Live or BallState.Popped;
+                trail.emitting = ball.State is BallState.Live or BallState.Popped or BallState.Returning;
                 trail.startColor = new Color(color.r, color.g, color.b, 0.8f);
                 trail.endColor = new Color(color.r, color.g, color.b, 0f);
                 bool strong = ball.State == BallState.Live && ball.Stats.Has(HitFlags.Charged);

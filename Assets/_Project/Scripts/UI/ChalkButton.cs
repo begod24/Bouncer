@@ -5,22 +5,22 @@ using UnityEngine.EventSystems;
 namespace Bouncer.UI
 {
     /// <summary>
-    /// Кнопка «мелом»: надпись, под которой появляется меловое подчёркивание, когда кнопка выбрана
-    /// (стрелками, геймпадом) или под мышью. Мышь выбирает кнопку наведением — так у всех способов ввода
-    /// одна и та же подсветка.
+    /// Пункт меню «мелом» (кнопка, ползунок, переключатель): надпись, под которой появляется меловое
+    /// подчёркивание, когда пункт выбран (стрелками, геймпадом) или под мышью. Мышь выбирает пункт
+    /// наведением — так у всех способов ввода одна и та же подсветка.
     /// </summary>
-    [RequireComponent(typeof(UnityEngine.UI.Button))]
+    [RequireComponent(typeof(UnityEngine.UI.Selectable))]
     public sealed class ChalkButton : MonoBehaviour, ISelectHandler, IDeselectHandler, IPointerEnterHandler
     {
         [SerializeField] UnityEngine.UI.Graphic underline;
         [SerializeField] RectTransform label;
         [SerializeField] float selectedScale = 1.1f;
 
-        UnityEngine.UI.Button _button;
+        UnityEngine.UI.Selectable _selectable;
         bool _selected;
         float _scale = 1f;
 
-        void Awake() => _button = GetComponent<UnityEngine.UI.Button>();
+        void Awake() => _selectable = GetComponent<UnityEngine.UI.Selectable>();
 
         void OnEnable()
         {
@@ -39,7 +39,7 @@ namespace Bouncer.UI
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            if (_button.IsInteractable() && EventSystem.current != null)
+            if (_selectable.IsInteractable() && EventSystem.current != null)
                 EventSystem.current.SetSelectedGameObject(gameObject);
         }
 

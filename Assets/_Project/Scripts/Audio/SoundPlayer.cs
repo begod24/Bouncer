@@ -62,7 +62,7 @@ namespace Bouncer.Audio
             source.transform.position = position;
             source.spatialBlend = entry.ui ? 0f : spatialBlend;
             source.pitch = 1f + Random.Range(-entry.pitchJitter, entry.pitchJitter);
-            source.volume = entry.volume * bank.masterVolume;
+            source.volume = entry.volume * bank.masterVolume * GameSettings.SfxGain;
             source.clip = clip;
             source.Play();
         }

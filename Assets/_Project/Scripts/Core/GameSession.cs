@@ -36,6 +36,12 @@ namespace Bouncer.Core
         public bool IsFinished => State is SessionState.GameOver or SessionState.Victory;
         public bool CanRestart => IsFinished && Time.unscaledTime - _gameOverTime > restartDelay;
 
+        /// <summary>
+        /// Поверх заставки или паузы открыт ещё один экран (настройки). Esc и Start паузу тогда не снимают:
+        /// экран закрывается сам и возвращает к паузе.
+        /// </summary>
+        public bool OverlayOpen { get; set; }
+
         float _gameOverTime;
 
         void Awake()
@@ -84,7 +90,7 @@ namespace Bouncer.Core
 
         public void TogglePause()
         {
-            if (State == SessionState.Playing)
+            if (State == SessionState.Playing && !OverlayOpen)
                 GameFeel.Paused = !GameFeel.Paused;
         }
 

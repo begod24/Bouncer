@@ -70,11 +70,15 @@ namespace Bouncer.Core
 
         public static void Shake(float force)
         {
-            if (s_instance == null || s_instance.impulseSource == null || force <= 0f)
+            if (s_instance == null || s_instance.impulseSource == null)
+                return;
+            // Множитель из настроек игрока — поверх отладочного.
+            force *= s_instance.shakeMultiplier * GameSettings.ScreenShake;
+            if (force <= 0f)
                 return;
             Vector3 direction = Random.insideUnitSphere;
             direction.y = Mathf.Abs(direction.y) + 0.5f;
-            s_instance.impulseSource.GenerateImpulseWithVelocity(direction.normalized * (force * s_instance.shakeMultiplier));
+            s_instance.impulseSource.GenerateImpulseWithVelocity(direction.normalized * force);
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

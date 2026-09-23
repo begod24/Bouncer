@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a406ce99e1944b3da6bb41b68ee8d62, type: 3}
+  m_Name: PlayerStats_Default
+  m_EditorClassIdentifier: Bouncer.Player::Bouncer.Player.PlayerStats
+  moveSpeed: 7
+  acceleration: 70
+  deceleration: 90
+  turnSpeed: 1440
+  chargingMoveMultiplier: 0.55
+  catchingMoveMultiplier: 0.8
+  dashDistance: 4.5
+  dashDuration: 0.16
+  dashCooldown: 0.9
+  dashInvulnerability: 0.22
+  maxLives: 3
+  hurtInvulnerability: 1.2
+  knockbackDamping: 10
+  startBalls: 2
+  maxBalls: 3
+  pickupRadius: 1.1
+  throwHeight: 1.1
+  throwForwardOffset: 0.6
+  tapThreshold: 0.15
+  chargeTime: 0.7
+  throwCooldown: 0.18
+  catchWindow: 0.28
+  catchRadius: 1.5
+  catchMissCooldown: 0.5
+  catchSuccessCooldown: 0.1
+  candleCatchHeight: 3.2
+  catchHeal: 1
+  aimPlaneHeight: 0.8
+  stickDeadzone: 0.25
+  autoAimRange: 18
+  autoAimAngle: 35

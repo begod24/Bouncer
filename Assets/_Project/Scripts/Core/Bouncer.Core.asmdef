@@ -2,7 +2,8 @@
     "name": "Bouncer.Core",
     "rootNamespace": "Bouncer.Core",
     "references": [
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "Unity.Cinemachine"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

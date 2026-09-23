@@ -3,8 +3,8 @@
     "rootNamespace": "Bouncer.UI",
     "references": [
         "Bouncer.Core",
-        "Bouncer.Upgrades",
-        "Unity.TextMeshPro",
+        "Bouncer.Balls",
+        "Bouncer.Player",
         "Unity.InputSystem"
     ],
     "includePlatforms": [],

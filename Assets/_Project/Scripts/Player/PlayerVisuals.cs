@@ -1,0 +1,134 @@
+using Bouncer.Core;
+using UnityEngine;
+
+namespace Bouncer.Player
+{
+    /// <summary>Визуал игрока: мяч в руке и заряд, кольцо ловли, мигание при неуязвимости, след рывка, падение.</summary>
+    public sealed class PlayerVisuals : MonoBehaviour
+    {
+        static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+
+        [SerializeField] PlayerController player;
+        [SerializeField] Transform body;
+        [SerializeField] Renderer[] blinkRenderers;
+        [SerializeField] Renderer handBall;
+        [SerializeField] CircleLine catchRing;
+        [SerializeField] TrailRenderer dashTrail;
+        [SerializeField] HitFlash hitFlash;
+
+        [Header("Цвета")]
+        [SerializeField] Color ballColor = new(0.85f, 0.18f, 0.15f);
+        [SerializeField] Color chargedColor = new(1f, 0.95f, 0.8f);
+        [SerializeField] Color candleColor = new(1f, 0.75f, 0.1f);
+        [SerializeField] Color catchActiveColor = new(0.35f, 1f, 0.45f, 0.95f);
+        [SerializeField] Color catchCooldownColor = new(1f, 1f, 1f, 0.25f);
+
+        MaterialPropertyBlock _block;
+        Vector3 _handBallScale;
+        Quaternion _bodyRotation;
+        Vector3 _bodyPosition;
+
+        void Awake()
+        {
+            _block = new MaterialPropertyBlock();
+            if (handBall)
+                _handBallScale = handBall.transform.localScale;
+            if (body)
+            {
+                _bodyRotation = body.localRotation;
+                _bodyPosition = body.localPosition;
+            }
+        }
+
+        // Подписка в Start: к этому моменту PlayerController.Awake уже заполнил свои ссылки.
+        void Start()
+        {
+            player.Hurt += OnHurt;
+            player.Balls.Caught += OnCaught;
+            player.Health.Died += OnDied;
+        }
+
+        void OnDestroy()
+        {
+            if (player == null || player.Balls == null)
+                return;
+            player.Hurt -= OnHurt;
+            player.Balls.Caught -= OnCaught;
+            player.Health.Died -= OnDied;
+        }
+
+        void LateUpdate()
+        {
+            var balls = player.Balls;
+            bool dead = player.IsDead;
+
+            if (handBall)
+            {
+                handBall.enabled = !dead && balls.Balls > 0;
+                float pulse = balls.Charge01 >= 1f ? 1f + 0.12f * Mathf.Sin(Time.time * 30f) : 1f;
+                handBall.transform.localScale = _handBallScale * ((1f + balls.Charge01 * 0.45f) * pulse);
+                Color color = balls.CandleReady
+                    ? Color.Lerp(candleColor, Color.white, 0.3f + 0.3f * Mathf.Sin(Time.time * 12f))
+                    : Color.Lerp(ballColor, chargedColor, balls.Charge01 >= 1f ? 0.7f : balls.Charge01 * 0.3f);
+                handBall.GetPropertyBlock(_block);
+                _block.SetColor(BaseColorId, color);
+                handBall.SetPropertyBlock(_block);
+            }
+
+            if (catchRing)
+            {
+                var line = catchRing.Line;
+                if (!dead && balls.IsCatching)
+                {
+                    line.enabled = true;
+                    catchRing.Radius = player.Stats.catchRadius;
+                    line.startColor = line.endColor = catchActiveColor;
+                    line.widthMultiplier = 0.12f;
+                }
+                else if (!dead && balls.CatchOnCooldown)
+                {
+                    line.enabled = true;
+                    catchRing.Radius = player.Stats.catchRadius * Mathf.Max(0.15f, balls.CatchCooldown01);
+                    line.startColor = line.endColor = catchCooldownColor;
+                    line.widthMultiplier = 0.05f;
+                }
+                else
+                {
+                    line.enabled = false;
+                }
+            }
+
+            bool hidden = !dead && player.Health.IsInvulnerable && Mathf.Repeat(Time.time, 0.12f) < 0.05f;
+            foreach (var r in blinkRenderers)
+                if (r)
+                    r.enabled = !hidden;
+
+            if (dashTrail)
+                dashTrail.emitting = player.Motor.IsDashing;
+        }
+
+        void OnHurt(HitInfo hit)
+        {
+            if (hitFlash)
+                hitFlash.Flash(new Color(1f, 0.25f, 0.2f), 0.2f);
+        }
+
+        void OnCaught(CatchInfo info)
+        {
+            if (hitFlash)
+                hitFlash.Flash(info.Candle ? candleColor : catchActiveColor, 0.15f);
+        }
+
+        void OnDied(HitInfo hit)
+        {
+            if (hitFlash)
+                hitFlash.Flash(Color.white, 0.3f);
+            if (body)
+            {
+                // Упал на спину от удара.
+                body.localRotation = Quaternion.Euler(-80f, 0f, 0f) * _bodyRotation;
+                body.localPosition = new Vector3(_bodyPosition.x, 0.35f, _bodyPosition.z);
+            }
+        }
+    }
+}

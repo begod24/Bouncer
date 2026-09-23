@@ -1,8 +1,13 @@
 {
-    "name": "Bouncer.Ball",
-    "rootNamespace": "Bouncer.Ball",
+    "name": "Bouncer.DebugTools",
+    "rootNamespace": "Bouncer.DebugTools",
     "references": [
-        "Bouncer.Core"
+        "Bouncer.Core",
+        "Bouncer.Balls",
+        "Bouncer.Player",
+        "Bouncer.Enemies",
+        "Bouncer.Waves",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

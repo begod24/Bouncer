@@ -1,9 +1,8 @@
 {
-    "name": "Bouncer.Upgrades",
-    "rootNamespace": "Bouncer.Upgrades",
+    "name": "Bouncer.Balls",
+    "rootNamespace": "Bouncer.Balls",
     "references": [
-        "Bouncer.Core",
-        "Bouncer.Balls"
+        "Bouncer.Core"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

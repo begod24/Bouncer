@@ -3,7 +3,7 @@
     "rootNamespace": "Bouncer.Player",
     "references": [
         "Bouncer.Core",
-        "Bouncer.Ball",
+        "Bouncer.Balls",
         "Unity.InputSystem",
         "Unity.Cinemachine"
     ],

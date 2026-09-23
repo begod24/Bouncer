@@ -3,7 +3,7 @@
     "rootNamespace": "Bouncer.Enemies",
     "references": [
         "Bouncer.Core",
-        "Bouncer.Ball",
+        "Bouncer.Balls",
         "Unity.AI.Navigation"
     ],
     "includePlatforms": [],

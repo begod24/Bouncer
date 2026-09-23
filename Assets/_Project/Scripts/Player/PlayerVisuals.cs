@@ -6,7 +6,7 @@ namespace Bouncer.Player
     /// <summary>Визуал игрока: мяч в руке и заряд, кольцо ловли, мигание при неуязвимости, след рывка, падение.</summary>
     public sealed class PlayerVisuals : MonoBehaviour
     {
-        static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+        static readonly int BaseColorId = PaletteShader.BaseColor;
 
         [SerializeField] PlayerController player;
         [SerializeField] Transform body;
@@ -27,12 +27,16 @@ namespace Bouncer.Player
         Vector3 _handBallScale;
         Quaternion _bodyRotation;
         Vector3 _bodyPosition;
+        bool _handBallPalette;
 
         void Awake()
         {
             _block = new MaterialPropertyBlock();
             if (handBall)
+            {
                 _handBallScale = handBall.transform.localScale;
+                _handBallPalette = PaletteShader.Supports(handBall.sharedMaterial);
+            }
             if (body)
             {
                 _bodyRotation = body.localRotation;
@@ -67,11 +71,20 @@ namespace Bouncer.Player
                 handBall.enabled = !dead && balls.Balls > 0;
                 float pulse = balls.Charge01 >= 1f ? 1f + 0.12f * Mathf.Sin(Time.time * 30f) : 1f;
                 handBall.transform.localScale = _handBallScale * ((1f + balls.Charge01 * 0.45f) * pulse);
-                Color color = balls.CandleReady
-                    ? Color.Lerp(candleColor, Color.white, 0.3f + 0.3f * Mathf.Sin(Time.time * 12f))
-                    : Color.Lerp(ballColor, chargedColor, balls.Charge01 >= 1f ? 0.7f : balls.Charge01 * 0.3f);
+                float charge = balls.Charge01 >= 1f ? 0.7f : balls.Charge01 * 0.3f;
+                Color candle = Color.Lerp(candleColor, Color.white, 0.3f + 0.3f * Mathf.Sin(Time.time * 12f));
                 handBall.GetPropertyBlock(_block);
-                _block.SetColor(BaseColorId, color);
+                if (_handBallPalette)
+                {
+                    // Модель мяча своего цвета; заряд и «свечка» перекрашивают её поверх.
+                    _block.SetColor(PaletteShader.TintColor, balls.CandleReady
+                        ? PaletteShader.Tint(candle, 0.75f)
+                        : PaletteShader.Tint(chargedColor, charge));
+                }
+                else
+                {
+                    _block.SetColor(BaseColorId, balls.CandleReady ? candle : Color.Lerp(ballColor, chargedColor, charge));
+                }
                 handBall.SetPropertyBlock(_block);
             }
 

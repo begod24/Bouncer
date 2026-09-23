@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1174e6158200841f58837215b18f34b7, type: 3}
+  m_Name: TimeOfDay_Day
+  m_EditorClassIdentifier: Bouncer.Visuals::Bouncer.Visuals.TimeOfDayProfile
+  palette: {fileID: 2800000, guid: 39c54ed7a42b5427786d015559d87051, type: 3}
+  emissionStrength: 0
+  sunColor: {r: 1, g: 0.97, b: 0.9, a: 1}
+  sunIntensity: 1.2
+  sunElevation: 55
+  sunAzimuth: 340
+  shadowStrength: 0.75
+  ambientSky: {r: 0.55, g: 0.62, b: 0.72, a: 1}
+  ambientEquator: {r: 0.45, g: 0.47, b: 0.48, a: 1}
+  ambientGround: {r: 0.3, g: 0.29, b: 0.26, a: 1}
+  fogColor: {r: 0.72, g: 0.8, b: 0.9, a: 1}
+  fogStart: 42
+  fogEnd: 120
+  skyColor: {r: 0.62, g: 0.76, b: 0.93, a: 1}
+  volumeProfile: {fileID: 11400000, guid: c3b73a97e74be4c9ca941d0b418cca05, type: 2}

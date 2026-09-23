@@ -10,7 +10,7 @@ namespace Bouncer.Balls
     [RequireComponent(typeof(Ball))]
     public sealed class BallVisuals : MonoBehaviour
     {
-        static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+        static readonly int BaseColorId = PaletteShader.BaseColor;
 
         [SerializeField] Renderer body;
         [SerializeField] TrailRenderer trail;
@@ -22,15 +22,19 @@ namespace Bouncer.Balls
         [SerializeField] Color enemyLiveColor = new(0.6f, 0.2f, 0.95f);
         [SerializeField] Color poppedColor = new(1f, 0.92f, 0.35f);
         [SerializeField] Color candleColor = new(1f, 0.75f, 0.1f);
+        [Tooltip("Модель мяча на шейдере палитры: насколько перекрашивать её в цвет состояния. Лежащий мяч — своего цвета.")]
+        [SerializeField, Range(0f, 1f)] float stateTint = 0.65f;
         [SerializeField] float trailWidth = 0.35f;
 
         Ball _ball;
         MaterialPropertyBlock _block;
+        bool _palette;
 
         void Awake()
         {
             _ball = GetComponent<Ball>();
             _block = new MaterialPropertyBlock();
+            _palette = body && PaletteShader.Supports(body.sharedMaterial);
         }
 
         void OnEnable()
@@ -56,7 +60,15 @@ namespace Bouncer.Balls
             if (body)
             {
                 body.GetPropertyBlock(_block);
-                _block.SetColor(BaseColorId, color);
+                if (_palette)
+                {
+                    bool flying = ball.State is BallState.Live or BallState.Popped;
+                    _block.SetColor(PaletteShader.TintColor, PaletteShader.Tint(color, flying ? stateTint : 0f));
+                }
+                else
+                {
+                    _block.SetColor(BaseColorId, color);
+                }
                 body.SetPropertyBlock(_block);
             }
 

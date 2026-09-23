@@ -1,0 +1,17 @@
+{
+    "name": "Bouncer.Visuals",
+    "rootNamespace": "Bouncer.Visuals",
+    "references": [
+        "Bouncer.Core",
+        "Unity.RenderPipelines.Core.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

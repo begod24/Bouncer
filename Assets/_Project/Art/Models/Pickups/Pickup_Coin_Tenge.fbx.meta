@@ -7,6 +7,11 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: M_Decals
+    second: {fileID: 2100000, guid: 5418f53edf5a641c89ff967d33a043df, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: M_Palette
     second: {fileID: 2100000, guid: 1f7d024680a4b4908af74085b50d058a, type: 2}
   materials:

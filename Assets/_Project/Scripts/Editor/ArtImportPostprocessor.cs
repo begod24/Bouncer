@@ -5,8 +5,10 @@ namespace Bouncer.EditorTools
 {
     /// <summary>
     /// Единые настройки импорта арта из Blender (Bouncer.blend → ba_export.py).
-    /// Модели из Art/Models: масштаб 1, плоские нормали из файла, без анимации, материал M_Palette.
+    /// Модели из Art/Models: масштаб 1, плоские нормали из файла, без анимации, материалы M_Palette и M_Decals
+    /// (надписи: UV0 — ячейка палитры, UV1 — место в атласе, поэтому второй UV не генерируется).
     /// Палитры из Art/Palettes: Point, без mip-map и сжатия — каждая ячейка 8×8 px должна остаться чистым цветом.
+    /// Атлас надписей из Art/Decals (Tools/decal_art.py): одноканальная маска (R) с mip-map, сжатая.
     /// UI из Art/UI (Tools/ui_art.py и иконки мячей): спрайты с прозрачностью, без mip-map и сжатия.
     /// Настройки применяются при каждом импорте, так что правки руками в инспекторе перезапишутся.
     /// </summary>
@@ -14,9 +16,12 @@ namespace Bouncer.EditorTools
     {
         const string ModelsRoot = "Assets/_Project/Art/Models/";
         const string PalettesRoot = "Assets/_Project/Art/Palettes/";
+        const string DecalsRoot = "Assets/_Project/Art/Decals/";
         const string UiRoot = "Assets/_Project/Art/UI/";
         const string PaletteMaterialPath = "Assets/_Project/Art/Materials/M_Palette.mat";
         const string PaletteMaterialName = "M_Palette";
+        const string DecalMaterialPath = "Assets/_Project/Art/Materials/M_Decals.mat";
+        const string DecalMaterialName = "M_Decals";
 
         void OnPreprocessModel()
         {
@@ -49,6 +54,9 @@ namespace Bouncer.EditorTools
             var palette = AssetDatabase.LoadAssetAtPath<Material>(PaletteMaterialPath);
             if (palette)
                 importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), PaletteMaterialName), palette);
+            var decals = AssetDatabase.LoadAssetAtPath<Material>(DecalMaterialPath);
+            if (decals)
+                importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), DecalMaterialName), decals);
         }
 
         void OnPreprocessTexture()
@@ -56,6 +64,11 @@ namespace Bouncer.EditorTools
             if (assetPath.StartsWith(UiRoot))
             {
                 PreprocessUiSprite();
+                return;
+            }
+            if (assetPath.StartsWith(DecalsRoot))
+            {
+                PreprocessDecalAtlas();
                 return;
             }
             if (!assetPath.StartsWith(PalettesRoot))
@@ -70,6 +83,23 @@ namespace Bouncer.EditorTools
             importer.wrapMode = TextureWrapMode.Clamp;
             importer.npotScale = TextureImporterNPOTScale.None;
             importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.isReadable = false;
+        }
+
+        void PreprocessDecalAtlas()
+        {
+            var importer = (TextureImporter)assetImporter;
+            importer.textureType = TextureImporterType.SingleChannel;
+            var settings = new TextureImporterSettings();
+            importer.ReadTextureSettings(settings);
+            settings.singleChannelComponent = TextureImporterSingleChannelComponent.Red;
+            importer.SetTextureSettings(settings);
+            importer.sRGBTexture = false;
+            importer.mipmapEnabled = true;
+            importer.filterMode = FilterMode.Trilinear;
+            importer.anisoLevel = 4;
+            importer.wrapMode = TextureWrapMode.Clamp;
+            importer.textureCompression = TextureImporterCompression.Compressed;
             importer.isReadable = false;
         }
 

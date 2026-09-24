@@ -33,12 +33,22 @@ MonoBehaviour:
   tapThreshold: 0.15
   chargeTime: 0.7
   throwCooldown: 0.18
-  catchWindow: 0.28
+  catchWindow: 0.25
+  perfectCatchWindow: 0.1
   catchRadius: 1.5
-  catchMissCooldown: 0.5
+  catchHalfAngle: 90
+  catchMissCooldown: 0.45
+  catchMissStreakPenalty: 0.3
+  catchMissStreakMax: 3
+  catchMissStreakReset: 1
   catchSuccessCooldown: 0.1
   candleCatchHeight: 3.2
   catchHeal: 1
+  earlyCatchHeal: 0
+  fumbleBounce: {x: 2.5, y: 3.5}
+  tackleRadius: 1.1
+  tackleKnockback: 14
+  freezeTimeScale: 0.3
   aimPlaneHeight: 0.8
   stickDeadzone: 0.25
   autoAimRange: 18

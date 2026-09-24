@@ -9,8 +9,10 @@ namespace Bouncer.Player
     {
         /// <summary>Пойман мяч после высокого отскока — следующий бросок усиленный.</summary>
         public bool Candle;
-        /// <summary>Пойман летящий мяч врага — +1 жизнь.</summary>
+        /// <summary>Пойман летящий мяч врага.</summary>
         public bool EnemyBall;
+        /// <summary>Мяч пойман сразу после нажатия — в последний момент. Только такая ловля лечит.</summary>
+        public bool Perfect;
         public Vector3 Position;
     }
 
@@ -18,6 +20,8 @@ namespace Bouncer.Player
     /// Мячи игрока: запас, заряд и бросок, окно ловли, подбор с пола.
     /// Мячи в руках — просто счётчик, объект мяча появляется только в момент броска.
     /// Каким мячом бросать (резиновый, волейбольный…), решают карточки — <see cref="SetBallPrefab"/>.
+    /// Ловля — на тайминг: идеальная в начале окна, мячи только спереди, промахи подряд удлиняют перезарядку,
+    /// сильный мяч без идеальной ловли выбивает из рук.
     /// </summary>
     public sealed class PlayerBallHandler : MonoBehaviour
     {
@@ -27,10 +31,13 @@ namespace Bouncer.Player
         PlayerModifiers _mods;
         float _chargeStart;
         float _nextThrowAt;
+        float _catchStart;
         float _catchUntil;
         float _catchReadyAt;
         float _catchCooldownStart;
         bool _catchWindowOpen;
+        /// <summary>Сколько попыток ловли подряд ушло в пустоту — за каждую перезарядка длиннее.</summary>
+        int _missStreak;
 
         public Ball BallPrefab => ballPrefab;
         public BallDefinition BallDefinition => ballPrefab ? ballPrefab.Definition : null;
@@ -38,6 +45,9 @@ namespace Bouncer.Player
         public int MaxBalls => _stats.maxBalls + _mods.ExtraBalls;
         public float CatchRadius => _stats.catchRadius * _mods.CatchRadius;
         float CatchWindow => _stats.catchWindow * _mods.CatchWindow;
+        float PerfectCatchWindow => _stats.perfectCatchWindow * _mods.CatchWindow;
+        /// <summary>Половина угла сектора спереди, из которого ловятся летящие мячи.</summary>
+        public float CatchHalfAngle => _stats.catchHalfAngle;
         float PickupRadius => _stats.pickupRadius * _mods.PickupRadius;
         public bool CandleReady { get; private set; }
         /// <summary>Горячая картошка: следующий бросок получит <see cref="PlayerModifiers.CatchPerks"/>.</summary>
@@ -45,6 +55,8 @@ namespace Bouncer.Player
         public bool IsCharging { get; private set; }
         public float Charge01 { get; private set; }
         public bool IsCatching => _catchWindowOpen && Time.time < _catchUntil;
+        /// <summary>Окно открыто, и мяч, пойманный прямо сейчас, будет пойман идеально.</summary>
+        public bool IsCatchPerfect => IsCatching && Time.time - _catchStart <= PerfectCatchWindow;
         public bool CatchOnCooldown => !IsCatching && Time.time < _catchReadyAt;
         /// <summary>1 — перезарядка только началась, 0 — ловля готова.</summary>
         public float CatchCooldown01
@@ -60,6 +72,8 @@ namespace Bouncer.Player
         public event Action<CatchInfo> Caught;
         public event Action CatchStarted;
         public event Action CatchMissed;
+        /// <summary>Сильный мяч пойман не идеально и выбит из рук.</summary>
+        public event Action Fumbled;
         public event Action PickedUp;
         /// <summary>Мяч сам вернулся в руки (бумеранг, резинка).</summary>
         public event Action Returned;
@@ -156,15 +170,37 @@ namespace Bouncer.Player
             }
         }
 
-        /// <summary>Поймать конкретный мяч (вызывается и когда мяч врезается в игрока с открытым окном).</summary>
-        public void Catch(Ball ball)
+        /// <summary>
+        /// Поймать мяч, который врезался в игрока. false — поймать нельзя: окно закрыто или мяч прилетел не спереди.
+        /// </summary>
+        public bool TryCatch(Ball ball)
+        {
+            if (!IsCatching || !InFront(ball))
+                return false;
+            CatchNow(ball);
+            return true;
+        }
+
+        void CatchNow(Ball ball)
         {
             var info = new CatchInfo
             {
                 Candle = ball.State == BallState.Popped,
                 EnemyBall = ball.State == BallState.Live && ball.Team == Team.Enemy,
+                Perfect = IsCatchPerfect,
                 Position = ball.Position,
             };
+
+            _catchWindowOpen = false;
+            _catchUntil = 0f;
+            _missStreak = 0;
+
+            // Сильный мяч (заряженный, отбитый качелями) удерживает только идеальная ловля.
+            if (ball.State == BallState.Live && !info.Perfect && ball.Stats.Has(HitFlags.Charged))
+            {
+                Fumble(ball);
+                return;
+            }
 
             if (Balls < MaxBalls)
             {
@@ -182,16 +218,41 @@ namespace Bouncer.Player
             if (_mods.HasCatchPerks)
                 CatchPerksReady = true;
 
-            _catchWindowOpen = false;
-            _catchUntil = 0f;
             StartCatchCooldown(_stats.catchSuccessCooldown);
-            GameEvents.PlaySound(info.Candle ? SoundCue.CatchCandle : SoundCue.Catch, info.Position);
+            GameEvents.PlaySound(info.Candle || info.Perfect ? SoundCue.CatchCandle : SoundCue.Catch, info.Position);
             Caught?.Invoke(info);
+        }
+
+        /// <summary>Сильный мяч выбило из рук: отскакивает вперёд и падает на пол, урона нет.</summary>
+        void Fumble(Ball ball)
+        {
+            Vector3 position = ball.Position;
+            Vector3 away = position - transform.position;
+            away.y = 0f;
+            away = away.sqrMagnitude > 1e-4f ? away.normalized : transform.forward;
+            ball.Drop(position, away * _stats.fumbleBounce.x + Vector3.up * _stats.fumbleBounce.y);
+            StartCatchCooldown(_stats.catchMissCooldown);
+            GameEvents.PlaySound(SoundCue.BallWall, position);
+            Fumbled?.Invoke();
+        }
+
+        /// <summary>Летящий мяч ловится только спереди. «Свечка» падает сверху — её видно всегда.</summary>
+        bool InFront(Ball ball)
+        {
+            if (ball.State == BallState.Popped || _stats.catchHalfAngle >= 180f)
+                return true;
+            Vector3 toBall = ball.Position - transform.position;
+            toBall.y = 0f;
+            return toBall.sqrMagnitude < 1e-4f || Vector3.Angle(transform.forward, toBall) <= _stats.catchHalfAngle;
         }
 
         void StartCatch()
         {
+            // Выждал после прошлой попытки — промахи подряд забыты: штраф только за нажатия наугад.
+            if (Time.time - _catchReadyAt > _stats.catchMissStreakReset)
+                _missStreak = 0;
             _catchWindowOpen = true;
+            _catchStart = Time.time;
             _catchUntil = Time.time + CatchWindow;
             CatchStarted?.Invoke();
         }
@@ -199,7 +260,9 @@ namespace Bouncer.Player
         void MissCatch()
         {
             _catchWindowOpen = false;
-            StartCatchCooldown(_stats.catchMissCooldown);
+            float penalty = _stats.catchMissStreakPenalty * Mathf.Min(_missStreak, _stats.catchMissStreakMax);
+            _missStreak++;
+            StartCatchCooldown(_stats.catchMissCooldown + penalty);
             GameEvents.PlaySound(SoundCue.CatchMiss, transform.position);
             CatchMissed?.Invoke();
         }
@@ -219,7 +282,7 @@ namespace Bouncer.Player
             for (int i = balls.Count - 1; i >= 0; i--)
             {
                 var ball = balls[i];
-                if (!ball.IsCatchableBy(Team.Player))
+                if (!ball.IsCatchableBy(Team.Player) || !InFront(ball))
                     continue;
 
                 Vector3 position = ball.Position;
@@ -238,7 +301,7 @@ namespace Bouncer.Player
                     continue;
                 }
 
-                Catch(ball);
+                CatchNow(ball);
                 return;
             }
         }

@@ -41,14 +41,31 @@ namespace Bouncer.Player
         public float throwCooldown = 0.18f;
 
         [Header("Ловля")]
-        public float catchWindow = 0.28f;
+        [Tooltip("Сколько секунд после нажатия открыто окно ловли")]
+        public float catchWindow = 0.25f;
+        [Tooltip("Мяч пойман за столько секунд после нажатия — ловля идеальная (в последний момент). " +
+                 "Только она лечит и удерживает сильный мяч")]
+        public float perfectCatchWindow = 0.1f;
         public float catchRadius = 1.5f;
-        public float catchMissCooldown = 0.5f;
+        [Tooltip("Летящий мяч ловится только спереди: половина угла сектора от взгляда, градусы. 180 — со всех сторон")]
+        [Range(0f, 180f)] public float catchHalfAngle = 90f;
+        [Tooltip("Перезарядка после промаха")]
+        public float catchMissCooldown = 0.45f;
+        [Tooltip("Прибавка к перезарядке за каждый промах подряд — против нажатий наугад")]
+        public float catchMissStreakPenalty = 0.3f;
+        [Tooltip("После скольких промахов подряд перезарядка перестаёт расти")]
+        [Min(0)] public int catchMissStreakMax = 3;
+        [Tooltip("Столько секунд не нажимал ловлю после перезарядки — промахи подряд забыты")]
+        public float catchMissStreakReset = 1f;
         public float catchSuccessCooldown = 0.1f;
         [Tooltip("До какой высоты над полом можно поймать «свечку»")]
         public float candleCatchHeight = 3.2f;
-        [Tooltip("Сколько жизней даёт пойманный мяч врага")]
+        [Tooltip("Сколько жизней даёт мяч врага, пойманный идеально")]
         [Min(0)] public int catchHeal = 1;
+        [Tooltip("Сколько жизней даёт мяч врага, пойманный рано (не идеально)")]
+        [Min(0)] public int earlyCatchHeal;
+        [Tooltip("С какой скоростью сильный мяч, выбитый из рук, отскакивает вперёд и вверх")]
+        public Vector2 fumbleBounce = new(2.5f, 3.5f);
 
         [Header("Карточки")]
         [Tooltip("Подкат: на каком расстоянии рывок сбивает врагов, м")]

@@ -29,7 +29,11 @@ namespace Bouncer.Player
         [Tooltip("Горячая картошка: следующий бросок взорвётся")]
         [SerializeField] Color hotColor = new(1f, 0.3f, 0.08f);
         [SerializeField] Color catchActiveColor = new(0.35f, 1f, 0.45f, 0.95f);
+        [Tooltip("Начало окна ловли: пойманный сейчас мяч будет пойман идеально")]
+        [SerializeField] Color catchPerfectColor = new(1f, 0.85f, 0.2f, 1f);
         [SerializeField] Color catchCooldownColor = new(1f, 1f, 1f, 0.25f);
+        [Tooltip("Сильный мяч выбило из рук")]
+        [SerializeField] Color fumbleColor = new(0.8f, 0.8f, 0.8f);
 
         [Header("Подкат")]
         [Tooltip("Насколько тело откидывается назад в подкате, градусы")]
@@ -65,6 +69,7 @@ namespace Bouncer.Player
             player.Hurt += OnHurt;
             player.Froze += OnFroze;
             player.Balls.Caught += OnCaught;
+            player.Balls.Fumbled += OnFumbled;
             player.Balls.BallTypeChanged += OnBallTypeChanged;
             player.Health.Died += OnDied;
         }
@@ -76,6 +81,7 @@ namespace Bouncer.Player
             player.Hurt -= OnHurt;
             player.Froze -= OnFroze;
             player.Balls.Caught -= OnCaught;
+            player.Balls.Fumbled -= OnFumbled;
             player.Balls.BallTypeChanged -= OnBallTypeChanged;
             player.Health.Died -= OnDied;
         }
@@ -140,14 +146,18 @@ namespace Bouncer.Player
                 var line = catchRing.Line;
                 if (!dead && balls.IsCatching)
                 {
+                    // Дуга — сектор спереди, откуда ловятся мячи; золотая, пока ловля будет идеальной.
+                    bool perfect = balls.IsCatchPerfect;
                     line.enabled = true;
                     catchRing.Radius = balls.CatchRadius;
-                    line.startColor = line.endColor = catchActiveColor;
-                    line.widthMultiplier = 0.12f;
+                    catchRing.Arc = balls.CatchHalfAngle * 2f;
+                    line.startColor = line.endColor = perfect ? catchPerfectColor : catchActiveColor;
+                    line.widthMultiplier = perfect ? 0.16f : 0.12f;
                 }
                 else if (!dead && balls.CatchOnCooldown)
                 {
                     line.enabled = true;
+                    catchRing.Arc = 360f;
                     catchRing.Radius = balls.CatchRadius * Mathf.Max(0.15f, balls.CatchCooldown01);
                     line.startColor = line.endColor = catchCooldownColor;
                     line.widthMultiplier = 0.05f;
@@ -176,7 +186,13 @@ namespace Bouncer.Player
         void OnCaught(CatchInfo info)
         {
             if (hitFlash)
-                hitFlash.Flash(info.Candle ? candleColor : catchActiveColor, 0.15f);
+                hitFlash.Flash(info.Candle || info.Perfect ? candleColor : catchActiveColor, 0.15f);
+        }
+
+        void OnFumbled()
+        {
+            if (hitFlash)
+                hitFlash.Flash(fumbleColor, 0.12f);
         }
 
         /// <summary>«Замри!»: от игрока расходится волна.</summary>

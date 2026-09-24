@@ -138,12 +138,9 @@ namespace Bouncer.Player
             if (IsDead || !ball.Team.IsHostileTo(Team.Player))
                 return BallContactResult.PassThrough;
 
-            // Окно ловли открыто — мяч пойман, даже если врезался в тело.
-            if (Balls.IsCatching)
-            {
-                Balls.Catch(ball);
+            // Окно ловли открыто и мяч прилетел спереди — пойман, даже если врезался в тело.
+            if (Balls.TryCatch(ball))
                 return BallContactResult.Caught;
-            }
 
             Vector3 direction = ball.Velocity;
             direction.y = 0f;
@@ -183,9 +180,10 @@ namespace Bouncer.Player
 
         void OnCaught(CatchInfo info)
         {
+            // Лечит только мяч врага, пойманный в последний момент.
             if (info.EnemyBall)
-                Health.Heal(stats.catchHeal);
-            GameFeel.HitStop(info.Candle ? 0.06f : 0.04f);
+                Health.Heal(info.Perfect ? stats.catchHeal : stats.earlyCatchHeal);
+            GameFeel.HitStop(info.Candle || info.Perfect ? 0.06f : 0.04f);
             GameFeel.Shake(0.25f);
             if (Modifiers.CatchFreeze > 0f)
             {

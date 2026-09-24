@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb5cac978b2614ffb8e1def74ecedab1, type: 3}
+  m_Name: Ball_Deflated
+  m_EditorClassIdentifier: Bouncer.Balls::Bouncer.Balls.BallDefinition
+  radius: 0.24
+  mass: 0.35
+  speed: 16
+  chargedSpeed: 25
+  upVelocity: 1
+  chargedUpVelocity: 0.5
+  liveGravity: 2.6
+  chargedLiveGravity: 1.3
+  damage: 1
+  chargedDamage: 2
+  candleDamage: 3
+  knockback: 4
+  chargedKnockback: 7
+  candleKnockback: 11
+  candleSpeedMultiplier: 1.15
+  maxRicochets: 2
+  wallSpeedKeep: 0.8
+  minLiveSpeed: 6
+  maxLiveTime: 3
+  pierceSpeedKeep: 0.75
+  popUpSpeed: 9
+  popHorizontalKeep: 0.15
+  popGravity: 14
+  poppedWallKeep: 0.5
+  perks:
+    extraShots: 0
+    spreadAngle: 0
+    chainBounces: 0
+    areaRadius: 0
+    areaDamage: 0
+    splitOnHit: 0
+    boomerang: 0
+    elastic: 0
+    floorBounces: 0
+    gumTrail: 0
+    blastRadius: 0
+    blastDamage: 0
+    snakeAmplitude: 0.7
+    grazeRadius: 0.8
+  areaEffect: {fileID: 0}
+  chainRange: 9
+  chainSpeedKeep: 0.9
+  splitAngle: 35
+  splitSpeedKeep: 0.8
+  boomerangDelay: 0.35
+  boomerangTurnRate: 540
+  elasticReturnSpeed: 18
+  floorBounceHeight: 1
+  floorBounceSpeedKeep: 0.85
+  gumSpacing: 1.2
+  blastKnockback: 10
+  snakeWavelength: 5
+  grazeKnockbackScale: 0.5
+  floorBounceKeep: 0.2
+  looseDamping: 2
+  maxLooseBalls: 14

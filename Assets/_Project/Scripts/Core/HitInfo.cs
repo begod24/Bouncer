@@ -12,6 +12,8 @@ namespace Bouncer.Core
         Melee = 1 << 2,
         /// <summary>Урон по площади (набивной мяч): задевает соседей основной цели.</summary>
         Area = 1 << 3,
+        /// <summary>Подкат: рывок игрока сбил с ног.</summary>
+        Tackle = 1 << 4,
     }
 
     public struct HitInfo

@@ -3,7 +3,10 @@ using UnityEngine;
 
 namespace Bouncer.Player
 {
-    /// <summary>Визуал игрока: мяч в руке и заряд, кольцо ловли, мигание при неуязвимости, след рывка, падение.</summary>
+    /// <summary>
+    /// Визуал игрока: мяч в руке и заряд, кольцо ловли, мигание при неуязвимости, след рывка, падение.
+    /// Эффекты карточек: горячий мяч в руке, подкат (рывок ногами вперёд), волна «Замри!».
+    /// </summary>
     public sealed class PlayerVisuals : MonoBehaviour
     {
         static readonly int BaseColorId = PaletteShader.BaseColor;
@@ -15,19 +18,31 @@ namespace Bouncer.Player
         [SerializeField] CircleLine catchRing;
         [SerializeField] TrailRenderer dashTrail;
         [SerializeField] HitFlash hitFlash;
+        [Tooltip("Кольцо «Замри!», из пула")]
+        [SerializeField] ExpandingRing freezeWave;
+        [SerializeField] float freezeWaveRadius = 7f;
 
         [Header("Цвета")]
         [SerializeField] Color ballColor = new(0.85f, 0.18f, 0.15f);
         [SerializeField] Color chargedColor = new(1f, 0.95f, 0.8f);
         [SerializeField] Color candleColor = new(1f, 0.75f, 0.1f);
+        [Tooltip("Горячая картошка: следующий бросок взорвётся")]
+        [SerializeField] Color hotColor = new(1f, 0.3f, 0.08f);
         [SerializeField] Color catchActiveColor = new(0.35f, 1f, 0.45f, 0.95f);
         [SerializeField] Color catchCooldownColor = new(1f, 1f, 1f, 0.25f);
+
+        [Header("Подкат")]
+        [Tooltip("Насколько тело откидывается назад в подкате, градусы")]
+        [SerializeField] float slideLean = 60f;
+        [Tooltip("Насколько тело опускается в подкате, м")]
+        [SerializeField] float slideDrop = 0.22f;
 
         MaterialPropertyBlock _block;
         Vector3 _handBallScale;
         Quaternion _bodyRotation;
         Vector3 _bodyPosition;
         bool _handBallPalette;
+        float _slide;
 
         void Awake()
         {
@@ -48,6 +63,7 @@ namespace Bouncer.Player
         void Start()
         {
             player.Hurt += OnHurt;
+            player.Froze += OnFroze;
             player.Balls.Caught += OnCaught;
             player.Balls.BallTypeChanged += OnBallTypeChanged;
             player.Health.Died += OnDied;
@@ -58,6 +74,7 @@ namespace Bouncer.Player
             if (player == null || player.Balls == null)
                 return;
             player.Hurt -= OnHurt;
+            player.Froze -= OnFroze;
             player.Balls.Caught -= OnCaught;
             player.Balls.BallTypeChanged -= OnBallTypeChanged;
             player.Health.Died -= OnDied;
@@ -86,20 +103,36 @@ namespace Bouncer.Player
                 float pulse = balls.Charge01 >= 1f ? 1f + 0.12f * Mathf.Sin(Time.time * 30f) : 1f;
                 handBall.transform.localScale = _handBallScale * ((1f + balls.Charge01 * 0.45f) * pulse);
                 float charge = balls.Charge01 >= 1f ? 0.7f : balls.Charge01 * 0.3f;
-                Color candle = Color.Lerp(candleColor, Color.white, 0.3f + 0.3f * Mathf.Sin(Time.time * 12f));
+                // Горячий мяч тлеет, как уголёк, — перебегает от красного к жёлтому.
+                Color glow = balls.CatchPerksReady
+                    ? Color.Lerp(hotColor, candleColor, 0.5f + 0.5f * Mathf.Sin(Time.time * 9f))
+                    : Color.Lerp(candleColor, Color.white, 0.3f + 0.3f * Mathf.Sin(Time.time * 12f));
+                bool glowing = balls.CandleReady || balls.CatchPerksReady;
                 handBall.GetPropertyBlock(_block);
                 if (_handBallPalette)
                 {
-                    // Модель мяча своего цвета; заряд и «свечка» перекрашивают её поверх.
-                    _block.SetColor(PaletteShader.TintColor, balls.CandleReady
-                        ? PaletteShader.Tint(candle, 0.75f)
+                    // Модель мяча своего цвета; заряд, «свечка» и горячая картошка перекрашивают её поверх.
+                    _block.SetColor(PaletteShader.TintColor, glowing
+                        ? PaletteShader.Tint(glow, 0.75f)
                         : PaletteShader.Tint(chargedColor, charge));
                 }
                 else
                 {
-                    _block.SetColor(BaseColorId, balls.CandleReady ? candle : Color.Lerp(ballColor, chargedColor, charge));
+                    _block.SetColor(BaseColorId, glowing ? glow : Color.Lerp(ballColor, chargedColor, charge));
                 }
                 handBall.SetPropertyBlock(_block);
+            }
+
+            // Подкат: в рывке игрок едет ногами вперёд, откинувшись назад.
+            if (body && !dead)
+            {
+                bool sliding = player.Motor.IsDashing && player.Modifiers.TackleDamage > 0;
+                if (sliding || _slide > 0f)
+                {
+                    _slide = Mathf.MoveTowards(_slide, sliding ? 1f : 0f, Time.deltaTime * 12f);
+                    body.localRotation = Quaternion.Euler(-slideLean * _slide, 0f, 0f) * _bodyRotation;
+                    body.localPosition = _bodyPosition + Vector3.down * (slideDrop * _slide);
+                }
             }
 
             if (catchRing)
@@ -144,6 +177,13 @@ namespace Bouncer.Player
         {
             if (hitFlash)
                 hitFlash.Flash(info.Candle ? candleColor : catchActiveColor, 0.15f);
+        }
+
+        /// <summary>«Замри!»: от игрока расходится волна.</summary>
+        void OnFroze()
+        {
+            if (freezeWave)
+                PoolService.Spawn(freezeWave, player.transform.position + Vector3.up * 0.05f, Quaternion.identity).Play(freezeWaveRadius);
         }
 
         void OnDied(HitInfo hit)

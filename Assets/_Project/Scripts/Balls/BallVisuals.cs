@@ -22,6 +22,8 @@ namespace Bouncer.Balls
         [SerializeField] Color enemyLiveColor = new(0.6f, 0.2f, 0.95f);
         [SerializeField] Color poppedColor = new(1f, 0.92f, 0.35f);
         [SerializeField] Color candleColor = new(1f, 0.75f, 0.1f);
+        [Tooltip("Горячая картошка: летит и ещё не взорвалась")]
+        [SerializeField] Color hotColor = new(1f, 0.3f, 0.08f);
         [Tooltip("Модель мяча на шейдере палитры: насколько перекрашивать её в цвет состояния. Лежащий мяч — своего цвета.")]
         [SerializeField, Range(0f, 1f)] float stateTint = 0.65f;
         [SerializeField] float trailWidth = 0.35f;
@@ -29,6 +31,7 @@ namespace Bouncer.Balls
         Ball _ball;
         MaterialPropertyBlock _block;
         bool _palette;
+        bool _hot;
 
         void Awake()
         {
@@ -49,8 +52,10 @@ namespace Bouncer.Balls
 
         void Refresh(Ball ball)
         {
+            _hot = ball.BlastPending;
             Color color = ball.State switch
             {
+                BallState.Live when _hot => hotColor,
                 BallState.Live when ball.Stats.Has(HitFlags.Candle) => candleColor,
                 BallState.Live => ball.Team == Team.Enemy ? enemyLiveColor : playerLiveColor,
                 BallState.Popped => poppedColor,
@@ -79,7 +84,7 @@ namespace Bouncer.Balls
                 trail.emitting = ball.State is BallState.Live or BallState.Popped or BallState.Returning;
                 trail.startColor = new Color(color.r, color.g, color.b, 0.8f);
                 trail.endColor = new Color(color.r, color.g, color.b, 0f);
-                bool strong = ball.State == BallState.Live && ball.Stats.Has(HitFlags.Charged);
+                bool strong = ball.State == BallState.Live && (ball.Stats.Has(HitFlags.Charged) || _hot);
                 trail.widthMultiplier = trailWidth * (strong ? 1.6f : 1f);
             }
 
@@ -89,6 +94,9 @@ namespace Bouncer.Balls
 
         void LateUpdate()
         {
+            // Горячая картошка взорвалась, не сменив состояния (отскок от асфальта) — гасим цвет.
+            if (_hot != _ball.BlastPending)
+                Refresh(_ball);
             if (!landingMarker || _ball.State != BallState.Popped || !_ball.TryPredictLanding(out Vector3 point))
                 return;
             float height01 = Mathf.Clamp01(transform.position.y / 4f);

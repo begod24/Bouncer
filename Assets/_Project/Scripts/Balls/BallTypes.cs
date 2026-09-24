@@ -27,16 +27,33 @@ namespace Bouncer.Balls
         public bool boomerang;
         [Tooltip("На резинке: упав на пол, сам возвращается в руки")]
         public bool elastic;
+        [Tooltip("Попрыгунчик: сколько раз мяч отскакивает от асфальта и летит дальше опасным")]
+        [Min(0)] public int floorBounces;
+        [Tooltip("Жвачка: мяч оставляет на асфальте липкий след, в котором вязнут враги")]
+        public bool gumTrail;
+        [Tooltip("Горячая картошка: радиус взрыва при первом попадании или касании асфальта, м. 0 — нет")]
+        [Min(0f)] public float blastRadius;
+        [Tooltip("Урон взрыва всем вокруг")]
+        [Min(0)] public int blastDamage;
+        [Tooltip("Сдутый мяч: летит змейкой, уходя в стороны на столько метров. 0 — прямо")]
+        [Min(0f)] public float snakeAmplitude;
+        [Tooltip("Сдутый мяч: задевает всех врагов на таком расстоянии от себя и летит дальше, «свечкой» не отскакивает. " +
+                 "0 — обычное попадание")]
+        [Min(0f)] public float grazeRadius;
 
         /// <summary>
-        /// Что достаётся мячу-двойнику: бьёт так же (цепочка, площадь), но не множится дальше
-        /// и не возвращается в руки — иначе двойники превращались бы в лишние мячи.
+        /// Что достаётся мячу-двойнику: бьёт и летит так же (цепочка, площадь, отскоки, жвачка, змейка),
+        /// но не множится дальше, не взрывается и не возвращается в руки — иначе двойники превращались бы в лишние мячи.
         /// </summary>
         public BallPerks ForTwin() => new()
         {
             chainBounces = chainBounces,
             areaRadius = areaRadius,
             areaDamage = areaDamage,
+            floorBounces = floorBounces,
+            gumTrail = gumTrail,
+            snakeAmplitude = snakeAmplitude,
+            grazeRadius = grazeRadius,
         };
 
         public static BallPerks Combine(in BallPerks a, in BallPerks b) => new()
@@ -49,6 +66,12 @@ namespace Bouncer.Balls
             splitOnHit = a.splitOnHit || b.splitOnHit,
             boomerang = a.boomerang || b.boomerang,
             elastic = a.elastic || b.elastic,
+            floorBounces = a.floorBounces + b.floorBounces,
+            gumTrail = a.gumTrail || b.gumTrail,
+            blastRadius = Mathf.Max(a.blastRadius, b.blastRadius),
+            blastDamage = Mathf.Max(a.blastDamage, b.blastDamage),
+            snakeAmplitude = Mathf.Max(a.snakeAmplitude, b.snakeAmplitude),
+            grazeRadius = Mathf.Max(a.grazeRadius, b.grazeRadius),
         };
     }
 

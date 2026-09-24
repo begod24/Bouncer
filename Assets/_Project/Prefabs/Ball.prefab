@@ -219,6 +219,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Bouncer.Balls::Bouncer.Balls.Ball
   definition: {fileID: 11400000, guid: 62c43a83c0269476ca7391579c266eed, type: 2}
   mesh: {fileID: 3747260312848730107}
+  gumSpot: {fileID: 8005354577828288026, guid: a6cd4f7c25de342519607012c9e33f8b, type: 3}
+  blastRing: {fileID: 4322836193269252346, guid: b96959c9369214f7a92b749c5b87c4b3, type: 3}
 --- !u!114 &8329245546095107209
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -239,6 +241,7 @@ MonoBehaviour:
   enemyLiveColor: {r: 0.6, g: 0.2, b: 0.95, a: 1}
   poppedColor: {r: 1, g: 0.92, b: 0.35, a: 1}
   candleColor: {r: 1, g: 0.75, b: 0.1, a: 1}
+  hotColor: {r: 1, g: 0.3, b: 0.08, a: 1}
   stateTint: 0.65
   trailWidth: 0.35
 --- !u!1 &8330986991933313048

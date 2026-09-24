@@ -23,6 +23,9 @@ namespace Bouncer.Player
         public bool IsDashing => Time.time < _dashEnd;
         public bool IsDashInvulnerable => Time.time < _dashStart + _stats.dashInvulnerability;
         public bool DashReady => Time.time >= _dashReadyAt;
+        /// <summary>Когда начался последний рывок (Time.time) — по нему видно, что рывок новый.</summary>
+        public float DashStartTime => _dashStart;
+        public Vector3 DashDirection => _dashDirection;
         /// <summary>0 — только что использован, 1 — готов.</summary>
         public float DashReady01
         {

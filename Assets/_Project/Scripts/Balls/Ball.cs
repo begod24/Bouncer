@@ -23,7 +23,8 @@ namespace Bouncer.Balls
     /// Мяч. В полёте (Live/Popped) движется сам через SphereCast — так рикошеты точные
     /// и предсказуемые, мяч не пролетает сквозь тонкие стены. Лежащий мяч — обычная физика.
     /// Эффекты типа мяча и карточек (<see cref="BallPerks"/>) срабатывают здесь же: цепочка, урон по площади,
-    /// раскол на двойников, бумеранг и возврат на резинке.
+    /// раскол на двойников, бумеранг и возврат на резинке, отскоки от асфальта, взрыв, след жвачки,
+    /// полёт змейкой и задевание врагов по пути.
     /// </summary>
     [RequireComponent(typeof(Rigidbody), typeof(SphereCollider))]
     public sealed class Ball : MonoBehaviour, IPoolable
@@ -40,6 +41,7 @@ namespace Bouncer.Balls
         static readonly List<Ball> s_active = new();
         static readonly List<Ball> s_loose = new();
         static readonly Collider[] s_area = new Collider[32];
+        static readonly Collider[] s_graze = new Collider[32];
         static readonly List<IDamageable> s_areaDamaged = new();
 
         public static IReadOnlyList<Ball> Active => s_active;
@@ -49,9 +51,16 @@ namespace Bouncer.Balls
         [Tooltip("Дочерний меш — масштабируется под радиус из определения")]
         [SerializeField] Transform mesh;
 
+        [Header("Эффекты карточек")]
+        [Tooltip("Пятно жвачки («Жвачка»), из пула")]
+        [SerializeField] GumSpot gumSpot;
+        [Tooltip("Кольцо взрыва («Горячая картошка»), из пула")]
+        [SerializeField] ExpandingRing blastRing;
+
         readonly RaycastHit[] _hits = new RaycastHit[16];
         readonly List<Collider> _ignored = new(4);
         readonly List<(Collider collider, float until)> _ignoredFor = new(4);
+        readonly List<IDamageable> _grazed = new(8);
         Rigidbody _rb;
         SphereCollider _collider;
         IBallReceiver _receiver;
@@ -61,6 +70,12 @@ namespace Bouncer.Balls
         int _chainsLeft;
         bool _splitDone;
         bool _elasticDone;
+        int _floorBouncesLeft;
+        bool _blastDone;
+        float _gumDistance;
+        Vector3 _snakeHeading;
+        float _snakeDistance;
+        float _snakeSide = 1f;
 
         public BallDefinition Definition => definition;
         public BallState State { get; private set; }
@@ -78,6 +93,10 @@ namespace Bouncer.Balls
         public Vector3 Position => _rb.position;
         public Vector3 Velocity => State == BallState.Loose ? _rb.linearVelocity : _velocity;
         public bool IsDangerous => State == BallState.Live;
+        /// <summary>Горячая картошка летит и ещё не взорвалась.</summary>
+        public bool BlastPending => State == BallState.Live && Perks.blastRadius > 0f && !_blastDone;
+        /// <summary>Сдутый мяч: пролетает сквозь врагов, задевая всех по пути.</summary>
+        bool Grazes => Perks.grazeRadius > 0f;
 
         public event Action<Ball> StateChanged;
         /// <summary>Рикошет от стены: мяч, точка, нормаль.</summary>
@@ -122,6 +141,9 @@ namespace Bouncer.Balls
             Ricochets = 0;
             _velocity = Vector3.zero;
             _ignoredFor.Clear();
+            _grazed.Clear();
+            _floorBouncesLeft = 0;
+            _blastDone = false;
             MakeKinematicAt(transform.position);
             SetState(BallState.Idle);
         }
@@ -148,12 +170,20 @@ namespace Bouncer.Balls
             _splitDone = false;
             _elasticDone = false;
             _ignoredFor.Clear();
+            _grazed.Clear();
+            _floorBouncesLeft = t.Perks.floorBounces;
+            _blastDone = false;
+            // Первое пятно жвачки — вскоре после броска, а не через целый шаг.
+            _gumDistance = definition.gumSpacing * 0.5f;
 
             Vector3 direction = Flat(t.Direction);
             if (direction.sqrMagnitude < 1e-6f)
                 direction = Flat(transform.forward);
             direction.Normalize();
 
+            _snakeHeading = direction;
+            _snakeDistance = 0f;
+            _snakeSide = UnityEngine.Random.value < 0.5f ? -1f : 1f;
             _velocity = direction * t.Stats.Speed + Vector3.up * t.Stats.UpVelocity;
             _gravity = t.Stats.Gravity;
             s_loose.Remove(this);
@@ -172,6 +202,12 @@ namespace Bouncer.Balls
             Stats = stats;
             _velocity = velocity;
             _gravity = stats.Gravity;
+            // Отбитый мяч — новый удар: змейка вьётся вокруг нового направления, задеть можно снова всех.
+            Vector3 heading = Flat(velocity);
+            if (heading.sqrMagnitude > 1e-4f)
+                _snakeHeading = heading.normalized;
+            _snakeDistance = 0f;
+            _grazed.Clear();
             SetState(BallState.Live);
         }
 
@@ -247,13 +283,20 @@ namespace Bouncer.Balls
         {
             _stateTime += dt;
             if (live && Perks.boomerang && _stateTime >= definition.boomerangDelay && CanReturn())
+            {
                 SteerBack(dt);
+            }
             else
+            {
                 _velocity.y -= _gravity * dt;
+                if (live && Perks.snakeAmplitude > 0f)
+                    Snake(dt);
+            }
 
             Vector3 position = _rb.position;
             float remaining = _velocity.magnitude * dt;
-            int mask = live ? Layers.LiveBallMask(Team) : Layers.EnvironmentMask;
+            // Сдутый мяч врагов не сбивает телом, а задевает по пути (Graze) — сталкивается только с окружением.
+            int mask = live && !Grazes ? Layers.LiveBallMask(Team) : Layers.EnvironmentMask;
             _ignored.Clear();
 
             for (int i = 0; i < MaxSweepIterations && remaining > 1e-5f; i++)
@@ -261,12 +304,12 @@ namespace Bouncer.Balls
                 Vector3 direction = _velocity.normalized;
                 if (!Sweep(position, direction, remaining, mask, out RaycastHit hit))
                 {
-                    position += direction * remaining;
+                    Advance(ref position, direction * remaining, live);
                     break;
                 }
 
                 float travel = Mathf.Max(0f, hit.distance - Skin);
-                position += direction * travel;
+                Advance(ref position, direction * travel, live);
                 remaining -= travel;
 
                 if (live)
@@ -283,7 +326,7 @@ namespace Bouncer.Balls
                         if (result == BallContactResult.Pierce)
                         {
                             _ignored.Add(hit.collider);
-                            OnTargetHit(hit, position);
+                            OnTargetHit(hit.point, hit.normal, hit.collider, position);
                             _velocity = new Vector3(_velocity.x * definition.pierceSpeedKeep, _velocity.y,
                                 _velocity.z * definition.pierceSpeedKeep);
                             remaining *= definition.pierceSpeedKeep;
@@ -299,7 +342,7 @@ namespace Bouncer.Balls
                             return;
                         if (result == BallContactResult.Hit)
                         {
-                            OnTargetHit(hit, position);
+                            OnTargetHit(hit.point, hit.normal, hit.collider, position);
                             if (_chainsLeft > 0 && TryChain(hit, position))
                                 continue;
                             Pop(position, hit.normal);
@@ -310,8 +353,13 @@ namespace Bouncer.Balls
                 }
 
                 // Пол или верх препятствия: мяч «умер» и дальше катится по физике.
+                // Горячая картошка тут взрывается, попрыгунчик отскакивает и летит дальше опасным.
                 if (hit.normal.y > 0.6f)
                 {
+                    if (BlastPending)
+                        Blast(hit.point, null);
+                    if (live && _floorBouncesLeft > 0 && TryFloorBounce(hit.point, ref remaining))
+                        continue;
                     BecomeLoose(position, Vector3.Reflect(_velocity, hit.normal) * definition.floorBounceKeep);
                     return;
                 }
@@ -324,6 +372,7 @@ namespace Bouncer.Balls
                 float keep = live ? definition.wallSpeedKeep : definition.poppedWallKeep;
                 Vector3 reflected = Vector3.Reflect(_velocity, normal);
                 _velocity = new Vector3(reflected.x * keep, reflected.y, reflected.z * keep);
+                _snakeHeading = Vector3.Reflect(_snakeHeading, normal);
                 remaining *= keep;
                 Ricocheted?.Invoke(this, hit.point, normal);
                 GameEvents.PlaySound(SoundCue.BallWall, hit.point);
@@ -435,6 +484,9 @@ namespace Bouncer.Balls
 
         void BecomeLoose(Vector3 position, Vector3 velocity)
         {
+            // Горячая картошка, так ни во что и не попав, взрывается, когда перестаёт быть опасной.
+            if (BlastPending)
+                Blast(position, null);
             if (IsPhantom)
             {
                 Consume();
@@ -461,58 +513,78 @@ namespace Bouncer.Balls
 
         // ---------- Эффекты мяча ----------
 
-        /// <summary>Мяч задел врага: урон по площади и раскол на двойников.</summary>
-        void OnTargetHit(in RaycastHit hit, Vector3 position)
+        /// <summary>Мяч задел врага: урон по площади, взрыв горячей картошки, раскол на двойников.</summary>
+        void OnTargetHit(Vector3 point, Vector3 normal, Collider struck, Vector3 position)
         {
+            var direct = struck ? struck.GetComponentInParent<IDamageable>() : null;
             if (Perks.areaRadius > 0f && Perks.areaDamage > 0)
-                DamageArea(hit);
+                DamageArea(point, direct);
+            if (BlastPending)
+                Blast(point, direct);
             if (Perks.splitOnHit && !IsPhantom && !_splitDone)
-                Split(hit, position);
+                Split(normal, struck, position);
         }
 
-        void DamageArea(in RaycastHit hit)
+        void DamageArea(Vector3 point, IDamageable direct)
+        {
+            HitAround(point, Perks.areaRadius, Perks.areaDamage, direct, Stats.Knockback * 0.7f, HitFlags.Area);
+            if (definition.areaEffect)
+            {
+                var ring = PoolService.Spawn(definition.areaEffect, new Vector3(point.x, 0.05f, point.z), Quaternion.identity);
+                if (ring.TryGetComponent(out ExpandingRing expanding))
+                    expanding.Play(Perks.areaRadius);
+            }
+            GameEvents.PlaySound(SoundCue.AreaThud, point);
+        }
+
+        /// <summary>Горячая картошка: взрыв бьёт всех вокруг, кроме того, в кого мяч попал сам.</summary>
+        void Blast(Vector3 point, IDamageable direct)
+        {
+            _blastDone = true;
+            if (Perks.blastDamage > 0)
+                HitAround(point, Perks.blastRadius, Perks.blastDamage, direct, definition.blastKnockback, HitFlags.Area | HitFlags.Charged);
+            if (blastRing)
+                PoolService.Spawn(blastRing, new Vector3(point.x, 0.05f, point.z), Quaternion.identity).Play(Perks.blastRadius);
+            GameEvents.PlaySound(SoundCue.AreaThud, point);
+            GameFeel.Shake(0.5f);
+        }
+
+        /// <summary>Урон всем противникам в радиусе, кроме exclude: их отбрасывает от центра.</summary>
+        void HitAround(Vector3 center, float radius, int damage, IDamageable exclude, float force, HitFlags flags)
         {
             int mask = Layers.LiveBallMask(Team) & ~Layers.EnvironmentMask;
-            int count = Physics.OverlapSphereNonAlloc(hit.point, Perks.areaRadius, s_area, mask, QueryTriggerInteraction.Ignore);
-            var direct = hit.collider.GetComponentInParent<IDamageable>();
+            int count = Physics.OverlapSphereNonAlloc(center, radius, s_area, mask, QueryTriggerInteraction.Ignore);
             s_areaDamaged.Clear();
             for (int i = 0; i < count; i++)
             {
                 var other = s_area[i];
                 var target = other.GetComponentInParent<IDamageable>();
-                if (target == null || target == direct || s_areaDamaged.Contains(target))
+                if (target == null || target == exclude || s_areaDamaged.Contains(target))
                     continue;
                 s_areaDamaged.Add(target);
-                Vector3 away = Flat(other.transform.position - hit.point);
+                Vector3 away = Flat(other.transform.position - center);
                 target.ApplyHit(new HitInfo
                 {
-                    Damage = Perks.areaDamage,
-                    Point = other.ClosestPoint(hit.point),
+                    Damage = damage,
+                    Point = other.ClosestPoint(center),
                     Direction = away.sqrMagnitude > 1e-4f ? away.normalized : Flat(_velocity).normalized,
-                    Force = Stats.Knockback * 0.7f,
+                    Force = force,
                     SourceTeam = Team,
                     Source = Thrower,
-                    Flags = HitFlags.Area,
+                    Flags = flags,
                 });
             }
-            if (definition.areaEffect)
-            {
-                var ring = PoolService.Spawn(definition.areaEffect, new Vector3(hit.point.x, 0.05f, hit.point.z), Quaternion.identity);
-                if (ring.TryGetComponent(out ExpandingRing expanding))
-                    expanding.Play(Perks.areaRadius);
-            }
-            GameEvents.PlaySound(SoundCue.AreaThud, hit.point);
         }
 
         /// <summary>Раскол: два двойника разлетаются в стороны от направления мяча.</summary>
-        void Split(in RaycastHit hit, Vector3 position)
+        void Split(Vector3 normal, Collider struck, Vector3 position)
         {
             _splitDone = true;
             if (!TryGetComponent(out PooledObject tag) || tag.Prefab == null)
                 return;
             Vector3 forward = Flat(_velocity);
             if (forward.sqrMagnitude < 1e-4f)
-                forward = -Flat(hit.normal);
+                forward = -Flat(normal);
             if (forward.sqrMagnitude < 1e-4f)
                 return;
             forward.Normalize();
@@ -533,8 +605,105 @@ namespace Bouncer.Balls
                     Perks = Perks.ForTwin(),
                     Phantom = true,
                 });
-                twin.IgnoreFor(hit.collider, 0.3f);
+                twin.IgnoreFor(struck, 0.3f);
             }
+        }
+
+        /// <summary>Отрезок пути в полёте: сдутый мяч задевает всех рядом, жвачка капает на асфальт.</summary>
+        void Advance(ref Vector3 position, Vector3 step, bool live)
+        {
+            Vector3 from = position;
+            position += step;
+            if (!live)
+                return;
+            if (Grazes)
+                Graze(from, position);
+            if (Perks.gumTrail)
+                TrailGum(from, position);
+        }
+
+        /// <summary>Сдутый мяч: бьёт всех противников рядом со своим путём (каждого — раз за бросок) и летит дальше.</summary>
+        void Graze(Vector3 from, Vector3 to)
+        {
+            int mask = Layers.LiveBallMask(Team) & ~Layers.EnvironmentMask;
+            int count = Physics.OverlapCapsuleNonAlloc(from, to, Perks.grazeRadius, s_graze, mask, QueryTriggerInteraction.Ignore);
+            Vector3 direction = Flat(_velocity);
+            direction = direction.sqrMagnitude > 1e-4f ? direction.normalized : Flat(transform.forward).normalized;
+            for (int i = 0; i < count; i++)
+            {
+                var other = s_graze[i];
+                if (IsIgnored(other))
+                    continue;
+                var target = other.GetComponentInParent<IDamageable>();
+                if (target == null || _grazed.Contains(target))
+                    continue;
+                _grazed.Add(target);
+                Vector3 point = other.ClosestPoint(to);
+                target.ApplyHit(new HitInfo
+                {
+                    Damage = Stats.Damage,
+                    Point = point,
+                    Direction = direction,
+                    Force = Stats.Knockback * definition.grazeKnockbackScale,
+                    SourceTeam = Team,
+                    Source = Thrower,
+                    Flags = Stats.Flags,
+                });
+                OnTargetHit(point, -direction, other, to);
+            }
+        }
+
+        /// <summary>Сдутый мяч: виляет вокруг направления броска — путь похож на синусоиду.</summary>
+        void Snake(float dt)
+        {
+            Vector3 horizontal = Flat(_velocity);
+            float speed = horizontal.magnitude;
+            if (speed < 1e-3f)
+                return;
+            // Путь: смещение A·r(x)·sin(k·x) вбок от направления броска, x — пройденное вдоль него.
+            // r(x) за первые полволны растёт от 0 до 1, чтобы мяч вылетал из рук по прицелу. Угол — наклон этой кривой.
+            float k = 2f * Mathf.PI / definition.snakeWavelength;
+            float rampLength = definition.snakeWavelength * 0.5f;
+            float ramp = Mathf.Clamp01(_snakeDistance / rampLength);
+            float rampSlope = ramp < 1f ? 1f / rampLength : 0f;
+            float phase = _snakeDistance * k;
+            float angle = Mathf.Atan(Perks.snakeAmplitude * (rampSlope * Mathf.Sin(phase) + ramp * k * Mathf.Cos(phase)));
+            _snakeDistance += speed * Mathf.Cos(angle) * dt;
+            Vector3 direction = Quaternion.AngleAxis(angle * Mathf.Rad2Deg * _snakeSide, Vector3.up) * _snakeHeading;
+            _velocity = direction * speed + Vector3.up * _velocity.y;
+        }
+
+        /// <summary>Жвачка: каждые gumSpacing метров полёта на асфальте под мячом остаётся липкое пятно.</summary>
+        void TrailGum(Vector3 from, Vector3 to)
+        {
+            if (gumSpot == null)
+                return;
+            float length = Flat(to - from).magnitude;
+            _gumDistance += length;
+            while (_gumDistance >= definition.gumSpacing)
+            {
+                _gumDistance -= definition.gumSpacing;
+                // Пятно там, где мяч был в момент, когда набежал шаг, а не в конце отрезка.
+                float back = length > 1e-4f ? Mathf.Clamp01(_gumDistance / length) : 0f;
+                GumSpot.Drop(gumSpot, Vector3.Lerp(to, from, back));
+            }
+        }
+
+        /// <summary>Попрыгунчик: мяч отскакивает от асфальта на одну и ту же высоту и летит дальше опасным.</summary>
+        bool TryFloorBounce(Vector3 point, ref float remaining)
+        {
+            Vector3 horizontal = Flat(_velocity) * definition.floorBounceSpeedKeep;
+            if (horizontal.magnitude < definition.minLiveSpeed)
+                return false;
+            _floorBouncesLeft--;
+            float up = Mathf.Sqrt(2f * Mathf.Max(0.01f, _gravity) * definition.floorBounceHeight);
+            _velocity = horizontal + Vector3.up * up;
+            remaining *= definition.floorBounceSpeedKeep;
+            // Отскок — новый полёт: время жизни мяча отсчитывается заново.
+            if (!IsComingBack)
+                _stateTime = 0f;
+            GameEvents.PlaySound(SoundCue.BallWall, point);
+            return true;
         }
 
         /// <summary>Цепочка (волейбольный): после попадания мяч перелетает к ближайшему другому врагу.</summary>

@@ -121,6 +121,8 @@ namespace Bouncer.Enemies
 
             if (!HasBall && Time.time >= _ballBackAt)
                 HasBall = true;
+            // В жвачке солдатик вязнет и марширует медленнее.
+            _agent.speed = definition.moveSpeed * GumSpot.EnemyMoveMultiplierAt(transform.position);
             if (_knockback.sqrMagnitude > 0.01f)
             {
                 _agent.Move(_knockback * dt);
@@ -270,9 +272,9 @@ namespace Bouncer.Enemies
             if (_health.IsDead)
                 return false;
 
+            // Без стоп-кадра: вздрагивает сам солдатик (HitPunch), камеру трясёт слегка.
             bool strong = hit.Has(HitFlags.Charged);
-            GameFeel.HitStop(strong ? 0.06f : 0.04f);
-            GameFeel.Shake(strong ? 0.45f : 0.25f);
+            GameFeel.Shake(strong ? 0.25f : 0.1f);
             if (hitFlash)
                 hitFlash.Flash(Color.white, 0.12f);
             GameEvents.PlaySound(strong ? SoundCue.EnemyHitStrong : SoundCue.EnemyHit, hit.Point);
@@ -304,8 +306,7 @@ namespace Bouncer.Enemies
             }
             GameEvents.RaiseEnemyKilled(gameObject, hit);
             GameEvents.PlaySound(SoundCue.SoldierPop, transform.position);
-            GameFeel.HitStop(0.07f);
-            GameFeel.Shake(0.6f);
+            GameFeel.Shake(0.25f);
             PoolService.Despawn(gameObject);
         }
 

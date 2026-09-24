@@ -4,7 +4,7 @@ Bouncer: UI-спрайты в стиле «мел на асфальте» и д�
 
 Запуск из корня репозитория:  python3 Tools/ui_art.py
 Нужны numpy и Pillow. HUD белый — цвет задаётся в Unity (Image.color); иконки вкладышей тёмные.
-Иконки мячей (волейбольный, набивной, теннисный) рендерит Unity из 3D-моделей, их здесь нет.
+Иконки мячей (волейбольный, набивной, теннисный, сдутый) рендерит Unity из 3D-моделей, их здесь нет.
 Сиды фиксированы: повторный запуск даёт те же картинки.
 """
 import math
@@ -144,6 +144,13 @@ class Canvas:
 def wobble(pts, amount, seed):
     rng = np.random.default_rng(seed)
     return [(x + rng.uniform(-amount, amount), y + rng.uniform(-amount, amount)) for x, y in pts]
+
+
+def rotate(pts, cx, cy, degrees, dx=0.0, dy=0.0):
+    """Поворот вокруг (cx, cy) (в координатах картинки: минус — против часовой) и сдвиг."""
+    a = math.radians(degrees)
+    ca, sa = math.cos(a), math.sin(a)
+    return [(cx + (x - cx) * ca - (y - cy) * sa + dx, cy + (x - cx) * sa + (y - cy) * ca + dy) for x, y in pts]
 
 
 # ================================================================ HUD
@@ -318,6 +325,102 @@ def icons():
     for x in (96, 128, 160):
         c.stroke(c.circle_pts(x, 104, 6), 4, closed=True, opacity=0.8)
     c.save("Icons/Icon_Sandwich.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 38)  # Попрыгунчик: мяч скачет по асфальту
+    c.stroke([(12, 226), (244, 226)], 9)
+    fall = [(14 + 90 * t, 222 - 104 * (1 - t * t)) for t in np.linspace(0, 1, 24)]
+    hop = [(104 + 96 * t, 222 - 120 * (2 * t - t * t)) for t in np.linspace(0, 0.8, 20)]
+    c.stroke(fall + hop[1:], 7, dash=13)
+    for tip in ((82, 192), (126, 192), (104, 186)):
+        c.stroke([(104 + (tip[0] - 104) * 0.45, 214 + (tip[1] - 214) * 0.45), tip], 6)
+    ball = c.circle_pts(204, 84, 30)
+    c.fill(ball, opacity=0.5, hatch=(30, 8))
+    c.stroke(ball, 8, closed=True)
+    c.save("Icons/Icon_Bouncy.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 39)  # Горячая картошка: картошка пышет жаром и вот-вот бахнет
+    potato = wobble([(128 + 84 * math.cos(a) + 6 * math.cos(3 * a), 160 + 56 * math.sin(a))
+                     for a in np.linspace(0, 2 * math.pi, 60, endpoint=False)], 1.5, 39)
+    c.fill(potato, opacity=0.4, hatch=(30, 9))
+    c.stroke(potato, 9, closed=True)
+    for x, y in ((96, 146), (150, 176), (172, 140)):
+        c.stroke(c.circle_pts(x, y, 6, 200, 340, 8), 5)
+    for x in (88, 128, 168):
+        c.stroke([(x + 9 * math.sin(i * 1.1), 92 - i * 11) for i in range(7)], 7)
+    for a in (192, 168, -12, 12):
+        ca, sa = math.cos(math.radians(a)), math.sin(math.radians(a))
+        c.stroke([(128 + ca * 100, 160 + sa * 70), (128 + ca * 122, 160 + sa * 84)], 7)
+    c.save("Icons/Icon_HotPotato.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 40)  # Жвачка: мяч тянет липкие нитки от пятна на асфальте
+    splat = wobble([(96 + 72 * math.cos(a) * (1 + 0.12 * math.sin(5 * a)), 206 + 26 * math.sin(a) * (1 + 0.12 * math.sin(5 * a)))
+                    for a in np.linspace(0, 2 * math.pi, 60, endpoint=False)], 1.5, 40)
+    c.fill(splat, opacity=0.45, hatch=(-30, 8))
+    c.stroke(splat, 8, closed=True)
+    ball = c.circle_pts(186, 66, 34)
+    c.fill(ball, opacity=0.5, hatch=(30, 8))
+    c.stroke(ball, 8, closed=True)
+    # Нитки тянутся от пятна к мячу и провисают — видно, что липкое.
+    for (x0, y0), (x1, y1), sag in (((66, 196), (164, 92), 22), ((102, 190), (180, 100), -12), ((136, 196), (196, 98), 14)):
+        length = math.hypot(x1 - x0, y1 - y0)
+        nx, ny = (y1 - y0) / length, -(x1 - x0) / length
+        c.stroke([(x0 + (x1 - x0) * t + nx * sag * math.sin(math.pi * t), y0 + (y1 - y0) * t + ny * sag * math.sin(math.pi * t))
+                  for t in np.linspace(0, 1, 24)], 4)
+    c.save("Icons/Icon_Gum.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 41)  # Подкат: кед едет подошвой вперёд, из-под пятки пыль
+    shoe = [(70, 190), (70, 138), (104, 128), (130, 96), (162, 96), (170, 134), (228, 152), (236, 190)]
+    shoe = rotate(shoe, 150, 150, -20, -28, 12)
+    c.fill(shoe, opacity=0.35, hatch=(-30, 9))
+    c.stroke(shoe, 9, closed=True)
+    c.stroke(rotate([(64, 202), (240, 202)], 150, 150, -20, -28, 12), 12)
+    for a in range(0, 360, 45):
+        ca, sa = math.cos(math.radians(a)), math.sin(math.radians(a))
+        r = 22 if a % 90 == 0 else 15
+        c.stroke([(226 + ca * 8, 120 + sa * 8), (226 + ca * r, 120 + sa * r)], 6)
+    for y, x0, x1 in ((148, 12, 46), (174, 6, 32)):
+        c.stroke([(x0, y), (x1, y)], 7, opacity=0.85)
+    for x, y, r in ((30, 226, 11), (44, 238, 8), (14, 236, 7)):
+        c.stroke(c.circle_pts(x, y, r), 5, closed=True, opacity=0.85)
+    c.stroke([(8, 248), (248, 248)], 7, opacity=0.9)
+    c.save("Icons/Icon_Tackle.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 42)  # Хулиганство: кулак — четыре согнутых пальца, поперёк большой, ниже запястье в рукаве
+    for i, lift in enumerate((6, 0, 3, 12)):
+        finger = c.round_rect_pts(58 + 35 * i, 62 + lift, 93 + 35 * i, 130, 16)
+        c.fill(finger, opacity=0.4, hatch=(30, 8))
+        c.stroke(finger, 8, closed=True)
+    thumb = c.round_rect_pts(52, 130, 172, 164, 16)
+    c.fill(thumb, opacity=0.4, hatch=(30, 8))
+    c.stroke(thumb, 8, closed=True)
+    palm = [(172, 130), (198, 130), (198, 176), (178, 202), (86, 202), (64, 184), (60, 164), (172, 164)]
+    c.fill(palm, opacity=0.25, hatch=(30, 8))
+    c.stroke([(198, 130), (198, 176), (178, 202), (86, 202), (64, 184), (60, 164)], 8)
+    c.stroke([(96, 202), (96, 216)], 8)
+    c.stroke([(168, 202), (168, 216)], 8)
+    # Рукав олимпийки с тремя полосками уходит за край картинки.
+    c.stroke(c.round_rect_pts(74, 216, 190, 276, 8), 8, closed=True)
+    for x in (108, 132, 156):
+        c.stroke([(x, 226), (x, 256)], 7)
+    # Кулак трясётся от злости.
+    for x0, y0, x1, y1 in ((40, 70, 24, 58), (34, 100, 14, 98), (216, 70, 232, 58), (222, 100, 242, 98)):
+        c.stroke([(x0, y0), (x1, y1)], 7)
+    c.save("Icons/Icon_Hooligan.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 43)  # «Замри!»: снежинка над волнами — «море волнуется, замри»
+    cx, cy, arm = 128, 100, 72
+    for k in range(6):
+        a = math.radians(90 + k * 60)
+        ca, sa = math.cos(a), math.sin(a)
+        c.stroke([(cx, cy), (cx + ca * arm, cy - sa * arm)], 10)
+        for f, size in ((0.55, 22), (0.82, 14)):
+            px, py = cx + ca * arm * f, cy - sa * arm * f
+            for side in (-1, 1):
+                b = a + side * math.radians(42)
+                c.stroke([(px, py), (px + math.cos(b) * size, py - math.sin(b) * size)], 7)
+    for y0 in (200, 230):
+        c.stroke([(12 + i * 4, y0 + 9 * math.sin(i * 0.36)) for i in range(59)], 8)
+    c.save("Icons/Icon_Freeze.png", grain=0.3, color=INK)
 
 
 if __name__ == "__main__":

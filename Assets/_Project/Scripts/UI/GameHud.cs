@@ -37,6 +37,8 @@ namespace Bouncer.UI
         [SerializeField] Color ballColor = new(0.97f, 0.69f, 0.29f);
         [SerializeField] Color emptyColor = new(1f, 1f, 1f, 0.45f);
         [SerializeField] Color candleColor = new(0.96f, 0.82f, 0.24f);
+        [Tooltip("Горячая картошка: следующий бросок взорвётся")]
+        [SerializeField] Color hotColor = new(0.93f, 0.33f, 0.16f);
         [SerializeField] TMP_Text candleLabel;
 
         [Header("Ловля и рывок")]
@@ -150,7 +152,10 @@ namespace Bouncer.UI
         {
             var balls = player.Balls;
             Resize(_balls, ballsRow, Mathf.Max(balls.MaxBalls, balls.Balls));
-            Color full = balls.CandleReady ? Color.Lerp(candleColor, Color.white, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 10f)) : ballColor;
+            float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 10f);
+            Color full = balls.CandleReady ? Color.Lerp(candleColor, Color.white, pulse)
+                : balls.CatchPerksReady ? Color.Lerp(hotColor, ballColor, pulse)
+                : ballColor;
             for (int i = 0; i < _balls.Count; i++)
                 SetIcon(_balls[i], i < balls.Balls, ballFull, ballEmpty, full);
             if (candleLabel)

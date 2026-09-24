@@ -81,6 +81,7 @@ GameObject:
   - component: {fileID: 6665582757519642623}
   - component: {fileID: 2441372655313742097}
   - component: {fileID: 74453607587754113}
+  - component: {fileID: 8460640983507722618}
   m_Layer: 8
   m_Name: TinSoldier
   m_TagString: Untagged
@@ -276,6 +277,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Bouncer.Core::Bouncer.Core.EnemyReward
   experience: 4
+--- !u!114 &8460640983507722618
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7471714542055159759}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82b45e614c9ee4ee1a320f860e354c5f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Bouncer.Core::Bouncer.Core.HitPunch
+  visual: {fileID: 7296933548407884990}
+  duration: 0.2
+  squash: 0.1
+  recoil: 0.1
+  jitter: 0.04
+  strongMultiplier: 1.5
 --- !u!1001 &5879887112100496081
 PrefabInstance:
   m_ObjectHideFlags: 0

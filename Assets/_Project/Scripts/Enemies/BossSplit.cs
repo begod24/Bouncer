@@ -70,6 +70,9 @@ namespace Bouncer.Enemies
 
             Vector3 origin = transform.position;
             GameEvents.PlaySound(SoundCue.BossSplit, origin);
+            // Раскол босса — редкий большой момент: ему можно и стоп-кадр, и сильную тряску.
+            GameFeel.HitStop(0.08f);
+            GameFeel.Shake(0.8f);
             Vector3 away = hit.Direction;
             away.y = 0f;
             if (away.sqrMagnitude < 1e-4f)

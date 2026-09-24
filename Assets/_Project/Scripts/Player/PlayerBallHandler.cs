@@ -40,6 +40,8 @@ namespace Bouncer.Player
         float CatchWindow => _stats.catchWindow * _mods.CatchWindow;
         float PickupRadius => _stats.pickupRadius * _mods.PickupRadius;
         public bool CandleReady { get; private set; }
+        /// <summary>Горячая картошка: следующий бросок получит <see cref="PlayerModifiers.CatchPerks"/>.</summary>
+        public bool CatchPerksReady { get; private set; }
         public bool IsCharging { get; private set; }
         public float Charge01 { get; private set; }
         public bool IsCatching => _catchWindowOpen && Time.time < _catchUntil;
@@ -143,6 +145,17 @@ namespace Bouncer.Player
 
         public void GiveBall(int amount = 1) => Balls = Mathf.Max(0, Balls + amount);
 
+        /// <summary>В руках больше мячей, чем теперь помещается (хулиганство): лишние падают под ноги.</summary>
+        public void DropExcess()
+        {
+            while (Balls > MaxBalls)
+            {
+                Balls--;
+                Vector3 position = transform.position + transform.forward * 0.6f + Vector3.up * 0.5f;
+                PoolService.Spawn(ballPrefab, position, Quaternion.identity).Drop(position, transform.forward);
+            }
+        }
+
         /// <summary>Поймать конкретный мяч (вызывается и когда мяч врезается в игрока с открытым окном).</summary>
         public void Catch(Ball ball)
         {
@@ -166,6 +179,8 @@ namespace Bouncer.Player
 
             if (info.Candle)
                 CandleReady = true;
+            if (_mods.HasCatchPerks)
+                CatchPerksReady = true;
 
             _catchWindowOpen = false;
             _catchUntil = 0f;
@@ -256,7 +271,13 @@ namespace Bouncer.Player
             var definition = BallDefinition;
             bool candle = CandleReady;
             var stats = definition.GetThrowStats(Charge01, candle);
+            stats.Damage += _mods.BonusDamage;
             var perks = BallPerks.Combine(definition.perks, _mods.Perks);
+            if (CatchPerksReady)
+            {
+                perks = BallPerks.Combine(perks, _mods.CatchPerks);
+                CatchPerksReady = false;
+            }
 
             Launch(direction, definition.radius, stats, perks, phantom: false);
             // Веер (теннисный): двойники по очереди справа и слева от основного мяча.

@@ -18,6 +18,7 @@ GameObject:
   - component: {fileID: 3703462308786385241}
   - component: {fileID: 5508596478902442191}
   - component: {fileID: 47493150668162121}
+  - component: {fileID: 3143874629055389783}
   m_Layer: 8
   m_Name: RolyPoly
   m_TagString: Untagged
@@ -203,6 +204,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Bouncer.Core::Bouncer.Core.EnemyReward
   experience: 3
+--- !u!114 &3143874629055389783
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 188804801301329896}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82b45e614c9ee4ee1a320f860e354c5f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Bouncer.Core::Bouncer.Core.HitPunch
+  visual: {fileID: 460693653464773260}
+  duration: 0.2
+  squash: 0.18
+  recoil: 0.12
+  jitter: 0.05
+  strongMultiplier: 1.5
 --- !u!1 &2199236121547590632
 GameObject:
   m_ObjectHideFlags: 0

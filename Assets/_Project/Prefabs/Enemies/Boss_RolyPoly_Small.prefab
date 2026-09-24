@@ -82,6 +82,7 @@ GameObject:
   - component: {fileID: 8622741345332890348}
   - component: {fileID: 120074997240050625}
   - component: {fileID: 4784547274922107311}
+  - component: {fileID: 8264897972953950142}
   m_Layer: 8
   m_Name: Boss_RolyPoly_Small
   m_TagString: Untagged
@@ -298,6 +299,24 @@ MonoBehaviour:
   references:
     version: 2
     RefIds: []
+--- !u!114 &8264897972953950142
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7819565211241362588}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82b45e614c9ee4ee1a320f860e354c5f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Bouncer.Core::Bouncer.Core.HitPunch
+  visual: {fileID: 8012914745251497233}
+  duration: 0.2
+  squash: 0.18
+  recoil: 0.14
+  jitter: 0.06
+  strongMultiplier: 1.5
 --- !u!1001 &8065228990772373840
 PrefabInstance:
   m_ObjectHideFlags: 0

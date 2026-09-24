@@ -49,6 +49,7 @@ GameObject:
   - component: {fileID: 5738543973947243955}
   - component: {fileID: 6106486888806024500}
   - component: {fileID: 4553513837731080471}
+  - component: {fileID: 5405309309259978630}
   m_Layer: 8
   m_Name: Pupsik
   m_TagString: Untagged
@@ -217,6 +218,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Bouncer.Core::Bouncer.Core.EnemyReward
   experience: 1
+--- !u!114 &5405309309259978630
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2124556403835334173}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82b45e614c9ee4ee1a320f860e354c5f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Bouncer.Core::Bouncer.Core.HitPunch
+  visual: {fileID: 36446992084581849}
+  duration: 0.2
+  squash: 0.2
+  recoil: 0.08
+  jitter: 0.04
+  strongMultiplier: 1.5
 --- !u!1 &7515585346628729974
 GameObject:
   m_ObjectHideFlags: 0

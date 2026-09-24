@@ -50,6 +50,14 @@ namespace Bouncer.Player
         [Tooltip("Сколько жизней даёт пойманный мяч врага")]
         [Min(0)] public int catchHeal = 1;
 
+        [Header("Карточки")]
+        [Tooltip("Подкат: на каком расстоянии рывок сбивает врагов, м")]
+        public float tackleRadius = 1.1f;
+        [Tooltip("Подкат: сила отброса сбитого врага")]
+        public float tackleKnockback = 14f;
+        [Tooltip("«Замри!»: скорость времени вокруг после удачной ловли")]
+        [Range(0.05f, 1f)] public float freezeTimeScale = 0.3f;
+
         [Header("Прицел")]
         [Tooltip("Высота плоскости, на которую проецируется курсор (уровень груди врагов)")]
         public float aimPlaneHeight = 0.8f;

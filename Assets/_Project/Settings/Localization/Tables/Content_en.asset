@@ -114,6 +114,65 @@ MonoBehaviour:
     m_Localized: +1 life. Grandma sent it.
     m_Metadata:
       m_Items: []
+  - m_Id: 23928708784128
+    m_Localized: Bouncy ball
+    m_Metadata:
+      m_Items: []
+  - m_Id: 23928712978432
+    m_Localized: After touching the asphalt, the ball hops up and flies dangerous
+      again. Up to two times.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 23928712978433
+    m_Localized: Hot potato
+    m_Metadata:
+      m_Items: []
+  - m_Id: 23928712978434
+    m_Localized: After a catch, your next throw explodes and hits everyone around.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 23928712978435
+    m_Localized: Bubble gum
+    m_Metadata:
+      m_Items: []
+  - m_Id: 23928712978436
+    m_Localized: The ball leaves a sticky pink trail. Enemies get stuck in it and
+      slow down.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 23928712978437
+    m_Localized: Slide tackle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 23928712978438
+    m_Localized: Your dash knocks enemies off their feet.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 23928712978439
+    m_Localized: Hooliganism
+    m_Metadata:
+      m_Items: []
+  - m_Id: 23928712978440
+    m_Localized: +1 damage to every throw, but one ball fewer.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 23928712978441
+    m_Localized: Freeze!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 23928712978442
+    m_Localized: Every successful catch slows everything around for a second.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 23928712978443
+    m_Localized: Deflated ball
+    m_Metadata:
+      m_Items: []
+  - m_Id: 23928712978444
+    m_Localized: Wobbles like a snake and grazes every enemy near its path. No sky
+      catches.
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

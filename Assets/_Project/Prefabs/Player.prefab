@@ -480,11 +480,16 @@ MonoBehaviour:
   catchRing: {fileID: 6614831532087542786}
   dashTrail: {fileID: 3552177400039422943}
   hitFlash: {fileID: 1694614332915023353}
+  freezeWave: {fileID: 5893299805964134197, guid: 42387b7a3dafd4673880b0b5365ee31e, type: 3}
+  freezeWaveRadius: 7
   ballColor: {r: 0.85, g: 0.18, b: 0.15, a: 1}
   chargedColor: {r: 1, g: 0.95, b: 0.8, a: 1}
   candleColor: {r: 1, g: 0.75, b: 0.1, a: 1}
+  hotColor: {r: 1, g: 0.3, b: 0.08, a: 1}
   catchActiveColor: {r: 0.35, g: 1, b: 0.45, a: 0.95}
   catchCooldownColor: {r: 1, g: 1, b: 1, a: 0.25}
+  slideLean: 60
+  slideDrop: 0.22
 --- !u!114 &4040264963739477248
 MonoBehaviour:
   m_ObjectHideFlags: 0

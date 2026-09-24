@@ -120,7 +120,8 @@ namespace Bouncer.Enemies
                         break;
                     }
                     Vector3 desired = ChaseDirection(targetDirection, distance)
-                                      * (definition.moveSpeed * GroundZone.MoveMultiplierAt(_rb.position))
+                                      * (definition.moveSpeed * GroundZone.MoveMultiplierAt(_rb.position)
+                                                              * GumSpot.EnemyMoveMultiplierAt(_rb.position))
                                       + Separation() * definition.separationStrength;
                     Drive(desired);
                     Face(desired.sqrMagnitude > 0.04f ? desired : targetDirection, dt);
@@ -273,8 +274,7 @@ namespace Bouncer.Enemies
             if (_health.IsDead)
                 return false;
 
-            GameFeel.HitStop(0.03f);
-            GameFeel.Shake(0.15f);
+            // Без стоп-кадра: пупсов выбивают пачками, стоп-кадры подряд выглядели бы как подвисания.
             if (hitFlash)
                 hitFlash.Flash(Color.white, 0.1f);
             GameEvents.PlaySound(SoundCue.EnemyHit, hit.Point);
@@ -298,7 +298,7 @@ namespace Bouncer.Enemies
             }
             GameEvents.RaiseEnemyKilled(gameObject, hit);
             GameEvents.PlaySound(SoundCue.PupsikPop, transform.position);
-            GameFeel.Shake(0.3f);
+            GameFeel.Shake(0.1f);
             PoolService.Despawn(gameObject);
         }
 

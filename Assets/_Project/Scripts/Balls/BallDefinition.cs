@@ -64,6 +64,18 @@ namespace Bouncer.Balls
         public float boomerangTurnRate = 540f;
         [Tooltip("На резинке: скорость, с которой мяч возвращается в руки")]
         public float elasticReturnSpeed = 18f;
+        [Tooltip("Попрыгунчик: на какую высоту над асфальтом подскакивает мяч, м")]
+        [Min(0.1f)] public float floorBounceHeight = 1f;
+        [Tooltip("Попрыгунчик: какую долю скорости мяч сохраняет при отскоке от асфальта")]
+        [Range(0.3f, 1f)] public float floorBounceSpeedKeep = 0.85f;
+        [Tooltip("Жвачка: через сколько метров полёта мяч оставляет новое пятно")]
+        [Min(0.2f)] public float gumSpacing = 1.2f;
+        [Tooltip("Горячая картошка: сила отброса от взрыва")]
+        public float blastKnockback = 10f;
+        [Tooltip("Сдутый мяч: длина одной волны «змейки», м")]
+        [Min(0.5f)] public float snakeWavelength = 4.5f;
+        [Tooltip("Сдутый мяч: какая доля отброса достаётся задетым врагам")]
+        [Range(0f, 1f)] public float grazeKnockbackScale = 0.5f;
 
         [Header("Лежащий мяч")]
         [Range(0f, 1f)] public float floorBounceKeep = 0.5f;

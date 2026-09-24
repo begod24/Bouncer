@@ -235,7 +235,8 @@ namespace Bouncer.Enemies
         void Drive(Vector3 desired)
         {
             desired.y = 0f;
-            desired = Vector3.ClampMagnitude(desired, definition.moveSpeed * GroundZone.MoveMultiplierAt(_rb.position));
+            desired = Vector3.ClampMagnitude(desired, definition.moveSpeed * GroundZone.MoveMultiplierAt(_rb.position)
+                                                      * GumSpot.EnemyMoveMultiplierAt(_rb.position));
             Vector3 velocity = _rb.linearVelocity;
             Vector3 horizontal = new(velocity.x, 0f, velocity.z);
             Vector3 acceleration = Vector3.ClampMagnitude((desired - horizontal) * 10f, definition.acceleration);
@@ -287,9 +288,9 @@ namespace Bouncer.Enemies
             if (_health.IsDead)
                 return false;
 
+            // Без стоп-кадра: вздрагивает сама неваляшка (HitPunch), камеру трясёт слегка.
             bool strong = hit.Has(HitFlags.Charged);
-            GameFeel.HitStop(strong ? 0.07f : 0.04f);
-            GameFeel.Shake(strong ? 0.5f : 0.25f);
+            GameFeel.Shake(strong ? 0.25f : 0.1f);
             if (hitFlash)
                 hitFlash.Flash(Color.white, 0.12f);
             GameEvents.PlaySound(strong ? SoundCue.EnemyHitStrong : SoundCue.EnemyHit, hit.Point);
@@ -352,8 +353,7 @@ namespace Bouncer.Enemies
             }
             GameEvents.RaiseEnemyKilled(gameObject, hit);
             GameEvents.PlaySound(SoundCue.RolyPolyPop, transform.position);
-            GameFeel.HitStop(0.09f);
-            GameFeel.Shake(0.8f);
+            GameFeel.Shake(0.3f);
             PoolService.Despawn(gameObject);
         }
 

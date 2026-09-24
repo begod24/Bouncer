@@ -208,6 +208,16 @@ def hud():
     c.stroke([(x, y + 8) for x, y in pts[10:70]], 4, opacity=0.6)
     c.save("HUD_Underline.png")
 
+    c = Canvas(128, 128, 10)  # монетка (тиын, тенге): счётчик в HUD и цены в ларьке
+    coin = c.circle_pts(64, 64, 46)
+    c.fill(coin, opacity=0.35, hatch=(30, 7))
+    c.stroke(coin, 7, closed=True)
+    c.stroke(c.circle_pts(64, 64, 35), 4, closed=True, opacity=0.6)
+    for y in (46, 58):                                   # знак тенге ₸
+        c.stroke([(46, y), (82, y)], 7)
+    c.stroke([(64, 58), (64, 90)], 7)
+    c.save("HUD_Coin.png")
+
 
 # ================================================================ Карточки
 

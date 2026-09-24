@@ -79,6 +79,14 @@ namespace Bouncer.Core
             Healed?.Invoke(amount);
         }
 
+        /// <summary>Задать здоровье напрямую — например, сердца, перенесённые с прошлой арены.</summary>
+        public void SetCurrent(int value)
+        {
+            if (IsDead)
+                return;
+            Current = Mathf.Clamp(value, 1, max);
+        }
+
         public void SetInvulnerable(float seconds) =>
             _invulnerableUntil = Mathf.Max(_invulnerableUntil, Time.time + seconds);
 

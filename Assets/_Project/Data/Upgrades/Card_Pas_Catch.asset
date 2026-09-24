@@ -33,8 +33,10 @@ MonoBehaviour:
   category: 2
   icon: {fileID: 21300000, guid: 7788b5a5511ff4a03a1f6418600a9fc4, type: 3}
   wrapperColor: {r: 0.49019608, g: 0.7294118, b: 0.30588236, a: 1}
+  rarity: 0
   maxStacks: 3
   weight: 1
+  requires: []
   moveSpeed: 0
   dashDistance: 0
   dashCooldown: 0
@@ -43,6 +45,12 @@ MonoBehaviour:
   pickupRadius: 0
   extraBalls: 0
   heal: 0
+  bonusDamage: 0
+  tackleDamage: 0
+  catchFreeze: 0
+  dominoDamage: 0
+  coinInterest: 0
+  lidCooldown: 0
   references:
     version: 2
     RefIds: []

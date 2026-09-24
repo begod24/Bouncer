@@ -1,0 +1,24 @@
+{
+    "name": "Bouncer.Run",
+    "rootNamespace": "Bouncer.Run",
+    "references": [
+        "Bouncer.Core",
+        "Bouncer.Balls",
+        "Bouncer.Player",
+        "Bouncer.Upgrades",
+        "Bouncer.Enemies",
+        "Bouncer.Waves",
+        "Bouncer.Visuals",
+        "Unity.Localization",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

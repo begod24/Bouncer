@@ -39,5 +39,16 @@ namespace Bouncer.Core
         UiMove,
         Victory,
         GameOver,
+
+        // Прогулка (новые — только в конец: банк звуков хранит номера)
+        Coin,
+        Portfolio,
+        KioskOpen,
+        Purchase,
+        NotEnoughCoins,
+        EliteSpawn,
+        Explosion,
+        ShieldBlock,
+        BallStuck,
     }
 }

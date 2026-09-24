@@ -17,6 +17,8 @@ namespace Bouncer.Balls
         Loose,
         /// <summary>Мяч на резинке летит обратно в руки бросившему: безопасен, подобрать нельзя.</summary>
         Returning,
+        /// <summary>Застрял во враге (плюшевый мишка): висит на нём, пока его не выбьют.</summary>
+        Stuck,
     }
 
     /// <summary>
@@ -37,6 +39,14 @@ namespace Bouncer.Balls
         /// <summary>На какой высоте над ногами бросившего летит возвращающийся мяч.</summary>
         const float ReturnHeight = 1.1f;
         const float MaxReturnTime = 4f;
+        /// <summary>Йо-йо: длина нити — пролетев столько метров, мяч летит обратно.</summary>
+        const float YoyoRange = 9f;
+        /// <summary>Йо-йо: насколько шире мяча полоса, в которой он задевает врагов на обратном пути.</summary>
+        const float YoyoGrazeExtra = 0.35f;
+        /// <summary>Глаз-алмаз: дальше этого мяч врагов не замечает.</summary>
+        const float HomingRange = 14f;
+        /// <summary>Глаз-алмаз: половина угла, в котором мяч видит врагов впереди, градусы.</summary>
+        const float HomingCone = 75f;
 
         static readonly List<Ball> s_active = new();
         static readonly List<Ball> s_loose = new();
@@ -76,6 +86,9 @@ namespace Bouncer.Balls
         Vector3 _snakeHeading;
         float _snakeDistance;
         float _snakeSide = 1f;
+        /// <summary>Сколько метров пролетел по горизонтали с броска (длина нити йо-йо).</summary>
+        float _travel;
+        bool _yoyoBack;
 
         public BallDefinition Definition => definition;
         public BallState State { get; private set; }
@@ -144,6 +157,8 @@ namespace Bouncer.Balls
             _grazed.Clear();
             _floorBouncesLeft = 0;
             _blastDone = false;
+            _travel = 0f;
+            _yoyoBack = false;
             MakeKinematicAt(transform.position);
             SetState(BallState.Idle);
         }
@@ -173,6 +188,8 @@ namespace Bouncer.Balls
             _grazed.Clear();
             _floorBouncesLeft = t.Perks.floorBounces;
             _blastDone = false;
+            _travel = 0f;
+            _yoyoBack = false;
             // Первое пятно жвачки — вскоре после броска, а не через целый шаг.
             _gumDistance = definition.gumSpacing * 0.5f;
 
@@ -228,6 +245,25 @@ namespace Bouncer.Balls
         /// <summary>Мяч забрали — вернуть в пул.</summary>
         public void Consume() => PoolService.Despawn(gameObject);
 
+        /// <summary>Мяч застрял во враге: безопасен, не ловится и не подбирается, пока враг его не отпустит.</summary>
+        public void Stick(Vector3 position)
+        {
+            Team = Team.Neutral;
+            _receiver = null;
+            _yoyoBack = false;
+            IsComingBack = false;
+            s_loose.Remove(this);
+            MakeKinematicAt(position);
+            SetState(BallState.Stuck);
+        }
+
+        /// <summary>Застрявший мяч едет вместе с врагом.</summary>
+        public void HoldAt(Vector3 position)
+        {
+            if (State == BallState.Stuck)
+                MakeKinematicAt(position);
+        }
+
         public bool IsCatchableBy(Team catcher) =>
             !IsPhantom && (State == BallState.Popped || (State == BallState.Live && this.Team.IsHostileTo(catcher)));
 
@@ -281,14 +317,21 @@ namespace Bouncer.Balls
 
         void TickFlight(float dt, bool live)
         {
+            if (live && _yoyoBack)
+            {
+                TickYoyoBack(dt);
+                return;
+            }
             _stateTime += dt;
-            if (live && Perks.boomerang && _stateTime >= definition.boomerangDelay && CanReturn())
+            if (live && Perks.boomerang && !Perks.yoyo && _stateTime >= definition.boomerangDelay && CanReturn())
             {
                 SteerBack(dt);
             }
             else
             {
                 _velocity.y -= _gravity * dt;
+                if (live && Perks.homing > 0f && !IsComingBack)
+                    Home(dt);
                 if (live && Perks.snakeAmplitude > 0f)
                     Snake(dt);
             }
@@ -343,8 +386,16 @@ namespace Bouncer.Balls
                         if (result == BallContactResult.Hit)
                         {
                             OnTargetHit(hit.point, hit.normal, hit.collider, position);
+                            // Рогатка: заряженный мяч пробивает врага и летит дальше, не теряя скорости.
+                            if (Perks.chargedPierce && Stats.Has(HitFlags.Charged))
+                            {
+                                _ignored.Add(hit.collider);
+                                continue;
+                            }
                             if (_chainsLeft > 0 && TryChain(hit, position))
                                 continue;
+                            if (Perks.yoyo && TryStartYoyo(hit.collider, position))
+                                return;
                             Pop(position, hit.normal);
                             return;
                         }
@@ -360,6 +411,8 @@ namespace Bouncer.Balls
                         Blast(hit.point, null);
                     if (live && _floorBouncesLeft > 0 && TryFloorBounce(hit.point, ref remaining))
                         continue;
+                    if (live && Perks.yoyo && TryStartYoyo(null, position))
+                        return;
                     BecomeLoose(position, Vector3.Reflect(_velocity, hit.normal) * definition.floorBounceKeep);
                     return;
                 }
@@ -379,6 +432,11 @@ namespace Bouncer.Balls
 
                 if (live)
                 {
+                    // Стеночка: каждый рикошет делает этот бросок сильнее.
+                    if (Perks.wallDamage > 0)
+                        AddDamage(Perks.wallDamage);
+                    if (Perks.yoyo && TryStartYoyo(null, position))
+                        return;
                     Ricochets++;
                     if (Ricochets > definition.maxRicochets || Flat(_velocity).magnitude < definition.minLiveSpeed)
                     {
@@ -393,6 +451,8 @@ namespace Bouncer.Balls
                 Consume();
                 return;
             }
+            if (live && Perks.yoyo && _travel >= YoyoRange && TryStartYoyo(null, position))
+                return;
             if (live && IsComingBack && TryHandBack(position))
                 return;
             float lifetime = Perks.boomerang ? definition.maxLiveTime + 2f : definition.maxLiveTime;
@@ -616,17 +676,21 @@ namespace Bouncer.Balls
             position += step;
             if (!live)
                 return;
+            _travel += Flat(step).magnitude;
             if (Grazes)
-                Graze(from, position);
+                Graze(from, position, Perks.grazeRadius);
             if (Perks.gumTrail)
                 TrailGum(from, position);
         }
 
-        /// <summary>Сдутый мяч: бьёт всех противников рядом со своим путём (каждого — раз за бросок) и летит дальше.</summary>
-        void Graze(Vector3 from, Vector3 to)
+        /// <summary>
+        /// Задеть всех противников рядом с отрезком пути (каждого — раз за бросок) и лететь дальше:
+        /// сдутый мяч всегда, йо-йо — на обратном пути.
+        /// </summary>
+        void Graze(Vector3 from, Vector3 to, float radius)
         {
             int mask = Layers.LiveBallMask(Team) & ~Layers.EnvironmentMask;
-            int count = Physics.OverlapCapsuleNonAlloc(from, to, Perks.grazeRadius, s_graze, mask, QueryTriggerInteraction.Ignore);
+            int count = Physics.OverlapCapsuleNonAlloc(from, to, radius, s_graze, mask, QueryTriggerInteraction.Ignore);
             Vector3 direction = Flat(_velocity);
             direction = direction.sqrMagnitude > 1e-4f ? direction.normalized : Flat(transform.forward).normalized;
             for (int i = 0; i < count; i++)
@@ -737,6 +801,93 @@ namespace Bouncer.Balls
             _stateTime = 0f;
             IgnoreFor(hit.collider, 0.25f);
             return true;
+        }
+
+        /// <summary>Стеночка: бросок бьёт сильнее на столько.</summary>
+        void AddDamage(int amount)
+        {
+            var stats = Stats;
+            stats.Damage += amount;
+            Stats = stats;
+        }
+
+        /// <summary>Глаз-алмаз: мяч плавно доворачивает к ближайшему врагу впереди.</summary>
+        void Home(float dt)
+        {
+            Vector3 horizontal = Flat(_velocity);
+            float speed = horizontal.magnitude;
+            if (speed < 1e-3f)
+                return;
+            Vector3 heading = Perks.snakeAmplitude > 0f ? _snakeHeading : horizontal / speed;
+            Vector3 position = _rb.position;
+            Targetable best = null;
+            float bestSqr = HomingRange * HomingRange;
+            foreach (var target in Targetable.All)
+            {
+                if (!target.IsAlive || !Team.IsHostileTo(target.Team))
+                    continue;
+                Vector3 to = Flat(target.AimPoint - position);
+                float sqr = to.sqrMagnitude;
+                if (sqr < 0.09f || sqr > bestSqr || Vector3.Angle(heading, to) > HomingCone)
+                    continue;
+                bestSqr = sqr;
+                best = target;
+            }
+            if (best == null)
+                return;
+            Vector3 want = Flat(best.AimPoint - position).normalized;
+            Vector3 turned = Vector3.RotateTowards(heading, want, Perks.homing * Mathf.Deg2Rad * dt, 0f);
+            // Змейка вьётся вокруг своего направления — доворачиваем его, а не саму скорость.
+            if (Perks.snakeAmplitude > 0f)
+                _snakeHeading = turned;
+            else
+                _velocity = turned * speed + Vector3.up * _velocity.y;
+        }
+
+        /// <summary>Йо-йо: мяч разворачивается и летит в руки бросившему, задевая всех по пути.</summary>
+        bool TryStartYoyo(Collider struck, Vector3 position)
+        {
+            if (_yoyoBack || !CanReturn())
+                return false;
+            _yoyoBack = true;
+            IsComingBack = true;
+            _stateTime = 0f;
+            _grazed.Clear();
+            // Того, в кого мяч только что попал, на развороте второй раз не бьём.
+            var direct = struck ? struck.GetComponentInParent<IDamageable>() : null;
+            if (direct != null)
+                _grazed.Add(direct);
+            _rb.MovePosition(position);
+            return true;
+        }
+
+        /// <summary>Обратный путь йо-йо: прямо к рукам, сквозь препятствия (мяч на нитке), задевая врагов.</summary>
+        void TickYoyoBack(float dt)
+        {
+            _stateTime += dt;
+            Vector3 position = _rb.position;
+            if (!CanReturn() || _stateTime > MaxReturnTime)
+            {
+                _yoyoBack = false;
+                IsComingBack = false;
+                _elasticDone = true;
+                BecomeLoose(position, Flat(_velocity) * 0.3f);
+                return;
+            }
+
+            Vector3 delta = Thrower.transform.position + Vector3.up * ReturnHeight - position;
+            float distance = delta.magnitude;
+            float speed = Mathf.Max(Flat(_velocity).magnitude, definition.elasticReturnSpeed, definition.minLiveSpeed + 4f);
+            Vector3 direction = distance > 1e-4f ? delta / distance : Vector3.zero;
+            _velocity = direction * speed;
+            Vector3 from = position;
+            position += direction * Mathf.Min(distance, speed * dt);
+            Graze(from, position, definition.radius + YoyoGrazeExtra);
+            if (State != BallState.Live)
+                return;
+            if (TryHandBack(position))
+                return;
+            _rb.MovePosition(position);
         }
 
         bool CanReturn() => !IsPhantom && _receiver != null && Thrower != null && Thrower.activeInHierarchy;

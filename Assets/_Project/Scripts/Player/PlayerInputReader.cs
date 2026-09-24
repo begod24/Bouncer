@@ -19,6 +19,7 @@ namespace Bouncer.Player
         InputAction _catch;
         InputAction _dash;
         InputAction _pause;
+        InputAction _interact;
 
         void Awake()
         {
@@ -33,6 +34,7 @@ namespace Bouncer.Player
             _catch = actions.FindAction("Player/Catch", true);
             _dash = actions.FindAction("Player/Dash", true);
             _pause = actions.FindAction("Player/Pause", true);
+            _interact = actions.FindAction("Player/Interact", true);
         }
 
         public PlayerIntent ReadIntent()
@@ -75,6 +77,7 @@ namespace Bouncer.Player
             intent.CatchPressed = _catch.WasPressedThisFrame();
             intent.DashPressed = _dash.WasPressedThisFrame();
             intent.PausePressed = _pause.WasPressedThisFrame();
+            intent.InteractPressed = _interact.WasPressedThisFrame();
             return intent;
         }
 

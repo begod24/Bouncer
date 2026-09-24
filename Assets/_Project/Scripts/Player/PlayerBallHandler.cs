@@ -159,6 +159,9 @@ namespace Bouncer.Player
 
         public void GiveBall(int amount = 1) => Balls = Mathf.Max(0, Balls + amount);
 
+        /// <summary>Лишние мячи сверх вместимости пропадают (карточки заново применяются на новой арене).</summary>
+        public void ClampToMax() => Balls = Mathf.Clamp(Balls, 0, MaxBalls);
+
         /// <summary>В руках больше мячей, чем теперь помещается (хулиганство): лишние падают под ноги.</summary>
         public void DropExcess()
         {

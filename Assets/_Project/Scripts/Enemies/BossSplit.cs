@@ -65,7 +65,8 @@ namespace Bouncer.Enemies
 
         void OnDied(HitInfo hit)
         {
-            if (childPrefab == null || childCount <= 0)
+            // Арена пройдена и остатки исчезают — половинок не будет.
+            if (childPrefab == null || childCount <= 0 || hit.Has(HitFlags.Despawn))
                 return;
 
             Vector3 origin = transform.position;

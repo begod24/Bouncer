@@ -15,7 +15,7 @@ namespace Bouncer.Waves
 
     /// <summary>
     /// Волны арены: дорожки (кто появляется, когда, как часто и какими группами) и разовые выходы
-    /// (например, босс). Время — секунды забега на арене.
+    /// (элитные враги, босс). Время — секунды боя на арене.
     /// </summary>
     [CreateAssetMenu(menuName = "Bouncer/Wave Definition", fileName = "Wave_")]
     public sealed class WaveDefinition : ScriptableObject
@@ -73,7 +73,14 @@ namespace Bouncer.Waves
         [Min(0f)] public float time;
         [Min(1)] public int count = 1;
         public GroupLayout layout = GroupLayout.Line;
-        [Tooltip("Босс арены: когда он и все его половинки выбиты, забег пройден")]
+        [Tooltip("Босс арены: когда он и все его половинки выбиты, арена пройдена")]
         public bool boss;
+        [Tooltip("Элитный враг: золотая метка и свой звук при появлении")]
+        public bool elite;
+        [Tooltip("Если не пусто — выходит случайный из этих вместо prefab (какая элитка — сюрприз)")]
+        public GameObject[] variants = System.Array.Empty<GameObject>();
+
+        public GameObject PickPrefab() =>
+            variants != null && variants.Length > 0 ? variants[UnityEngine.Random.Range(0, variants.Length)] : prefab;
     }
 }

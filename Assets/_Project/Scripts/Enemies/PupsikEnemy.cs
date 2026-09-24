@@ -119,11 +119,12 @@ namespace Bouncer.Enemies
                         Enter(State.Windup);
                         break;
                     }
+                    // Рядом с вожаком (пупс в чепчике) рой бегает быстрее.
+                    float speed = definition.moveSpeed * SwarmLeader.SpeedMultiplierAt(_rb.position);
                     Vector3 desired = ChaseDirection(targetDirection, distance)
-                                      * (definition.moveSpeed * GroundZone.MoveMultiplierAt(_rb.position)
-                                                              * GumSpot.EnemyMoveMultiplierAt(_rb.position))
+                                      * (speed * GroundZone.MoveMultiplierAt(_rb.position) * GumSpot.EnemyMoveMultiplierAt(_rb.position))
                                       + Separation() * definition.separationStrength;
-                    Drive(desired);
+                    Drive(desired, speed);
                     Face(desired.sqrMagnitude > 0.04f ? desired : targetDirection, dt);
                     break;
 
@@ -216,10 +217,12 @@ namespace Bouncer.Enemies
 
         // ---------- Тело ----------
 
-        void Drive(Vector3 desired)
+        void Drive(Vector3 desired) => Drive(desired, definition.moveSpeed);
+
+        void Drive(Vector3 desired, float maxSpeed)
         {
             desired.y = 0f;
-            desired = Vector3.ClampMagnitude(desired, definition.moveSpeed);
+            desired = Vector3.ClampMagnitude(desired, maxSpeed);
             Vector3 horizontal = Flat(_rb.linearVelocity);
             _rb.AddForce(Vector3.ClampMagnitude((desired - horizontal) * 12f, definition.acceleration), ForceMode.Acceleration);
         }

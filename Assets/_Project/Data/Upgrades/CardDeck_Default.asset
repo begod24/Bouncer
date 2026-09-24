@@ -10,11 +10,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4c128b6cf93e145c6a27cd7b95b69a93, type: 3}
-  m_Name: Progression_Default
+  m_Name: CardDeck_Default
   m_EditorClassIdentifier: Bouncer.Upgrades::Bouncer.Upgrades.ProgressionDefinition
-  experienceBase: 6
-  experienceGrowth: 3
-  offerDelay: 0.35
   choices: 3
   deck:
   - {fileID: 11400000, guid: 898e50f4a3e844b7babc8a3daea984b5, type: 2}
@@ -34,4 +31,40 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 5520f5fa2822b404b94694cde44c1d40, type: 2}
   - {fileID: 11400000, guid: 813eebd4ac7b64df88ab406bc138dda9, type: 2}
   - {fileID: 11400000, guid: 83c6e2ebfffbd47ddac98b07d069ff8f, type: 2}
+  - {fileID: 11400000, guid: 2f9244981d5a2490986e6e427d2e2a71, type: 2}
+  - {fileID: 11400000, guid: ecf8ea7d6d054413682a083d0db576a7, type: 2}
+  - {fileID: 11400000, guid: 1fb1ae03346f946d183856b1b256c69b, type: 2}
+  - {fileID: 11400000, guid: 28a1eef0940b84ceabf2e90e3bfae4c4, type: 2}
+  - {fileID: 11400000, guid: 7ebfc785946744643b7341ceba0a11e9, type: 2}
+  - {fileID: 11400000, guid: e9f55f8f847cd4f38b135cbe7ba34046, type: 2}
+  - {fileID: 11400000, guid: b3f9cc470fee54df08bb50df8f438a0b, type: 2}
   filler: {fileID: 11400000, guid: 8debd2ee683184cfea4154b2e606b657, type: 2}
+  offerDelay: 0.35
+  start:
+    common: 1
+    rare: 0
+    gold: 0
+  portfolio:
+    common: 60
+    rare: 32
+    gold: 8
+  boss:
+    common: 0
+    rare: 75
+    gold: 25
+  shop:
+    common: 60
+    rare: 32
+    gold: 8
+  comboBoost: 4
+  shopSlots: 4
+  priceCommon: 20
+  priceRare: 40
+  priceGold: 75
+  priceGrowth: 0.15
+  rerollPrice: 5
+  rerollStep: 3
+  lemonadePrice: 10
+  lemonadeHeal: 1
+  sandwichPrice: 25
+  interestPer: 10

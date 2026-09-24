@@ -20,6 +20,8 @@ namespace Bouncer.Enemies
         float _nextRegroup;
         float _nextVolley;
 
+        /// <summary>Офицер: пока он в строю, залпы идут по его расписанию.</summary>
+        public TinSoldierEnemy Leader { get; set; }
         public Targetable Target { get; private set; }
         public int VolleyId { get; private set; }
         public float VolleyStart { get; private set; } = float.NegativeInfinity;
@@ -60,6 +62,8 @@ namespace Bouncer.Enemies
             if (_tickFrame == Time.frameCount || _members.Count == 0)
                 return;
             _tickFrame = Time.frameCount;
+            if (Leader != null && _members.Contains(Leader))
+                d = Leader.Definition;
 
             Vector3 centroid = Vector3.zero;
             foreach (var member in _members)

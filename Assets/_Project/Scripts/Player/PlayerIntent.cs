@@ -21,6 +21,8 @@ namespace Bouncer.Player
         public bool CatchPressed;
         public bool DashPressed;
         public bool PausePressed;
+        /// <summary>Взаимодействие: открыть ларёк и т.п.</summary>
+        public bool InteractPressed;
     }
 
     public interface IPlayerIntentSource

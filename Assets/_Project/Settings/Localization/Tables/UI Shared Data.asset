@@ -87,10 +87,6 @@ MonoBehaviour:
     m_Key: victory.stats
     m_Metadata:
       m_Items: []
-  - m_Id: 155645370385
-    m_Key: hud.level
-    m_Metadata:
-      m_Items: []
   - m_Id: 155645370386
     m_Key: hud.kills
     m_Metadata:
@@ -101,10 +97,6 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 155645370388
     m_Key: hud.help
-    m_Metadata:
-      m_Items: []
-  - m_Id: 155645370389
-    m_Key: upgrade.title
     m_Metadata:
       m_Items: []
   - m_Id: 155645370390
@@ -233,6 +225,106 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 1931966668800
     m_Key: common.back_hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958216966144
+    m_Key: choice.title.start
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160448
+    m_Key: choice.title.portfolio
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160449
+    m_Key: choice.title.boss
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160450
+    m_Key: card.category.combo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160451
+    m_Key: card.rarity.rare
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160452
+    m_Key: card.rarity.gold
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160453
+    m_Key: shop.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160454
+    m_Key: shop.subtitle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160455
+    m_Key: shop.sold
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160456
+    m_Key: shop.lock
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160457
+    m_Key: shop.locked
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160458
+    m_Key: shop.reroll
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160459
+    m_Key: shop.lemonade
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160460
+    m_Key: shop.sandwich
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160461
+    m_Key: shop.leave
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160462
+    m_Key: shop.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160463
+    m_Key: shop.not_enough
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160464
+    m_Key: shop.interest
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160465
+    m_Key: kiosk.prompt
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160466
+    m_Key: kiosk.open
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160467
+    m_Key: arena.cleared
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160468
+    m_Key: arena.cleared.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160469
+    m_Key: arena.yard_morning
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160470
+    m_Key: arena.yard_evening
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160471
+    m_Key: exit.yard_evening
     m_Metadata:
       m_Items: []
   m_Metadata:

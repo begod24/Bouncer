@@ -146,6 +146,16 @@ def wobble(pts, amount, seed):
     return [(x + rng.uniform(-amount, amount), y + rng.uniform(-amount, amount)) for x, y in pts]
 
 
+def dense(pts, step=3.0):
+    """Ломаная, разбитая на короткие отрезки: пунктир (dash) режет только по отрезкам."""
+    out = []
+    for (x0, y0), (x1, y1) in zip(pts[:-1], pts[1:]):
+        n = max(1, int(math.hypot(x1 - x0, y1 - y0) / step))
+        out += [(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t) for t in np.linspace(0, 1, n, endpoint=False)]
+    out.append(pts[-1])
+    return out
+
+
 def rotate(pts, cx, cy, degrees, dx=0.0, dy=0.0):
     """Поворот вокруг (cx, cy) (в координатах картинки: минус — против часовой) и сдвиг."""
     a = math.radians(degrees)
@@ -218,6 +228,23 @@ def hud():
     c.stroke([(64, 58), (64, 90)], 7)
     c.save("HUD_Coin.png")
 
+    c = Canvas(128, 128, 11)  # «Крышка от кастрюли»: готовность блока в HUD
+    lid = c.circle_pts(64, 64, 46)
+    c.fill(lid, opacity=0.3, hatch=(30, 7))
+    c.stroke(lid, 7, closed=True)
+    c.stroke(c.circle_pts(64, 64, 33), 4, closed=True, opacity=0.6)
+    knob = c.circle_pts(64, 64, 11)
+    c.fill(knob, opacity=0.9)
+    c.stroke(knob, 5, closed=True)
+    c.save("HUD_Lid.png")
+
+    c = Canvas(256, 128, 12)  # стрелка мелом на асфальте: выход на следующую арену, метка над ларьком
+    c.stroke([(18, 64), (196, 64)], 18)
+    c.arrow_head((238, 64), 0, 62, 18)
+    for y in (40, 88):
+        c.stroke([(26, y), (86, y)], 7, opacity=0.7)
+    c.save("Exit_Arrow.png")
+
 
 # ================================================================ Карточки
 
@@ -247,6 +274,11 @@ def card_frames():
     c.stroke(c.round_rect_pts(22, 22, 378, 538, 26), 10, closed=True, rough=0)
     c.alpha = np.clip(blur(c.alpha, 6.0) * 2.2, 0, 1)
     c.save("Card_Glow.png", chalky=False)
+
+    # Рамка редкости по контуру вкладыша (цвет — в Unity): у редких синяя, у золотых золотая.
+    c = Canvas(360, 520, 23)
+    c.stroke(pts, 12, closed=True, rough=0)
+    c.save("Card_RarityFrame.png", chalky=False)
 
 
 def icons():
@@ -431,6 +463,125 @@ def icons():
     for y0 in (200, 230):
         c.stroke([(12 + i * 4, y0 + 9 * math.sin(i * 0.36)) for i in range(59)], 8)
     c.save("Icons/Icon_Freeze.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 44)  # Стеночка: мяч отскакивает от кирпичной стенки и бьёт сильнее
+    wall = [(180, 20), (236, 20), (236, 236), (180, 236)]
+    c.fill(wall, opacity=0.3, hatch=(45, 10))
+    c.stroke(wall, 9, closed=True)
+    for row, y in enumerate(range(20, 236, 27)):
+        if y > 20:
+            c.stroke([(180, y), (236, y)], 5, opacity=0.9)
+        for x in ((208,) if row % 2 == 0 else (194, 222)):
+            c.stroke([(x, y + 3), (x, min(233, y + 24))], 5, opacity=0.9)
+    c.stroke(dense([(58, 194), (172, 110), (70, 52)]), 7, dash=12)
+    c.arrow_head((70, 52), math.degrees(math.atan2(52 - 110, 70 - 172)), 26, 8)
+    for a in (150, 180, 210):
+        ca, sa = math.cos(math.radians(a)), math.sin(math.radians(a))
+        c.stroke([(172 + ca * 10, 110 + sa * 10), (172 + ca * 26, 110 + sa * 26)], 6)
+    c.stroke([(122, 102), (122, 130)], 9)
+    c.stroke([(108, 116), (136, 116)], 9)
+    ball = c.circle_pts(52, 200, 28)
+    c.fill(ball, opacity=0.5, hatch=(30, 8))
+    c.stroke(ball, 8, closed=True)
+    c.save("Icons/Icon_Wall.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 45)  # Рогатка: рогатка, резинка натянута, мяч в кожанке
+    c.stroke([(128, 248), (128, 150)], 18, rough=0.8)
+    c.stroke([(128, 156), (74, 64)], 15, rough=0.8)
+    c.stroke([(128, 156), (182, 64)], 15, rough=0.8)
+    c.stroke([(74, 64), (56, 196)], 6)
+    c.stroke([(182, 64), (56, 196)], 6)
+    ball = c.circle_pts(52, 204, 24)
+    c.fill(ball, opacity=0.5, hatch=(30, 8))
+    c.stroke(ball, 8, closed=True)
+    for x0, y0 in ((196, 44), (214, 64), (222, 92)):
+        c.stroke([(x0, y0), (x0 + 22, y0 - 22)], 6, opacity=0.85)
+    c.save("Icons/Icon_Slingshot.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 46)  # Глаз-алмаз: глаз, и мяч по дуге сам заходит в мишень
+    upper = [(20 + 120 * t, 92 - 34 * math.sin(math.pi * t)) for t in np.linspace(0, 1, 24)]
+    lower = [(140 - 120 * t, 92 + 30 * math.sin(math.pi * t)) for t in np.linspace(0, 1, 24)]
+    c.stroke(upper + lower, 8, closed=True)
+    iris = c.circle_pts(80, 92, 20)
+    c.fill(iris, opacity=0.75)
+    c.stroke(iris, 6, closed=True)
+    for a in (-120, -90, -60):
+        ca, sa = math.cos(math.radians(a)), math.sin(math.radians(a))
+        c.stroke([(80 + ca * 44, 92 + sa * 50), (80 + ca * 58, 92 + sa * 64)], 6)
+    curve = [((1 - t) ** 2 * 118 + 2 * (1 - t) * t * 214 + t * t * 204, (1 - t) ** 2 * 124 + 2 * (1 - t) * t * 112 + t * t * 172)
+             for t in np.linspace(0, 1, 30)]
+    c.stroke(curve, 7, dash=12)
+    c.arrow_head(curve[-1], math.degrees(math.atan2(curve[-1][1] - curve[-3][1], curve[-1][0] - curve[-3][0])), 24, 8)
+    c.stroke(c.circle_pts(204, 212, 30), 7, closed=True)
+    c.fill(c.circle_pts(204, 212, 10), opacity=0.9)
+    c.save("Icons/Icon_EagleEye.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 47)  # Домино: костяшки падают одна на другую
+    c.stroke([(12, 224), (244, 224)], 8)
+    for x, angle in ((50, 50), (122, 25), (196, 0)):
+        tile = rotate(c.round_rect_pts(x - 20, 124, x + 20, 220, 8), x + 20, 220, angle)
+        c.fill(tile, opacity=0.35, hatch=(-30, 8))
+        c.stroke(tile, 8, closed=True)
+        c.stroke(rotate([(x - 12, 172), (x + 12, 172)], x + 20, 220, angle), 5)
+        for dy in (148, 196):
+            dot = rotate(c.circle_pts(x, dy, 6), x + 20, 220, angle)
+            c.fill(dot, opacity=0.9)
+    for x0, y0 in ((40, 100), (30, 124)):
+        c.stroke([(x0, y0), (x0 - 20, y0 + 6)], 6, opacity=0.8)
+    c.save("Icons/Icon_Domino.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 48)  # Копилка: свинка-копилка и монетка над щелью
+    body = [(124 + 82 * math.cos(a), 158 + 56 * math.sin(a)) for a in np.linspace(0, 2 * math.pi, 60, endpoint=False)]
+    c.fill(body, opacity=0.35, hatch=(30, 9))
+    c.stroke(body, 9, closed=True)
+    snout = c.circle_pts(210, 160, 18)
+    c.stroke(snout, 8, closed=True)
+    for y in (154, 168):
+        c.fill(c.circle_pts(210, y, 4), opacity=0.9)
+    c.stroke([(92, 110), (108, 78), (126, 104)], 8)
+    c.fill(c.circle_pts(172, 136, 6), opacity=0.9)
+    for x in (72, 104, 148, 176):
+        c.stroke([(x, 206), (x, 230)], 12)
+    c.stroke([(44, 150), (30, 142), (24, 154), (34, 162), (28, 172)], 6)
+    c.stroke([(106, 104), (148, 104)], 7)
+    coin = c.circle_pts(128, 42, 24)
+    c.fill(coin, opacity=0.4, hatch=(30, 7))
+    c.stroke(coin, 7, closed=True)
+    for y in (34, 42):
+        c.stroke([(116, y), (140, y)], 5)
+    c.stroke([(128, 42), (128, 56)], 5)
+    c.save("Icons/Icon_Piggy.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 49)  # Крышка от кастрюли: мяч отскакивает от крышки, как от щита
+    lid = c.circle_pts(108, 142, 80)
+    c.fill(lid, opacity=0.3, hatch=(30, 9))
+    c.stroke(lid, 9, closed=True)
+    c.stroke(c.circle_pts(108, 142, 60), 5, closed=True, opacity=0.7)
+    knob = c.round_rect_pts(90, 130, 126, 154, 10)
+    c.fill(knob, opacity=0.8)
+    c.stroke(knob, 6, closed=True)
+    c.stroke(dense([(190, 112), (214, 64)]), 7, dash=11)
+    for a in (-60, -20, 20):
+        ca, sa = math.cos(math.radians(a)), math.sin(math.radians(a))
+        c.stroke([(190 + ca * 12, 118 + sa * 12), (190 + ca * 28, 118 + sa * 28)], 6)
+    ball = c.circle_pts(220, 44, 22)
+    c.fill(ball, opacity=0.5, hatch=(30, 8))
+    c.stroke(ball, 8, closed=True)
+    c.save("Icons/Icon_Lid.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 50)  # Йо-йо: йо-йо на нитке крутится и возвращается в руку
+    yoyo = c.circle_pts(128, 170, 58)
+    c.fill(yoyo, opacity=0.4, hatch=(30, 9))
+    c.stroke(yoyo, 9, closed=True)
+    c.stroke(c.circle_pts(128, 170, 40), 5, closed=True, opacity=0.7)
+    c.fill(c.circle_pts(128, 170, 10), opacity=0.9)
+    c.stroke([(128, 162), (128, 36)], 5)
+    c.stroke(c.circle_pts(128, 24, 13), 8, closed=True)
+    back = c.circle_pts(128, 170, 80, 200, 290, 24)
+    c.stroke(back, 7)
+    c.arrow_head(back[-1], math.degrees(math.atan2(back[-1][1] - back[-3][1], back[-1][0] - back[-3][0])), 22, 7)
+    c.stroke(c.circle_pts(128, 170, 80, 20, 110, 24), 7, opacity=0.8)
+    c.save("Icons/Icon_Yoyo.png", grain=0.3, color=INK)
 
 
 if __name__ == "__main__":

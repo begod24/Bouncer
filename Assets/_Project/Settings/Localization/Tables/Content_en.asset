@@ -173,6 +173,64 @@ MonoBehaviour:
       catches.
     m_Metadata:
       m_Items: []
+  - m_Id: 133956933509120
+    m_Localized: Off the wall
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509121
+    m_Localized: Every wall bounce adds +1 damage to the throw. Up to two times.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509122
+    m_Localized: Slingshot
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509123
+    m_Localized: A charged throw pierces through every enemy and keeps flying.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509124
+    m_Localized: Eagle eye
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509125
+    m_Localized: The ball curves toward the nearest enemy ahead.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509126
+    m_Localized: Domino
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509127
+    m_Localized: A knocked-out enemy falls onto its neighbours and knocks them over,
+      all down the line.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509128
+    m_Localized: Piggy bank
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509129
+    m_Localized: 'At the newsstand: +1 coin for every 10 you carry. Up to two times.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509130
+    m_Localized: Pot lid
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509131
+    m_Localized: Blocks one hit or ball every 20 seconds.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509132
+    m_Localized: Yo-yo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509133
+    m_Localized: Boomerang + Rubber band. After a hit the ball snaps back to your
+      hands, knocking down everyone on the way.
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

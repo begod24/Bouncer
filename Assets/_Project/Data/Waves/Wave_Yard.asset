@@ -12,47 +12,96 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a3ec48938dc7428eb1bca75c8c72ba9, type: 3}
   m_Name: Wave_Yard
   m_EditorClassIdentifier: Bouncer.Waves::Bouncer.Waves.WaveDefinition
-  duration: 420
+  duration: 300
   maxAliveStart: 14
   maxAliveEnd: 36
   tracks:
   - name: "\u041D\u0435\u0432\u0430\u043B\u044F\u0448\u043A\u0438"
     prefab: {fileID: 188804801301329896, guid: c4b9f7220404f4a3481d1c5c9e2173f2, type: 3}
     from: 0
-    to: 360
-    firstDelay: 1
-    intervalStart: 6.5
-    intervalEnd: 3.2
+    to: 270
+    firstDelay: 0.75
+    intervalStart: 5.85
+    intervalEnd: 2.8799999
     groupStart: 2
     groupEnd: 2
     layout: 0
     maxAlive: 12
   - name: "\u041F\u0443\u043F\u0441\u044B"
     prefab: {fileID: 2124556403835334173, guid: c4e890b4fcc064153b2a377a9c3a1ff5, type: 3}
-    from: 40
-    to: 360
+    from: 30
+    to: 270
     firstDelay: 0
-    intervalStart: 22
-    intervalEnd: 10
+    intervalStart: 19.8
+    intervalEnd: 9
     groupStart: 5
     groupEnd: 8
     layout: 0
     maxAlive: 24
   - name: "\u0421\u043E\u043B\u0434\u0430\u0442\u0438\u043A\u0438"
     prefab: {fileID: 7471714542055159759, guid: 0f3b097281a5942a6abc0e12ce480b0f, type: 3}
-    from: 90
-    to: 360
+    from: 67.5
+    to: 270
     firstDelay: 0
-    intervalStart: 40
-    intervalEnd: 24
+    intervalStart: 36
+    intervalEnd: 21.599998
     groupStart: 3
     groupEnd: 4
     layout: 1
     maxAlive: 8
+  - name: "\u0426\u044B\u043F\u043B\u044F\u0442\u0430"
+    prefab: {fileID: 2642837128033992027, guid: f194bfe63c83c48cfab3d782e096b1d3, type: 3}
+    from: 50
+    to: 270
+    firstDelay: 0
+    intervalStart: 16
+    intervalEnd: 9
+    groupStart: 1
+    groupEnd: 2
+    layout: 0
+    maxAlive: 4
+  - name: "\u042E\u043B\u044B"
+    prefab: {fileID: 7639004335897309999, guid: 8e91cb7fd4cd44c728953b5b65f7a70d, type: 3}
+    from: 90
+    to: 270
+    firstDelay: 0
+    intervalStart: 24
+    intervalEnd: 14
+    groupStart: 1
+    groupEnd: 1
+    layout: 0
+    maxAlive: 3
   bursts:
   - name: "\u0411\u043E\u043B\u044C\u0448\u0430\u044F \u043D\u0435\u0432\u0430\u043B\u044F\u0448\u043A\u0430"
     prefab: {fileID: 7330531023709120378, guid: ea04d21d2c32443ce83b93adb57bdd6a, type: 3}
-    time: 360
+    time: 270
     count: 1
     layout: 0
     boss: 1
+    elite: 0
+    variants: []
+  - name: "\u042D\u043B\u0438\u0442\u043A\u0430 1"
+    prefab: {fileID: 188804801301329896, guid: 82a7b5db940874a67824ed841dfaf38e, type: 3}
+    time: 100
+    count: 1
+    layout: 0
+    boss: 0
+    elite: 1
+    variants:
+    - {fileID: 188804801301329896, guid: 82a7b5db940874a67824ed841dfaf38e, type: 3}
+    - {fileID: 2124556403835334173, guid: 017cd34e9dbc849b4a27151f1e0069ce, type: 3}
+    - {fileID: 9030351865293224398, guid: 1dc45cae9fd3d4fd8b7d306a54366704, type: 3}
+    - {fileID: 3551966787156909914, guid: 9b6c61d06bd824b95aefe53d279425ff, type: 3}
+  - name: "\u042D\u043B\u0438\u0442\u043A\u0430 2"
+    prefab: {fileID: 188804801301329896, guid: 82a7b5db940874a67824ed841dfaf38e, type: 3}
+    time: 200
+    count: 1
+    layout: 0
+    boss: 0
+    elite: 1
+    variants:
+    - {fileID: 188804801301329896, guid: 82a7b5db940874a67824ed841dfaf38e, type: 3}
+    - {fileID: 2124556403835334173, guid: 017cd34e9dbc849b4a27151f1e0069ce, type: 3}
+    - {fileID: 7471714542055159759, guid: 7dc264dc887c1406f88d7ed7c9895418, type: 3}
+    - {fileID: 9030351865293224398, guid: 1dc45cae9fd3d4fd8b7d306a54366704, type: 3}
+    - {fileID: 3551966787156909914, guid: 9b6c61d06bd824b95aefe53d279425ff, type: 3}

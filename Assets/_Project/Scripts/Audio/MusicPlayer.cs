@@ -102,8 +102,9 @@ namespace Bouncer.Audio
             if (session != _session)
             {
                 // Новая сцена сразу с забегом («Ещё раз», «Заново») — игровой трек начинается сначала.
+                // Следующая арена той же прогулки музыку не обрывает.
                 _session = session;
-                _restart = session != null && session.State != SessionState.Title;
+                _restart = session != null && session.State != SessionState.Title && RunState.ArenaIndex == 0;
             }
 
             var wanted = session == null || session.State == SessionState.Title ? menuTheme : gameTheme;

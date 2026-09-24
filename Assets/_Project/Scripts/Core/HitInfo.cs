@@ -14,6 +14,10 @@ namespace Bouncer.Core
         Area = 1 << 3,
         /// <summary>Подкат: рывок игрока сбил с ног.</summary>
         Tackle = 1 << 4,
+        /// <summary>Арена пройдена, оставшиеся враги исчезают: ни монеток, ни счёта, ни домино.</summary>
+        Despawn = 1 << 5,
+        /// <summary>«Домино»: выбитый враг сбил соседа.</summary>
+        Domino = 1 << 6,
     }
 
     public struct HitInfo

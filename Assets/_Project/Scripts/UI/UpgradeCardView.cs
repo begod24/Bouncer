@@ -8,9 +8,9 @@ using UnityEngine.EventSystems;
 namespace Bouncer.UI
 {
     /// <summary>
-    /// Один вкладыш на экране выбора: цвет обёртки, картинка, название, описание, сколько раз уже взят.
-    /// Выбранный (мышью, стрелками, геймпадом) чуть больше, ровный и подсвечен. Анимации — по реальному времени,
-    /// потому что игра на время выбора стоит.
+    /// Один вкладыш на экране выбора и на витрине ларька: цвет обёртки, картинка, название, описание, редкость
+    /// (рамка и подпись у редких и золотых), сколько раз уже взят. Выбранный (мышью, стрелками, геймпадом)
+    /// чуть больше, ровный и подсвечен. Анимации — по реальному времени, потому что игра на время выбора стоит.
     /// </summary>
     public sealed class UpgradeCardView : MonoBehaviour, IPointerEnterHandler, ISelectHandler, IDeselectHandler
     {
@@ -26,6 +26,12 @@ namespace Bouncer.UI
         [SerializeField] TMP_Text category;
         [SerializeField] TMP_Text stacks;
         [SerializeField] TMP_Text hotkey;
+        [Tooltip("Рамка редкости: у обычных скрыта, у редких и золотых — своего цвета")]
+        [SerializeField] UnityEngine.UI.Image rarityFrame;
+
+        [Header("Цвет рамки редкости")]
+        [SerializeField] Color rareColor = new(0.45f, 0.72f, 1f);
+        [SerializeField] Color goldColor = new(1f, 0.82f, 0.25f);
 
         [Header("Анимация")]
         [SerializeField] float appearTime = 0.35f;
@@ -38,6 +44,7 @@ namespace Bouncer.UI
 
         public event Action<UpgradeCardView> Clicked;
         public bool IsSelected { get; private set; }
+        public UnityEngine.UI.Button Button => button;
 
         void Awake() => button.onClick.AddListener(() => Clicked?.Invoke(this));
 
@@ -48,9 +55,16 @@ namespace Bouncer.UI
             icon.enabled = card.icon != null;
             title.text = card.title.GetLocalizedString();
             description.text = card.description.GetLocalizedString();
-            category.text = CategoryName(card.category);
+            category.text = card.rarity == CardRarity.Common
+                ? CategoryName(card)
+                : $"{CategoryName(card)} · {RarityName(card.rarity)}";
+            if (rarityFrame)
+            {
+                rarityFrame.enabled = card.rarity != CardRarity.Common;
+                rarityFrame.color = card.rarity == CardRarity.Gold ? goldColor : rareColor;
+            }
             stacks.text = card.maxStacks > 1 && card.category != UpgradeCategory.Treat ? $"{taken + 1}/{card.maxStacks}" : string.Empty;
-            hotkey.text = number.ToString();
+            hotkey.text = number > 0 ? number.ToString() : string.Empty;
 
             _appearAt = Time.unscaledTime + delay;
             _tilt = UnityEngine.Random.Range(-maxTilt, maxTilt);
@@ -93,13 +107,16 @@ namespace Bouncer.UI
 
         public void OnDeselect(BaseEventData eventData) => IsSelected = false;
 
-        static string CategoryName(UpgradeCategory category) => Loc.Get(category switch
+        static string CategoryName(UpgradeCard card) => Loc.Get(card.IsCombo ? "card.category.combo" : card.category switch
         {
             UpgradeCategory.Ball => "card.category.ball",
             UpgradeCategory.Modifier => "card.category.modifier",
             UpgradeCategory.Passive => "card.category.passive",
             _ => "card.category.treat",
         });
+
+        static string RarityName(CardRarity rarity) => Loc.Get(rarity == CardRarity.Gold ? "card.rarity.gold" : "card.rarity.rare");
+
 
         static float EaseOutBack(float t)
         {

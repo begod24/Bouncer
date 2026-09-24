@@ -23,6 +23,12 @@ namespace Bouncer.Player
         public int TackleDamage;
         /// <summary>«Замри!»: на сколько секунд удачная ловля замедляет всё вокруг. 0 — не замедляет.</summary>
         public float CatchFreeze;
+        /// <summary>«Домино»: с каким уроном выбитый враг сбивает соседей. 0 — не сбивает.</summary>
+        public int DominoDamage;
+        /// <summary>«Копилка»: сколько монеток прибавляется у ларька за каждые 10 в кармане.</summary>
+        public int CoinInterest;
+        /// <summary>«Крышка от кастрюли»: раз в столько секунд блокирует удар. 0 — крышки нет.</summary>
+        public float LidCooldown;
         /// <summary>Модификаторы мяча от карточек; складываются со свойствами типа мяча.</summary>
         public BallPerks Perks;
         /// <summary>Свойства только следующего броска после удачной ловли (горячая картошка).</summary>

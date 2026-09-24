@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6e859727a9964cd383da28ba5265d9a, type: 3}
+  m_Name: Enemy_Bear
+  m_EditorClassIdentifier: Bouncer.Enemies::Bouncer.Enemies.BearDefinition
+  displayName: "\u041F\u043B\u044E\u0448\u0435\u0432\u044B\u0439 \u043C\u0438\u0448\u043A\u0430"
+  hitsToKill: 5
+  moveSpeed: 2.2
+  turnSpeed: 240
+  attackRange: 1.6
+  windupTime: 0.55
+  swipeTime: 0.18
+  swipeRange: 2
+  swipeHalfAngle: 70
+  recoverTime: 0.7
+  attackCooldown: 1.6
+  damage: 1
+  knockback: 10
+  maxStuckBalls: 1
+  knockOutVelocity: {x: 4, y: 4.5}
+  spitDelay: 0
+  spitSpeed: 13
+  spitGravity: 3
+  spitDamage: 1
+  knockbackScale: 0.12
+  staggerTime: 0.3
+  debrisForce: 3

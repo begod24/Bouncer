@@ -10,7 +10,7 @@ using UnityEngine.InputSystem.UI;
 namespace Bouncer.UI
 {
     /// <summary>
-    /// Экраны поверх забега: заставка, пауза, настройки, авторы, «Выбит!» и «Двор наш!» — с кнопками для мыши,
+    /// Экраны поверх прогулки: заставка, пауза, настройки, авторы, «Выбит!» и победа — с кнопками для мыши,
     /// клавиатуры и геймпада. Какой экран показать, решает состояние <see cref="GameSession"/>; кнопки только
     /// зовут её методы. Настройки открываются с заставки и паузы, авторы — с заставки; Esc / B возвращают назад.
     /// </summary>
@@ -55,7 +55,7 @@ namespace Bouncer.UI
         [Tooltip("«Назад» на экранах настроек и авторов")]
         [SerializeField] UnityEngine.UI.Button[] backButtons;
 
-        PlayerProgression _progression;
+        PlayerCards _cards;
         Overlay _overlay;
         /// <summary>Кнопка, открывшая экран поверх, — на неё вернуться.</summary>
         GameObject _returnTo;
@@ -77,20 +77,21 @@ namespace Bouncer.UI
             var session = GameSession.Instance;
             if (session == null)
                 return;
-            if (_progression == null)
+            if (_cards == null)
             {
                 var player = FindFirstObjectByType<PlayerController>();
                 if (player != null)
-                    player.TryGetComponent(out _progression);
+                    player.TryGetComponent(out _cards);
             }
 
             var state = session.State;
-            bool titleOrPause = state == SessionState.Title || (state == SessionState.Playing && GameFeel.Paused);
+            bool paused = state is (SessionState.Playing or SessionState.Cleared) && GameFeel.Paused;
+            bool titleOrPause = state == SessionState.Title || paused;
             if (_overlay != Overlay.None && !titleOrPause)
                 CloseOverlay();
             bool noOverlay = _overlay == Overlay.None;
             Show(title, state == SessionState.Title && noOverlay, true);
-            Show(pause, state == SessionState.Playing && GameFeel.Paused && noOverlay, true);
+            Show(pause, paused && noOverlay, true);
             Show(settings, _overlay == Overlay.Settings, true);
             Show(credits, _overlay == Overlay.Credits, true);
             // Кнопки конца забега оживают не сразу — чтобы случайное нажатие не перезапустило игру.
@@ -168,12 +169,13 @@ namespace Bouncer.UI
             return cancel != null && cancel.WasPressedThisFrame();
         }
 
+        /// <summary>Итоги всей прогулки: время, выбитые, карточки, заработанные монетки.</summary>
         string Stats(GameSession session, string key)
         {
-            int seconds = Mathf.FloorToInt(session.SurvivalTime);
+            int seconds = Mathf.FloorToInt(session.RunTime);
             string time = $"{seconds / 60}:{seconds % 60:00}";
-            int level = _progression != null ? _progression.Level : 1;
-            return Loc.Format(key, time, session.Kills, level);
+            int cards = _cards != null ? _cards.Count : 0;
+            return Loc.Format(key, time, session.RunKills, cards, RunState.CoinsEarned);
         }
 
         static void Session(Action<GameSession> action)

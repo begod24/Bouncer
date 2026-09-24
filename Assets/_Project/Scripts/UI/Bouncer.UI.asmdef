@@ -10,7 +10,8 @@
         "UnityEngine.UI",
         "Unity.TextMeshPro",
         "Bouncer.Enemies",
-        "Unity.Localization"
+        "Unity.Localization",
+        "Bouncer.Run"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

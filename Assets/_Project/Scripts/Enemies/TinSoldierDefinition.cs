@@ -44,6 +44,8 @@ namespace Bouncer.Enemies
         public float knockback = 5f;
         [Tooltip("Упреждение: 0 — в текущую позицию игрока, 1 — полное")]
         [Range(0f, 1f)] public float lead = 0.6f;
+        [Tooltip("Офицер: бросает сильный мяч — удержит только идеальная ловля")]
+        public bool strongThrow;
 
         [Header("Попадание")]
         [Tooltip("Сколько секунд солдатик качается после попадания и не стреляет")]

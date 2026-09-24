@@ -45,6 +45,20 @@ namespace Bouncer.Visuals
             Apply();
         }
 
+        /// <summary>
+        /// Арена прогулки задаёт свои ключи (двор утром, двор ночью) и длину боя, за которую их пройти.
+        /// Меняется только в игре, в сцене остаются ключи из инспектора.
+        /// </summary>
+        public void Configure(TimeOfDayProfile[] arenaKeys, float duration)
+        {
+            if (arenaKeys != null && arenaKeys.Length > 0)
+                keys = arenaKeys;
+            runDuration = Mathf.Max(0f, duration);
+            progress = 0f;
+            _startProgress = 0f;
+            Apply();
+        }
+
         void OnDisable()
         {
             // Без контроллера шейдер берёт палитру из материала.

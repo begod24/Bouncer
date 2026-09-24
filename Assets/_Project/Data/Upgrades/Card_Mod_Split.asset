@@ -33,8 +33,10 @@ MonoBehaviour:
   category: 1
   icon: {fileID: 21300000, guid: d0f723154890f483c8da7ddeea4bf4ed, type: 3}
   wrapperColor: {r: 0.6901961, g: 0.5411765, b: 0.8392157, a: 1}
+  rarity: 2
   maxStacks: 1
   weight: 1
+  requires: []
   perks:
     extraShots: 0
     spreadAngle: 0
@@ -44,6 +46,17 @@ MonoBehaviour:
     splitOnHit: 1
     boomerang: 0
     elastic: 0
+    floorBounces: 0
+    gumTrail: 0
+    blastRadius: 0
+    blastDamage: 0
+    snakeAmplitude: 0
+    grazeRadius: 0
+    wallDamage: 0
+    chargedPierce: 0
+    homing: 0
+    yoyo: 0
+  nextThrowAfterCatch: 0
   references:
     version: 2
     RefIds: []

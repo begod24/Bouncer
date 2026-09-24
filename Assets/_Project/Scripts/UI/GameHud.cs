@@ -2,19 +2,19 @@ using System.Collections.Generic;
 using Bouncer.Core;
 using Bouncer.Enemies;
 using Bouncer.Player;
-using Bouncer.Upgrades;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
+using UnityEngine.Serialization;
 
 namespace Bouncer.UI
 {
     /// <summary>
-    /// HUD «мелом на асфальте»: жизни, мячи и «свечка», готовность ловли и рывка, опыт и уровень,
-    /// время и счёт, полоса босса, полоса заряда над игроком, подсказка управления (H).
-    /// Только показывает состояние игрока и забега, ничего в них не меняет. Экраны (пауза и т.п.) — в RunScreens.
+    /// HUD «мелом на асфальте»: жизни, мячи и «свечка», готовность ловли, рывка и крышки, монетки,
+    /// время арены и счёт, полоса босса, полоса заряда над игроком, подсказка управления (H).
+    /// Только показывает состояние игрока и прогулки, ничего в них не меняет. Экраны (пауза и т.п.) — в RunScreens.
     /// Надписи со счётом переписываются, только когда меняется число или язык.
     /// </summary>
     public sealed class GameHud : MonoBehaviour
@@ -44,14 +44,18 @@ namespace Bouncer.UI
         [Header("Ловля и рывок")]
         [SerializeField] UnityEngine.UI.Image catchIcon;
         [SerializeField] UnityEngine.UI.Image dashIcon;
+        [Tooltip("«Крышка от кастрюли»: видна, только когда карточка взята")]
+        [SerializeField] UnityEngine.UI.Image lidIcon;
         [SerializeField] Color readyColor = new(0.96f, 0.95f, 0.92f);
         [SerializeField] Color activeColor = new(0.49f, 0.73f, 0.31f);
         [SerializeField] Color cooldownColor = new(1f, 1f, 1f, 0.3f);
 
-        [Header("Опыт")]
-        [SerializeField] TMP_Text levelLabel;
-        [Tooltip("Заливка полосы опыта: растягивается по ширине от левого края")]
-        [SerializeField] RectTransform xpFill;
+        [Header("Монетки")]
+        [FormerlySerializedAs("levelLabel")]
+        [SerializeField] TMP_Text coinsLabel;
+        [Tooltip("Значок монетки: подпрыгивает, когда монетки прибавились")]
+        [SerializeField] RectTransform coinIcon;
+        [SerializeField] float coinCountSpeed = 40f;
 
         [Header("Забег")]
         [SerializeField] TMP_Text timerLabel;
@@ -74,10 +78,10 @@ namespace Bouncer.UI
 
         readonly List<UnityEngine.UI.Image> _hearts = new();
         readonly List<UnityEngine.UI.Image> _balls = new();
-        PlayerProgression _progression;
         RectTransform _canvasRect;
-        float _xpShown;
-        int _levelShown;
+        float _coinsShown = -1f;
+        int _coinsLabelValue = -1;
+        float _coinBump;
         int _killsShown = -1;
         float _bossShown = 1f;
         BossSplit _bossNamed;
@@ -89,16 +93,28 @@ namespace Bouncer.UI
             _canvasRect = (RectTransform)GetComponentInParent<Canvas>().rootCanvas.transform;
         }
 
-        void OnEnable() => LocalizationSettings.SelectedLocaleChanged += OnLocaleChanged;
+        void OnEnable()
+        {
+            LocalizationSettings.SelectedLocaleChanged += OnLocaleChanged;
+            RunState.CoinsChanged += OnCoinsChanged;
+        }
 
-        void OnDisable() => LocalizationSettings.SelectedLocaleChanged -= OnLocaleChanged;
+        void OnDisable()
+        {
+            LocalizationSettings.SelectedLocaleChanged -= OnLocaleChanged;
+            RunState.CoinsChanged -= OnCoinsChanged;
+        }
 
         void OnLocaleChanged(Locale locale)
         {
-            if (_levelShown > 0)
-                levelLabel.text = Loc.Format("hud.level", _levelShown);
             _killsShown = -1;
             _bossNamed = null;
+        }
+
+        void OnCoinsChanged(int delta)
+        {
+            if (delta > 0)
+                _coinBump = 1f;
         }
 
         void Update()
@@ -112,22 +128,22 @@ namespace Bouncer.UI
             var session = GameSession.Instance;
             if (hudGroup)
             {
-                bool title = session != null && session.State == SessionState.Title;
-                hudGroup.alpha = Mathf.MoveTowards(hudGroup.alpha, title ? 0f : 1f, Time.unscaledDeltaTime * 4f);
+                // На заставке и у витрины ларька HUD прячется: у витрины свои монетки.
+                bool hidden = session != null && session.State is (SessionState.Title or SessionState.Shop);
+                hudGroup.alpha = Mathf.MoveTowards(hudGroup.alpha, hidden ? 0f : 1f, Time.unscaledDeltaTime * 4f);
             }
 
+            UpdateCoins();
             if (player == null)
             {
                 player = FindFirstObjectByType<PlayerController>();
                 if (player == null)
                     return;
-                player.TryGetComponent(out _progression);
             }
 
             UpdateLives();
             UpdateBalls();
             UpdateAbilities();
-            UpdateExperience();
             UpdateRun();
             UpdateBoss();
         }
@@ -176,22 +192,40 @@ namespace Bouncer.UI
                 dashIcon.fillAmount = dash;
                 dashIcon.color = dash >= 1f ? readyColor : cooldownColor;
             }
+            if (lidIcon)
+            {
+                bool has = player.HasLid;
+                if (lidIcon.gameObject.activeSelf != has)
+                    lidIcon.gameObject.SetActive(has);
+                if (has)
+                {
+                    float lid = player.LidReady01;
+                    lidIcon.fillAmount = lid;
+                    lidIcon.color = lid >= 1f ? readyColor : cooldownColor;
+                }
+            }
         }
 
-        void UpdateExperience()
+        /// <summary>Монетки: число догоняет настоящее, значок подпрыгивает на каждую прибавку.</summary>
+        void UpdateCoins()
         {
-            if (_progression == null)
+            if (coinsLabel == null)
                 return;
-            if (_levelShown != _progression.Level)
+            int coins = RunState.Coins;
+            _coinsShown = _coinsShown < 0f || coins < _coinsShown
+                ? coins
+                : Mathf.MoveTowards(_coinsShown, coins, Time.unscaledDeltaTime * Mathf.Max(coinCountSpeed, (coins - _coinsShown) * 4f));
+            int shown = Mathf.RoundToInt(_coinsShown);
+            if (shown != _coinsLabelValue)
             {
-                // Новый уровень: полоса добегает до конца и начинается заново.
-                _xpShown = _levelShown == 0 ? _progression.Experience01 : 0f;
-                _levelShown = _progression.Level;
-                levelLabel.text = Loc.Format("hud.level", _levelShown);
+                _coinsLabelValue = shown;
+                coinsLabel.text = shown.ToString();
             }
-            _xpShown = Mathf.MoveTowards(_xpShown, _progression.Experience01, Time.unscaledDeltaTime * 1.5f);
-            xpFill.anchorMax = new Vector2(Mathf.Max(0.02f, _xpShown), xpFill.anchorMax.y);
-            xpFill.gameObject.SetActive(_xpShown > 0.001f);
+            if (coinIcon)
+            {
+                _coinBump = Mathf.MoveTowards(_coinBump, 0f, Time.unscaledDeltaTime * 5f);
+                coinIcon.localScale = Vector3.one * (1f + 0.25f * Mathf.Sin(_coinBump * Mathf.PI));
+            }
         }
 
         void UpdateRun()
@@ -201,9 +235,9 @@ namespace Bouncer.UI
                 return;
             int seconds = Mathf.FloorToInt(session.SurvivalTime);
             timerLabel.text = $"{seconds / 60}:{seconds % 60:00}";
-            if (session.Kills != _killsShown)
+            if (session.RunKills != _killsShown)
             {
-                _killsShown = session.Kills;
+                _killsShown = session.RunKills;
                 killsLabel.text = Loc.Format("hud.kills", _killsShown);
             }
         }

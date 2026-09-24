@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7aa2f9d6a172644cfbb371dde22aaefa, type: 3}
+  m_Name: Enemy_Top_Elite
+  m_EditorClassIdentifier: Bouncer.Enemies::Bouncer.Enemies.TopDefinition
+  displayName: "\u042E\u043B\u0430-\u0441\u043F\u0443\u0442\u043D\u0438\u043A"
+  hitsToKill: 6
+  moveSpeed: 3.8
+  acceleration: 10
+  arcAngle: 40
+  arcPeriod: 3
+  radius: 0.72
+  spinSpeed: 900
+  wobbleAngle: 6
+  touchDistance: 1.2
+  damage: 1
+  knockback: 9
+  touchCooldown: 1
+  launchSpeed: 15
+  launchDrag: 1.4
+  launchEndSpeed: 4
+  bumpDamage: 1
+  bumpKnockback: 10
+  wallBounceKeep: 0.85
+  debrisForce: 4

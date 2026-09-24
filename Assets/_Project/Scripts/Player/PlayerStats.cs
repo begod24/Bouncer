@@ -74,6 +74,12 @@ namespace Bouncer.Player
         public float tackleKnockback = 14f;
         [Tooltip("«Замри!»: скорость времени вокруг после удачной ловли")]
         [Range(0.05f, 1f)] public float freezeTimeScale = 0.3f;
+        [Tooltip("«Домино»: на каком расстоянии выбитый враг сбивает соседей, м")]
+        public float dominoRadius = 2.3f;
+        [Tooltip("«Домино»: через сколько секунд падает следующая костяшка")]
+        public float dominoDelay = 0.08f;
+        [Tooltip("«Домино»: сила отброса сбитых соседей")]
+        public float dominoKnockback = 8f;
 
         [Header("Прицел")]
         [Tooltip("Высота плоскости, на которую проецируется курсор (уровень груди врагов)")]

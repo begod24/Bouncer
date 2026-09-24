@@ -79,7 +79,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 155645370382
-    m_Localized: 'survived {0}    knocked out: {1}    level: {2}'
+    m_Localized: 'survived {0}    knocked out: {1}    cards: {2}    coins: {3}'
     m_Metadata:
       m_Items: []
   - m_Id: 155645370383
@@ -87,11 +87,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 155645370384
-    m_Localized: 'yard taken in {0}    knocked out: {1}    level: {2}'
-    m_Metadata:
-      m_Items: []
-  - m_Id: 155645370385
-    m_Localized: lv. {0}
+    m_Localized: 'walk done in {0}    knocked out: {1}    cards: {2}    coins: {3}'
     m_Metadata:
       m_Items: []
   - m_Id: 155645370386
@@ -104,13 +100,9 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 155645370388
     m_Localized: "WASD \u2014 run    mouse \u2014 aim    LMB \u2014 throw (hold to
-      charge)\nRMB / E \u2014 catch    Space / Shift \u2014 dash    Esc \u2014 pause\nGamepad:
-      left stick, right stick, RT \u2014 throw, LT \u2014 catch, A \u2014 dash\nH
-      \u2014 hide hints"
-    m_Metadata:
-      m_Items: []
-  - m_Id: 155645370389
-    m_Localized: Level {0}!
+      charge)\nRMB / E \u2014 catch    Space / Shift \u2014 dash    F \u2014 newsstand   
+      Esc \u2014 pause\nGamepad: left stick, right stick, RT \u2014 throw, LT \u2014
+      catch, A \u2014 dash, X \u2014 newsstand\nH \u2014 hide hints"
     m_Metadata:
       m_Items: []
   - m_Id: 155645370390
@@ -240,6 +232,108 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 1931966668800
     m_Localized: "Esc / B \u2014 back"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958216966144
+    m_Localized: Starting card
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160448
+    m_Localized: School bag!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160449
+    m_Localized: Boss trophy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160450
+    m_Localized: COMBO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160451
+    m_Localized: RARE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160452
+    m_Localized: GOLD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160453
+    m_Localized: NEWSSTAND
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160454
+    m_Localized: Bubble gum with cards
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160455
+    m_Localized: SOLD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160456
+    m_Localized: Hold
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160457
+    m_Localized: Held
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160458
+    m_Localized: Reroll
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160459
+    m_Localized: 'Lemonade: +1 heart'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160460
+    m_Localized: 'Sandwich: all hearts'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160461
+    m_Localized: Leave
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160462
+    m_Localized: "Click or Enter \u2014 buy    L \u2014 hold    R \u2014 reroll   
+      Esc \u2014 leave\nGamepad: A \u2014 buy    X \u2014 hold    Y \u2014 reroll   
+      B \u2014 leave"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160463
+    m_Localized: Not enough coins
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160464
+    m_Localized: 'Piggy bank: +{0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160465
+    m_Localized: "{0} \u2014 newsstand"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160466
+    m_Localized: Newsstand open
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160467
+    m_Localized: CLEARED!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160468
+    m_Localized: Visit the newsstand, then follow the arrow
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160469
+    m_Localized: "The Yard \xB7 morning"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160470
+    m_Localized: "The Yard \xB7 evening"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133958221160471
+    m_Localized: "Until evening \u2192"
     m_Metadata:
       m_Items: []
   references:

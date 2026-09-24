@@ -33,8 +33,10 @@ MonoBehaviour:
   category: 0
   icon: {fileID: 21300000, guid: 8ea421e2311c34e9c8f556e1617368a6, type: 3}
   wrapperColor: {r: 0.35686275, g: 0.56078434, b: 0.85882354, a: 1}
+  rarity: 0
   maxStacks: 1
   weight: 1
+  requires: []
   ballPrefab: {fileID: 6046830448127597153, guid: 4e1ee430a2b58488780c80b74423bbb3, type: 3}
   references:
     version: 2

@@ -9,7 +9,8 @@ namespace Bouncer.Waves
     /// <summary>
     /// Ведёт волны по <see cref="WaveDefinition"/>: дорожки врагов с растущим темпом, разовые выходы
     /// и общий лимит живых. Группа появляется в точке спавна вне экрана и не ближе заданного расстояния
-    /// к игрокам; перед появлением на полу мигают метки. Когда вышедший босс выбит целиком — забег пройден.
+    /// к игрокам; перед появлением на полу мигают метки (у элитных — золотые). Когда вышедший босс выбит
+    /// целиком, сообщает <see cref="GameEvents.BossDefeated"/>; что дальше, решает арена.
     /// </summary>
     public sealed class WaveSpawner : MonoBehaviour
     {
@@ -21,11 +22,14 @@ namespace Bouncer.Waves
             public Quaternion Rotation;
             public float SpawnAt;
             public bool Boss;
+            public bool Elite;
         }
 
         [SerializeField] WaveDefinition wave;
         [SerializeField] Transform[] spawnPoints;
         [SerializeField] GameObject spawnMarkerPrefab;
+        [Tooltip("Метка под элитным врагом: золотая, заметнее обычной")]
+        [SerializeField] GameObject eliteMarkerPrefab;
         [SerializeField] bool spawning = true;
 
         [Header("Появление")]
@@ -44,7 +48,35 @@ namespace Bouncer.Waves
         bool[] _burstDone;
         bool _bossSpawned;
 
-        public WaveDefinition Wave => wave;
+        /// <summary>Волны арены. Арена прогулки задаёт свои (<c>ArenaDirector</c>) до начала боя.</summary>
+        public WaveDefinition Wave
+        {
+            get => wave;
+            set
+            {
+                wave = value;
+                _nextTrackTime = null;
+                _burstDone = null;
+            }
+        }
+        public Transform[] SpawnPoints => spawnPoints;
+        /// <summary>Все разовые выходы уже вышли.</summary>
+        public bool BurstsDone
+        {
+            get
+            {
+                if (wave == null)
+                    return true;
+                if (_burstDone == null || _burstDone.Length != wave.bursts.Count)
+                    return wave.bursts.Count == 0;
+                foreach (bool done in _burstDone)
+                    if (!done)
+                        return false;
+                return true;
+            }
+        }
+        /// <summary>Сколько врагов ждут появления (метки уже на полу).</summary>
+        public int PendingEnemies => PendingCount(null);
         /// <summary>Секунды забега по часам волн. Отладка может перемотать вперёд.</summary>
         public float WaveTime { get; set; }
         public bool Spawning
@@ -85,8 +117,7 @@ namespace Bouncer.Waves
                 if (group.Boss)
                     return;
             _bossSpawned = false;
-            if (GameSession.Instance != null)
-                GameSession.Instance.Win();
+            GameEvents.RaiseBossDefeated();
         }
 
         void EnsureSchedule()
@@ -133,7 +164,7 @@ namespace Bouncer.Waves
                 if (_burstDone[i] || WaveTime < burst.time)
                     continue;
                 _burstDone[i] = true;
-                QueueGroup(burst.prefab, burst.count, burst.layout, burst.boss);
+                QueueGroup(burst.PickPrefab(), burst.count, burst.layout, burst.boss, burst.elite);
             }
         }
 
@@ -143,7 +174,7 @@ namespace Bouncer.Waves
             if (wave == null || index < 0 || index >= wave.bursts.Count)
                 return;
             var burst = wave.bursts[index];
-            QueueGroup(burst.prefab, burst.count, burst.layout, burst.boss);
+            QueueGroup(burst.PickPrefab(), burst.count, burst.layout, burst.boss, burst.elite);
         }
 
         public IReadOnlyList<SpawnBurst> Bursts => wave ? wave.bursts : System.Array.Empty<SpawnBurst>();
@@ -151,7 +182,7 @@ namespace Bouncer.Waves
         // ---------- Появление ----------
 
         /// <summary>Поставить группу в очередь: метки на полу сразу, враги — через telegraphTime.</summary>
-        public bool QueueGroup(GameObject prefab, int count, GroupLayout layout, bool boss = false)
+        public bool QueueGroup(GameObject prefab, int count, GroupLayout layout, bool boss = false, bool elite = false)
         {
             if (prefab == null || count <= 0)
                 return false;
@@ -164,6 +195,8 @@ namespace Bouncer.Waves
             group.Rotation = Quaternion.LookRotation(facing);
             group.SpawnAt = Time.time + telegraphTime;
             group.Boss = boss;
+            group.Elite = elite;
+            var marker = elite && eliteMarkerPrefab ? eliteMarkerPrefab : spawnMarkerPrefab;
 
             for (int i = 0; i < count; i++)
             {
@@ -173,11 +206,11 @@ namespace Bouncer.Waves
                 Vector3 position = point + offset;
                 position = NavMesh.SamplePosition(position, out NavMeshHit hit, 2f, NavMesh.AllAreas) ? hit.position : point;
                 group.Positions.Add(position);
-                if (spawnMarkerPrefab)
-                    group.Markers.Add(PoolService.Spawn(spawnMarkerPrefab, position, Quaternion.identity));
+                if (marker)
+                    group.Markers.Add(PoolService.Spawn(marker, position, Quaternion.identity));
             }
             _pending.Add(group);
-            GameEvents.PlaySound(SoundCue.SpawnWarning, point);
+            GameEvents.PlaySound(elite ? SoundCue.EliteSpawn : SoundCue.SpawnWarning, point);
             return true;
         }
 
@@ -188,6 +221,24 @@ namespace Bouncer.Waves
                 return;
             var track = wave.tracks[index];
             QueueGroup(track.prefab, track.GroupSizeAt(WaveTime), track.layout);
+        }
+
+        /// <summary>
+        /// Арена пройдена: ждущие появления группы отменяются, живые враги исчезают — без монеток, счёта и домино.
+        /// </summary>
+        public void DespawnAll()
+        {
+            ClearPending();
+            var hit = new HitInfo { Damage = 999, Direction = Vector3.up, SourceTeam = Team.Neutral, Flags = HitFlags.Despawn };
+            var all = Targetable.All;
+            for (int i = all.Count - 1; i >= 0; i--)
+            {
+                if (i >= all.Count)
+                    continue;
+                var target = all[i];
+                if (target.Team == Team.Enemy && target.Health != null && !target.Health.IsDead)
+                    target.Health.Kill(hit);
+            }
         }
 
         public void KillAll()
@@ -250,6 +301,7 @@ namespace Bouncer.Waves
             group.Positions.Clear();
             group.Prefab = null;
             group.Boss = false;
+            group.Elite = false;
             _freeGroups.Push(group);
         }
 

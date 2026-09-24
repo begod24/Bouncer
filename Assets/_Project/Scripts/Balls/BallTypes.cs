@@ -40,10 +40,19 @@ namespace Bouncer.Balls
         [Tooltip("Сдутый мяч: задевает всех врагов на таком расстоянии от себя и летит дальше, «свечкой» не отскакивает. " +
                  "0 — обычное попадание")]
         [Min(0f)] public float grazeRadius;
+        [Tooltip("Стеночка: каждый рикошет от стены прибавляет этому броску столько урона")]
+        [Min(0)] public int wallDamage;
+        [Tooltip("Рогатка: заряженный бросок пробивает всех врагов насквозь")]
+        public bool chargedPierce;
+        [Tooltip("Глаз-алмаз: мяч доворачивает к ближайшему врагу впереди, градусов в секунду. 0 — летит прямо")]
+        [Min(0f)] public float homing;
+        [Tooltip("Йо-йо: после попадания или в конце нити мяч сам летит в руки, задевая всех на обратном пути")]
+        public bool yoyo;
 
         /// <summary>
-        /// Что достаётся мячу-двойнику: бьёт и летит так же (цепочка, площадь, отскоки, жвачка, змейка),
-        /// но не множится дальше, не взрывается и не возвращается в руки — иначе двойники превращались бы в лишние мячи.
+        /// Что достаётся мячу-двойнику: бьёт и летит так же (цепочка, площадь, отскоки, жвачка, змейка, стеночка,
+        /// рогатка, доводка), но не множится дальше, не взрывается и не возвращается в руки — иначе двойники
+        /// превращались бы в лишние мячи.
         /// </summary>
         public BallPerks ForTwin() => new()
         {
@@ -54,6 +63,9 @@ namespace Bouncer.Balls
             gumTrail = gumTrail,
             snakeAmplitude = snakeAmplitude,
             grazeRadius = grazeRadius,
+            wallDamage = wallDamage,
+            chargedPierce = chargedPierce,
+            homing = homing,
         };
 
         public static BallPerks Combine(in BallPerks a, in BallPerks b) => new()
@@ -72,6 +84,10 @@ namespace Bouncer.Balls
             blastDamage = Mathf.Max(a.blastDamage, b.blastDamage),
             snakeAmplitude = Mathf.Max(a.snakeAmplitude, b.snakeAmplitude),
             grazeRadius = Mathf.Max(a.grazeRadius, b.grazeRadius),
+            wallDamage = a.wallDamage + b.wallDamage,
+            chargedPierce = a.chargedPierce || b.chargedPierce,
+            homing = Mathf.Max(a.homing, b.homing),
+            yoyo = a.yoyo || b.yoyo,
         };
     }
 

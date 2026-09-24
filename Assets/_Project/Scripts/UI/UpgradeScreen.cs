@@ -8,9 +8,10 @@ using UnityEngine.InputSystem;
 namespace Bouncer.UI
 {
     /// <summary>
-    /// Экран «Новый уровень»: показывает предложение <see cref="PlayerProgression"/> и передаёт выбор.
-    /// Выбор — мышью, стрелками/WASD + Enter, геймпадом или клавишами 1–3. Первые доли секунды ввод
-    /// не принимается, чтобы случайный клик или бросок не выбрал карточку вслепую.
+    /// Экран выбора вкладыша «1 из 3» (старт прогулки, портфель, босс): показывает предложение
+    /// <see cref="PlayerCards"/> и передаёт выбор. Выбор — мышью, стрелками/WASD + Enter, геймпадом или
+    /// клавишами 1–3. Первые доли секунды ввод не принимается, чтобы случайный клик или бросок не выбрал
+    /// карточку вслепую.
     /// </summary>
     public sealed class UpgradeScreen : MonoBehaviour
     {
@@ -22,7 +23,7 @@ namespace Bouncer.UI
         [Tooltip("Пауза между появлением соседних карточек, с")]
         [SerializeField] float cardStagger = 0.07f;
 
-        PlayerProgression _progression;
+        PlayerCards _cards;
         float _openedAt;
         bool _open;
 
@@ -37,21 +38,21 @@ namespace Bouncer.UI
 
         void OnDestroy()
         {
-            if (_progression != null)
-                _progression.OfferChanged -= OnOfferChanged;
+            if (_cards != null)
+                _cards.OfferChanged -= OnOfferChanged;
         }
 
         void Bind(PlayerController player)
         {
-            if (player == null || !player.TryGetComponent(out _progression))
+            if (player == null || !player.TryGetComponent(out _cards))
                 return;
-            _progression.OfferChanged += OnOfferChanged;
+            _cards.OfferChanged += OnOfferChanged;
             OnOfferChanged();
         }
 
         void OnOfferChanged()
         {
-            if (_progression.IsChoosing)
+            if (_cards.IsChoosing)
                 Open();
             else
                 Close();
@@ -62,13 +63,18 @@ namespace Bouncer.UI
             _open = true;
             _openedAt = Time.unscaledTime;
             SetVisible(true);
-            title.text = Loc.Format("upgrade.title", _progression.Level);
+            title.text = Loc.Get(_cards.OfferKind switch
+            {
+                OfferKind.Start => "choice.title.start",
+                OfferKind.Portfolio => "choice.title.portfolio",
+                _ => "choice.title.boss",
+            });
 
-            var offer = _progression.Offer;
+            var offer = _cards.Offer;
             for (int i = 0; i < cards.Length; i++)
             {
                 if (i < offer.Count)
-                    cards[i].Show(offer[i], _progression.StacksOf(offer[i]), i + 1, i * cardStagger);
+                    cards[i].Show(offer[i], _cards.StacksOf(offer[i]), i + 1, i * cardStagger);
                 else
                     cards[i].gameObject.SetActive(false);
             }
@@ -123,8 +129,8 @@ namespace Bouncer.UI
 
         void Pick(int index)
         {
-            if (index >= 0 && index < _progression.Offer.Count)
-                _progression.Choose(index);
+            if (index >= 0 && index < _cards.Offer.Count)
+                _cards.Choose(index);
         }
 
         void Select(int index)

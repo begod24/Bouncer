@@ -163,6 +163,62 @@ MonoBehaviour:
     m_Key: card.ball_deflated.description
     m_Metadata:
       m_Items: []
+  - m_Id: 133956933509120
+    m_Key: card.mod_wall.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509121
+    m_Key: card.mod_wall.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509122
+    m_Key: card.mod_slingshot.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509123
+    m_Key: card.mod_slingshot.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509124
+    m_Key: card.mod_eagle.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509125
+    m_Key: card.mod_eagle.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509126
+    m_Key: card.pas_domino.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509127
+    m_Key: card.pas_domino.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509128
+    m_Key: card.pas_piggy.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509129
+    m_Key: card.pas_piggy.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509130
+    m_Key: card.pas_lid.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509131
+    m_Key: card.pas_lid.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509132
+    m_Key: card.combo_yoyo.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133956933509133
+    m_Key: card.combo_yoyo.description
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

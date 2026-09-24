@@ -103,7 +103,8 @@ namespace Bouncer.Enemies
                     soldier.JoinSquad(squad);
         }
 
-        void JoinSquad(SoldierSquad squad)
+        /// <summary>Встать в строй (офицер собирает свою шеренгу сам).</summary>
+        public void JoinSquad(SoldierSquad squad)
         {
             _squad?.Remove(this);
             _squad = squad;
@@ -240,6 +241,8 @@ namespace Bouncer.Enemies
                     Gravity = definition.ballGravity,
                     Damage = definition.damage,
                     Knockback = definition.knockback,
+                    // Офицер бросает сильный мяч: удержит только идеальная ловля.
+                    Flags = definition.strongThrow ? HitFlags.Charged : HitFlags.None,
                 },
             });
         }

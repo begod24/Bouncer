@@ -29,6 +29,14 @@ namespace Bouncer.Upgrades
         [Tooltip("«Замри!»: на сколько секунд удачная ловля замедляет всё вокруг")]
         [Min(0f)] public float catchFreeze;
 
+        [Header("Особые")]
+        [Tooltip("«Домино»: выбитый враг сбивает соседей с таким уроном")]
+        [Min(0)] public int dominoDamage;
+        [Tooltip("«Копилка»: у ларька +столько монеток за каждые 10 в кармане")]
+        [Min(0)] public int coinInterest;
+        [Tooltip("«Крышка от кастрюли»: раз в столько секунд блокирует один удар. 0 — нет")]
+        [Min(0f)] public float lidCooldown;
+
         // Карточка с минусом к мячам не должна оставить игрока совсем без мячей.
         public override bool CanOffer(PlayerController player, int stacks) =>
             base.CanOffer(player, stacks) && player.Balls.MaxBalls + extraBalls >= 1;
@@ -46,11 +54,21 @@ namespace Bouncer.Upgrades
             mods.BonusDamage += bonusDamage;
             mods.TackleDamage += tackleDamage;
             mods.CatchFreeze += catchFreeze;
+            mods.DominoDamage += dominoDamage;
+            mods.CoinInterest += coinInterest;
+            if (lidCooldown > 0f)
+                mods.LidCooldown = mods.LidCooldown > 0f ? Mathf.Min(mods.LidCooldown, lidCooldown) : lidCooldown;
             if (extraBalls > 0)
                 player.Balls.GiveBall(extraBalls);
             else if (extraBalls < 0)
-                player.Balls.DropExcess();
-            if (heal > 0)
+            {
+                // На новой арене мячей на полу ещё нет: лишние просто не выдаются.
+                if (Replaying)
+                    player.Balls.ClampToMax();
+                else
+                    player.Balls.DropExcess();
+            }
+            if (heal > 0 && !Replaying)
                 player.Health.Heal(heal);
             mods.NotifyChanged();
         }

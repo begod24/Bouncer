@@ -6,6 +6,8 @@ using Bouncer.Upgrades;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
 
 namespace Bouncer.UI
 {
@@ -13,6 +15,7 @@ namespace Bouncer.UI
     /// HUD «мелом на асфальте»: жизни, мячи и «свечка», готовность ловли и рывка, опыт и уровень,
     /// время и счёт, полоса босса, полоса заряда над игроком, подсказка управления (H).
     /// Только показывает состояние игрока и забега, ничего в них не меняет. Экраны (пауза и т.п.) — в RunScreens.
+    /// Надписи со счётом переписываются, только когда меняется число или язык.
     /// </summary>
     public sealed class GameHud : MonoBehaviour
     {
@@ -73,13 +76,27 @@ namespace Bouncer.UI
         RectTransform _canvasRect;
         float _xpShown;
         int _levelShown;
+        int _killsShown = -1;
         float _bossShown = 1f;
+        BossSplit _bossNamed;
         bool _helpWanted = true;
 
         void Awake()
         {
             iconTemplate.gameObject.SetActive(false);
             _canvasRect = (RectTransform)GetComponentInParent<Canvas>().rootCanvas.transform;
+        }
+
+        void OnEnable() => LocalizationSettings.SelectedLocaleChanged += OnLocaleChanged;
+
+        void OnDisable() => LocalizationSettings.SelectedLocaleChanged -= OnLocaleChanged;
+
+        void OnLocaleChanged(Locale locale)
+        {
+            if (_levelShown > 0)
+                levelLabel.text = Loc.Format("hud.level", _levelShown);
+            _killsShown = -1;
+            _bossNamed = null;
         }
 
         void Update()
@@ -165,7 +182,7 @@ namespace Bouncer.UI
                 // Новый уровень: полоса добегает до конца и начинается заново.
                 _xpShown = _levelShown == 0 ? _progression.Experience01 : 0f;
                 _levelShown = _progression.Level;
-                levelLabel.text = $"ур. {_levelShown}";
+                levelLabel.text = Loc.Format("hud.level", _levelShown);
             }
             _xpShown = Mathf.MoveTowards(_xpShown, _progression.Experience01, Time.unscaledDeltaTime * 1.5f);
             xpFill.anchorMax = new Vector2(Mathf.Max(0.02f, _xpShown), xpFill.anchorMax.y);
@@ -179,7 +196,11 @@ namespace Bouncer.UI
                 return;
             int seconds = Mathf.FloorToInt(session.SurvivalTime);
             timerLabel.text = $"{seconds / 60}:{seconds % 60:00}";
-            killsLabel.text = $"выбито: {session.Kills}";
+            if (session.Kills != _killsShown)
+            {
+                _killsShown = session.Kills;
+                killsLabel.text = Loc.Format("hud.kills", _killsShown);
+            }
         }
 
         void UpdateBoss()
@@ -194,7 +215,11 @@ namespace Bouncer.UI
                 _bossShown = 1f;
                 return;
             }
-            bossName.text = parts[0].BossName;
+            if (parts[0] != _bossNamed)
+            {
+                _bossNamed = parts[0];
+                bossName.text = _bossNamed.BossName.GetLocalizedString();
+            }
             _bossShown = Mathf.MoveTowards(_bossShown, BossSplit.Remaining01, Time.unscaledDeltaTime * 0.8f);
             bossFill.anchorMax = new Vector2(Mathf.Max(0.01f, _bossShown), bossFill.anchorMax.y);
         }

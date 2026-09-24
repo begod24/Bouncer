@@ -12,10 +12,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d0ee692cf9a149c6973ac0b061eea20, type: 3}
   m_Name: Card_Mod_Elastic
   m_EditorClassIdentifier: Bouncer.Upgrades::Bouncer.Upgrades.BallPerkCard
-  title: "\u041D\u0430 \u0440\u0435\u0437\u0438\u043D\u043A\u0435"
-  description: "\u0423\u043F\u0430\u0432\u0448\u0438\u0439 \u043C\u044F\u0447 \u0441\u0430\u043C
-    \u043F\u0440\u044B\u0433\u0430\u0435\u0442 \u043E\u0431\u0440\u0430\u0442\u043D\u043E
-    \u0432 \u0440\u0443\u043A\u0438."
+  title:
+    m_TableReference:
+      m_TableCollectionName: Content
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: card.mod_elastic.title
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  description:
+    m_TableReference:
+      m_TableCollectionName: Content
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: card.mod_elastic.description
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
   category: 1
   icon: {fileID: 21300000, guid: 9a48ae46272454343837b752965123fe, type: 3}
   wrapperColor: {r: 0.9372549, g: 0.5411765, b: 0.6392157, a: 1}
@@ -30,3 +44,6 @@ MonoBehaviour:
     splitOnHit: 0
     boomerang: 0
     elastic: 1
+  references:
+    version: 2
+    RefIds: []

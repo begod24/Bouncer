@@ -1,0 +1,247 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: UI_en
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.StringTable
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: f583a746d76df4aae8d517df047601af, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 155641176064
+    m_Localized: IT'S OUR FIELD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370368
+    m_Localized: backyard dodgeball against toys come to life
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370369
+    m_Localized: Play
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370370
+    m_Localized: Settings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370371
+    m_Localized: Credits
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370372
+    m_Localized: Quit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370373
+    m_Localized: mouse, arrows + Enter or gamepad
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370374
+    m_Localized: PAUSED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370375
+    m_Localized: Resume
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370376
+    m_Localized: Restart
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370377
+    m_Localized: Main menu
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370378
+    m_Localized: "Esc \u2014 resume"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370379
+    m_Localized: KNOCKED OUT!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370380
+    m_Localized: Play again
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370381
+    m_Localized: "R / Start \u2014 play again"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370382
+    m_Localized: 'survived {0}    knocked out: {1}    level: {2}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370383
+    m_Localized: THE YARD IS OURS!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370384
+    m_Localized: 'yard taken in {0}    knocked out: {1}    level: {2}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370385
+    m_Localized: lv. {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370386
+    m_Localized: 'knocked out: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370387
+    m_Localized: SKY CATCH! Next throw is powered up
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370388
+    m_Localized: "WASD \u2014 run    mouse \u2014 aim    LMB \u2014 throw (hold to
+      charge)\nRMB / E \u2014 catch    Space / Shift \u2014 dash    Esc \u2014 pause\nGamepad:
+      left stick, right stick, RT \u2014 throw, LT \u2014 catch, A \u2014 dash\nH
+      \u2014 hide hints"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370389
+    m_Localized: Level {0}!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370390
+    m_Localized: Pick a gum card
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370391
+    m_Localized: "Mouse, arrows + Enter, gamepad \u2014 or keys 1 \xB7 2 \xB7 3"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370392
+    m_Localized: BALL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370393
+    m_Localized: TRICK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370394
+    m_Localized: SKILL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370395
+    m_Localized: TREAT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370396
+    m_Localized: SETTINGS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370397
+    m_Localized: Gameplay
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370398
+    m_Localized: Video
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370399
+    m_Localized: Audio
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370400
+    m_Localized: Language
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370401
+    m_Localized: Master volume
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370402
+    m_Localized: Music
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370403
+    m_Localized: Sound effects
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370404
+    m_Localized: Display mode
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370405
+    m_Localized: Resolution
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370406
+    m_Localized: V-Sync
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370407
+    m_Localized: Screen shake
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370408
+    m_Localized: 'Auto-aim: mouse'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370409
+    m_Localized: 'Auto-aim: gamepad'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370410
+    m_Localized: Aim line
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370411
+    m_Localized: Language
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370412
+    m_Localized: on
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370413
+    m_Localized: off
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370414
+    m_Localized: windowed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370415
+    m_Localized: fullscreen
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370416
+    m_Localized: "\u2039 \u203A \u2014 change    Q / E, LB / RB \u2014 tabs    Esc
+      / B \u2014 back"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370417
+    m_Localized: Back
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370418
+    m_Localized: CREDITS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370419
+    m_Localized: Created by
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370420
+    m_Localized: "Fonts Neucha and Caveat \u2014 SIL Open Font License"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1931966668800
+    m_Localized: "Esc / B \u2014 back"
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

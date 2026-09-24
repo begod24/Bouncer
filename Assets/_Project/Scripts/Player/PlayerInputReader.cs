@@ -1,4 +1,3 @@
-using Bouncer.Core;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -70,12 +69,10 @@ namespace Bouncer.Player
                 }
             }
 
-            // Клики по отладочному окну не должны бросать мяч.
-            bool blocked = !gamepad && GameSettings.PointerOverDebugUI;
-            intent.ThrowHeld = _throw.IsPressed() && !blocked;
-            intent.ThrowPressed = _throw.WasPressedThisFrame() && !blocked;
+            intent.ThrowHeld = _throw.IsPressed();
+            intent.ThrowPressed = _throw.WasPressedThisFrame();
             intent.ThrowReleased = _throw.WasReleasedThisFrame();
-            intent.CatchPressed = _catch.WasPressedThisFrame() && !blocked;
+            intent.CatchPressed = _catch.WasPressedThisFrame();
             intent.DashPressed = _dash.WasPressedThisFrame();
             intent.PausePressed = _pause.WasPressedThisFrame();
             return intent;

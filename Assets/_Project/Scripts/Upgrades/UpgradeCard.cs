@@ -1,5 +1,6 @@
 using Bouncer.Player;
 using UnityEngine;
+using UnityEngine.Localization;
 
 namespace Bouncer.Upgrades
 {
@@ -21,8 +22,9 @@ namespace Bouncer.Upgrades
     public abstract class UpgradeCard : ScriptableObject
     {
         [Header("Вкладыш")]
-        public string title = "Вкладыш";
-        [TextArea(2, 4)] public string description;
+        [Tooltip("Название и описание — строки таблицы «Content» (card.<имя>.title / .description)")]
+        public LocalizedString title;
+        public LocalizedString description;
         public UpgradeCategory category;
         [Tooltip("Картинка на вкладыше")]
         public Sprite icon;

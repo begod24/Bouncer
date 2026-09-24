@@ -12,13 +12,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0aba205c22e164676b1b82ef40cb2230, type: 3}
   m_Name: Card_Ball_Medicine
   m_EditorClassIdentifier: Bouncer.Upgrades::Bouncer.Upgrades.BallTypeCard
-  title: "\u041D\u0430\u0431\u0438\u0432\u043D\u043E\u0439 \u043C\u044F\u0447"
-  description: "\u0422\u044F\u0436\u0451\u043B\u044B\u0439 \u0438 \u043C\u0435\u0434\u043B\u0435\u043D\u043D\u044B\u0439.
-    \u0411\u044C\u0451\u0442 \u0441\u0438\u043B\u044C\u043D\u0435\u0435 \u0438 \u0437\u0430\u0434\u0435\u0432\u0430\u0435\u0442
-    \u0432\u0441\u0435\u0445 \u0432\u043E\u043A\u0440\u0443\u0433 \u0446\u0435\u043B\u0438."
+  title:
+    m_TableReference:
+      m_TableCollectionName: Content
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: card.ball_medicine.title
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  description:
+    m_TableReference:
+      m_TableCollectionName: Content
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: card.ball_medicine.description
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
   category: 0
   icon: {fileID: 21300000, guid: f202f2797ff1145d5bf8e1636dadd960, type: 3}
   wrapperColor: {r: 0.5411765, g: 0.3529412, b: 0.2, a: 1}
   maxStacks: 1
   weight: 1
   ballPrefab: {fileID: 9135535968229420765, guid: e92423024997447e6aeaa521347bcf58, type: 3}
+  references:
+    version: 2
+    RefIds: []

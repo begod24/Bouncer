@@ -4,7 +4,8 @@
     "references": [
         "Bouncer.Core",
         "Bouncer.Balls",
-        "Unity.AI.Navigation"
+        "Unity.AI.Navigation",
+        "Unity.Localization"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

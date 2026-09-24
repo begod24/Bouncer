@@ -1,4 +1,5 @@
 using Bouncer.Core;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -15,12 +16,21 @@ namespace Bouncer.UI
         [SerializeField] UnityEngine.UI.Graphic underline;
         [SerializeField] RectTransform label;
         [SerializeField] float selectedScale = 1.1f;
+        [Tooltip("Подчёркивание по ширине надписи — для строк, где надпись прижата влево и меняется с языком")]
+        [SerializeField] bool fitUnderline;
 
         UnityEngine.UI.Selectable _selectable;
+        TMP_Text _labelText;
+        string _fittedText;
         bool _selected;
         float _scale = 1f;
 
-        void Awake() => _selectable = GetComponent<UnityEngine.UI.Selectable>();
+        void Awake()
+        {
+            _selectable = GetComponent<UnityEngine.UI.Selectable>();
+            if (label)
+                _labelText = label.GetComponent<TMP_Text>();
+        }
 
         void OnEnable()
         {
@@ -55,6 +65,12 @@ namespace Bouncer.UI
                 label.localScale = Vector3.one * _scale;
             if (underline)
                 underline.enabled = _selected;
+            if (_selected && fitUnderline && underline && _labelText && !ReferenceEquals(_labelText.text, _fittedText))
+            {
+                _fittedText = _labelText.text;
+                var rect = underline.rectTransform;
+                rect.sizeDelta = new Vector2(_labelText.GetPreferredValues(_fittedText).x + 20f, rect.sizeDelta.y);
+            }
         }
     }
 }

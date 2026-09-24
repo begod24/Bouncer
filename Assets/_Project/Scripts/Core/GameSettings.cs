@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Bouncer.Core
 {
     /// <summary>
-    /// Настройки игрока (экран «Настройки», часть — и в отладочном окне). Хранятся в PlayerPrefs.
+    /// Настройки игрока (экран «Настройки»). Хранятся в PlayerPrefs.
     /// Разрешение и режим окна движок запоминает сам, здесь их нет. Все звуки игры идут через
     /// SoundPlayer и MusicPlayer, поэтому общая громкость — множитель в их громкости, а не AudioListener.volume.
     /// </summary>
@@ -20,11 +20,6 @@ namespace Bouncer.Core
         /// <summary>Тряска камеры, 0–1: множитель поверх тряски из GameFeel.</summary>
         public static float ScreenShake = 1f;
         public static bool VSync = true;
-
-        public static bool GodMode;
-
-        /// <summary>Курсор над отладочным окном — клики мыши не должны бросать мяч.</summary>
-        public static bool PointerOverDebugUI;
 
         public static bool AutoAimFor(bool gamepad) => gamepad ? AutoAimGamepad : AutoAimMouse;
 
@@ -47,8 +42,6 @@ namespace Bouncer.Core
             SfxVolume = GetFloat(nameof(SfxVolume), 1f);
             ScreenShake = GetFloat(nameof(ScreenShake), 1f);
             VSync = GetBool(nameof(VSync), true);
-            GodMode = false;
-            PointerOverDebugUI = false;
             Apply();
         }
 

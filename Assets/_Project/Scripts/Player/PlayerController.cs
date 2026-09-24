@@ -117,7 +117,7 @@ namespace Bouncer.Player
             if (IsDead || Motor.IsDashInvulnerable || Health.IsInvulnerable)
                 return false;
 
-            if (!GameSettings.GodMode && !Health.TryDamage(hit))
+            if (!Health.TryDamage(hit))
                 return false;
 
             Health.SetInvulnerable(stats.hurtInvulnerability);

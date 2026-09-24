@@ -46,8 +46,8 @@ namespace Bouncer.UI
             paper.color = card.wrapperColor;
             icon.sprite = card.icon;
             icon.enabled = card.icon != null;
-            title.text = card.title;
-            description.text = card.description;
+            title.text = card.title.GetLocalizedString();
+            description.text = card.description.GetLocalizedString();
             category.text = CategoryName(card.category);
             stacks.text = card.maxStacks > 1 && card.category != UpgradeCategory.Treat ? $"{taken + 1}/{card.maxStacks}" : string.Empty;
             hotkey.text = number.ToString();
@@ -93,13 +93,13 @@ namespace Bouncer.UI
 
         public void OnDeselect(BaseEventData eventData) => IsSelected = false;
 
-        static string CategoryName(UpgradeCategory category) => category switch
+        static string CategoryName(UpgradeCategory category) => Loc.Get(category switch
         {
-            UpgradeCategory.Ball => "МЯЧ",
-            UpgradeCategory.Modifier => "ФИШКА",
-            UpgradeCategory.Passive => "УМЕНИЕ",
-            _ => "ГОСТИНЕЦ",
-        };
+            UpgradeCategory.Ball => "card.category.ball",
+            UpgradeCategory.Modifier => "card.category.modifier",
+            UpgradeCategory.Passive => "card.category.passive",
+            _ => "card.category.treat",
+        });
 
         static float EaseOutBack(float t)
         {

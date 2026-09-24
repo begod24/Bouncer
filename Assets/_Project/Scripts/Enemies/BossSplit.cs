@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Bouncer.Core;
 using UnityEngine;
+using UnityEngine.Localization;
 
 namespace Bouncer.Enemies
 {
@@ -14,7 +15,8 @@ namespace Bouncer.Enemies
     {
         static readonly List<BossSplit> s_alive = new();
 
-        [SerializeField] string bossName = "Большая неваляшка";
+        [Tooltip("Имя на полосе босса — строка таблицы «Content»")]
+        [SerializeField] LocalizedString bossName = new("Content", "boss.big_roly_poly");
         [Tooltip("Кто появляется, когда эта часть выбита. Пусто — последняя ступень")]
         [SerializeField] GameObject childPrefab;
         [SerializeField, Min(0)] int childCount = 2;
@@ -33,7 +35,7 @@ namespace Bouncer.Enemies
         Health _health;
 
         public static IReadOnlyList<BossSplit> Alive => s_alive;
-        public string BossName => bossName;
+        public LocalizedString BossName => bossName;
 
         /// <summary>Сколько осталось от всего босса: 1 — целый, 0 — выбит полностью.</summary>
         public static float Remaining01

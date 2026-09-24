@@ -62,7 +62,7 @@ namespace Bouncer.UI
             _open = true;
             _openedAt = Time.unscaledTime;
             SetVisible(true);
-            title.text = $"Новый уровень — {_progression.Level}!";
+            title.text = Loc.Format("upgrade.title", _progression.Level);
 
             var offer = _progression.Offer;
             for (int i = 0; i < cards.Length; i++)

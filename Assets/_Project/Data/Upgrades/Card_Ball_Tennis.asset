@@ -12,13 +12,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0aba205c22e164676b1b82ef40cb2230, type: 3}
   m_Name: Card_Ball_Tennis
   m_EditorClassIdentifier: Bouncer.Upgrades::Bouncer.Upgrades.BallTypeCard
-  title: "\u0422\u0435\u043D\u043D\u0438\u0441\u043D\u044B\u0435 \u043C\u044F\u0447\u0438"
-  description: "\u041B\u0435\u0442\u044F\u0442 \u0432\u0435\u0435\u0440\u043E\u043C
-    \u043F\u043E \u0442\u0440\u0438. \u041B\u0438\u0448\u043D\u0438\u0435 \u0438\u0441\u0447\u0435\u0437\u0430\u044E\u0442,
-    \u043A\u043E\u0441\u043D\u0443\u0432\u0448\u0438\u0441\u044C \u0430\u0441\u0444\u0430\u043B\u044C\u0442\u0430."
+  title:
+    m_TableReference:
+      m_TableCollectionName: Content
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: card.ball_tennis.title
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  description:
+    m_TableReference:
+      m_TableCollectionName: Content
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: card.ball_tennis.description
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
   category: 0
   icon: {fileID: 21300000, guid: 2e19261fd3c5143bf8990fac0a8f9dc3, type: 3}
   wrapperColor: {r: 0.76862746, g: 0.8627451, b: 0.29803923, a: 1}
   maxStacks: 1
   weight: 1
   ballPrefab: {fileID: 4636000945257043656, guid: 42e3fbf95dc2a4e34bcc6155ce3fdf2a, type: 3}
+  references:
+    version: 2
+    RefIds: []

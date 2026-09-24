@@ -12,10 +12,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 455dcde8311e346b5bdedb7082262966, type: 3}
   m_Name: Card_Pas_Catch
   m_EditorClassIdentifier: Bouncer.Upgrades::Bouncer.Upgrades.StatCard
-  title: "\u0426\u0435\u043F\u043A\u0438\u0435 \u0440\u0443\u043A\u0438"
-  description: "\u041E\u043A\u043D\u043E \u043B\u043E\u0432\u043B\u0438 \u0434\u043B\u0438\u043D\u043D\u0435\u0435
-    \u043D\u0430 35%, \u043B\u043E\u0432\u0438\u0448\u044C \u0447\u0443\u0442\u044C
-    \u0434\u0430\u043B\u044C\u0448\u0435. \u0414\u043E \u0442\u0440\u0451\u0445 \u0440\u0430\u0437."
+  title:
+    m_TableReference:
+      m_TableCollectionName: Content
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: card.pas_catch.title
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  description:
+    m_TableReference:
+      m_TableCollectionName: Content
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: card.pas_catch.description
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
   category: 2
   icon: {fileID: 21300000, guid: 7788b5a5511ff4a03a1f6418600a9fc4, type: 3}
   wrapperColor: {r: 0.49019608, g: 0.7294118, b: 0.30588236, a: 1}
@@ -29,3 +43,6 @@ MonoBehaviour:
   pickupRadius: 0
   extraBalls: 0
   heal: 0
+  references:
+    version: 2
+    RefIds: []

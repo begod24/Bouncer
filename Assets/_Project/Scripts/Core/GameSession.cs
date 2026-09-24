@@ -37,8 +37,8 @@ namespace Bouncer.Core
         public bool CanRestart => IsFinished && Time.unscaledTime - _gameOverTime > restartDelay;
 
         /// <summary>
-        /// Поверх заставки или паузы открыт ещё один экран (настройки). Esc и Start паузу тогда не снимают:
-        /// экран закрывается сам и возвращает к паузе.
+        /// Поверх заставки или паузы открыт ещё один экран (настройки, авторы). Esc и Start паузу тогда
+        /// не снимают: экран закрывается сам и возвращает к паузе.
         /// </summary>
         public bool OverlayOpen { get; set; }
 

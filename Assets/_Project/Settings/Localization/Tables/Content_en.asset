@@ -1,0 +1,119 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: Content_en
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.StringTable
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: 9709e1cdb23fa419990d29f684126c4e, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 153544024064
+    m_Localized: Big Roly-Poly
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153552412672
+    m_Localized: Medicine ball
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153552412673
+    m_Localized: Heavy and slow. Hits harder and knocks down everyone around the
+      target.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153552412674
+    m_Localized: Tennis balls
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153552412675
+    m_Localized: Fly in a fan of three. The extra ones vanish when they touch the
+      asphalt.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153552412676
+    m_Localized: Volleyball
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153552412677
+    m_Localized: After a hit, bounces on into two more enemies in a row.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153552412678
+    m_Localized: Boomerang
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153552412679
+    m_Localized: The ball turns around mid-flight and flies back to your hands, knocking
+      down everyone on the way.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153552412680
+    m_Localized: On a rubber band
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153552412681
+    m_Localized: A dropped ball jumps back into your hands by itself.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153556606976
+    m_Localized: One more ball
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153556606977
+    m_Localized: +1 ball in your hands and in reserve. Up to three times.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153556606978
+    m_Localized: Split
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153556606979
+    m_Localized: On the first hit the ball splits in two and keeps flying.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153556606980
+    m_Localized: Sticky hands
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153556606981
+    m_Localized: Catch window 35% longer, and you catch a bit farther. Up to three
+      times.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153556606982
+    m_Localized: Long arms
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153556606983
+    m_Localized: Pick up balls from one and a half times farther. Up to two times.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153556606984
+    m_Localized: New sneakers
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153556606985
+    m_Localized: Run 12% faster. Up to three times.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153556606986
+    m_Localized: Sandwich
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153556606987
+    m_Localized: +1 life. Grandma sent it.
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

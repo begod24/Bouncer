@@ -1,0 +1,248 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: UI Shared Data
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.SharedTableData
+  m_TableCollectionName: UI
+  m_TableCollectionNameGuidString: f583a746d76df4aae8d517df047601af
+  m_Entries:
+  - m_Id: 155641176064
+    m_Key: title.logo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370368
+    m_Key: title.subtitle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370369
+    m_Key: menu.play
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370370
+    m_Key: menu.settings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370371
+    m_Key: menu.credits
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370372
+    m_Key: menu.quit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370373
+    m_Key: menu.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370374
+    m_Key: pause.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370375
+    m_Key: pause.resume
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370376
+    m_Key: pause.restart
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370377
+    m_Key: pause.to_menu
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370378
+    m_Key: pause.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370379
+    m_Key: gameover.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370380
+    m_Key: gameover.again
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370381
+    m_Key: gameover.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370382
+    m_Key: gameover.stats
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370383
+    m_Key: victory.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370384
+    m_Key: victory.stats
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370385
+    m_Key: hud.level
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370386
+    m_Key: hud.kills
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370387
+    m_Key: hud.candle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370388
+    m_Key: hud.help
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370389
+    m_Key: upgrade.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370390
+    m_Key: upgrade.subtitle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370391
+    m_Key: upgrade.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370392
+    m_Key: card.category.ball
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370393
+    m_Key: card.category.modifier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370394
+    m_Key: card.category.passive
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370395
+    m_Key: card.category.treat
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370396
+    m_Key: settings.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370397
+    m_Key: settings.tab.gameplay
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370398
+    m_Key: settings.tab.video
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370399
+    m_Key: settings.tab.audio
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370400
+    m_Key: settings.tab.language
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370401
+    m_Key: settings.master_volume
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370402
+    m_Key: settings.music_volume
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370403
+    m_Key: settings.sfx_volume
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370404
+    m_Key: settings.display_mode
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370405
+    m_Key: settings.resolution
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370406
+    m_Key: settings.vsync
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370407
+    m_Key: settings.screen_shake
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370408
+    m_Key: settings.auto_aim_mouse
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370409
+    m_Key: settings.auto_aim_gamepad
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370410
+    m_Key: settings.aim_line
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370411
+    m_Key: settings.language
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370412
+    m_Key: settings.on
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370413
+    m_Key: settings.off
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370414
+    m_Key: settings.windowed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370415
+    m_Key: settings.fullscreen
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370416
+    m_Key: settings.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370417
+    m_Key: common.back
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370418
+    m_Key: credits.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370419
+    m_Key: credits.made_by
+    m_Metadata:
+      m_Items: []
+  - m_Id: 155645370420
+    m_Key: credits.fonts
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1931966668800
+    m_Key: common.back_hint
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 9096900162955772016
+  references:
+    version: 2
+    RefIds:
+    - rid: 9096900162955772016
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1790234833465

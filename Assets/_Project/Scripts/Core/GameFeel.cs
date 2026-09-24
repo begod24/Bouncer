@@ -5,7 +5,7 @@ namespace Bouncer.Core
 {
     /// <summary>
     /// «Сок»: стоп-кадр при попадании, тряска камеры, замедление. Единственное место,
-    /// которое пишет Time.timeScale — пауза, отладочная скорость и эффекты не спорят друг с другом.
+    /// которое пишет Time.timeScale — пауза и эффекты не спорят друг с другом.
     /// </summary>
     [DefaultExecutionOrder(-100)]
     public sealed class GameFeel : MonoBehaviour
@@ -21,19 +21,9 @@ namespace Bouncer.Core
         static float s_slowMoUntil;
         static float s_slowMoScale = 1f;
 
-        public static float DebugTimeScale { get; set; } = 1f;
         public static bool Paused { get; set; }
         /// <summary>Время стоит, но это не пауза: открыт выбор карточки и т.п.</summary>
         public static bool Frozen { get; set; }
-        public static float ShakeMultiplier
-        {
-            get => s_instance ? s_instance.shakeMultiplier : 1f;
-            set
-            {
-                if (s_instance)
-                    s_instance.shakeMultiplier = value;
-            }
-        }
 
         void Awake() => s_instance = this;
 
@@ -48,7 +38,7 @@ namespace Bouncer.Core
         void Update()
         {
             float now = Time.unscaledTime;
-            float scale = DebugTimeScale;
+            float scale = 1f;
             if (now < s_slowMoUntil)
                 scale *= s_slowMoScale;
             if (now < s_hitStopUntil)
@@ -72,7 +62,7 @@ namespace Bouncer.Core
         {
             if (s_instance == null || s_instance.impulseSource == null)
                 return;
-            // Множитель из настроек игрока — поверх отладочного.
+            // Множитель из настроек игрока — поверх общего из инспектора.
             force *= s_instance.shakeMultiplier * GameSettings.ScreenShake;
             if (force <= 0f)
                 return;
@@ -84,7 +74,6 @@ namespace Bouncer.Core
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
         {
-            DebugTimeScale = 1f;
             Paused = false;
             Frozen = false;
             s_hitStopUntil = 0f;

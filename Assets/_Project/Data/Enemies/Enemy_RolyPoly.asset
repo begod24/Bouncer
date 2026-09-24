@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Enemy_RolyPoly
   m_EditorClassIdentifier: Bouncer.Enemies::Bouncer.Enemies.EnemyDefinition
   displayName: "\u041D\u0435\u0432\u0430\u043B\u044F\u0448\u043A\u0430"
-  hitsToKill: 3
+  hitsToKill: 1
   comboResetTime: 3
   moveSpeed: 3.2
   acceleration: 14

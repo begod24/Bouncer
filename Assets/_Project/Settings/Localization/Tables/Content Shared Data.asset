@@ -1,0 +1,120 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: Content Shared Data
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.SharedTableData
+  m_TableCollectionName: Content
+  m_TableCollectionNameGuidString: 9709e1cdb23fa419990d29f684126c4e
+  m_Entries:
+  - m_Id: 153544024064
+    m_Key: boss.big_roly_poly
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153552412672
+    m_Key: card.ball_medicine.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153552412673
+    m_Key: card.ball_medicine.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153552412674
+    m_Key: card.ball_tennis.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153552412675
+    m_Key: card.ball_tennis.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153552412676
+    m_Key: card.ball_volleyball.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153552412677
+    m_Key: card.ball_volleyball.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153552412678
+    m_Key: card.mod_boomerang.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153552412679
+    m_Key: card.mod_boomerang.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153552412680
+    m_Key: card.mod_elastic.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153552412681
+    m_Key: card.mod_elastic.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153556606976
+    m_Key: card.mod_extraball.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153556606977
+    m_Key: card.mod_extraball.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153556606978
+    m_Key: card.mod_split.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153556606979
+    m_Key: card.mod_split.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153556606980
+    m_Key: card.pas_catch.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153556606981
+    m_Key: card.pas_catch.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153556606982
+    m_Key: card.pas_pickup.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153556606983
+    m_Key: card.pas_pickup.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153556606984
+    m_Key: card.pas_speed.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153556606985
+    m_Key: card.pas_speed.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153556606986
+    m_Key: card.treat_sandwich.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 153556606987
+    m_Key: card.treat_sandwich.description
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 9096900162955772017
+  references:
+    version: 2
+    RefIds:
+    - rid: 9096900162955772017
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1790234833966

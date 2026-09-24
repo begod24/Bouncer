@@ -887,7 +887,6 @@ GameObject:
   - component: {fileID: 732143288}
   - component: {fileID: 732143287}
   - component: {fileID: 732143286}
-  - component: {fileID: 732143284}
   - component: {fileID: 732143290}
   m_Layer: 0
   m_Name: GameSystems
@@ -896,20 +895,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &732143284
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 732143283}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8b19504950374498d8d432365e44fc7e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Bouncer.DebugTools::Bouncer.DebugTools.DebugPanel
-  visible: 0
-  referenceHeight: 1080
 --- !u!114 &732143286
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -4,7 +4,8 @@
     "references": [
         "Bouncer.Core",
         "Bouncer.Balls",
-        "Bouncer.Player"
+        "Bouncer.Player",
+        "Unity.Localization"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

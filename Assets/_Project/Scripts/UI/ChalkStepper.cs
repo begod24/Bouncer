@@ -34,6 +34,9 @@ namespace Bouncer.UI
             Show(index);
         }
 
+        /// <summary>Новые подписи при том же выбранном значении (например, сменился язык).</summary>
+        public void SetOptions(IEnumerable<string> options) => SetOptions(options, Index);
+
         public void SetIndex(int index) => Show(index);
 
         public void OnMove(AxisEventData eventData)

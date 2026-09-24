@@ -279,7 +279,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5113b1b11fb124e4c9ab8f23272ae7ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Bouncer.Enemies::Bouncer.Enemies.BossSplit
-  bossName: "\u0411\u043E\u043B\u044C\u0448\u0430\u044F \u043D\u0435\u0432\u0430\u043B\u044F\u0448\u043A\u0430"
+  bossName:
+    m_TableReference:
+      m_TableCollectionName: Content
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: boss.big_roly_poly
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
   childPrefab: {fileID: 7819565211241362588, guid: 49c20fc7331184a2dbda0d525375381c, type: 3}
   childCount: 2
   spread: 1.4
@@ -287,6 +295,9 @@ MonoBehaviour:
   childStun: 0.8
   barShare: 0.1667
   barReserve: 0.1667
+  references:
+    version: 2
+    RefIds: []
 --- !u!1001 &5282167371478965338
 PrefabInstance:
   m_ObjectHideFlags: 0

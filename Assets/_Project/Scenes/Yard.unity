@@ -3624,7 +3624,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Bouncer.Core::Bouncer.Core.GameFeel
   impulseSource: {fileID: 732143287}
   hitStopTimeScale: 0.03
+  hitStopCooldown: 0.35
   shakeMultiplier: 1
+  shakeWindow: 0.1
 --- !u!114 &732143287
 MonoBehaviour:
   m_ObjectHideFlags: 0

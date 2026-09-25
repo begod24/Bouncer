@@ -7,6 +7,7 @@ namespace Bouncer.EditorTools
     /// Единые настройки импорта арта из Blender (Bouncer.blend → ba_export.py).
     /// Модели из Art/Models: масштаб 1, плоские нормали из файла, без анимации, материалы M_Palette и M_Decals
     /// (надписи: UV0 — ячейка палитры, UV1 — место в атласе, поэтому второй UV не генерируется).
+    /// Исключение — дети из Art/Models/Kids: скелет Humanoid, клипы в Anim_*.fbx.
     /// Палитры из Art/Palettes: Point, без mip-map и сжатия — каждая ячейка 8×8 px должна остаться чистым цветом.
     /// Атлас надписей из Art/Decals (Tools/decal_art.py): одноканальная маска (R) с mip-map, сжатая.
     /// UI из Art/UI (Tools/ui_art.py и иконки мячей): спрайты с прозрачностью, без mip-map и сжатия.
@@ -15,6 +16,10 @@ namespace Bouncer.EditorTools
     sealed class ArtImportPostprocessor : AssetPostprocessor
     {
         const string ModelsRoot = "Assets/_Project/Art/Models/";
+        const string KidsRoot = "Assets/_Project/Art/Models/Kids/";
+        const string KidAnimPrefix = "Anim_";
+        /// <summary>Клипы детей, которые крутятся по кругу (по началу имени).</summary>
+        static readonly string[] KidLoopClips = { "Idle", "Run_", "Cheer", "Pose_", "Test_" };
         const string PalettesRoot = "Assets/_Project/Art/Palettes/";
         const string DecalsRoot = "Assets/_Project/Art/Decals/";
         const string UiRoot = "Assets/_Project/Art/UI/";
@@ -48,6 +53,8 @@ namespace Bouncer.EditorTools
             importer.addCollider = false;
             importer.animationType = ModelImporterAnimationType.None;
             importer.importAnimation = false;
+            if (assetPath.StartsWith(KidsRoot))
+                PreprocessKid(importer);
             importer.materialImportMode = ModelImporterMaterialImportMode.ImportStandard;
             importer.materialLocation = ModelImporterMaterialLocation.InPrefab;
 
@@ -57,6 +64,56 @@ namespace Bouncer.EditorTools
             var decals = AssetDatabase.LoadAssetAtPath<Material>(DecalMaterialPath);
             if (decals)
                 importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), DecalMaterialName), decals);
+        }
+
+        /// <summary>
+        /// Дети (ba_kids.py): скелет Humanoid с именами костей как в <see cref="HumanBodyBones"/>, T-поза.
+        /// Модели детей — без анимаций; все клипы лежат в Anim_*.fbx и через Humanoid ложатся на любого ребёнка.
+        /// Кости остаются объектами: к руке крепится мяч и реквизит.
+        /// </summary>
+        void PreprocessKid(ModelImporter importer)
+        {
+            importer.animationType = ModelImporterAnimationType.Human;
+            importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+            importer.optimizeGameObjects = false;
+            importer.importAnimation = System.IO.Path.GetFileName(assetPath).StartsWith(KidAnimPrefix);
+            importer.animationCompression = ModelImporterAnimationCompression.Optimal;
+            importer.resampleCurves = true;
+
+            // Разметку костей (их имена — как у HumanBodyBones) и позу скелета Unity каждый раз строит заново:
+            // сохранённый скелет устарел бы, как только в Blender поменяются пропорции ребёнка.
+            var description = importer.humanDescription;
+            description.human = System.Array.Empty<HumanBone>();
+            description.skeleton = System.Array.Empty<SkeletonBone>();
+            importer.humanDescription = description;
+        }
+
+        /// <summary>
+        /// Клипы детей: имя без приставки «Скелет|» из Blender, всё движение корня остаётся в позе (бег на месте —
+        /// ребёнка двигает PlayerMotor), зацикленные — по списку <see cref="KidLoopClips"/>.
+        /// </summary>
+        void OnPreprocessAnimation()
+        {
+            if (!assetPath.StartsWith(KidsRoot))
+                return;
+            var importer = (ModelImporter)assetImporter;
+            var clips = importer.defaultClipAnimations;
+            foreach (var clip in clips)
+            {
+                int bar = clip.name.LastIndexOf('|');
+                if (bar >= 0)
+                    clip.name = clip.name[(bar + 1)..];
+                clip.loopTime = System.Array.Exists(KidLoopClips, p => clip.name.StartsWith(p));
+                clip.loopPose = false;
+                clip.lockRootRotation = true;
+                clip.keepOriginalOrientation = true;
+                clip.lockRootHeightY = true;
+                clip.keepOriginalPositionY = true;
+                clip.heightFromFeet = false;
+                clip.lockRootPositionXZ = true;
+                clip.keepOriginalPositionXZ = true;
+            }
+            importer.clipAnimations = clips;
         }
 
         void OnPreprocessTexture()

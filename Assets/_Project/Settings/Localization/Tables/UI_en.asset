@@ -484,6 +484,15 @@ MonoBehaviour:
     m_Localized: Home!
     m_Metadata:
       m_Items: []
+  - m_Id: 441339446550528
+    m_Localized: WHO'S GOING OUT?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 441339446550529
+    m_Localized: "\u2190/\u2192 \u2014 choose, Enter / A \u2014 go out, Esc / B \u2014
+      back"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

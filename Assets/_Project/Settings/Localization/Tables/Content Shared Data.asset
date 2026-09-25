@@ -331,6 +331,38 @@ MonoBehaviour:
     m_Key: boss.dusk
     m_Metadata:
       m_Items: []
+  - m_Id: 441337332621312
+    m_Key: kid.otlichnik.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 441337345204224
+    m_Key: kid.otlichnik.tagline
+    m_Metadata:
+      m_Items: []
+  - m_Id: 441337345204225
+    m_Key: kid.tolstyak.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 441337345204226
+    m_Key: kid.tolstyak.tagline
+    m_Metadata:
+      m_Items: []
+  - m_Id: 441337345204227
+    m_Key: kid.melkaya.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 441337345204228
+    m_Key: kid.melkaya.tagline
+    m_Metadata:
+      m_Items: []
+  - m_Id: 441337345204229
+    m_Key: kid.huligan.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 441337345204230
+    m_Key: kid.huligan.tagline
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

@@ -5,7 +5,8 @@
         "Bouncer.Core",
         "Bouncer.Balls",
         "Unity.InputSystem",
-        "Unity.Cinemachine"
+        "Unity.Cinemachine",
+        "Unity.Localization"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

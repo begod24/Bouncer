@@ -27,6 +27,20 @@ namespace Bouncer.Core
         {
             if (renderers == null || renderers.Length == 0)
                 renderers = GetComponentsInChildren<MeshRenderer>(true);
+            _block = new MaterialPropertyBlock();
+            CacheRenderers();
+        }
+
+        /// <summary>Другие меши (модель игрока сменилась на ходу).</summary>
+        public void SetRenderers(Renderer[] list)
+        {
+            renderers = list ?? System.Array.Empty<Renderer>();
+            CacheRenderers();
+            _dirty = true;
+        }
+
+        void CacheRenderers()
+        {
             _baseColors = new Color[renderers.Length];
             _palette = new bool[renderers.Length];
             for (int i = 0; i < renderers.Length; i++)
@@ -35,7 +49,6 @@ namespace Bouncer.Core
                 _baseColors[i] = material && material.HasProperty(BaseColorId) ? material.GetColor(BaseColorId) : Color.white;
                 _palette[i] = PaletteShader.Supports(material);
             }
-            _block = new MaterialPropertyBlock();
         }
 
         void OnEnable()

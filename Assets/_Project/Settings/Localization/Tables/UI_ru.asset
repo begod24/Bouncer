@@ -531,6 +531,15 @@ MonoBehaviour:
     m_Localized: "\u0414\u043E\u043C\u043E\u0439!"
     m_Metadata:
       m_Items: []
+  - m_Id: 441339446550528
+    m_Localized: "\u041A\u0422\u041E \u0412\u042B\u0425\u041E\u0414\u0418\u0422 \u0413\u0423\u041B\u042F\u0422\u042C?"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 441339446550529
+    m_Localized: "\u2190/\u2192 \u2014 \u0432\u044B\u0431\u0440\u0430\u0442\u044C,
+      Enter / A \u2014 \u0433\u0443\u043B\u044F\u0442\u044C, Esc / B \u2014 \u043D\u0430\u0437\u0430\u0434"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

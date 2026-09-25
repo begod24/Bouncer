@@ -209,6 +209,8 @@ def entries():
         ("doodle_smiley", shape((260, 260), _smiley)),
         ("shape_star", shape((200, 200), _star)),
         ("shape_bolt", shape((140, 240), _bolt)),
+        ("label_fizika", text_img("ФИЗИКА", sign_font(130), spacing=4)),
+        ("label_chipsy", text_img("ЧИПСЫ", sign_font(140), spacing=4)),
     ]
 
 

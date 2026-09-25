@@ -10,9 +10,10 @@ using UnityEngine.InputSystem.UI;
 namespace Bouncer.UI
 {
     /// <summary>
-    /// Экраны поверх прогулки: заставка, пауза, настройки, авторы, «Выбит!» и победа — с кнопками для мыши,
-    /// клавиатуры и геймпада. Какой экран показать, решает состояние <see cref="GameSession"/>; кнопки только
-    /// зовут её методы. Настройки открываются с заставки и паузы, авторы — с заставки; Esc / B возвращают назад.
+    /// Экраны поверх прогулки: заставка, выбор ребёнка, пауза, настройки, авторы, «Выбит!» и победа — с кнопками
+    /// для мыши, клавиатуры и геймпада. Какой экран показать, решает состояние <see cref="GameSession"/>; кнопки только
+    /// зовут её методы. «Играть» открывает выбор ребёнка, выбор начинает прогулку. Настройки открываются с заставки
+    /// и паузы, авторы и выбор — с заставки; Esc / B возвращают назад.
     /// </summary>
     public sealed class RunScreens : MonoBehaviour
     {
@@ -31,15 +32,19 @@ namespace Bouncer.UI
             None,
             Settings,
             Credits,
+            Kids,
         }
 
         [SerializeField] Screen title;
         [SerializeField] Screen pause;
         [SerializeField] Screen settings;
         [SerializeField] Screen credits;
+        [Tooltip("«Кто выходит гулять?» — после «Играть»")]
+        [SerializeField] Screen kidSelect;
         [SerializeField] Screen gameOver;
         [SerializeField] Screen victory;
         [SerializeField] SettingsScreen settingsScreen;
+        [SerializeField] KidSelectScreen kidSelectScreen;
         [SerializeField] TMP_Text gameOverStats;
         [SerializeField] TMP_Text victoryStats;
         [SerializeField] float fadeSpeed = 6f;
@@ -62,7 +67,9 @@ namespace Bouncer.UI
 
         void Awake()
         {
-            Bind(playButtons, () => Session(s => s.StartRun()));
+            Bind(playButtons, Play);
+            if (kidSelectScreen != null)
+                kidSelectScreen.Chosen += OnKidChosen;
             Bind(resumeButtons, () => Session(s => s.TogglePause()));
             Bind(restartButtons, () => Session(s => s.Restart()));
             Bind(menuButtons, () => Session(s => s.ToTitle()));
@@ -94,6 +101,7 @@ namespace Bouncer.UI
             Show(pause, paused && noOverlay, true);
             Show(settings, _overlay == Overlay.Settings, true);
             Show(credits, _overlay == Overlay.Credits, true);
+            Show(kidSelect, _overlay == Overlay.Kids, true);
             // Кнопки конца забега оживают не сразу — чтобы случайное нажатие не перезапустило игру.
             Show(gameOver, state == SessionState.GameOver, session.CanRestart);
             Show(victory, state == SessionState.Victory, session.CanRestart);
@@ -146,6 +154,11 @@ namespace Bouncer.UI
                     return;
                 settingsScreen.Refresh();
             }
+            else if (overlay == Overlay.Kids)
+            {
+                kidSelectScreen.Open();
+                kidSelect.first = kidSelectScreen.FirstButton;
+            }
             _returnTo = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
             _overlay = overlay;
             session.OverlayOpen = true;
@@ -157,9 +170,26 @@ namespace Bouncer.UI
                 return;
             if (_overlay == Overlay.Settings)
                 settingsScreen.Save();
+            else if (_overlay == Overlay.Kids)
+                kidSelectScreen.Close();
             _overlay = Overlay.None;
             if (GameSession.Instance != null)
                 GameSession.Instance.OverlayOpen = false;
+        }
+
+        /// <summary>«Играть»: сначала выбрать, с кем гулять (если экрана выбора нет — сразу в прогулку).</summary>
+        void Play()
+        {
+            if (kidSelectScreen != null)
+                Open(Overlay.Kids);
+            else
+                Session(s => s.StartRun());
+        }
+
+        void OnKidChosen(int kid)
+        {
+            CloseOverlay();
+            Session(s => s.StartRun());
         }
 
         static bool CancelPressed()

@@ -20,6 +20,8 @@ namespace Bouncer.Core
         /// <summary>Тряска камеры, 0–1: множитель поверх тряски из GameFeel.</summary>
         public static float ScreenShake = 1f;
         public static bool VSync = true;
+        /// <summary>Ребёнок, с которым игрок выходит гулять (номер в KidRoster). Запоминается между запусками.</summary>
+        public static int Kid;
 
         public static bool AutoAimFor(bool gamepad) => gamepad ? AutoAimGamepad : AutoAimMouse;
 
@@ -42,6 +44,7 @@ namespace Bouncer.Core
             SfxVolume = GetFloat(nameof(SfxVolume), 1f);
             ScreenShake = GetFloat(nameof(ScreenShake), 1f);
             VSync = GetBool(nameof(VSync), true);
+            Kid = Mathf.Max(0, PlayerPrefs.GetInt(Prefix + nameof(Kid), 0));
             Apply();
         }
 
@@ -63,6 +66,7 @@ namespace Bouncer.Core
             PlayerPrefs.SetFloat(Prefix + nameof(SfxVolume), SfxVolume);
             PlayerPrefs.SetFloat(Prefix + nameof(ScreenShake), ScreenShake);
             SetBool(nameof(VSync), VSync);
+            PlayerPrefs.SetInt(Prefix + nameof(Kid), Kid);
             PlayerPrefs.Save();
         }
 

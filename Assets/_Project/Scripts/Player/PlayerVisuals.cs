@@ -4,17 +4,19 @@ using UnityEngine;
 namespace Bouncer.Player
 {
     /// <summary>
-    /// Визуал игрока: мяч в руке и заряд, кольцо ловли, мигание при неуязвимости, след рывка, падение.
-    /// Эффекты карточек: горячий мяч в руке, подкат (рывок ногами вперёд), волна «Замри!».
+    /// Визуал игрока: мяч в руке и заряд, кольцо ловли, мигание при неуязвимости, след рывка, вспышки.
+    /// Эффекты карточек: горячий мяч в руке, волна «Замри!». Позы (подкат, падение) — клипы ребёнка, см. KidAnimator.
     /// </summary>
     public sealed class PlayerVisuals : MonoBehaviour
     {
         static readonly int BaseColorId = PaletteShader.BaseColor;
 
         [SerializeField] PlayerController player;
-        [SerializeField] Transform body;
+        [Tooltip("Мигают при неуязвимости. Модель ребёнка отдаёт свои сама (PlayerKid)")]
         [SerializeField] Renderer[] blinkRenderers;
         [SerializeField] Renderer handBall;
+        [Tooltip("Мяч в руке меньше настоящего: настоящий крупнее головы ребёнка")]
+        [SerializeField] float heldBallScale = 0.8f;
         [SerializeField] CircleLine catchRing;
         [SerializeField] TrailRenderer dashTrail;
         [SerializeField] HitFlash hitFlash;
@@ -35,18 +37,9 @@ namespace Bouncer.Player
         [Tooltip("Сильный мяч выбило из рук")]
         [SerializeField] Color fumbleColor = new(0.8f, 0.8f, 0.8f);
 
-        [Header("Подкат")]
-        [Tooltip("Насколько тело откидывается назад в подкате, градусы")]
-        [SerializeField] float slideLean = 60f;
-        [Tooltip("Насколько тело опускается в подкате, м")]
-        [SerializeField] float slideDrop = 0.22f;
-
         MaterialPropertyBlock _block;
         Vector3 _handBallScale;
-        Quaternion _bodyRotation;
-        Vector3 _bodyPosition;
         bool _handBallPalette;
-        float _slide;
 
         void Awake()
         {
@@ -56,12 +49,10 @@ namespace Bouncer.Player
                 _handBallScale = handBall.transform.localScale;
                 _handBallPalette = PaletteShader.Supports(handBall.sharedMaterial);
             }
-            if (body)
-            {
-                _bodyRotation = body.localRotation;
-                _bodyPosition = body.localPosition;
-            }
         }
+
+        /// <summary>Меши, которые мигают при неуязвимости (модель ребёнка сменилась).</summary>
+        public void SetBodyRenderers(Renderer[] renderers) => blinkRenderers = renderers ?? System.Array.Empty<Renderer>();
 
         // Подписка в Start: к этому моменту PlayerController.Awake уже заполнил свои ссылки.
         void Start()
@@ -107,7 +98,7 @@ namespace Bouncer.Player
             {
                 handBall.enabled = !dead && balls.Balls > 0;
                 float pulse = balls.Charge01 >= 1f ? 1f + 0.12f * Mathf.Sin(Time.time * 30f) : 1f;
-                handBall.transform.localScale = _handBallScale * ((1f + balls.Charge01 * 0.45f) * pulse);
+                handBall.transform.localScale = _handBallScale * (heldBallScale * (1f + balls.Charge01 * 0.45f) * pulse);
                 float charge = balls.Charge01 >= 1f ? 0.7f : balls.Charge01 * 0.3f;
                 // Горячий мяч тлеет, как уголёк, — перебегает от красного к жёлтому.
                 Color glow = balls.CatchPerksReady
@@ -127,18 +118,6 @@ namespace Bouncer.Player
                     _block.SetColor(BaseColorId, glowing ? glow : Color.Lerp(ballColor, chargedColor, charge));
                 }
                 handBall.SetPropertyBlock(_block);
-            }
-
-            // Подкат: в рывке игрок едет ногами вперёд, откинувшись назад.
-            if (body && !dead)
-            {
-                bool sliding = player.Motor.IsDashing && player.Modifiers.TackleDamage > 0;
-                if (sliding || _slide > 0f)
-                {
-                    _slide = Mathf.MoveTowards(_slide, sliding ? 1f : 0f, Time.deltaTime * 12f);
-                    body.localRotation = Quaternion.Euler(-slideLean * _slide, 0f, 0f) * _bodyRotation;
-                    body.localPosition = _bodyPosition + Vector3.down * (slideDrop * _slide);
-                }
             }
 
             if (catchRing)
@@ -206,12 +185,6 @@ namespace Bouncer.Player
         {
             if (hitFlash)
                 hitFlash.Flash(Color.white, 0.3f);
-            if (body)
-            {
-                // Упал на спину от удара.
-                body.localRotation = Quaternion.Euler(-80f, 0f, 0f) * _bodyRotation;
-                body.localPosition = new Vector3(_bodyPosition.x, 0.35f, _bodyPosition.z);
-            }
         }
     }
 }

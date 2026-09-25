@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50b75b6c8d17246d8802cb13a2b76107, type: 3}
+  m_Name: Kid_Tolstyak
+  m_EditorClassIdentifier: Bouncer.Player::Bouncer.Player.KidDefinition
+  displayName:
+    m_TableReference:
+      m_TableCollectionName: Content
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: kid.tolstyak.name
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  tagline:
+    m_TableReference:
+      m_TableCollectionName: Content
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: kid.tolstyak.tagline
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  model: {fileID: 919132149155446097, guid: 0d0cdb9b9bb8048239f98908a0376b0e, type: 3}
+  selectPose: Pose_Cheer
+  prop: {fileID: 919132149155446097, guid: aaf1713527b954ea788f38899ca89f91, type: 3}
+  propBone: 17
+  propPosition: {x: 0, y: -0.02, z: 0.05}
+  propRotation: {x: 0, y: 0, z: 0}
+  references:
+    version: 2
+    RefIds: []

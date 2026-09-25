@@ -350,6 +350,38 @@ MonoBehaviour:
     m_Localized: The One in the Dusk
     m_Metadata:
       m_Items: []
+  - m_Id: 441337332621312
+    m_Localized: Brainiac
+    m_Metadata:
+      m_Items: []
+  - m_Id: 441337345204224
+    m_Localized: Loves books, a bit of a know-it-all
+    m_Metadata:
+      m_Items: []
+  - m_Id: 441337345204225
+    m_Localized: Chubs
+    m_Metadata:
+      m_Items: []
+  - m_Id: 441337345204226
+    m_Localized: Kind, always hungry, your best friend
+    m_Metadata:
+      m_Items: []
+  - m_Id: 441337345204227
+    m_Localized: Shorty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 441337345204228
+    m_Localized: Fast, fearless, never sits still
+    m_Metadata:
+      m_Items: []
+  - m_Id: 441337345204229
+    m_Localized: Hooligan
+    m_Metadata:
+      m_Items: []
+  - m_Id: 441337345204230
+    m_Localized: Tough scrapper, boss of the yard
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

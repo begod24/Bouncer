@@ -86,7 +86,6 @@ namespace Bouncer.UI
         int _killsShown = -1;
         float _bossShown = 1f;
         BossSplit _bossNamed;
-        bool _helpWanted = true;
         bool _homeShown;
 
         void Awake()
@@ -122,12 +121,16 @@ namespace Bouncer.UI
 
         void Update()
         {
+            // H прячет и показывает подсказку управления — это та же настройка «Подсказки», она запоминается.
             var keyboard = Keyboard.current;
             if (keyboard != null && keyboard.hKey.wasPressedThisFrame)
-                _helpWanted = !_helpWanted;
+            {
+                GameSettings.ShowHints = !GameSettings.ShowHints;
+                GameSettings.Save();
+            }
             // Подсказка только посреди игры: под паузой, карточками и «Выбит!» она мешает.
             if (help)
-                help.SetActive(_helpWanted && GameSession.IsGameplayActive);
+                help.SetActive(GameSettings.ShowHints && GameSession.IsGameplayActive);
             var session = GameSession.Instance;
             if (hudGroup)
             {

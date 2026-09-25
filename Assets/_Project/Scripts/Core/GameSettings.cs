@@ -12,6 +12,8 @@ namespace Bouncer.Core
         public static bool AutoAimMouse;
         public static bool AutoAimGamepad = true;
         public static bool ShowAimPreview = true;
+        /// <summary>Подсказки управления: блок в углу экрана посреди игры (H) и строки внизу меню.</summary>
+        public static bool ShowHints = true;
 
         /// <summary>Громкости — положение ползунка 0–1. В AudioSource идёт <see cref="VolumeGain"/>.</summary>
         public static float MasterVolume = 1f;
@@ -39,6 +41,7 @@ namespace Bouncer.Core
             AutoAimMouse = GetBool(nameof(AutoAimMouse), false);
             AutoAimGamepad = GetBool(nameof(AutoAimGamepad), true);
             ShowAimPreview = GetBool(nameof(ShowAimPreview), true);
+            ShowHints = GetBool(nameof(ShowHints), true);
             MasterVolume = GetFloat(nameof(MasterVolume), 1f);
             MusicVolume = GetFloat(nameof(MusicVolume), 1f);
             SfxVolume = GetFloat(nameof(SfxVolume), 1f);
@@ -61,6 +64,7 @@ namespace Bouncer.Core
             SetBool(nameof(AutoAimMouse), AutoAimMouse);
             SetBool(nameof(AutoAimGamepad), AutoAimGamepad);
             SetBool(nameof(ShowAimPreview), ShowAimPreview);
+            SetBool(nameof(ShowHints), ShowHints);
             PlayerPrefs.SetFloat(Prefix + nameof(MasterVolume), MasterVolume);
             PlayerPrefs.SetFloat(Prefix + nameof(MusicVolume), MusicVolume);
             PlayerPrefs.SetFloat(Prefix + nameof(SfxVolume), SfxVolume);

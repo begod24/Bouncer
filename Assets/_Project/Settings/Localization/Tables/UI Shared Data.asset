@@ -483,6 +483,10 @@ MonoBehaviour:
     m_Key: kids.hint
     m_Metadata:
       m_Items: []
+  - m_Id: 445157471150080
+    m_Key: settings.hints
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

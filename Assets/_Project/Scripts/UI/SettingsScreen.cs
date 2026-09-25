@@ -10,7 +10,7 @@ using UnityEngine.Localization.Settings;
 namespace Bouncer.UI
 {
     /// <summary>
-    /// Экран «Настройки» с вкладками: игра (тряска, прицел), видео (окно, разрешение, синхронизация),
+    /// Экран «Настройки» с вкладками: игра (тряска, прицел, подсказки), видео (окно, разрешение, синхронизация),
     /// звук (громкости) и язык. Всё меняется сразу и пишется в <see cref="GameSettings"/>; на диск — при
     /// закрытии (<see cref="Save"/>). Язык выбирает и запоминает пакет Localization. Вкладки листаются
     /// стрелками на ряду вкладок, Q / E или LB / RB откуда угодно и кликом мыши. Открывает и закрывает экран
@@ -37,6 +37,8 @@ namespace Bouncer.UI
         [SerializeField] ChalkStepper autoAimMouse;
         [SerializeField] ChalkStepper autoAimGamepad;
         [SerializeField] ChalkStepper aimLine;
+        [Tooltip("Подсказки управления: в углу экрана посреди игры и внизу меню")]
+        [SerializeField] ChalkStepper hints;
 
         [Header("Видео")]
         [SerializeField] ChalkStepper displayMode;
@@ -71,6 +73,7 @@ namespace Bouncer.UI
             autoAimMouse.Changed += index => GameSettings.AutoAimMouse = index == 1;
             autoAimGamepad.Changed += index => GameSettings.AutoAimGamepad = index == 1;
             aimLine.Changed += index => GameSettings.ShowAimPreview = index == 1;
+            hints.Changed += index => GameSettings.ShowHints = index == 1;
 
             displayMode.Changed += _ => OnDisplayModeChanged();
             resolution.Changed += _ => _applyScreenAt = Time.unscaledTime + resolutionDelay;
@@ -100,6 +103,7 @@ namespace Bouncer.UI
             autoAimMouse.SetOptions(onOff, GameSettings.AutoAimMouse ? 1 : 0);
             autoAimGamepad.SetOptions(onOff, GameSettings.AutoAimGamepad ? 1 : 0);
             aimLine.SetOptions(onOff, GameSettings.ShowAimPreview ? 1 : 0);
+            hints.SetOptions(onOff, GameSettings.ShowHints ? 1 : 0);
 
             displayMode.SetOptions(DisplayModes, Screen.fullScreenMode == FullScreenMode.Windowed ? 0 : 1);
             RefreshResolutions();
@@ -141,6 +145,7 @@ namespace Bouncer.UI
             autoAimMouse.SetOptions(onOff);
             autoAimGamepad.SetOptions(onOff);
             aimLine.SetOptions(onOff);
+            hints.SetOptions(onOff);
             vSync.SetOptions(onOff);
             displayMode.SetOptions(DisplayModes);
             RefreshLanguages();

@@ -39,6 +39,8 @@ MonoBehaviour:
     m_LocalVariables: []
   portfolioFinds: 1
   portfolioWindow: {x: 0.3, y: 0.6}
+  weatherChance: 0.3
+  weathers: 010000000200000003000000
   references:
     version: 2
     RefIds: []

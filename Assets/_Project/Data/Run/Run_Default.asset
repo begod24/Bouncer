@@ -14,4 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Bouncer.Run::Bouncer.Run.RunDefinition
   arenas:
   - {fileID: 11400000, guid: d8c77b34a030845dca613ebaad9a07fd, type: 2}
-  - {fileID: 11400000, guid: 259e696b77b5e458c81d35f04fbc1ea0, type: 2}
+  - {fileID: 11400000, guid: a42301e7198f245bf8f9a95df8ee6f35, type: 2}
+  - {fileID: 11400000, guid: bb331432d13734a62a85897b96d582d6, type: 2}

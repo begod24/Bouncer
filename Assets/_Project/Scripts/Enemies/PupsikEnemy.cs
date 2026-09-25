@@ -88,12 +88,17 @@ namespace Bouncer.Enemies
         void FixedUpdate()
         {
             float dt = Time.fixedDeltaTime;
-            _stateTime += dt;
             if (_rb.position.y < -5f)
             {
                 PoolService.Despawn(gameObject);
                 return;
             }
+            if (_self.IsFrozen)
+            {
+                Drive(Vector3.zero);
+                return;
+            }
+            _stateTime += dt;
 
             if (Time.time >= _nextRetarget)
             {

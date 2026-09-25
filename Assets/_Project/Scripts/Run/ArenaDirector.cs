@@ -23,6 +23,8 @@ namespace Bouncer.Run
         [SerializeField, Min(0)] int defaultArena;
         [SerializeField] WaveSpawner spawner;
         [SerializeField] TimeOfDayController timeOfDay;
+        [Tooltip("Погода арены: пусто — всегда ясно")]
+        [SerializeField] WeatherController weather;
         [SerializeField] LootDropper loot;
         [SerializeField] Kiosk kiosk;
         [SerializeField] ArenaExit exit;
@@ -43,6 +45,8 @@ namespace Bouncer.Run
         public ArenaDefinition NextArena => run ? run.Get(ArenaIndex + 1) : null;
         /// <summary>Арена пройдена (ларёк и стрелка открыты).</summary>
         public bool IsComplete => _complete;
+        /// <summary>Какая погода выпала на эту арену.</summary>
+        public WeatherKind Weather { get; private set; }
         public Kiosk Kiosk => kiosk;
         public ArenaExit Exit => exit;
 
@@ -97,12 +101,23 @@ namespace Bouncer.Run
                 timeOfDay.Configure(Arena.timeOfDay, Arena.wave ? Arena.wave.duration : 0f);
             if (exit)
                 exit.Hide();
+            Weather = RollWeather();
+            if (weather)
+                weather.Begin(Weather);
 
             _portfolioTimes.Clear();
             float duration = Arena.wave ? Arena.wave.duration : 300f;
             for (int i = 0; i < Arena.portfolioFinds; i++)
                 _portfolioTimes.Add(Random.Range(Arena.portfolioWindow.x, Arena.portfolioWindow.y) * duration);
             _portfolioTimes.Sort();
+        }
+
+        /// <summary>Непогода выпадает с шансом арены, какая именно — случайно из её списка.</summary>
+        WeatherKind RollWeather()
+        {
+            if (weather == null || Arena.weathers == null || Arena.weathers.Length == 0 || Random.value >= Arena.weatherChance)
+                return WeatherKind.Clear;
+            return Arena.weathers[Random.Range(0, Arena.weathers.Length)];
         }
 
         void Update()

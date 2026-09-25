@@ -166,6 +166,7 @@ void PaletteDecalFragment(
     half4 color = UniversalFragmentBlinnPhong(inputData, surfaceData);
     color.rgb = lerp(color.rgb, _FlashColor.rgb, _FlashColor.a);
     color.rgb = MixFog(color.rgb, inputData.fogCoord);
+    color.rgb = MixRadialFog(color.rgb, input.positionWS);
     color.a = 1.0h;
     outColor = color;
 

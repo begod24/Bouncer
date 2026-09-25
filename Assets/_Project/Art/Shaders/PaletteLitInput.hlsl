@@ -46,4 +46,20 @@ half3 SamplePaletteEmission(float2 uv)
     return SAMPLE_TEXTURE2D(_EmissionMap, sampler_PointClamp, uv).rgb * (half)(_EmissionStrength + _Bouncer_EmissionStrength);
 }
 
+// Туман вокруг игрока (погода «Туман»): густеет с расстоянием от игрока по земле, а не от камеры —
+// камера висит в двадцати метрах, и обычный туман закрывал бы не то. Задаёт WeatherController;
+// при силе 0 ничего не делает. xyz центра — позиция игрока; параметры: x — начало, y — конец, z — сила.
+float4 _Bouncer_FogCenter;
+float4 _Bouncer_FogParams;
+half4 _Bouncer_FogColor;
+
+half3 MixRadialFog(half3 color, float3 positionWS)
+{
+    if (_Bouncer_FogParams.z <= 0.0)
+        return color;
+    float distance = length(positionWS.xz - _Bouncer_FogCenter.xz);
+    float fog = smoothstep(_Bouncer_FogParams.x, _Bouncer_FogParams.y, distance) * _Bouncer_FogParams.z;
+    return lerp(color, _Bouncer_FogColor.rgb, (half)fog);
+}
+
 #endif

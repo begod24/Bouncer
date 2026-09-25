@@ -69,6 +69,9 @@ namespace Bouncer.Upgrades
             }
             if (RunState.Lives > 0)
                 _player.Health.SetCurrent(RunState.Lives);
+            // «Бабушкины пирожки»: на каждой следующей арене прибавляется сердце.
+            if (RunState.ArenaIndex > 0 && _player.Modifiers.ArenaHeal > 0)
+                _player.Health.Heal(_player.Modifiers.ArenaHeal);
         }
 
         public int StacksOf(UpgradeCard card) => card && _stacks.TryGetValue(card, out int stacks) ? stacks : 0;
@@ -178,10 +181,12 @@ namespace Bouncer.Upgrades
                 OfferKind.Portfolio => deck.portfolio,
                 _ => deck.boss,
             };
-            deck.Roll(_offer, deck.choices, weights, CanOffer);
-            if (_offer.Count < deck.choices)
-                deck.Roll(_offer, deck.choices - _offer.Count, new RarityWeights(1f, 1f, 1f), CanOffer);
-            if (_offer.Count < deck.choices && deck.filler && !_offer.Contains(deck.filler))
+            // «Счастливый фантик»: в портфеле и за босса карточек на выбор больше.
+            int choices = deck.choices + (kind == OfferKind.Start ? 0 : _player.Modifiers.ExtraChoices);
+            deck.Roll(_offer, choices, weights, CanOffer);
+            if (_offer.Count < choices)
+                deck.Roll(_offer, choices - _offer.Count, new RarityWeights(1f, 1f, 1f), CanOffer);
+            if (_offer.Count < choices && deck.filler && !_offer.Contains(deck.filler))
                 _offer.Add(deck.filler);
             return _offer.Count > 0;
         }

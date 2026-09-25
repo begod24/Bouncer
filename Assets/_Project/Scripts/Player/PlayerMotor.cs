@@ -70,8 +70,8 @@ namespace Bouncer.Player
             if (dt <= 0f)
                 return;
 
-            // Песок замедляет бег, но не рывок — им из песочницы и выбираются.
-            float ground = GroundZone.MoveMultiplierAt(transform.position);
+            // Песок и лужи замедляют бег, но не рывок — им из песочницы и выбираются. В резиновых сапогах — не замедляют.
+            float ground = _mods.IgnoreGround ? 1f : GroundZone.MoveMultiplierAt(transform.position);
             Vector3 target = move * (_stats.moveSpeed * _mods.MoveSpeed * speedMultiplier * ground);
             float rate = target.sqrMagnitude >= _velocity.sqrMagnitude ? _stats.acceleration : _stats.deceleration;
             _velocity = Vector3.MoveTowards(_velocity, target, rate * dt);

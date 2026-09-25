@@ -8,6 +8,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Project/Scenes/Yard.unity
     guid: 1a899a28d742a474a85d68862ceccd21
+  - enabled: 1
+    path: Assets/_Project/Scenes/Rink.unity
+    guid: 5dd96c0852fa843e19399893da2e8a40
+  - enabled: 1
+    path: Assets/_Project/Scenes/Site.unity
+    guid: c1642172edb624f1580be11434bb36a2
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: 533970bbe1d9b4eb6b501a84b71f6833, type: 2}
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}

@@ -14,6 +14,8 @@ namespace Bouncer.Core
 
         [Tooltip("Размер участка по локальным осям X и Z")]
         [SerializeField] Vector2 size = new(2.6f, 2.6f);
+        [Tooltip("Участок — эллипс, вписанный в этот прямоугольник (лужа), а не сам прямоугольник")]
+        [SerializeField] bool round;
         [Tooltip("Центр участка по локальным осям X и Z")]
         [SerializeField] Vector2 center;
         [Tooltip("Множитель скорости бега на участке")]
@@ -32,9 +34,11 @@ namespace Bouncer.Core
         public bool Contains(Vector3 position)
         {
             Vector3 local = transform.InverseTransformPoint(position);
-            return local.y <= maxHeight
-                   && Mathf.Abs(local.x - center.x) <= size.x * 0.5f
-                   && Mathf.Abs(local.z - center.y) <= size.y * 0.5f;
+            if (local.y > maxHeight)
+                return false;
+            float x = (local.x - center.x) / Mathf.Max(0.01f, size.x * 0.5f);
+            float z = (local.z - center.y) / Mathf.Max(0.01f, size.y * 0.5f);
+            return round ? x * x + z * z <= 1f : Mathf.Abs(x) <= 1f && Mathf.Abs(z) <= 1f;
         }
 
         /// <summary>Множитель скорости в точке: 1 — обычная земля.</summary>

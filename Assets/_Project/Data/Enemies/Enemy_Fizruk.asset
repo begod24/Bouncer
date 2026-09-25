@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55887b0c371f64d4a811ac932d5df0b1, type: 3}
+  m_Name: Enemy_Fizruk
+  m_EditorClassIdentifier: Bouncer.Enemies::Bouncer.Enemies.FizrukDefinition
+  displayName: "\u0424\u0438\u0437\u0440\u0443\u043A-\u043C\u0430\u043D\u0435\u043A\u0435\u043D"
+  hitsToKill: 30
+  moveSpeed: 3
+  turnSpeed: 160
+  attackRange: 2.6
+  windupTime: 0.75
+  smashTime: 0.2
+  smashRange: 3.2
+  smashHalfAngle: 80
+  recoverTime: 0.8
+  attackCooldown: 1.6
+  smashDamage: 1
+  smashKnockback: 15
+  throwMinRange: 6
+  throwMaxRange: 20
+  throwWindup: 0.55
+  throwCooldown: 4.5
+  ballSpeed: 18
+  ballGravity: 2
+  ballDamage: 1
+  ballKnockback: 8
+  firstWhistle: 5
+  whistleInterval: 12
+  angryWhistleInterval: 9
+  angryAt: 0.5
+  whistleTime: 0.6
+  freezeTime: 3
+  freezeGrace: 0.6
+  freezeMoveSpeed: 1.6
+  freezePunishCooldown: 0.8
+  penaltyBalls: 5
+  penaltySpread: 56
+  penaltyWindup: 0.8
+  penaltySpeed: 14
+  ballInPlayTime: 8
+  debrisForce: 5

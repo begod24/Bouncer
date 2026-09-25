@@ -9,6 +9,7 @@ namespace Bouncer.Visuals
     /// глобальная палитра шейдера Bouncer/PaletteLit, солнце, окружающий свет, туман, фон камеры.
     /// Цветокоррекция — через два Volume: A (текущий ключ, вес 1) и B (следующий, вес t, приоритет выше),
     /// итог = lerp(A, B, t). Работает и в редакторе: ползунок Progress — превью времени суток.
+    /// Погода (<see cref="WeatherController"/>) поверх этого приглушает свет в дождь и сгущает туман.
     /// </summary>
     [ExecuteAlways]
     [DefaultExecutionOrder(-50)]
@@ -28,6 +29,17 @@ namespace Bouncer.Visuals
         [SerializeField] Volume volumeB;
 
         float _startProgress;
+        float _wet;
+        float _fog;
+        float _flash;
+
+        /// <summary>Погода: wet — дождь (свет тусклее, туман серее), fog — туман, flash — вспышка молнии. Всё 0..1.</summary>
+        public void SetWeather(float wet, float fog, float flash)
+        {
+            _wet = Mathf.Clamp01(wet);
+            _fog = Mathf.Clamp01(fog);
+            _flash = Mathf.Clamp01(flash);
+        }
 
         public float Progress
         {
@@ -116,29 +128,39 @@ namespace Bouncer.Visuals
             }
             Shader.SetGlobalFloat(PaletteShader.GlobalEmissionStrength, Mathf.Lerp(a.emissionStrength, b.emissionStrength, t));
 
+            // Дождь: солнце и небо тусклее. Туман: всё вдали тонет в сером.
+            float dim = 1f - 0.4f * _wet;
             if (sun)
             {
                 sun.color = Color.Lerp(a.sunColor, b.sunColor, t);
-                sun.intensity = Mathf.Lerp(a.sunIntensity, b.sunIntensity, t);
-                sun.shadowStrength = Mathf.Lerp(a.shadowStrength, b.shadowStrength, t);
+                sun.intensity = Mathf.Lerp(a.sunIntensity, b.sunIntensity, t) * dim;
+                sun.shadowStrength = Mathf.Lerp(a.shadowStrength, b.shadowStrength, t) * (1f - 0.5f * Mathf.Max(_wet, _fog));
                 sun.transform.rotation = Quaternion.Slerp(SunRotation(a), SunRotation(b), t);
             }
 
+            // Молния на миг заливает всё холодным светом.
+            Color flash = new Color(0.75f, 0.8f, 1f) * (_flash * 1.6f);
+            float ambientDim = 1f - 0.25f * _wet;
             RenderSettings.ambientMode = AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor = Color.Lerp(a.ambientSky, b.ambientSky, t);
-            RenderSettings.ambientEquatorColor = Color.Lerp(a.ambientEquator, b.ambientEquator, t);
-            RenderSettings.ambientGroundColor = Color.Lerp(a.ambientGround, b.ambientGround, t);
+            RenderSettings.ambientSkyColor = Color.Lerp(a.ambientSky, b.ambientSky, t) * ambientDim + flash;
+            RenderSettings.ambientEquatorColor = Color.Lerp(a.ambientEquator, b.ambientEquator, t) * ambientDim + flash;
+            RenderSettings.ambientGroundColor = Color.Lerp(a.ambientGround, b.ambientGround, t) * ambientDim + flash * 0.5f;
 
+            Color fogColor = Color.Lerp(a.fogColor, b.fogColor, t);
+            float grey = fogColor.grayscale;
+            fogColor = Color.Lerp(fogColor, new Color(grey, grey, grey * 1.05f), 0.5f * Mathf.Max(_wet, _fog));
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.Linear;
-            RenderSettings.fogColor = Color.Lerp(a.fogColor, b.fogColor, t);
-            RenderSettings.fogStartDistance = Mathf.Lerp(a.fogStart, b.fogStart, t);
-            RenderSettings.fogEndDistance = Mathf.Lerp(a.fogEnd, b.fogEnd, t);
+            RenderSettings.fogColor = fogColor;
+            RenderSettings.fogStartDistance = Mathf.Lerp(Mathf.Lerp(a.fogStart, b.fogStart, t), 22f, _fog);
+            RenderSettings.fogEndDistance = Mathf.Lerp(Mathf.Lerp(a.fogEnd, b.fogEnd, t), 45f, _fog);
+            FogColor = fogColor;
 
             if (targetCamera)
             {
                 targetCamera.clearFlags = CameraClearFlags.SolidColor;
-                targetCamera.backgroundColor = Color.Lerp(a.skyColor, b.skyColor, t);
+                Color sky = Color.Lerp(a.skyColor, b.skyColor, t) * (1f - 0.3f * _wet);
+                targetCamera.backgroundColor = Color.Lerp(sky, fogColor, _fog) + flash * 0.5f;
             }
 
             if (volumeA)
@@ -154,6 +176,9 @@ namespace Bouncer.Visuals
                 volumeB.weight = a == b ? 0f : t;
             }
         }
+
+        /// <summary>Цвет тумана сейчас — им же красится туман вокруг игрока.</summary>
+        public Color FogColor { get; private set; } = Color.grey;
 
         static Quaternion SunRotation(TimeOfDayProfile profile) =>
             Quaternion.Euler(profile.sunElevation, profile.sunAzimuth, 0f);

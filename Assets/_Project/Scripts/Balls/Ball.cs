@@ -26,7 +26,7 @@ namespace Bouncer.Balls
     /// и предсказуемые, мяч не пролетает сквозь тонкие стены. Лежащий мяч — обычная физика.
     /// Эффекты типа мяча и карточек (<see cref="BallPerks"/>) срабатывают здесь же: цепочка, урон по площади,
     /// раскол на двойников, бумеранг и возврат на резинке, отскоки от асфальта, взрыв, след жвачки,
-    /// полёт змейкой и задевание врагов по пути.
+    /// полёт змейкой и задевание врагов по пути. Борта с <see cref="RicochetSurface"/> отражают мяч «идеально».
     /// </summary>
     [RequireComponent(typeof(Rigidbody), typeof(SphereCollider))]
     public sealed class Ball : MonoBehaviour, IPoolable
@@ -47,6 +47,8 @@ namespace Bouncer.Balls
         const float HomingRange = 14f;
         /// <summary>Глаз-алмаз: половина угла, в котором мяч видит врагов впереди, градусы.</summary>
         const float HomingCone = 75f;
+        /// <summary>Доводка после рикошета от борта (<see cref="RicochetSurface"/>): дальше этого врагов не ищет.</summary>
+        const float RicochetAssistRange = 30f;
 
         static readonly List<Ball> s_active = new();
         static readonly List<Ball> s_loose = new();
@@ -422,11 +424,20 @@ namespace Bouncer.Balls
                     normal = -Flat(direction);
                 normal.Normalize();
 
-                float keep = live ? definition.wallSpeedKeep : definition.poppedWallKeep;
+                // Борта коробки: рикошет без потери скорости и высоты, лимит рикошетов не тратится.
+                var surface = live ? hit.collider.GetComponentInParent<RicochetSurface>() : null;
+                float keep = !live ? definition.poppedWallKeep : surface ? surface.SpeedKeep : definition.wallSpeedKeep;
                 Vector3 reflected = Vector3.Reflect(_velocity, normal);
                 _velocity = new Vector3(reflected.x * keep, reflected.y, reflected.z * keep);
                 _snakeHeading = Vector3.Reflect(_snakeHeading, normal);
                 remaining *= keep;
+                if (surface)
+                {
+                    if (surface.KeepHeight && _velocity.y < 0f)
+                        _velocity.y = 0f;
+                    if (surface.AimAssist > 0f && Team == Team.Player)
+                        AssistAim(position, surface.AimAssist);
+                }
                 Ricocheted?.Invoke(this, hit.point, normal);
                 GameEvents.PlaySound(SoundCue.BallWall, hit.point);
 
@@ -437,7 +448,8 @@ namespace Bouncer.Balls
                         AddDamage(Perks.wallDamage);
                     if (Perks.yoyo && TryStartYoyo(null, position))
                         return;
-                    Ricochets++;
+                    if (surface == null || !surface.Free)
+                        Ricochets++;
                     if (Ricochets > definition.maxRicochets || Flat(_velocity).magnitude < definition.minLiveSpeed)
                     {
                         BecomeLoose(position, _velocity * 0.5f);
@@ -581,13 +593,17 @@ namespace Bouncer.Balls
                 DamageArea(point, direct);
             if (BlastPending)
                 Blast(point, direct);
-            if (Perks.splitOnHit && !IsPhantom && !_splitDone)
+            // Двойник раскалывается, только если ему это передали («Град»): см. BallPerks.ForTwin.
+            if (Perks.splitOnHit && !_splitDone)
                 Split(normal, struck, position);
         }
 
         void DamageArea(Vector3 point, IDamageable direct)
         {
-            HitAround(point, Perks.areaRadius, Perks.areaDamage, direct, Stats.Knockback * 0.7f, HitFlags.Area);
+            HitAround(point, Perks.areaRadius, Perks.areaDamage, direct, Stats.Knockback * 0.7f, HitFlags.Area, Perks.areaStun);
+            // Гиря: оглушает и того, в кого попал сам мяч.
+            if (Perks.areaStun > 0f && direct is Component struck && struck && struck.TryGetComponent(out Targetable target))
+                target.Freeze(Perks.areaStun);
             if (definition.areaEffect)
             {
                 var ring = PoolService.Spawn(definition.areaEffect, new Vector3(point.x, 0.05f, point.z), Quaternion.identity);
@@ -609,8 +625,8 @@ namespace Bouncer.Balls
             GameFeel.Shake(0.5f);
         }
 
-        /// <summary>Урон всем противникам в радиусе, кроме exclude: их отбрасывает от центра.</summary>
-        void HitAround(Vector3 center, float radius, int damage, IDamageable exclude, float force, HitFlags flags)
+        /// <summary>Урон всем противникам в радиусе, кроме exclude: их отбрасывает от центра, stun — оглушает (Гиря).</summary>
+        void HitAround(Vector3 center, float radius, int damage, IDamageable exclude, float force, HitFlags flags, float stun = 0f)
         {
             int mask = Layers.LiveBallMask(Team) & ~Layers.EnvironmentMask;
             int count = Physics.OverlapSphereNonAlloc(center, radius, s_area, mask, QueryTriggerInteraction.Ignore);
@@ -633,6 +649,8 @@ namespace Bouncer.Balls
                     Source = Thrower,
                     Flags = flags,
                 });
+                if (stun > 0f && target is Component component && component && component.TryGetComponent(out Targetable targetable))
+                    targetable.Freeze(stun);
             }
         }
 
@@ -767,7 +785,56 @@ namespace Bouncer.Balls
             if (!IsComingBack)
                 _stateTime = 0f;
             GameEvents.PlaySound(SoundCue.BallWall, point);
+            // Прыгающая бомба: каждый отскок — взрыв.
+            if (Perks.bounceBlastRadius > 0f && Perks.bounceBlastDamage > 0 && !IsPhantom)
+                BounceBlast(point);
             return true;
+        }
+
+        /// <summary>Прыгающая бомба: взрыв на отскоке от асфальта, послабее горячей картошки.</summary>
+        void BounceBlast(Vector3 point)
+        {
+            HitAround(point, Perks.bounceBlastRadius, Perks.bounceBlastDamage, null, definition.blastKnockback * 0.7f,
+                HitFlags.Area | HitFlags.Charged);
+            if (blastRing)
+                PoolService.Spawn(blastRing, new Vector3(point.x, 0.05f, point.z), Quaternion.identity).Play(Perks.bounceBlastRadius);
+            GameEvents.PlaySound(SoundCue.Explosion, point);
+            GameFeel.Shake(0.3f);
+        }
+
+        /// <summary>
+        /// Доводка после рикошета от борта: если враг почти на линии отражения, мяч летит точно в него.
+        /// Змейка вьётся вокруг нового направления.
+        /// </summary>
+        void AssistAim(Vector3 position, float maxAngle)
+        {
+            Vector3 horizontal = Flat(_velocity);
+            float speed = horizontal.magnitude;
+            if (speed < 1e-3f)
+                return;
+            Vector3 heading = horizontal / speed;
+            Targetable best = null;
+            float bestAngle = maxAngle;
+            foreach (var target in Targetable.All)
+            {
+                if (!target.IsAlive || !Team.IsHostileTo(target.Team))
+                    continue;
+                Vector3 to = Flat(target.AimPoint - position);
+                float sqr = to.sqrMagnitude;
+                if (sqr < 0.25f || sqr > RicochetAssistRange * RicochetAssistRange)
+                    continue;
+                float angle = Vector3.Angle(heading, to);
+                if (angle < bestAngle)
+                {
+                    bestAngle = angle;
+                    best = target;
+                }
+            }
+            if (best == null)
+                return;
+            Vector3 want = Flat(best.AimPoint - position).normalized;
+            _velocity = want * speed + Vector3.up * _velocity.y;
+            _snakeHeading = want;
         }
 
         /// <summary>Цепочка (волейбольный): после попадания мяч перелетает к ближайшему другому врагу.</summary>

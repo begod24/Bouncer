@@ -327,6 +327,66 @@ MonoBehaviour:
     m_Key: exit.yard_evening
     m_Metadata:
       m_Items: []
+  - m_Id: 194564366262272
+    m_Key: arena.rink
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262273
+    m_Key: arena.site
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262274
+    m_Key: exit.rink
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262275
+    m_Key: exit.site
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262276
+    m_Key: rule.freeze
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262277
+    m_Key: rule.freeze.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262278
+    m_Key: rule.penalty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262279
+    m_Key: rule.penalty.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262280
+    m_Key: rule.ball
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262281
+    m_Key: rule.ball.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262282
+    m_Key: rule.substitution
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262283
+    m_Key: rule.substitution.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262284
+    m_Key: weather.rain
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262285
+    m_Key: weather.storm
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262286
+    m_Key: weather.fog
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

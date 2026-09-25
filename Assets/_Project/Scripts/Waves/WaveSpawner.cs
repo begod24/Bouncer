@@ -11,6 +11,8 @@ namespace Bouncer.Waves
     /// и общий лимит живых. Группа появляется в точке спавна вне экрана и не ближе заданного расстояния
     /// к игрокам; перед появлением на полу мигают метки (у элитных — золотые). Когда вышедший босс выбит
     /// целиком, сообщает <see cref="GameEvents.BossDefeated"/>; что дальше, решает арена.
+    /// Врагов с <see cref="SpawnPreference"/> (тень) выпускает только в тёмных точках, а подмогу, которую зовёт
+    /// босс (<see cref="GameEvents.SpawnRequested"/>), — у названной точки, тоже с метками.
     /// </summary>
     public sealed class WaveSpawner : MonoBehaviour
     {
@@ -90,6 +92,17 @@ namespace Bouncer.Waves
 
         // Поле направлений роя строится при загрузке, а не посреди боя, когда появится первый пупс.
         void Start() => _ = EnemyFlowField.Instance;
+
+        void OnEnable() => GameEvents.SpawnRequested += OnSpawnRequested;
+
+        void OnDisable() => GameEvents.SpawnRequested -= OnSpawnRequested;
+
+        void OnSpawnRequested(SpawnRequest request)
+        {
+            if (!GameSession.IsGameplayActive)
+                return;
+            QueueGroupAt(request.Prefab, request.Count, request.Line ? GroupLayout.Line : GroupLayout.Cluster, request.Position);
+        }
 
         void Update()
         {
@@ -186,8 +199,15 @@ namespace Bouncer.Waves
         {
             if (prefab == null || count <= 0)
                 return false;
+            return QueueGroupAt(prefab, count, layout, PickSpawnPoint(prefab), boss, elite);
+        }
 
-            Vector3 point = PickSpawnPoint();
+        /// <summary>Поставить группу в очередь у заданной точки (скамейка запасных).</summary>
+        public bool QueueGroupAt(GameObject prefab, int count, GroupLayout layout, Vector3 point, bool boss = false, bool elite = false)
+        {
+            if (prefab == null || count <= 0)
+                return false;
+
             Vector3 facing = FacingToPlayers(point);
             Vector3 right = Vector3.Cross(Vector3.up, facing);
             var group = _freeGroups.Count > 0 ? _freeGroups.Pop() : new PendingGroup();
@@ -305,12 +325,16 @@ namespace Bouncer.Waves
             _freeGroups.Push(group);
         }
 
-        /// <summary>Точка вне экрана и подальше от игроков; если таких нет — самая дальняя.</summary>
-        Vector3 PickSpawnPoint()
+        /// <summary>
+        /// Точка вне экрана и подальше от игроков; если таких нет — самая дальняя.
+        /// Тень выходит только из темноты: освещённые фонарями точки ей не годятся, пока есть тёмные.
+        /// </summary>
+        Vector3 PickSpawnPoint(GameObject prefab)
         {
             if (spawnPoints == null || spawnPoints.Length == 0)
                 return transform.position;
 
+            bool darkOnly = prefab && prefab.TryGetComponent(out SpawnPreference preference) && preference.DarkOnly && HasDarkPoint();
             var camera = Camera.main;
             float minSqr = minDistanceFromPlayer * minDistanceFromPlayer;
             Transform farthest = null;
@@ -319,7 +343,7 @@ namespace Bouncer.Waves
             _onScreen.Clear();
             foreach (var point in spawnPoints)
             {
-                if (!point)
+                if (!point || (darkOnly && LightZone.IsLit(point.position)))
                     continue;
                 float sqr = NearestPlayerSqr(point.position);
                 if (sqr > farthestSqr)
@@ -339,6 +363,14 @@ namespace Bouncer.Waves
             if (candidates.Count > 0)
                 return candidates[Random.Range(0, candidates.Count)].position;
             return farthest ? farthest.position : transform.position;
+        }
+
+        bool HasDarkPoint()
+        {
+            foreach (var point in spawnPoints)
+                if (point && !LightZone.IsLit(point.position))
+                    return true;
+            return false;
         }
 
         static bool IsOnScreen(Camera camera, Vector3 position)

@@ -231,6 +231,121 @@ MonoBehaviour:
       hands, knocking down everyone on the way.
     m_Metadata:
       m_Items: []
+  - m_Id: 194562260721664
+    m_Localized: Jump rope
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915968
+    m_Localized: Dash 30% farther, and it recharges faster. Up to three times.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915969
+    m_Localized: Pocket mirror
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915970
+    m_Localized: Mannequins freeze even when they are right behind you.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915971
+    m_Localized: Flashlight
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915972
+    m_Localized: A wider circle of light around you in the dark. In it, shadows turn
+      solid and can be hit.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915973
+    m_Localized: Whistle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915974
+    m_Localized: A perfect catch freezes the enemies around you for a second and
+      a half.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915975
+    m_Localized: Second wind
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915976
+    m_Localized: Once per walk, a hit that would knock you out leaves you with one
+      heart.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915977
+    m_Localized: Grandma's pies
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915978
+    m_Localized: +1 heart at the start of every next arena.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915979
+    m_Localized: Rubber boots
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915980
+    m_Localized: Sand and puddles don't slow you down.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915981
+    m_Localized: Bouncing bomb
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915982
+    m_Localized: Hot potato + Bouncy ball. Every time the ball bounces off the asphalt,
+      it explodes.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915983
+    m_Localized: Hailstorm
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915984
+    m_Localized: Tennis balls + Split. The fan balls and the twins split on a hit
+      too.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915985
+    m_Localized: Kettlebell
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915986
+    m_Localized: Medicine ball + Hooliganism. The area hit stuns everyone it touches
+      for a second.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915987
+    m_Localized: Roll
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915988
+    m_Localized: Slide tackle + Jump rope. Dashing through an enemy ball catches
+      it, even a strong one.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915989
+    m_Localized: Cheat sheet
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915990
+    m_Localized: At every newsstand, the first reroll is free.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915991
+    m_Localized: Lucky wrapper
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915992
+    m_Localized: School bags and bosses offer four cards to choose from.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915993
+    m_Localized: PE Teacher Mannequin
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

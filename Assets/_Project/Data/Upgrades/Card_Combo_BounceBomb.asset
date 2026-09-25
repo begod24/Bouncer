@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d0ee692cf9a149c6973ac0b061eea20, type: 3}
+  m_Name: Card_Combo_BounceBomb
+  m_EditorClassIdentifier: Bouncer.Upgrades::Bouncer.Upgrades.BallPerkCard
+  title:
+    m_TableReference:
+      m_TableCollectionName: Content
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: card.combo_bouncebomb.title
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  description:
+    m_TableReference:
+      m_TableCollectionName: Content
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: card.combo_bouncebomb.description
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  category: 1
+  icon: {fileID: 21300000, guid: 30ee9868543de471fa4f7f077bf2344f, type: 3}
+  wrapperColor: {r: 0.93, g: 0.4, b: 0.25, a: 1}
+  rarity: 2
+  maxStacks: 1
+  weight: 1
+  requires:
+  - {fileID: 11400000, guid: 785ba9a3a039046b1976a14c32564c2f, type: 2}
+  - {fileID: 11400000, guid: daa14f4870e4e405cb472a0951a6f195, type: 2}
+  perks:
+    extraShots: 0
+    spreadAngle: 0
+    chainBounces: 0
+    areaRadius: 0
+    areaDamage: 0
+    splitOnHit: 0
+    boomerang: 0
+    elastic: 0
+    floorBounces: 0
+    gumTrail: 0
+    blastRadius: 0
+    blastDamage: 0
+    snakeAmplitude: 0
+    grazeRadius: 0
+    wallDamage: 0
+    chargedPierce: 0
+    homing: 0
+    yoyo: 0
+    bounceBlastRadius: 2.2
+    bounceBlastDamage: 1
+    twinSplit: 0
+    areaStun: 0
+  nextThrowAfterCatch: 0
+  references:
+    version: 2
+    RefIds: []

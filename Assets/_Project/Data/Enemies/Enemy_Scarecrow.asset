@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f7e5f80fd33040c5bb42337f95331eb, type: 3}
+  m_Name: Enemy_Scarecrow
+  m_EditorClassIdentifier: Bouncer.Enemies::Bouncer.Enemies.ScarecrowDefinition
+  displayName: "\u0427\u0443\u0447\u0435\u043B\u043E"
+  hitsToKill: 3
+  keepDistance: 7
+  hopInterval: 0.9
+  hopTime: 0.35
+  hopDistance: 1.2
+  hopHeight: 0.35
+  turnSpeed: 110
+  catchRadius: 1.6
+  catchHalfAngle: 65
+  maxHeld: 1
+  catchCharged: 0
+  holdTime: 1
+  throwSpeed: 14
+  throwGravity: 3
+  throwDamage: 1
+  throwKnockback: 6
+  throwStrong: 0
+  lead: 0.5
+  knockbackScale: 0.15
+  debrisForce: 4

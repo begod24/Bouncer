@@ -336,6 +336,66 @@ MonoBehaviour:
     m_Localized: "Until evening \u2192"
     m_Metadata:
       m_Items: []
+  - m_Id: 194564366262272
+    m_Localized: "The Hockey Box \xB7 evening"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262273
+    m_Localized: "The Construction Site \xB7 dusk"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262274
+    m_Localized: "To the box \u2192"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262275
+    m_Localized: "To the site \u2192"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262276
+    m_Localized: FREEZE!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262277
+    m_Localized: Whoever runs gets the ball
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262278
+    m_Localized: PENALTY!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262279
+    m_Localized: Catch what you can
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262280
+    m_Localized: BALL IN PLAY!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262281
+    m_Localized: The giant ball knocks everyone down
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262282
+    m_Localized: SUBSTITUTION!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262283
+    m_Localized: Help runs in from the bench
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262284
+    m_Localized: 'Rain: balls stop dead in puddles'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262285
+    m_Localized: 'Storm: lightning lights everything up'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194564366262286
+    m_Localized: 'Fog: you can''t see far'
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

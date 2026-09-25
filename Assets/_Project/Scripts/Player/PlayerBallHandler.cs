@@ -184,13 +184,25 @@ namespace Bouncer.Player
             return true;
         }
 
-        void CatchNow(Ball ball)
+        /// <summary>
+        /// «Кувырок»: рывок подхватил летящий мяч врага — пойман без окна ловли и с любой стороны, сильный тоже
+        /// удерживается. Такая ловля не идеальная и не лечит.
+        /// </summary>
+        public bool TryDashCatch(Ball ball)
+        {
+            if (ball == null || ball.IsPhantom || ball.State != BallState.Live || !ball.Team.IsHostileTo(Team.Player))
+                return false;
+            CatchNow(ball, dash: true);
+            return true;
+        }
+
+        void CatchNow(Ball ball, bool dash = false)
         {
             var info = new CatchInfo
             {
                 Candle = ball.State == BallState.Popped,
                 EnemyBall = ball.State == BallState.Live && ball.Team == Team.Enemy,
-                Perfect = IsCatchPerfect,
+                Perfect = !dash && IsCatchPerfect,
                 Position = ball.Position,
             };
 
@@ -198,8 +210,8 @@ namespace Bouncer.Player
             _catchUntil = 0f;
             _missStreak = 0;
 
-            // Сильный мяч (заряженный, отбитый качелями) удерживает только идеальная ловля.
-            if (ball.State == BallState.Live && !info.Perfect && ball.Stats.Has(HitFlags.Charged))
+            // Сильный мяч (заряженный, отбитый качелями) удерживает только идеальная ловля — или кувырок.
+            if (!dash && ball.State == BallState.Live && !info.Perfect && ball.Stats.Has(HitFlags.Charged))
             {
                 Fumble(ball);
                 return;

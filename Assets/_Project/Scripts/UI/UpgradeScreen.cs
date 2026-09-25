@@ -8,10 +8,10 @@ using UnityEngine.InputSystem;
 namespace Bouncer.UI
 {
     /// <summary>
-    /// Экран выбора вкладыша «1 из 3» (старт прогулки, портфель, босс): показывает предложение
-    /// <see cref="PlayerCards"/> и передаёт выбор. Выбор — мышью, стрелками/WASD + Enter, геймпадом или
-    /// клавишами 1–3. Первые доли секунды ввод не принимается, чтобы случайный клик или бросок не выбрал
-    /// карточку вслепую.
+    /// Экран выбора вкладыша «1 из 3» (старт прогулки, портфель, босс; со «Счастливым фантиком» — из 4):
+    /// показывает предложение <see cref="PlayerCards"/> и передаёт выбор. Выбор — мышью, стрелками/WASD + Enter,
+    /// геймпадом или клавишами 1–4. Первые доли секунды ввод не принимается, чтобы случайный клик или бросок
+    /// не выбрал карточку вслепую.
     /// </summary>
     public sealed class UpgradeScreen : MonoBehaviour
     {
@@ -22,6 +22,8 @@ namespace Bouncer.UI
         [SerializeField] float inputDelay = 0.45f;
         [Tooltip("Пауза между появлением соседних карточек, с")]
         [SerializeField] float cardStagger = 0.07f;
+        [Tooltip("Масштаб ряда, когда карточек четыре («Счастливый фантик»): чтобы влезли и на узком экране")]
+        [SerializeField] float fourCardsScale = 0.88f;
 
         PlayerCards _cards;
         float _openedAt;
@@ -71,6 +73,8 @@ namespace Bouncer.UI
             });
 
             var offer = _cards.Offer;
+            if (cards.Length > 0 && cards[0].transform.parent)
+                cards[0].transform.parent.localScale = Vector3.one * (offer.Count > 3 ? fourCardsScale : 1f);
             for (int i = 0; i < cards.Length; i++)
             {
                 if (i < offer.Count)
@@ -117,6 +121,8 @@ namespace Bouncer.UI
                 Pick(1);
             else if (keyboard.digit3Key.wasPressedThisFrame || keyboard.numpad3Key.wasPressedThisFrame)
                 Pick(2);
+            else if (keyboard.digit4Key.wasPressedThisFrame || keyboard.numpad4Key.wasPressedThisFrame)
+                Pick(3);
         }
 
         bool AcceptsInput => Time.unscaledTime - _openedAt >= inputDelay;

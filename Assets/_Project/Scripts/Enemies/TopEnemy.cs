@@ -65,7 +65,8 @@ namespace Bouncer.Enemies
         void FixedUpdate()
         {
             float dt = Time.fixedDeltaTime;
-            if (!GameSession.IsGameplayActive && !_launched)
+            // Запущенная ударом юла катится дальше и заморозку не замечает — это уже снаряд игрока.
+            if ((!GameSession.IsGameplayActive || _self.IsFrozen) && !_launched)
                 return;
 
             if (_launched)

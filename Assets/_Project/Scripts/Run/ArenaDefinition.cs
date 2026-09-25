@@ -1,3 +1,4 @@
+using Bouncer.Core;
 using Bouncer.Visuals;
 using Bouncer.Waves;
 using UnityEngine;
@@ -43,5 +44,11 @@ namespace Bouncer.Run
         [Min(0)] public int portfolioFinds = 1;
         [Tooltip("Портфель появляется в случайный момент между этими долями боя")]
         public Vector2 portfolioWindow = new(0.3f, 0.6f);
+
+        [Header("Погода — случайное событие")]
+        [Tooltip("С какой вероятностью на арене непогода")]
+        [Range(0f, 1f)] public float weatherChance = 0.3f;
+        [Tooltip("Какая непогода может выпасть (одна из списка)")]
+        public WeatherKind[] weathers = { WeatherKind.Rain, WeatherKind.Storm, WeatherKind.Fog };
     }
 }

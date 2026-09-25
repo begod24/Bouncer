@@ -87,9 +87,14 @@ namespace Bouncer.Enemies
         void Update()
         {
             float dt = Time.deltaTime;
-            _stateTime += dt;
             if (!_agent.isOnNavMesh)
                 return;
+            if (_self.IsFrozen)
+            {
+                Halt();
+                return;
+            }
+            _stateTime += dt;
             if (Time.time >= _nextRepath)
             {
                 _nextRepath = Time.time + RepathInterval;
@@ -296,7 +301,7 @@ namespace Bouncer.Enemies
 
         void LateUpdate()
         {
-            if (!rocker)
+            if (!rocker || _self.IsFrozen)
                 return;
             float dt = Time.deltaTime;
             float angle;

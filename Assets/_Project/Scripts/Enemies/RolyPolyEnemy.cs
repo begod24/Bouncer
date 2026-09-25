@@ -108,12 +108,19 @@ namespace Bouncer.Enemies
 
         void FixedUpdate()
         {
-            _stateTime += Time.fixedDeltaTime;
             if (_rb.position.y < -5f)
             {
                 PoolService.Despawn(gameObject);
                 return;
             }
+            if (_self.IsFrozen)
+            {
+                // Заморожена («Замри!», «Свисток»): стоит и ждёт, попадания по ней проходят.
+                Balance(1f);
+                Drive(Vector3.zero);
+                return;
+            }
+            _stateTime += Time.fixedDeltaTime;
 
             bool hasTarget = _target != null && _target.IsAlive && GameSession.IsGameplayActive;
             Vector3 toTarget = hasTarget ? Flat(_target.Position - _rb.position) : Vector3.zero;

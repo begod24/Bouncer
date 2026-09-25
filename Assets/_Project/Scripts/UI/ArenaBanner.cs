@@ -6,8 +6,8 @@ using UnityEngine;
 namespace Bouncer.UI
 {
     /// <summary>
-    /// Плашка посреди экрана: название арены, когда начинается бой («Двор · утро»), и «Пройдено!»
-    /// с подсказкой про ларёк и стрелку, когда арена пройдена.
+    /// Плашка посреди экрана: название арены, когда начинается бой («Двор · утро»), с погодой, если она выпала
+    /// («Дождь: в лужах мяч гаснет»), и «Пройдено!» с подсказкой про ларёк и стрелку, когда арена пройдена.
     /// </summary>
     public sealed class ArenaBanner : MonoBehaviour
     {
@@ -33,7 +33,9 @@ namespace Bouncer.UI
                 if (!_introShown && session.State == SessionState.Playing && !director.Arena.title.IsEmpty)
                 {
                     _introShown = true;
-                    Show(director.Arena.title.GetLocalizedString(), string.Empty, introTime);
+                    string weather = WeatherKey(director.Weather);
+                    Show(director.Arena.title.GetLocalizedString(), weather != null ? Loc.Get(weather) : string.Empty,
+                        weather != null ? introTime + 1.2f : introTime);
                 }
                 // Сначала выбор карточки за босса, потом плашка — иначе её не видно под экраном выбора.
                 if (!_clearedShown && director.IsComplete && session.State == SessionState.Cleared)
@@ -47,6 +49,14 @@ namespace Bouncer.UI
             float target = Time.unscaledTime < _hideAt ? 1f : 0f;
             group.alpha = Mathf.MoveTowards(group.alpha, target, Time.unscaledDeltaTime * fadeSpeed);
         }
+
+        static string WeatherKey(WeatherKind weather) => weather switch
+        {
+            WeatherKind.Rain => "weather.rain",
+            WeatherKind.Storm => "weather.storm",
+            WeatherKind.Fog => "weather.fog",
+            _ => null,
+        };
 
         void Show(string titleText, string hintText, float seconds)
         {

@@ -30,6 +30,8 @@ namespace Bouncer.Core
         public static float PastTime { get; private set; }
         public static int PastKills { get; private set; }
         public static int CoinsEarned { get; private set; }
+        /// <summary>«Второе дыхание» уже спасло игрока в этой прогулке (действует раз за прогулку).</summary>
+        public static bool SecondWindUsed { get; set; }
 
         /// <summary>Монеток стало больше или меньше: изменение (может быть отрицательным).</summary>
         public static event Action<int> CoinsChanged;
@@ -47,6 +49,7 @@ namespace Bouncer.Core
             PastTime = 0f;
             PastKills = 0;
             CoinsEarned = 0;
+            SecondWindUsed = false;
             CoinsChanged?.Invoke(0);
         }
 
@@ -62,6 +65,7 @@ namespace Bouncer.Core
             PastTime = 0f;
             PastKills = 0;
             CoinsEarned = 0;
+            SecondWindUsed = false;
         }
 
         /// <summary>Сцена отдельной арены запущена сама (редактор): прогулка начинается с неё, тоже со стартовой карточкой.</summary>

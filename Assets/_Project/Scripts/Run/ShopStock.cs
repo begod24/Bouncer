@@ -39,7 +39,15 @@ namespace Bouncer.Run
         int _rerolls;
 
         public IReadOnlyList<Slot> Slots => _slots;
-        public int RerollPrice => _deck.rerollPrice + _deck.rerollStep * _rerolls;
+        /// <summary>Цена перебора: «Шпаргалка» делает первые переборы в этом ларьке бесплатными.</summary>
+        public int RerollPrice
+        {
+            get
+            {
+                int free = _cards.Player.Modifiers.FreeRerolls;
+                return _rerolls < free ? 0 : _deck.rerollPrice + _deck.rerollStep * (_rerolls - free);
+            }
+        }
         public int LemonadePrice => _deck.lemonadePrice;
         public int SandwichPrice => _deck.sandwichPrice;
         public bool HeartsFull => _cards.Player.Health.Current >= _cards.Player.Health.Max;

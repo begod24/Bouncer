@@ -583,6 +583,194 @@ def icons():
     c.stroke(c.circle_pts(128, 170, 80, 20, 110, 24), 7, opacity=0.8)
     c.save("Icons/Icon_Yoyo.png", grain=0.3, color=INK)
 
+    c = Canvas(256, 256, 51)  # Скакалка: верёвка дугой над головой, две ручки и полоски движения
+    rope = [(64 + 128 * t, 196 - 170 * math.sin(math.pi * t)) for t in np.linspace(0, 1, 40)]
+    c.stroke(rope, 7)
+    for x, a in ((64, 20), (192, -20)):
+        handle = rotate(c.round_rect_pts(x - 11, 192, x + 11, 244, 9), x, 196, a)
+        c.fill(handle, opacity=0.45, hatch=(30, 8))
+        c.stroke(handle, 8, closed=True)
+    for y, x0 in ((70, 16), (100, 8), (130, 16)):
+        c.stroke([(x0, y), (x0 + 30, y)], 6, opacity=0.8)
+        c.stroke([(256 - x0, y), (226 - x0, y)], 6, opacity=0.8)
+    c.save("Icons/Icon_JumpRope.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 52)  # Зеркальце: овальное зеркальце с ручкой, в нём глаз, по стеклу блики
+    glass = [(128 + 60 * math.cos(a), 100 + 78 * math.sin(a)) for a in np.linspace(0, 2 * math.pi, 64, endpoint=False)]
+    c.fill(glass, opacity=0.15, hatch=(45, 12))
+    c.stroke(glass, 11, closed=True)
+    c.stroke([(128 + 46 * math.cos(a), 100 + 63 * math.sin(a)) for a in np.linspace(0, 2 * math.pi, 64, endpoint=False)],
+             5, closed=True, opacity=0.7)
+    c.stroke(c.circle_pts(128, 18, 9), 6, closed=True)
+    handle = c.round_rect_pts(116, 180, 140, 248, 10)
+    c.fill(handle, opacity=0.45, hatch=(30, 8))
+    c.stroke(handle, 8, closed=True)
+    upper = [(98 + 60 * t, 112 - 18 * math.sin(math.pi * t)) for t in np.linspace(0, 1, 20)]
+    lower = [(158 - 60 * t, 112 + 16 * math.sin(math.pi * t)) for t in np.linspace(0, 1, 20)]
+    c.stroke(upper + lower, 6, closed=True)
+    c.fill(c.circle_pts(128, 112, 9), opacity=0.9)
+    for x0, y0, x1, y1 in ((96, 70, 118, 48), (96, 90, 132, 54)):
+        c.stroke([(x0, y0), (x1, y1)], 6, opacity=0.85)
+    c.save("Icons/Icon_Mirror.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 53)  # Фонарик: фонарик светит широким конусом
+    body = rotate(c.round_rect_pts(22, 108, 104, 148, 10), 64, 128, 0)
+    c.fill(body, opacity=0.45, hatch=(30, 8))
+    c.stroke(body, 9, closed=True)
+    head = [(104, 100), (132, 88), (132, 168), (104, 156)]
+    c.fill(head, opacity=0.3, hatch=(-30, 8))
+    c.stroke(head, 9, closed=True)
+    c.stroke([(60, 108), (60, 96), (76, 96), (76, 108)], 6)
+    for a in (-24, -8, 8, 24):
+        ca, sa = math.cos(math.radians(a)), math.sin(math.radians(a))
+        c.stroke(dense([(140 + ca * 10, 128 + sa * 10), (140 + ca * 104, 128 + sa * 104)]), 6, dash=14)
+    c.stroke(c.circle_pts(140, 128, 110, -30, 30, 16), 7)
+    c.save("Icons/Icon_Flashlight.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 54)  # Свисток: свисток на шнурке, от него волны звука и снежинка — все замерли
+    whistle = [(46, 118), (150, 118), (150, 110), (176, 110), (176, 134)]
+    whistle += [(148 + 34 * math.cos(a), 150 + 34 * math.sin(a)) for a in np.linspace(math.radians(-20), math.radians(200), 20)]
+    whistle += [(46, 150)]
+    c.fill(whistle, opacity=0.45, hatch=(30, 8))
+    c.stroke(whistle, 9, closed=True)
+    c.stroke(c.circle_pts(148, 150, 12), 5, closed=True)
+    c.stroke([(52, 118), (70, 60), (120, 34)], 5, opacity=0.85)
+    for r in (26, 44):
+        c.stroke(c.circle_pts(196, 150, r, -40, 40, 10), 6)
+    cx, cy = 214, 52
+    for k in range(3):
+        a = math.radians(90 + k * 60)
+        c.stroke([(cx - math.cos(a) * 22, cy + math.sin(a) * 22), (cx + math.cos(a) * 22, cy - math.sin(a) * 22)], 6)
+    c.save("Icons/Icon_Whistle.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 55)  # Второе дыхание: сердце с пластырем крест-накрест и искры
+    heart = c.heart_pts(128, 132, 6.2)
+    c.fill(heart, opacity=0.35, hatch=(30, 9))
+    c.stroke(heart, 10, closed=True)
+    for a in (35, -35):
+        plaster = rotate(c.round_rect_pts(84, 116, 172, 144, 10), 128, 130, a)
+        c.fill(plaster, opacity=0.2)
+        c.stroke(plaster, 7, closed=True)
+    for x, y in ((40, 40), (216, 44), (224, 96)):
+        c.stroke([(x - 12, y), (x + 12, y)], 6)
+        c.stroke([(x, y - 12), (x, y + 12)], 6)
+    c.save("Icons/Icon_SecondWind.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 56)  # Бабушкины пирожки: два пирожка со швом, над ними пар
+    for cx, cy, a in ((96, 178, -8), (160, 150, 10)):
+        pie = rotate([(cx + 62 * math.cos(t), cy + 30 * math.sin(t)) for t in np.linspace(0, 2 * math.pi, 50, endpoint=False)], cx, cy, a)
+        c.fill(pie, opacity=0.35, hatch=(30, 9))
+        c.stroke(pie, 9, closed=True)
+        seam = rotate([(cx - 44 + 88 * t, cy - 14 + 4 * math.sin(t * 14)) for t in np.linspace(0, 1, 30)], cx, cy, a)
+        c.stroke(seam, 5)
+    for x in (100, 136, 172):
+        c.stroke([(x + 9 * math.sin(i * 1.1), 108 - i * 12) for i in range(7)], 7)
+    c.save("Icons/Icon_Pies.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 57)  # Резиновые сапоги: сапог шлёпает по луже, брызги
+    boot = [(92, 30), (150, 30), (150, 150), (212, 172), (220, 206), (80, 206), (80, 150)]
+    c.fill(boot, opacity=0.4, hatch=(-30, 9))
+    c.stroke(boot, 9, closed=True)
+    c.stroke([(92, 60), (150, 60)], 6)
+    c.stroke([(80, 190), (220, 190)], 6)
+    splat = [(128 + 110 * math.cos(a), 226 + 16 * math.sin(a)) for a in np.linspace(0, 2 * math.pi, 50, endpoint=False)]
+    c.stroke(splat, 7, closed=True)
+    for x0, y0, x1, y1 in ((30, 200, 12, 172), (44, 190, 36, 158), (226, 196, 244, 168)):
+        c.stroke([(x0, y0), (x1, y1)], 6)
+        c.fill(c.circle_pts(x1, y1 - 8, 5), opacity=0.9)
+    c.save("Icons/Icon_Boots.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 58)  # Прыгающая бомба: мяч скачет, и на каждом отскоке — взрыв
+    c.stroke([(8, 222), (248, 222)], 8)
+    path = [(20 + 90 * t, 214 - 150 * 4 * t * (1 - t)) for t in np.linspace(0, 1, 24)]
+    path += [(110 + 70 * t, 214 - 110 * 4 * t * (1 - t)) for t in np.linspace(0, 1, 20)][1:]
+    c.stroke(path, 6, dash=12)
+    for x in (110, 180):
+        for a in range(0, 360, 45):
+            ca, sa = math.cos(math.radians(a)), math.sin(math.radians(a))
+            r0, r1 = (10, 26) if a % 90 == 0 else (8, 18)
+            if sa > 0.3:
+                continue
+            c.stroke([(x + ca * r0, 214 + sa * r0), (x + ca * r1, 214 + sa * r1)], 6)
+    ball = c.circle_pts(214, 118, 26)
+    c.fill(ball, opacity=0.5, hatch=(30, 8))
+    c.stroke(ball, 8, closed=True)
+    c.stroke([(226, 94), (238, 70)], 6)
+    c.stroke(c.circle_pts(242, 62, 7), 5, closed=True)
+    c.save("Icons/Icon_BounceBomb.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 59)  # Град: теннисный мяч раскалывается на мячики, мячики — ещё раз
+    ball = c.circle_pts(62, 128, 32)
+    c.fill(ball, opacity=0.5, hatch=(30, 8))
+    c.stroke(ball, 8, closed=True)
+    c.stroke(c.circle_pts(40, 128, 30, -60, 60, 12), 5)
+    for tip, kids in (((150, 70), ((214, 36), (222, 92))), ((150, 186), ((214, 164), (222, 220)))):
+        c.stroke([(96, 128), tip], 6)
+        b = c.circle_pts(tip[0], tip[1], 18)
+        c.fill(b, opacity=0.5, hatch=(30, 7))
+        c.stroke(b, 7, closed=True)
+        for k in kids:
+            c.stroke([(tip[0] + 18, tip[1]), (k[0] - 12, k[1])], 5, opacity=0.85)
+            kb = c.circle_pts(k[0], k[1], 11)
+            c.fill(kb, opacity=0.7)
+            c.stroke(kb, 5, closed=True)
+    c.save("Icons/Icon_Hail.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 60)  # Гиря: чугунная гиря бьёт в пол, вокруг звёздочки — все оглушены
+    bell = [(128 + 70 * math.cos(a), 168 + 58 * math.sin(a)) for a in np.linspace(math.radians(-60), math.radians(240), 40)]
+    c.fill(bell, opacity=0.45, hatch=(30, 9))
+    c.stroke(bell, 10, closed=True)
+    c.stroke(c.circle_pts(128, 96, 44, 180, 360, 24), 14, rough=0.8)
+    c.stroke([(84, 96), (92, 124)], 12)
+    c.stroke([(172, 96), (164, 124)], 12)
+    c.stroke([(16, 236), (240, 236)], 8)
+    for x, y in ((32, 110), (224, 110), (40, 190), (216, 196)):
+        for k in range(5):
+            a = math.radians(-90 + k * 72)
+            c.stroke([(x, y), (x + math.cos(a) * 14, y + math.sin(a) * 14)], 5)
+    c.save("Icons/Icon_Kettlebell.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 61)  # Кувырок: кед в рывке по дуге подхватывает летящий мяч
+    arc = c.circle_pts(128, 150, 88, 190, 350, 40)
+    c.stroke(arc, 8, dash=14)
+    c.arrow_head(arc[-1], math.degrees(math.atan2(arc[-1][1] - arc[-3][1], arc[-1][0] - arc[-3][0])), 28, 8)
+    shoe = [(70, 190), (70, 138), (104, 128), (130, 96), (162, 96), (170, 134), (228, 152), (236, 190)]
+    shoe = [(74 + (x - 150) * 0.55, 196 + (y - 150) * 0.55) for x, y in shoe]
+    c.fill(shoe, opacity=0.35, hatch=(-30, 9))
+    c.stroke(shoe, 8, closed=True)
+    ball = c.circle_pts(128, 70, 26)
+    c.fill(ball, opacity=0.5, hatch=(30, 8))
+    c.stroke(ball, 8, closed=True)
+    c.stroke(c.circle_pts(128, 70, 44, 110, 250, 14), 6)
+    c.stroke(c.circle_pts(128, 70, 44, -70, 70, 14), 6)
+    c.save("Icons/Icon_Roll.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 62)  # Шпаргалка: сложенная бумажка со строчками и галочкой
+    sheet = [(56, 30), (190, 30), (214, 54), (214, 226), (56, 226)]
+    c.fill(sheet, opacity=0.2, hatch=(45, 12))
+    c.stroke(sheet, 9, closed=True)
+    c.stroke([(190, 30), (190, 54), (214, 54)], 7)
+    for i, y in enumerate((80, 112, 144, 176)):
+        c.stroke(wobble(dense([(80, y), (186 - (i % 2) * 30, y)], 8), 2.0, 62 + i), 5)
+    c.stroke([(150, 200), (170, 218), (232, 152)], 10)
+    c.save("Icons/Icon_CheatSheet.png", grain=0.3, color=INK)
+
+    c = Canvas(256, 256, 63)  # Счастливый фантик: фантик-конфета, на нём клевер-четырёхлистник
+    wrap = [(40, 90), (84, 106), (172, 106), (216, 90), (206, 128), (216, 166), (172, 150), (84, 150), (40, 166), (50, 128)]
+    c.fill(wrap, opacity=0.25, hatch=(30, 10))
+    c.stroke(wrap, 9, closed=True)
+    c.stroke([(84, 106), (84, 150)], 6)
+    c.stroke([(172, 106), (172, 150)], 6)
+    for dx, dy in ((0, -14), (14, 0), (0, 14), (-14, 0)):
+        leaf = c.circle_pts(128 + dx, 128 + dy, 11)
+        c.fill(leaf, opacity=0.8)
+    c.stroke([(128, 128), (138, 152)], 5)
+    for x, y in ((56, 44), (200, 40), (224, 214), (40, 214)):
+        for k in range(4):
+            a = math.radians(k * 45)
+            c.stroke([(x - math.cos(a) * 11, y - math.sin(a) * 11), (x + math.cos(a) * 11, y + math.sin(a) * 11)], 5)
+    c.save("Icons/Icon_LuckyWrapper.png", grain=0.3, color=INK)
+
 
 if __name__ == "__main__":
     hud()

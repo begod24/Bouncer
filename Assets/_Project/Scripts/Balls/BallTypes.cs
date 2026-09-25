@@ -48,17 +48,26 @@ namespace Bouncer.Balls
         [Min(0f)] public float homing;
         [Tooltip("Йо-йо: после попадания или в конце нити мяч сам летит в руки, задевая всех на обратном пути")]
         public bool yoyo;
+        [Tooltip("Прыгающая бомба: каждый отскок от асфальта взрывается с таким радиусом, м. 0 — нет")]
+        [Min(0f)] public float bounceBlastRadius;
+        [Tooltip("Прыгающая бомба: урон взрыва на отскоке")]
+        [Min(0)] public int bounceBlastDamage;
+        [Tooltip("Град: двойники (веер теннисных, раскол) тоже раскалываются при попадании — один раз")]
+        public bool twinSplit;
+        [Tooltip("Гиря: урон по площади оглушает задетых на столько секунд. 0 — нет")]
+        [Min(0f)] public float areaStun;
 
         /// <summary>
         /// Что достаётся мячу-двойнику: бьёт и летит так же (цепочка, площадь, отскоки, жвачка, змейка, стеночка,
-        /// рогатка, доводка), но не множится дальше, не взрывается и не возвращается в руки — иначе двойники
-        /// превращались бы в лишние мячи.
+        /// рогатка, доводка, оглушение гири), но не взрывается и не возвращается в руки — иначе двойники
+        /// превращались бы в лишние мячи. Раскалывается двойник только с «Градом», и только один раз.
         /// </summary>
         public BallPerks ForTwin() => new()
         {
             chainBounces = chainBounces,
             areaRadius = areaRadius,
             areaDamage = areaDamage,
+            splitOnHit = twinSplit,
             floorBounces = floorBounces,
             gumTrail = gumTrail,
             snakeAmplitude = snakeAmplitude,
@@ -66,6 +75,7 @@ namespace Bouncer.Balls
             wallDamage = wallDamage,
             chargedPierce = chargedPierce,
             homing = homing,
+            areaStun = areaStun,
         };
 
         public static BallPerks Combine(in BallPerks a, in BallPerks b) => new()
@@ -88,6 +98,10 @@ namespace Bouncer.Balls
             chargedPierce = a.chargedPierce || b.chargedPierce,
             homing = Mathf.Max(a.homing, b.homing),
             yoyo = a.yoyo || b.yoyo,
+            bounceBlastRadius = Mathf.Max(a.bounceBlastRadius, b.bounceBlastRadius),
+            bounceBlastDamage = Mathf.Max(a.bounceBlastDamage, b.bounceBlastDamage),
+            twinSplit = a.twinSplit || b.twinSplit,
+            areaStun = Mathf.Max(a.areaStun, b.areaStun),
         };
     }
 

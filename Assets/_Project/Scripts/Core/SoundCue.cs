@@ -50,5 +50,20 @@ namespace Bouncer.Core
         Explosion,
         ShieldBlock,
         BallStuck,
+
+        // Коробка, стройка и погода
+        /// <summary>Свисток Физрука: новое правило раунда.</summary>
+        Whistle,
+        Thunder,
+        /// <summary>Манекен замер в новой позе — пластиковый щелчок.</summary>
+        MannequinPose,
+        /// <summary>Тень выходит из темноты или плотнеет для удара.</summary>
+        ShadowHiss,
+        /// <summary>Чучело поймало мяч.</summary>
+        ScarecrowCatch,
+        /// <summary>Фонарь погас.</summary>
+        LampOut,
+        /// <summary>«Второе дыхание»: игрока не выбило.</summary>
+        SecondWind,
     }
 }

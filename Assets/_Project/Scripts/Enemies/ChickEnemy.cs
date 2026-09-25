@@ -102,9 +102,15 @@ namespace Bouncer.Enemies
         void FixedUpdate()
         {
             float dt = Time.fixedDeltaTime;
-            _stateTime += dt;
             if (_exploded)
                 return;
+            if (_self.IsFrozen)
+            {
+                // Заморожен: стоит, завод не кончается.
+                _rb.linearVelocity = new Vector3(0f, _rb.linearVelocity.y, 0f);
+                return;
+            }
+            _stateTime += dt;
             if (_rb.position.y < -5f)
             {
                 PoolService.Despawn(gameObject);

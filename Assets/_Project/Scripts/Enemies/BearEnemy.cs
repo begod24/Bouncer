@@ -104,9 +104,14 @@ namespace Bouncer.Enemies
         void Update()
         {
             float dt = Time.deltaTime;
-            _stateTime += dt;
             if (!_agent.isOnNavMesh)
                 return;
+            if (_self.IsFrozen)
+            {
+                Halt();
+                return;
+            }
+            _stateTime += dt;
 
             if (Time.time >= _nextRepath)
             {

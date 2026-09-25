@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1d3295e478f84cbab38e31a535ed44a, type: 3}
+  m_Name: Enemy_Shadow
+  m_EditorClassIdentifier: Bouncer.Enemies::Bouncer.Enemies.ShadowDefinition
+  displayName: "\u0422\u0435\u043D\u044C"
+  hitsToKill: 2
+  moveSpeed: 4.2
+  turnSpeed: 360
+  emergeTime: 0.8
+  attackRange: 1.5
+  windupTime: 0.5
+  strikeTime: 0.15
+  strikeRange: 1.9
+  strikeHalfAngle: 75
+  recoverTime: 0.45
+  attackCooldown: 1.2
+  damage: 1
+  knockback: 8
+  knockbackScale: 0.3
+  staggerTime: 0.4
+  putOutReach: 0
+  putOutTime: 6
+  putOutCooldown: 9

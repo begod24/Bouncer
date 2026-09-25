@@ -219,6 +219,114 @@ MonoBehaviour:
     m_Key: card.combo_yoyo.description
     m_Metadata:
       m_Items: []
+  - m_Id: 194562260721664
+    m_Key: card.pas_jumprope.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915968
+    m_Key: card.pas_jumprope.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915969
+    m_Key: card.pas_mirror.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915970
+    m_Key: card.pas_mirror.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915971
+    m_Key: card.pas_flashlight.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915972
+    m_Key: card.pas_flashlight.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915973
+    m_Key: card.pas_whistle.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915974
+    m_Key: card.pas_whistle.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915975
+    m_Key: card.pas_secondwind.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915976
+    m_Key: card.pas_secondwind.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915977
+    m_Key: card.pas_pies.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915978
+    m_Key: card.pas_pies.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915979
+    m_Key: card.pas_boots.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915980
+    m_Key: card.pas_boots.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915981
+    m_Key: card.combo_bouncebomb.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915982
+    m_Key: card.combo_bouncebomb.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915983
+    m_Key: card.combo_hail.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915984
+    m_Key: card.combo_hail.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915985
+    m_Key: card.combo_kettlebell.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915986
+    m_Key: card.combo_kettlebell.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915987
+    m_Key: card.combo_roll.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915988
+    m_Key: card.combo_roll.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915989
+    m_Key: card.pas_cheatsheet.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915990
+    m_Key: card.pas_cheatsheet.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915991
+    m_Key: card.pas_luckywrapper.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915992
+    m_Key: card.pas_luckywrapper.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 194562264915993
+    m_Key: boss.fizruk
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

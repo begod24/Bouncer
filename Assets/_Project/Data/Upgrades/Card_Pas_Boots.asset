@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 455dcde8311e346b5bdedb7082262966, type: 3}
+  m_Name: Card_Pas_Boots
+  m_EditorClassIdentifier: Bouncer.Upgrades::Bouncer.Upgrades.StatCard
+  title:
+    m_TableReference:
+      m_TableCollectionName: Content
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: card.pas_boots.title
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  description:
+    m_TableReference:
+      m_TableCollectionName: Content
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: card.pas_boots.description
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  category: 2
+  icon: {fileID: 21300000, guid: cf30fd51edd7e4a67ac5ea5d97c37fa8, type: 3}
+  wrapperColor: {r: 0.45, g: 0.72, b: 0.45, a: 1}
+  rarity: 0
+  maxStacks: 1
+  weight: 1
+  requires: []
+  moveSpeed: 0
+  dashDistance: 0
+  dashCooldown: 0
+  catchWindow: 0
+  catchRadius: 0
+  pickupRadius: 0
+  extraBalls: 0
+  heal: 0
+  bonusDamage: 0
+  tackleDamage: 0
+  catchFreeze: 0
+  dominoDamage: 0
+  coinInterest: 0
+  lidCooldown: 0
+  mirrorAngle: 0
+  lanternRadius: 0
+  whistleFreeze: 0
+  secondWind: 0
+  arenaHeal: 0
+  ignoreGround: 1
+  dashCatch: 0
+  freeRerolls: 0
+  extraChoices: 0
+  references:
+    version: 2
+    RefIds: []

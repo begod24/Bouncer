@@ -81,6 +81,16 @@ namespace Bouncer.Player
         [Tooltip("«Домино»: сила отброса сбитых соседей")]
         public float dominoKnockback = 8f;
 
+        [Header("Сумерки")]
+        [Tooltip("Взгляд: манекены замирают в секторе с такой половиной угла от направления взгляда, градусы")]
+        [Range(0f, 180f)] public float gazeHalfAngle = 35f;
+        [Tooltip("«Свисток»: радиус, в котором идеальная ловля замораживает врагов, м")]
+        public float whistleRadius = 6f;
+        [Tooltip("«Второе дыхание»: сколько секунд игрок неуязвим после спасения")]
+        public float secondWindInvulnerability = 2f;
+        [Tooltip("«Кувырок»: на каком расстоянии рывок подхватывает вражеский мяч, м")]
+        public float dashCatchRadius = 1.3f;
+
         [Header("Прицел")]
         [Tooltip("Высота плоскости, на которую проецируется курсор (уровень груди врагов)")]
         public float aimPlaneHeight = 0.8f;

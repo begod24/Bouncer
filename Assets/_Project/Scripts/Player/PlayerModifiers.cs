@@ -29,6 +29,24 @@ namespace Bouncer.Player
         public int CoinInterest;
         /// <summary>«Крышка от кастрюли»: раз в столько секунд блокирует удар. 0 — крышки нет.</summary>
         public float LidCooldown;
+        /// <summary>«Зеркальце»: манекены замирают и в секторе за спиной — половина угла, градусы. 0 — нет.</summary>
+        public float MirrorAngle;
+        /// <summary>«Фонарик»: радиус света вокруг игрока, м — в нём тень твёрдая. 0 — нет.</summary>
+        public float LanternRadius;
+        /// <summary>«Свисток»: идеальная ловля замораживает врагов вокруг на столько секунд. 0 — нет.</summary>
+        public float WhistleFreeze;
+        /// <summary>«Второе дыхание»: раз за прогулку удар, который выбил бы, оставляет с одним сердцем.</summary>
+        public bool SecondWind;
+        /// <summary>«Бабушкины пирожки»: столько сердец прибавляется в начале каждой следующей арены.</summary>
+        public int ArenaHeal;
+        /// <summary>«Резиновые сапоги»: песок и лужи не замедляют.</summary>
+        public bool IgnoreGround;
+        /// <summary>«Кувырок»: рывок сквозь вражеский мяч ловит его.</summary>
+        public bool DashCatch;
+        /// <summary>«Шпаргалка»: столько переборов витрины в каждом ларьке бесплатно.</summary>
+        public int FreeRerolls;
+        /// <summary>«Счастливый фантик»: на столько карточек больше на выбор в портфеле и за босса.</summary>
+        public int ExtraChoices;
         /// <summary>Модификаторы мяча от карточек; складываются со свойствами типа мяча.</summary>
         public BallPerks Perks;
         /// <summary>Свойства только следующего броска после удачной ловли (горячая картошка).</summary>

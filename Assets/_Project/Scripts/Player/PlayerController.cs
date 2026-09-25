@@ -9,8 +9,10 @@ namespace Bouncer.Player
     /// <summary>
     /// Связывает модули игрока: берёт намерение (локальный ввод, позже — сеть),
     /// раздаёт его движению, прицелу и мячам. Принимает попадания мячей и удары.
-    /// Здесь же эффекты карточек, которые не про мяч: подкат рывком, «Замри!» после ловли,
-    /// «Крышка от кастрюли» (блок удара) и «Домино» (выбитый враг сбивает соседей).
+    /// Здесь же эффекты карточек, которые не про мяч: подкат рывком, «Замри!» и «Свисток» после ловли,
+    /// «Крышка от кастрюли» (блок удара), «Домино» (выбитый враг сбивает соседей), «Второе дыхание»
+    /// и «Кувырок» (рывок ловит мячи). Взгляд игрока (под ним замирают манекены), «Зеркальце» и «Фонарик»
+    /// передаются в <see cref="Targetable"/> — враги читают их оттуда.
     /// </summary>
     [RequireComponent(typeof(PlayerMotor), typeof(PlayerAim), typeof(PlayerBallHandler))]
     [RequireComponent(typeof(Health), typeof(Targetable))]
@@ -35,6 +37,7 @@ namespace Bouncer.Player
         public PlayerAim Aim { get; private set; }
         public PlayerBallHandler Balls { get; private set; }
         public Health Health { get; private set; }
+        public Targetable Targetable { get; private set; }
         public bool IsDead => Health.IsDead;
         public PlayerIntent LastIntent { get; private set; }
 
@@ -44,6 +47,8 @@ namespace Bouncer.Player
         public event Action Froze;
         /// <summary>«Крышка от кастрюли» отбила удар (для визуала).</summary>
         public event Action LidBlocked;
+        /// <summary>«Второе дыхание» спасло от выбывания (для визуала).</summary>
+        public event Action SecondWindUsed;
 
         public bool HasLid => Modifiers.LidCooldown > 0f;
         public bool LidReady => HasLid && Time.time >= _lidReadyAt;
@@ -59,14 +64,25 @@ namespace Bouncer.Player
             Health = GetComponent<Health>();
             _intentSource = GetComponent<IPlayerIntentSource>();
 
+            Targetable = GetComponent<Targetable>();
+
             Motor.Init(stats, Modifiers);
             Aim.Init(stats);
             Balls.Init(stats, Modifiers);
             Health.Configure(stats.maxLives, 0f);
-            GetComponent<Targetable>().Team = Team.Player;
+            Targetable.Team = Team.Player;
+            Targetable.GazeHalfAngle = stats.gazeHalfAngle;
 
             Health.Died += OnDied;
             Balls.Caught += OnCaught;
+            Modifiers.Changed += OnModifiersChanged;
+        }
+
+        /// <summary>Карточки поменяли взгляд или свет — враги читают их из Targetable.</summary>
+        void OnModifiersChanged()
+        {
+            Targetable.BackGazeHalfAngle = Modifiers.MirrorAngle;
+            Targetable.LightRadius = Modifiers.LanternRadius;
         }
 
         void OnEnable() => GameEvents.EnemyKilled += OnEnemyKilled;
@@ -111,6 +127,25 @@ namespace Bouncer.Player
             Motor.Face(Aim.Direction, dt);
             if (Modifiers.TackleDamage > 0 && Motor.IsDashing)
                 Tackle();
+            if (Modifiers.DashCatch && Motor.IsDashing)
+                DashCatchNearby();
+        }
+
+        /// <summary>«Кувырок»: рывок подхватывает летящие рядом мячи врага.</summary>
+        void DashCatchNearby()
+        {
+            Vector3 chest = transform.position + Vector3.up * stats.throwHeight;
+            float radiusSqr = stats.dashCatchRadius * stats.dashCatchRadius;
+            var balls = Ball.Active;
+            for (int i = balls.Count - 1; i >= 0; i--)
+            {
+                var ball = balls[i];
+                if (ball.State != BallState.Live || ball.IsPhantom || !ball.Team.IsHostileTo(Team.Player))
+                    continue;
+                if ((ball.Position - chest).sqrMagnitude > radiusSqr)
+                    continue;
+                Balls.TryDashCatch(ball);
+            }
         }
 
         /// <summary>Подкат: рывок сбивает с ног врагов на пути — каждого по разу за рывок.</summary>
@@ -156,6 +191,9 @@ namespace Bouncer.Player
             if (IsDead || !ball.Team.IsHostileTo(Team.Player))
                 return BallContactResult.PassThrough;
 
+            // «Кувырок»: мяч, в который влетел рывок, пойман.
+            if (Modifiers.DashCatch && Motor.IsDashing && Balls.TryDashCatch(ball))
+                return BallContactResult.Caught;
             // Окно ловли открыто и мяч прилетел спереди — пойман, даже если врезался в тело.
             if (Balls.TryCatch(ball))
                 return BallContactResult.Caught;
@@ -183,6 +221,8 @@ namespace Bouncer.Player
                 return false;
             if (TryLidBlock(hit.Point))
                 return false;
+            if (TrySecondWind(hit))
+                return true;
 
             if (!Health.TryDamage(hit))
                 return false;
@@ -199,6 +239,30 @@ namespace Bouncer.Player
         }
 
         public bool TryReceive(Ball ball) => !IsDead && Balls.TryReceive(ball);
+
+        /// <summary>
+        /// «Второе дыхание»: удар, который выбил бы, оставляет с одним сердцем и даёт пару секунд неуязвимости.
+        /// Раз за прогулку — отметка в <see cref="RunState.SecondWindUsed"/> переживает смену арены.
+        /// </summary>
+        bool TrySecondWind(in HitInfo hit)
+        {
+            if (!Modifiers.SecondWind || RunState.SecondWindUsed || hit.Damage < Health.Current)
+                return false;
+            RunState.SecondWindUsed = true;
+            var saved = hit;
+            saved.Damage = Health.Current - 1;
+            if (saved.Damage > 0)
+                Health.TryDamage(saved);
+            Health.SetInvulnerable(stats.secondWindInvulnerability);
+            Motor.AddKnockback(hit.Direction * hit.Force);
+            Balls.CancelCharge();
+            GameFeel.HitStop(0.12f);
+            GameFeel.Shake(1f);
+            GameEvents.PlaySound(SoundCue.SecondWind, transform.position);
+            Hurt?.Invoke(saved);
+            SecondWindUsed?.Invoke();
+            return true;
+        }
 
         /// <summary>«Крышка от кастрюли»: готова — удар отбит, игрок цел, крышка перезаряжается.</summary>
         bool TryLidBlock(Vector3 point)
@@ -270,6 +334,13 @@ namespace Bouncer.Player
             if (Modifiers.CatchFreeze > 0f)
             {
                 GameFeel.BulletTime(stats.freezeTimeScale, Modifiers.CatchFreeze);
+                Froze?.Invoke();
+            }
+            // «Свисток»: идеальная ловля — и враги вокруг замирают.
+            if (info.Perfect && Modifiers.WhistleFreeze > 0f)
+            {
+                Targetable.FreezeAround(transform.position, stats.whistleRadius, Team.Enemy, Modifiers.WhistleFreeze);
+                GameEvents.PlaySound(SoundCue.Whistle, transform.position);
                 Froze?.Invoke();
             }
         }

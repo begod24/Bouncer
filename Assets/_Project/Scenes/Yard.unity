@@ -7834,6 +7834,86 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 2312c341d932c4ea9a9f3a8eb91c5dd8, type: 3}
   m_PrefabInstance: {fileID: 1436796485}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &1441389604
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1467390335227548598, guid: d99ca91df593346b4bbf7209ccf2b9eb, type: 3}
+      propertyPath: m_Name
+      value: Weather
+      objectReference: {fileID: 0}
+    - target: {fileID: 2082454845267321967, guid: d99ca91df593346b4bbf7209ccf2b9eb, type: 3}
+      propertyPath: area.x
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 2082454845267321967, guid: d99ca91df593346b4bbf7209ccf2b9eb, type: 3}
+      propertyPath: area.y
+      value: 26
+      objectReference: {fileID: 0}
+    - target: {fileID: 2082454845267321967, guid: d99ca91df593346b4bbf7209ccf2b9eb, type: 3}
+      propertyPath: timeOfDay
+      value: 
+      objectReference: {fileID: 955970379}
+    - target: {fileID: 7992560073618188018, guid: d99ca91df593346b4bbf7209ccf2b9eb, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7992560073618188018, guid: d99ca91df593346b4bbf7209ccf2b9eb, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7992560073618188018, guid: d99ca91df593346b4bbf7209ccf2b9eb, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7992560073618188018, guid: d99ca91df593346b4bbf7209ccf2b9eb, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7992560073618188018, guid: d99ca91df593346b4bbf7209ccf2b9eb, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7992560073618188018, guid: d99ca91df593346b4bbf7209ccf2b9eb, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7992560073618188018, guid: d99ca91df593346b4bbf7209ccf2b9eb, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7992560073618188018, guid: d99ca91df593346b4bbf7209ccf2b9eb, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7992560073618188018, guid: d99ca91df593346b4bbf7209ccf2b9eb, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7992560073618188018, guid: d99ca91df593346b4bbf7209ccf2b9eb, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: d99ca91df593346b4bbf7209ccf2b9eb, type: 3}
+--- !u!114 &1441389605 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2082454845267321967, guid: d99ca91df593346b4bbf7209ccf2b9eb, type: 3}
+  m_PrefabInstance: {fileID: 1441389604}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d76fdfda3b7349d485eb04c2490c20d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Bouncer.Visuals::Bouncer.Visuals.WeatherController
 --- !u!114 &1441556531
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8444,6 +8524,7 @@ MonoBehaviour:
   defaultArena: 0
   spawner: {fileID: 317722729}
   timeOfDay: {fileID: 955970379}
+  weather: {fileID: 1441389605}
   loot: {fileID: 1596687393}
   kiosk: {fileID: 471891381}
   exit: {fileID: 12640706}
@@ -10468,6 +10549,14 @@ PrefabInstance:
       propertyPath: m_TextStyleHashCode
       value: -1183493901
       objectReference: {fileID: 0}
+    - target: {fileID: 3279331808345387806, guid: 7855ad5f1e6b84037b611c09af0996cc, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4282791467
+      objectReference: {fileID: 0}
+    - target: {fileID: 3279331808345387806, guid: 7855ad5f1e6b84037b611c09af0996cc, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     - target: {fileID: 3288032300062170306, guid: 7855ad5f1e6b84037b611c09af0996cc, type: 3}
       propertyPath: m_fontColor32.rgba
       value: 3644641526
@@ -10764,6 +10853,10 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5332289521476577481, guid: 7855ad5f1e6b84037b611c09af0996cc, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     - target: {fileID: 5376914636634938806, guid: 7855ad5f1e6b84037b611c09af0996cc, type: 3}
       propertyPath: m_fontColor32.rgba
       value: 3644641526
@@ -10848,6 +10941,22 @@ PrefabInstance:
       propertyPath: m_TextStyleHashCode
       value: -1183493901
       objectReference: {fileID: 0}
+    - target: {fileID: 6263697581946393013, guid: 7855ad5f1e6b84037b611c09af0996cc, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6263697581946393013, guid: 7855ad5f1e6b84037b611c09af0996cc, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6263697581946393013, guid: 7855ad5f1e6b84037b611c09af0996cc, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6263697581946393013, guid: 7855ad5f1e6b84037b611c09af0996cc, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6346852567035356704, guid: 7855ad5f1e6b84037b611c09af0996cc, type: 3}
       propertyPath: m_TextStyleHashCode
       value: -1183493901
@@ -10889,6 +10998,14 @@ PrefabInstance:
       value: 4293718772
       objectReference: {fileID: 0}
     - target: {fileID: 6803907700299466552, guid: 7855ad5f1e6b84037b611c09af0996cc, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 6839690749233892096, guid: 7855ad5f1e6b84037b611c09af0996cc, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4282791467
+      objectReference: {fileID: 0}
+    - target: {fileID: 6839690749233892096, guid: 7855ad5f1e6b84037b611c09af0996cc, type: 3}
       propertyPath: m_TextStyleHashCode
       value: -1183493901
       objectReference: {fileID: 0}
@@ -12549,3 +12666,4 @@ SceneRoots:
   - {fileID: 1028786898}
   - {fileID: 12640705}
   - {fileID: 1596687395}
+  - {fileID: 1441389604}

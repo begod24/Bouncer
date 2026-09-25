@@ -1,0 +1,98 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a3ec48938dc7428eb1bca75c8c72ba9, type: 3}
+  m_Name: Wave_Site
+  m_EditorClassIdentifier: Bouncer.Waves::Bouncer.Waves.WaveDefinition
+  duration: 300
+  maxAliveStart: 12
+  maxAliveEnd: 26
+  tracks:
+  - name: "\u041C\u0430\u043D\u0435\u043A\u0435\u043D\u044B"
+    prefab: {fileID: 3330391762857217134, guid: f31e70a1a818f4c34bf35acd2af9033c, type: 3}
+    from: 0
+    to: 272
+    firstDelay: 1
+    intervalStart: 11
+    intervalEnd: 5.5
+    groupStart: 1
+    groupEnd: 3
+    layout: 0
+    maxAlive: 8
+  - name: "\u0422\u0435\u043D\u0438"
+    prefab: {fileID: 8164200646972820754, guid: b5c42fce3f0a946ed94490f26960df1d, type: 3}
+    from: 25
+    to: 272
+    firstDelay: 0
+    intervalStart: 15
+    intervalEnd: 7.5
+    groupStart: 1
+    groupEnd: 2
+    layout: 0
+    maxAlive: 6
+  - name: "\u0427\u0443\u0447\u0435\u043B\u0430"
+    prefab: {fileID: 5532231852749314023, guid: b4ce4b33207364e9395ac0c99a2d1c8b, type: 3}
+    from: 15
+    to: 272
+    firstDelay: 0
+    intervalStart: 24
+    intervalEnd: 14
+    groupStart: 1
+    groupEnd: 2
+    layout: 0
+    maxAlive: 4
+  bursts:
+  - name: "\u042D\u043B\u0438\u0442\u043A\u0430 1"
+    prefab: {fileID: 4377954695402079543, guid: 3781a7ab4b0634838bbfda856b199ffe, type: 3}
+    time: 100
+    count: 1
+    layout: 0
+    boss: 0
+    elite: 1
+    variants:
+    - {fileID: 4377954695402079543, guid: 3781a7ab4b0634838bbfda856b199ffe, type: 3}
+    - {fileID: 8266572699192250298, guid: ca8148ada10f34e4b9608b1480b3a0cf, type: 3}
+    - {fileID: 7394618913065957709, guid: 73a8bf21d4a7944e7abf6b0245c8cc54, type: 3}
+  - name: "\u042D\u043B\u0438\u0442\u043A\u0430 2"
+    prefab: {fileID: 4377954695402079543, guid: 3781a7ab4b0634838bbfda856b199ffe, type: 3}
+    time: 190
+    count: 1
+    layout: 0
+    boss: 0
+    elite: 1
+    variants:
+    - {fileID: 4377954695402079543, guid: 3781a7ab4b0634838bbfda856b199ffe, type: 3}
+    - {fileID: 8266572699192250298, guid: ca8148ada10f34e4b9608b1480b3a0cf, type: 3}
+    - {fileID: 7394618913065957709, guid: 73a8bf21d4a7944e7abf6b0245c8cc54, type: 3}
+  - name: "\u041F\u0430\u0447\u043A\u0430: \u043C\u0430\u043D\u0435\u043A\u0435\u043D"
+    prefab: {fileID: 4377954695402079543, guid: 3781a7ab4b0634838bbfda856b199ffe, type: 3}
+    time: 278
+    count: 1
+    layout: 0
+    boss: 0
+    elite: 1
+    variants: []
+  - name: "\u041F\u0430\u0447\u043A\u0430: \u0447\u0443\u0447\u0435\u043B\u043E"
+    prefab: {fileID: 8266572699192250298, guid: ca8148ada10f34e4b9608b1480b3a0cf, type: 3}
+    time: 280
+    count: 1
+    layout: 0
+    boss: 0
+    elite: 1
+    variants: []
+  - name: "\u041F\u0430\u0447\u043A\u0430: \u0442\u0435\u043D\u044C"
+    prefab: {fileID: 7394618913065957709, guid: 73a8bf21d4a7944e7abf6b0245c8cc54, type: 3}
+    time: 282
+    count: 1
+    layout: 0
+    boss: 0
+    elite: 1
+    variants: []

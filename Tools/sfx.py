@@ -292,7 +292,96 @@ def sfx_run():
     write("GameOver", sad)
 
 
+# ---------------------------------------------------------------- коробка, стройка, погода
+
+def write_loop(name, x, crossfade=0.25):
+    """Бесшовная петля: хвост плавно накладывается на начало, без затухания в конце."""
+    f = int(SR * crossfade)
+    head, tail = x[:f], x[-f:]
+    ramp = np.linspace(0.0, 1.0, f)
+    body = x[f:-f].copy()
+    x = np.concatenate([head * ramp + tail * (1.0 - ramp), body])
+    x = x - np.mean(x)
+    m = np.abs(x).max()
+    x = x * (0.7 / m) if m > 0 else x
+    os.makedirs(OUT, exist_ok=True)
+    data = (np.clip(x, -1.0, 1.0) * 32767).astype(np.int16)
+    with wave.open(os.path.join(OUT, name + ".wav"), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(SR)
+        w.writeframes(data.tobytes())
+    print("wrote", name, f"{len(data) / SR:.2f}s (loop)")
+
+
+def sfx_dusk():
+    # Свисток физрука: высокий тон с трелью горошины, в начале — выдох.
+    n = int(SR * 0.75)
+    t = np.arange(n) / SR
+    trill = 1.0 + 0.045 * np.sign(np.sin(2 * np.pi * 34 * t)) * (0.6 + 0.4 * np.sin(2 * np.pi * 3 * t))
+    tone = osc(2750.0 * trill, n) + 0.35 * osc(5500.0 * trill, n)
+    breath = band_noise(n, 2900.0, 900.0) * 0.5
+    env = attack_decay(n, 0.02, 0.9) * np.clip((0.75 - t) / 0.08, 0.0, 1.0)
+    write("Whistle", (tone * 0.8 + breath) * env)
+
+    # Гром: треск и долгий низкий раскат, который перекатывается.
+    n = int(SR * 3.2)
+    t = np.arange(n) / SR
+    crack = spectral(noise(n), lo=400, hi=5000) * attack_decay(n, 0.002, 0.08)
+    rumble = spectral(noise(n), hi=180) * attack_decay(n, 0.15, 1.3)
+    roll = 0.6 + 0.4 * np.sin(2 * np.pi * (1.3 + 0.6 * t) * t)
+    write("Thunder", 0.5 * crack + 2.2 * rumble * roll)
+
+    # Манекен встал в позу: сухой пластиковый щелчок суставов, два подряд.
+    clack = pad(0.2)
+    for at, freq, amp in ((0.0, 1150, 1.0), (0.055, 820, 0.7)):
+        m = int(SR * 0.06)
+        knock = osc(freq, m, "triangle") * attack_decay(m, 0.001, 0.012)
+        place(knock, 0.6 * click(0.01, 2500), 0.0)
+        place(clack, amp * knock, at)
+    write("MannequinPose", clack)
+
+    # Тень: шипящий выдох, уходящий вниз, под ним глухой гул.
+    n = int(SR * 0.7)
+    hiss = band_noise(n, sweep(5200, 2200, n), 1800.0) * attack_decay(n, 0.12, 0.25)
+    hum = osc(sweep(95, 60, n), n) * attack_decay(n, 0.1, 0.3) * 0.5
+    write("ShadowHiss", hiss + hum)
+
+    # Чучело поймало мяч: шорох соломы и мягкий хлопок.
+    n = int(SR * 0.3)
+    rustle = spectral(noise(n), lo=1200, hi=6000) * attack_decay(n, 0.004, 0.07)
+    write("ScarecrowCatch", rustle + 0.9 * place(pad(0.3), thump(0.12, 220, 120, 0.04), 0.0))
+
+    # Фонарь погас: электрический треск и затихающий гул.
+    n = int(SR * 0.6)
+    crackle = np.zeros(n)
+    rng = np.random.default_rng(11)
+    for at in np.sort(rng.uniform(0.0, 0.3, 14)):
+        place(crackle, rng.uniform(0.4, 1.0) * click(0.006, 2000), at)
+    buzz = osc(100.0, n, "saw") * attack_decay(n, 0.005, 0.18) * 0.35
+    write("LampOut", crackle + spectral(buzz, hi=1500))
+
+    # «Второе дыхание»: удар сердца и восходящий перезвон.
+    breath = pad(1.0)
+    place(breath, thump(0.18, 90, 50, 0.06), 0.0)
+    place(breath, 0.7 * thump(0.16, 80, 45, 0.05), 0.22)
+    for i, name in enumerate(("C5", "G5", "C6")):
+        place(breath, 0.5 * bell(note(name), 0.6, 0.7), 0.3 + i * 0.09)
+    write("SecondWind", breath)
+
+    # Дождь: ровный шум капель с редкими звонкими каплями — петля для погоды.
+    n = int(SR * 4.5)
+    rain = spectral(noise(n), lo=500, hi=7000) * 0.6 + spectral(noise(n), hi=400) * 0.35
+    rng = np.random.default_rng(12)
+    for at in rng.uniform(0.0, 4.4, 60):
+        m = int(SR * 0.03)
+        drop = osc(rng.uniform(1800, 3600), m) * attack_decay(m, 0.001, 0.006) * rng.uniform(0.1, 0.35)
+        place(rain, drop, at)
+    write_loop("RainLoop", rain)
+
+
 if __name__ == "__main__":
     sfx_player()
     sfx_enemies()
     sfx_run()
+    sfx_dusk()

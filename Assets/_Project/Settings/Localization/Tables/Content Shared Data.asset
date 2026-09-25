@@ -327,6 +327,10 @@ MonoBehaviour:
     m_Key: boss.fizruk
     m_Metadata:
       m_Items: []
+  - m_Id: 377579491024896
+    m_Key: boss.dusk
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

@@ -387,6 +387,94 @@ MonoBehaviour:
     m_Key: weather.fog
     m_Metadata:
       m_Items: []
+  - m_Id: 377581583982592
+    m_Key: arena.final
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371200
+    m_Key: arena.final.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371201
+    m_Key: exit.final
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371202
+    m_Key: exit.home
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371203
+    m_Key: rule.sack
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371204
+    m_Key: rule.sack.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371205
+    m_Key: rule.crows
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371206
+    m_Key: rule.crows.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371207
+    m_Key: rule.carousel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371208
+    m_Key: rule.carousel.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371209
+    m_Key: rule.count
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371210
+    m_Key: rule.count.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371211
+    m_Key: rule.count.found
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371212
+    m_Key: rule.lights
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371213
+    m_Key: rule.lights.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371214
+    m_Key: rule.hide
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371215
+    m_Key: rule.hide.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371216
+    m_Key: call.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371217
+    m_Key: call.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371218
+    m_Key: call.hint.boss
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371219
+    m_Key: hud.call
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371220
+    m_Key: hud.call.home
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

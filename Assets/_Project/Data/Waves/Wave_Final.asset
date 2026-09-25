@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a3ec48938dc7428eb1bca75c8c72ba9, type: 3}
+  m_Name: Wave_Final
+  m_EditorClassIdentifier: Bouncer.Waves::Bouncer.Waves.WaveDefinition
+  duration: 180
+  maxAliveStart: 12
+  maxAliveEnd: 12
+  tracks: []
+  bursts:
+  - name: "\u0422\u043E\u0442, \u043A\u0442\u043E \u0432 \u0441\u0443\u043C\u0435\u0440\u043A\u0430\u0445"
+    prefab: {fileID: 2312194866097381671, guid: d30bd236f021e457baf1f04b96e12d70, type: 3}
+    time: 1.5
+    count: 1
+    layout: 0
+    boss: 1
+    elite: 0
+    variants: []

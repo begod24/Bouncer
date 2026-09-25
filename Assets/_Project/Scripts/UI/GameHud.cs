@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Bouncer.Core;
 using Bouncer.Enemies;
 using Bouncer.Player;
+using Bouncer.Run;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -86,6 +87,7 @@ namespace Bouncer.UI
         float _bossShown = 1f;
         BossSplit _bossNamed;
         bool _helpWanted = true;
+        bool _homeShown;
 
         void Awake()
         {
@@ -109,6 +111,7 @@ namespace Bouncer.UI
         {
             _killsShown = -1;
             _bossNamed = null;
+            _homeShown = false;
         }
 
         void OnCoinsChanged(int delta)
@@ -233,8 +236,26 @@ namespace Bouncer.UI
             var session = GameSession.Instance;
             if (session == null)
                 return;
-            int seconds = Mathf.FloorToInt(session.SurvivalTime);
-            timerLabel.text = $"{seconds / 60}:{seconds % 60:00}";
+            // Финал: часы идут назад — сколько осталось до зова мамы; позвала — «Домой!».
+            var home = HomeCall.Instance;
+            if (home != null && home.IsFinale)
+            {
+                if (!home.Called)
+                {
+                    int left = Mathf.CeilToInt(home.Remaining);
+                    timerLabel.text = $"{left / 60}:{left % 60:00}";
+                }
+                else if (!_homeShown)
+                {
+                    _homeShown = true;
+                    timerLabel.text = Loc.Get("hud.call.home");
+                }
+            }
+            else
+            {
+                int seconds = Mathf.FloorToInt(session.SurvivalTime);
+                timerLabel.text = $"{seconds / 60}:{seconds % 60:00}";
+            }
             if (session.RunKills != _killsShown)
             {
                 _killsShown = session.RunKills;

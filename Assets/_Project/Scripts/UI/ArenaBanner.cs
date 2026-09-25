@@ -34,8 +34,11 @@ namespace Bouncer.UI
                 {
                     _introShown = true;
                     string weather = WeatherKey(director.Weather);
-                    Show(director.Arena.title.GetLocalizedString(), weather != null ? Loc.Get(weather) : string.Empty,
-                        weather != null ? introTime + 1.2f : introTime);
+                    string hintText = weather != null ? Loc.Get(weather)
+                        : !director.Arena.introHint.IsEmpty ? director.Arena.introHint.GetLocalizedString()
+                        : string.Empty;
+                    Show(director.Arena.title.GetLocalizedString(), hintText,
+                        hintText.Length > 0 ? introTime + 1.2f : introTime);
                 }
                 // Сначала выбор карточки за босса, потом плашка — иначе её не видно под экраном выбора.
                 if (!_clearedShown && director.IsComplete && session.State == SessionState.Cleared)

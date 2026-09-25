@@ -47,6 +47,10 @@ namespace Bouncer.Run
         public bool IsComplete => _complete;
         /// <summary>Какая погода выпала на эту арену.</summary>
         public WeatherKind Weather { get; private set; }
+        /// <summary>Секунды боя на арене — по часам волн.</summary>
+        public float ArenaTime => spawner ? spawner.WaveTime : GameSession.Instance ? GameSession.Instance.SurvivalTime : 0f;
+        /// <summary>Сколько длится бой по волнам арены, с (финал: время до зова мамы).</summary>
+        public float ArenaDuration => Arena != null && Arena.wave ? Arena.wave.duration : 0f;
         public Kiosk Kiosk => kiosk;
         public ArenaExit Exit => exit;
 
@@ -150,11 +154,11 @@ namespace Bouncer.Run
         void OnBossDefeated()
         {
             if (Arena != null && Arena.goal is (ArenaGoal.DefeatBoss or ArenaGoal.SurviveUntilCall))
-                Complete(boss: Arena.goal == ArenaGoal.DefeatBoss);
+                Complete(boss: Arena.goal == ArenaGoal.DefeatBoss, bossDefeated: true);
         }
 
-        /// <summary>Условие победы выполнено.</summary>
-        void Complete(bool boss)
+        /// <summary>Условие победы выполнено. boss — предложить карточку за босса.</summary>
+        void Complete(bool boss, bool bossDefeated = false)
         {
             var session = GameSession.Instance;
             if (_complete || session == null)
@@ -163,6 +167,13 @@ namespace Bouncer.Run
 
             if (IsLastArena)
             {
+                // Финал: мама позвала — но прогулка кончится, только когда игрок добежит до подъезда.
+                var home = HomeCall.Instance;
+                if (Arena.goal == ArenaGoal.SurviveUntilCall && home != null && home.IsFinale)
+                {
+                    home.BeginCall(bossDefeated);
+                    return;
+                }
                 session.Win();
                 return;
             }

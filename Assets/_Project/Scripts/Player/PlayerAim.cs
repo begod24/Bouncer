@@ -40,7 +40,7 @@ namespace Bouncer.Player
             Targetable best = null;
             foreach (var target in Targetable.All)
             {
-                if (!target.IsAlive || !Team.Player.IsHostileTo(target.Team))
+                if (!target.IsAlive || target.HiddenFromAim || !Team.Player.IsHostileTo(target.Team))
                     continue;
                 Vector3 to = target.AimPoint - origin;
                 to.y = 0f;

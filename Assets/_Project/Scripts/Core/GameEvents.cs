@@ -19,6 +19,8 @@ namespace Bouncer.Core
         public static event Action<Announcement> Announced;
         /// <summary>Кто-то зовёт подмогу (Физрук — «Замена!»): спавнер ставит группу в очередь у этой точки, с метками.</summary>
         public static event Action<SpawnRequest> SpawnRequested;
+        /// <summary>Финал: мама позвала домой — открыт подъезд, сумеречные разбегаются.</summary>
+        public static event Action MomCalled;
 
         public static void RaiseEnemyKilled(GameObject enemy, in HitInfo hit) => EnemyKilled?.Invoke(enemy, hit);
         public static void RaisePlayerDied(GameObject player) => PlayerDied?.Invoke(player);
@@ -26,6 +28,7 @@ namespace Bouncer.Core
         public static void RaiseBossDefeated() => BossDefeated?.Invoke();
         public static void Announce(in Announcement announcement) => Announced?.Invoke(announcement);
         public static void RequestSpawn(in SpawnRequest request) => SpawnRequested?.Invoke(request);
+        public static void RaiseMomCalled() => MomCalled?.Invoke();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
@@ -36,6 +39,7 @@ namespace Bouncer.Core
             BossDefeated = null;
             Announced = null;
             SpawnRequested = null;
+            MomCalled = null;
         }
     }
 

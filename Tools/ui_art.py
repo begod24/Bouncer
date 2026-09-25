@@ -245,6 +245,29 @@ def hud():
         c.stroke([(26, y), (86, y)], 7, opacity=0.7)
     c.save("Exit_Arrow.png")
 
+    # Финал «Мама зовёт домой»: часы до зова — панелька мелом, окна поверх неё загораются одно за другим.
+    c = Canvas(256, 320, 13)
+    c.stroke(wobble([(28, 70), (228, 70), (228, 306), (28, 306)], 1.5, 13), 7, closed=True)
+    c.stroke([(18, 70), (238, 70)], 7)                                        # край крыши
+    for x, top in ((64, 34), (186, 42)):                                      # антенны
+        c.stroke([(x, 70), (x, top)], 4)
+        c.stroke([(x - 14, top + 8), (x + 14, top + 8)], 4)
+        c.stroke([(x - 9, top + 18), (x + 9, top + 18)], 4)
+    c.stroke([(112, 306), (112, 266), (144, 266), (144, 306)], 6)             # дверь подъезда
+    c.stroke([(102, 260), (154, 260)], 5)                                     # козырёк
+    c.save("HUD_Panelka.png")
+
+    c = Canvas(64, 64, 14)  # окно в часах: горит
+    window = c.round_rect_pts(10, 8, 54, 56, 4)
+    c.fill(window, opacity=0.85, hatch=(45, 6))
+    c.stroke(window, 5, closed=True)
+    c.stroke([(32, 10), (32, 54)], 3, opacity=0.8)
+    c.save("HUD_WindowLit.png")
+
+    c = Canvas(64, 64, 15)  # окно в часах: тёмное
+    c.stroke(c.round_rect_pts(10, 8, 54, 56, 4), 4, closed=True, opacity=0.85)
+    c.save("HUD_WindowDark.png")
+
 
 # ================================================================ Карточки
 

@@ -40,6 +40,8 @@ namespace Bouncer.Player
         public Targetable Targetable { get; private set; }
         public bool IsDead => Health.IsDead;
         public PlayerIntent LastIntent { get; private set; }
+        /// <summary>Игроком ведёт сценка (финал: бежит в подъезд): ввод не читается, удары не проходят.</summary>
+        public bool IsScripted { get; private set; }
 
         /// <summary>Получил урон (для визуала).</summary>
         public event Action<HitInfo> Hurt;
@@ -98,7 +100,7 @@ namespace Bouncer.Player
             LastIntent = intent;
             if (intent.PausePressed && GameSession.Instance != null)
                 GameSession.Instance.TogglePause();
-            if (GameFeel.Paused)
+            if (GameFeel.Paused || IsScripted)
                 return;
 
             float dt = Time.deltaTime;
@@ -186,9 +188,23 @@ namespace Bouncer.Player
             }
         }
 
+        /// <summary>
+        /// Дальше игроком ведёт сценка: мячи и ввод отключены, персонаж неуязвим, двигает его тот, кто позвал
+        /// (финал: дорога от двора до подъезда).
+        /// </summary>
+        public void BeginScripted()
+        {
+            if (IsScripted)
+                return;
+            IsScripted = true;
+            Balls.CancelCharge();
+            Balls.CancelCatch();
+            Motor.SetScripted(true);
+        }
+
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)
         {
-            if (IsDead || !ball.Team.IsHostileTo(Team.Player))
+            if (IsDead || IsScripted || !ball.Team.IsHostileTo(Team.Player))
                 return BallContactResult.PassThrough;
 
             // «Кувырок»: мяч, в который влетел рывок, пойман.
@@ -217,7 +233,7 @@ namespace Bouncer.Player
 
         public bool ApplyHit(in HitInfo hit)
         {
-            if (IsDead || Motor.IsDashInvulnerable || Health.IsInvulnerable)
+            if (IsDead || IsScripted || Motor.IsDashInvulnerable || Health.IsInvulnerable)
                 return false;
             if (TryLidBlock(hit.Point))
                 return false;

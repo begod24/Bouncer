@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a2c856ab14f04ccc92654b52bc4eb78, type: 3}
+  m_Name: Enemy_Crow
+  m_EditorClassIdentifier: Bouncer.Enemies::Bouncer.Enemies.CrowDefinition
+  displayName: "\u0412\u043E\u0440\u043E\u043D\u0430"
+  hitsToKill: 1
+  flySpeed: 9
+  acceleration: 30
+  circleHeight: 5
+  circleRadius: 7
+  circleSpeed: 70
+  circleTime: {x: 1, y: 2.5}
+  hittableHeight: 2.4
+  markTime: 0.7
+  diveSpeed: 15
+  diveHeight: 1.1
+  diveOvershoot: 5
+  dives: 2
+  damage: 1
+  knockback: 8
+  hitRadius: 0.8
+  stealChance: 0.35
+  stealMinDistance: 3
+  carryHeight: 3.5
+  lifetime: 20

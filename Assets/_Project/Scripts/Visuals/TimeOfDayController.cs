@@ -9,7 +9,8 @@ namespace Bouncer.Visuals
     /// глобальная палитра шейдера Bouncer/PaletteLit, солнце, окружающий свет, туман, фон камеры.
     /// Цветокоррекция — через два Volume: A (текущий ключ, вес 1) и B (следующий, вес t, приоритет выше),
     /// итог = lerp(A, B, t). Работает и в редакторе: ползунок Progress — превью времени суток.
-    /// Погода (<see cref="WeatherController"/>) поверх этого приглушает свет в дождь и сгущает туман.
+    /// Погода (<see cref="WeatherController"/>) поверх этого приглушает свет в дождь и сгущает туман,
+    /// а когда финальный босс гасит свет (<see cref="LightsOut"/>), гаснут луна, окна и фонари.
     /// </summary>
     [ExecuteAlways]
     [DefaultExecutionOrder(-50)]
@@ -126,10 +127,13 @@ namespace Bouncer.Visuals
                 Shader.SetGlobalTexture(PaletteShader.GlobalPaletteB, b.palette);
                 Shader.SetGlobalFloat(PaletteShader.GlobalPaletteBlend, t);
             }
-            Shader.SetGlobalFloat(PaletteShader.GlobalEmissionStrength, Mathf.Lerp(a.emissionStrength, b.emissionStrength, t));
+            // Свет погашен: окна и фонари (свечение палитры) тухнут, луна прячется, двор почти чёрный.
+            float dark = Application.isPlaying ? LightsOut.Dark01 : 0f;
+            Shader.SetGlobalFloat(PaletteShader.GlobalEmissionStrength,
+                Mathf.Lerp(a.emissionStrength, b.emissionStrength, t) * (1f - dark));
 
             // Дождь: солнце и небо тусклее. Туман: всё вдали тонет в сером.
-            float dim = 1f - 0.4f * _wet;
+            float dim = (1f - 0.4f * _wet) * (1f - 0.85f * dark);
             if (sun)
             {
                 sun.color = Color.Lerp(a.sunColor, b.sunColor, t);
@@ -140,7 +144,7 @@ namespace Bouncer.Visuals
 
             // Молния на миг заливает всё холодным светом.
             Color flash = new Color(0.75f, 0.8f, 1f) * (_flash * 1.6f);
-            float ambientDim = 1f - 0.25f * _wet;
+            float ambientDim = (1f - 0.25f * _wet) * (1f - 0.7f * dark);
             RenderSettings.ambientMode = AmbientMode.Trilight;
             RenderSettings.ambientSkyColor = Color.Lerp(a.ambientSky, b.ambientSky, t) * ambientDim + flash;
             RenderSettings.ambientEquatorColor = Color.Lerp(a.ambientEquator, b.ambientEquator, t) * ambientDim + flash;
@@ -159,7 +163,7 @@ namespace Bouncer.Visuals
             if (targetCamera)
             {
                 targetCamera.clearFlags = CameraClearFlags.SolidColor;
-                Color sky = Color.Lerp(a.skyColor, b.skyColor, t) * (1f - 0.3f * _wet);
+                Color sky = Color.Lerp(a.skyColor, b.skyColor, t) * ((1f - 0.3f * _wet) * (1f - 0.6f * dark));
                 targetCamera.backgroundColor = Color.Lerp(sky, fogColor, _fog) + flash * 0.5f;
             }
 

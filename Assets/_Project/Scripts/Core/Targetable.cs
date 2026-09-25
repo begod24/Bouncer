@@ -63,6 +63,9 @@ namespace Bouncer.Core
         /// <summary>«Фонарик»: в этом радиусе вокруг светло — тень твёрдая. 0 — нет.</summary>
         public float LightRadius { get; set; }
 
+        /// <summary>Автоприцел не берёт эту цель: ворона кружит высоко, босс растворился в темноте.</summary>
+        public bool HiddenFromAim { get; set; }
+
         /// <summary>Заморожен: стоит на месте и не атакует, но попадания по нему проходят.</summary>
         public bool IsFrozen => Time.time < _frozenUntil || (team == Team.Enemy && Time.time < s_enemiesFrozenUntil);
 
@@ -91,6 +94,7 @@ namespace Bouncer.Core
             _lastPosition = transform.position;
             Velocity = Vector3.zero;
             _frozenUntil = 0f;
+            HiddenFromAim = false;
         }
 
         void OnDisable() => s_all.Remove(this);
@@ -148,6 +152,13 @@ namespace Bouncer.Core
             if (now >= s_enemiesFrozenUntil)
                 s_enemiesFrozenStart = now;
             s_enemiesFrozenUntil = Mathf.Max(s_enemiesFrozenUntil, now + seconds);
+        }
+
+        /// <summary>Новая сцена: общая заморозка врагов прошлого боя в неё не переходит.</summary>
+        public static void ClearEnemyFreeze()
+        {
+            s_enemiesFrozenStart = 0f;
+            s_enemiesFrozenUntil = 0f;
         }
 
         /// <summary>Заморозить всех живых этой команды в радиусе. Возвращает, скольких задело.</summary>

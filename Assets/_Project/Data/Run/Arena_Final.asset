@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fac8fe698972e4d46be0450aa56c8152, type: 3}
+  m_Name: Arena_Final
+  m_EditorClassIdentifier: Bouncer.Run::Bouncer.Run.ArenaDefinition
+  sceneName: Yard
+  title:
+    m_TableReference:
+      m_TableCollectionName: UI
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: arena.final
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  introHint:
+    m_TableReference:
+      m_TableCollectionName: UI
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: arena.final.hint
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  wave: {fileID: 11400000, guid: ec00805b146734197baa6dda72906c6a, type: 2}
+  timeOfDay:
+  - {fileID: 11400000, guid: 17e603b61896d4cfda642da840dd7886, type: 2}
+  goal: 2
+  kiosk: 0
+  arrivalLabel:
+    m_TableReference:
+      m_TableCollectionName: UI
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: exit.final
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  portfolioFinds: 0
+  portfolioWindow: {x: 0.3, y: 0.6}
+  weatherChance: 0
+  weathers: 
+  references:
+    version: 2
+    RefIds: []

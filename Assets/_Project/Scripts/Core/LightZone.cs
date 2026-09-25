@@ -18,6 +18,8 @@ namespace Bouncer.Core
         [SerializeField, Min(0.5f)] float radius = 5f;
         [Tooltip("Центр круга по локальным осям X и Z (голова фонаря висит над дорожкой, а не над столбом)")]
         [SerializeField] Vector2 center;
+        [Tooltip("Свет из двери подъезда в финале: сумеречные в него не заходят и оттуда не нападают")]
+        [SerializeField] bool repelsDusk;
 
         float _outUntil;
         float _outStart;
@@ -66,6 +68,9 @@ namespace Bouncer.Core
                 _outStart = now;
             _outUntil = Mathf.Max(_outUntil, now + seconds);
         }
+
+        /// <summary>Зажечь погашенный фонарь сейчас же.</summary>
+        public void Relight() => _outUntil = Mathf.Min(_outUntil, Time.time);
 
         public bool Contains(Vector3 position)
         {
@@ -121,6 +126,36 @@ namespace Bouncer.Core
 
         /// <summary>Вспышка молнии: всё освещено столько секунд.</summary>
         public static void Flash(float seconds) => s_flashUntil = Mathf.Max(s_flashUntil, Time.time + seconds);
+
+        /// <summary>Точка в свете, который отгоняет сумеречных (дверь подъезда в финале).</summary>
+        public static bool Repels(Vector3 position)
+        {
+            foreach (var zone in s_all)
+                if (zone.repelsDusk && zone.IsOn && zone.Contains(position))
+                    return true;
+            return false;
+        }
+
+        /// <summary>Если точка в отгоняющем свете — сдвинуть её за край круга (с запасом margin). true — сдвинули.</summary>
+        public static bool PushOutOfRepelling(ref Vector3 point, float margin)
+        {
+            bool moved = false;
+            foreach (var zone in s_all)
+            {
+                if (!zone.repelsDusk || !zone.IsOn)
+                    continue;
+                Vector3 c = zone.Center;
+                Vector3 delta = point - c;
+                delta.y = 0f;
+                float limit = zone.radius + margin;
+                if (delta.sqrMagnitude >= limit * limit)
+                    continue;
+                Vector3 away = delta.sqrMagnitude > 1e-4f ? delta.normalized : Vector3.back;
+                point = new Vector3(c.x + away.x * limit, point.y, c.z + away.z * limit);
+                moved = true;
+            }
+            return moved;
+        }
 
         void OnDrawGizmos()
         {

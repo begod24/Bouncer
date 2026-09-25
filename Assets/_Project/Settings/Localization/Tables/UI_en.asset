@@ -396,6 +396,94 @@ MonoBehaviour:
     m_Localized: 'Fog: you can''t see far'
     m_Metadata:
       m_Items: []
+  - m_Id: 377581583982592
+    m_Localized: "The Yard \xB7 night"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371200
+    m_Localized: Hold out until mom calls you home
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371201
+    m_Localized: "Home \u2192"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371202
+    m_Localized: Home!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371203
+    m_Localized: THE SACK!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371204
+    m_Localized: Hit the sack from behind to spill the balls
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371205
+    m_Localized: CROWS!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371206
+    m_Localized: A shadow on the ground is a crow. Hit it when it dives
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371207
+    m_Localized: MERRY-GO-ROUND!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371208
+    m_Localized: "Catch the balls \u2014 a perfect catch heals"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371209
+    m_Localized: ONE, TWO, THREE, FOUR, FIVE...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371210
+    m_Localized: Hide behind the rocket, the newsstand or the swings while he counts!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371211
+    m_Localized: READY OR NOT, HERE I COME!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371212
+    m_Localized: LIGHTS OUT!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371213
+    m_Localized: 'Shadows crawl out of the dark: solid only while they swing'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371214
+    m_Localized: HIDE AND SEEK!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371215
+    m_Localized: The real one gives himself away with glowing eyes
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371216
+    m_Localized: MOM'S CALLING YOU HOME!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371217
+    m_Localized: "Run to the entrance \u2014 he won't step into its light"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371218
+    m_Localized: The One in the Dusk is knocked out. Run home!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371219
+    m_Localized: till mom calls
+    m_Metadata:
+      m_Items: []
+  - m_Id: 377581592371220
+    m_Localized: Home!
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

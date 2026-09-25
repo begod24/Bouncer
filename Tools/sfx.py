@@ -380,8 +380,151 @@ def sfx_dusk():
     write_loop("RainLoop", rain)
 
 
+def reverb(x, seconds=0.9, mix=0.35, seed=21):
+    """Простое эхо двора: свёртка с затухающим шумом (через FFT)."""
+    rng = np.random.default_rng(seed)
+    n = int(SR * seconds)
+    ir = rng.uniform(-1.0, 1.0, n) * np.exp(-np.arange(n) / SR / (seconds * 0.3))
+    ir = spectral(ir, hi=4000)
+    ir /= max(1e-6, np.abs(ir).sum() ** 0.5)
+    size = len(x) + n
+    wet = np.fft.irfft(np.fft.rfft(x, size) * np.fft.rfft(ir, size), size)
+    dry = np.concatenate([x, np.zeros(n)])
+    wet *= np.abs(dry).max() / max(1e-6, np.abs(wet).max())
+    return dry * (1.0 - mix) + wet * mix
+
+
+def vowel(source, formants):
+    """Грубый голос: полосы вокруг формант, formants = [(частота, ширина, вес)]."""
+    return sum(w * spectral(source, lo=f - bw, hi=f + bw) for f, bw, w in formants)
+
+
+def sfx_final():
+    # Смешок Бабая: глухое «хе-хе-хе» с хрипом, каждое ниже предыдущего.
+    laugh = pad(1.0)
+    for i, (at, f0) in enumerate(((0.0, 118.0), (0.17, 108.0), (0.34, 98.0), (0.53, 90.0))):
+        m = int(SR * 0.16)
+        glottal = osc(sweep(f0, f0 * 0.85, m), m, "saw")
+        voice = vowel(glottal, [(420.0, 140.0, 1.0), (900.0, 220.0, 0.55), (2400.0, 400.0, 0.12)])
+        breath = band_noise(m, 1400.0, 900.0) * 0.35
+        env = attack_decay(m, 0.012, 0.05)
+        place(laugh, (voice + breath) * env * (1.0 - 0.12 * i), at)
+    write("BabaiLaugh", reverb(laugh, 0.7, 0.3))
+
+    # «Считалочка»: деревянный стук и низкий колокол на каждый счёт.
+    n = int(SR * 0.7)
+    knock = thump(0.12, 190, 120, 0.035) + 0.5 * place(pad(0.12), click(0.01, 1400), 0)
+    tick = pad(0.7)
+    place(tick, knock, 0.0)
+    place(tick, 0.35 * bell(note("A3"), 0.65, 0.5), 0.0)
+    write("CountTick", reverb(tick, 0.5, 0.25))
+
+    # «Я иду искать!»: тритон колоколами и свист, уходящий вверх.
+    sting = pad(1.3)
+    place(sting, 0.6 * bell(note("C4"), 1.2, 0.8), 0.0)
+    place(sting, 0.5 * bell(note("F#4"), 1.2, 0.8), 0.02)
+    place(sting, 0.7 * whoosh(0.5, 300, 2600, 900, 0.7), 0.0)
+    place(sting, 0.6 * thump(0.2, 80, 45, 0.07), 0.0)
+    write("FoundYou", reverb(sting, 0.8, 0.3))
+
+    # Приземление после прыжка на шесте: тяжёлый удар, пыль и стук клюки.
+    n = int(SR * 0.7)
+    dust = spectral(noise(n), lo=150, hi=1800) * attack_decay(n, 0.004, 0.18)
+    land = 1.4 * place(pad(0.7), thump(0.3, 95, 38, 0.1), 0) + 0.5 * dust
+    place(land, 0.4 * (osc(620, int(SR * 0.08), "triangle") * attack_decay(int(SR * 0.08), 0.001, 0.02)), 0.01)
+    write("PoleLand", land)
+
+    # «Карусель»: воющий вихрь, который то накатывает, то отпускает — фигура кружится.
+    n = int(SR * 1.8)
+    t = np.arange(n) / SR
+    whirl = band_noise(n, sweep(380, 1300, n), 700.0) * (0.55 + 0.45 * np.sin(2 * np.pi * 6.0 * t))
+    env = np.clip(t / 0.25, 0.0, 1.0) * np.clip((1.8 - t) / 0.4, 0.0, 1.0)
+    write("CarouselSpin", whirl * env + 0.3 * osc(sweep(90, 140, n), n) * env)
+
+    # Ворона: хриплое «кра-а», тон сползает вниз.
+    n = int(SR * 0.42)
+    t = np.arange(n) / SR
+    source = osc(sweep(640, 470, n), n, "saw") * (1.0 + 0.3 * np.sign(np.sin(2 * np.pi * 55 * t)))
+    caw = vowel(source, [(900.0, 250.0, 1.0), (1500.0, 300.0, 0.8), (2700.0, 400.0, 0.3)])
+    caw += 0.35 * band_noise(n, 1800.0, 1400.0)
+    write("CrowCaw", caw * attack_decay(n, 0.015, 0.16))
+
+    # Хлопанье крыльев: несколько глухих взмахов.
+    flap = pad(0.5)
+    for i, at in enumerate((0.0, 0.09, 0.18, 0.28)):
+        m = int(SR * 0.07)
+        place(flap, (0.9 - 0.15 * i) * spectral(noise(m), lo=250, hi=2200) * attack_decay(m, 0.006, 0.02), at)
+    write("CrowFlap", flap)
+
+    # Ложное чучело рассыпалось: шорох соломы и мягкий хлопок.
+    n = int(SR * 0.7)
+    straw = spectral(noise(n), lo=1500, hi=8000) * attack_decay(n, 0.003, 0.12)
+    straw += 0.5 * spectral(noise(n), lo=400, hi=2000) * attack_decay(n, 0.01, 0.2)
+    write("DecoyBurst", straw + 0.8 * place(pad(0.7), thump(0.15, 160, 70, 0.05), 0))
+
+    # Мячи улетели в мешок: глухое «фух» и шорох мешковины.
+    n = int(SR * 0.45)
+    stuff = 0.9 * place(pad(0.45), thump(0.18, 140, 70, 0.06), 0.03)
+    stuff += 0.45 * spectral(noise(n), lo=600, hi=3500) * attack_decay(n, 0.02, 0.1)
+    write("SackStuff", stuff)
+
+    # Мешок высыпался: мячи скачут по асфальту в разные стороны.
+    spill = pad(1.0)
+    rng = np.random.default_rng(31)
+    for at in np.sort(rng.uniform(0.0, 0.6, 7)):
+        f = rng.uniform(260, 420)
+        m = int(SR * 0.12)
+        boing = osc(sweep(f * 1.3, f, m), m) * attack_decay(m, 0.002, 0.04)
+        place(spill, rng.uniform(0.4, 0.8) * boing, at)
+    n = int(SR * 1.0)
+    spill += 0.3 * spectral(noise(n), lo=600, hi=3500) * attack_decay(n, 0.01, 0.15)
+    write("SackSpill", spill)
+
+    # Свет погас во всём дворе: глухой провал, шипение вниз и треск умирающих ламп.
+    n = int(SR * 1.6)
+    t = np.arange(n) / SR
+    whump = osc(sweep(62, 32, n), n) * attack_decay(n, 0.02, 0.5)
+    hiss = band_noise(n, sweep(3200, 280, n), 1300.0) * attack_decay(n, 0.05, 0.45) * 0.5
+    dark = 1.3 * whump + hiss
+    rng = np.random.default_rng(41)
+    for at in np.sort(rng.uniform(0.05, 0.6, 10)):
+        place(dark, rng.uniform(0.2, 0.5) * click(0.006, 2200), at)
+    write("DarkWave", dark)
+
+    # Мама зовёт из окна: скрип форточки и далёкое напевное «До-мо-ой!».
+    call = pad(2.4)
+    n = int(SR * 0.3)
+    creak = osc(sweep(900, 600, n) * (1.0 + 0.06 * noise(n)), n, "saw")
+    place(call, 0.18 * spectral(creak, lo=500, hi=3000) * attack_decay(n, 0.01, 0.12), 0.0)
+    for at, f0, length in ((0.35, note("G4"), 0.32), (0.66, note("E4"), 0.3), (0.95, note("D4"), 0.9)):
+        m = int(SR * length)
+        t = np.arange(m) / SR
+        vib = 1.0 + 0.012 * np.sin(2 * np.pi * 5.5 * t) * np.clip(t / 0.2, 0, 1)
+        source = osc(f0 * vib, m, "saw")
+        voice = vowel(source, [(600.0, 160.0, 1.0), (1000.0, 200.0, 0.7), (2600.0, 350.0, 0.15)])
+        env = np.clip(t / 0.06, 0, 1) * np.clip((length - t) / 0.12, 0, 1)
+        place(call, voice * env, at)
+    write("MomCall", reverb(call, 1.2, 0.45))
+
+    # Дверь подъезда: скрип петель, пружина и тяжёлый хлопок железной двери.
+    door = pad(1.4)
+    n = int(SR * 0.5)
+    t = np.arange(n) / SR
+    hinge = osc(sweep(420, 260, n) * (1.0 + 0.04 * np.sin(2 * np.pi * 23 * t)), n, "saw")
+    place(door, 0.25 * spectral(hinge, lo=300, hi=2500) * attack_decay(n, 0.05, 0.25), 0.0)
+    m = int(SR * 0.35)
+    spring = osc(sweep(900, 700, m), m, "triangle") * attack_decay(m, 0.002, 0.12) * (1 + 0.5 * np.sin(2 * np.pi * 30 * np.arange(m) / SR))
+    place(door, 0.3 * spring, 0.5)
+    place(door, 1.2 * thump(0.3, 110, 45, 0.09), 0.62)
+    m = int(SR * 0.7)
+    ring = sum(a * osc(f, m) * decay(m, d) for f, a, d in ((410, 0.4, 0.25), (1030, 0.25, 0.15), (1720, 0.15, 0.1)))
+    place(door, 0.5 * ring, 0.62)
+    write("DoorOpen", reverb(door, 0.6, 0.25))
+
+
 if __name__ == "__main__":
     sfx_player()
     sfx_enemies()
     sfx_run()
     sfx_dusk()
+    sfx_final()

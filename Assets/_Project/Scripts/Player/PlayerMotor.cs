@@ -107,5 +107,13 @@ namespace Bouncer.Player
             _knockback = Vector3.zero;
             _dashEnd = float.NegativeInfinity;
         }
+
+        /// <summary>Игрока ведёт сценка (дорога домой в финале): контроллер выключен, стены и пол не мешают.</summary>
+        public void SetScripted(bool scripted)
+        {
+            Stop();
+            _verticalSpeed = 0f;
+            _controller.enabled = !scripted;
+        }
     }
 }

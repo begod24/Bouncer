@@ -66,6 +66,9 @@ namespace Bouncer.Core
             Instance = this;
             GameFeel.Paused = false;
             GameFeel.Frozen = false;
+            // Темнота «Гасит свет» и заморозка врагов прошлой сцены (финал, «Замри!») в новую не переходят.
+            LightsOut.Clear();
+            Targetable.ClearEnemyFreeze();
             if (RunState.ContinuesRun)
             {
                 // Следующая арена той же прогулки: сразу бой.

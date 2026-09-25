@@ -65,5 +65,31 @@ namespace Bouncer.Core
         LampOut,
         /// <summary>«Второе дыхание»: игрока не выбило.</summary>
         SecondWind,
+
+        // Финал: «Тот, кто в сумерках» и зов мамы
+        /// <summary>Глухой смешок босса: новое умение, новая фаза, появление.</summary>
+        BabaiLaugh,
+        /// <summary>«Считалочка»: удар на каждый счёт.</summary>
+        CountTick,
+        /// <summary>«Я иду искать!» — босс открыл глаза.</summary>
+        FoundYou,
+        /// <summary>Приземление после прыжка на шесте.</summary>
+        PoleLand,
+        /// <summary>«Карусель»: босс раскручивается на шесте.</summary>
+        CarouselSpin,
+        CrowCaw,
+        CrowFlap,
+        /// <summary>Ложное чучело рассыпалось соломой.</summary>
+        DecoyBurst,
+        /// <summary>Мячи улетели в мешок.</summary>
+        SackStuff,
+        /// <summary>Попали в мешок — мячи высыпались.</summary>
+        SackSpill,
+        /// <summary>Свет погас во всём дворе.</summary>
+        DarkWave,
+        /// <summary>Мама зовёт из окна.</summary>
+        MomCall,
+        /// <summary>Дверь подъезда: скрип и хлопок на пружине.</summary>
+        DoorOpen,
     }
 }

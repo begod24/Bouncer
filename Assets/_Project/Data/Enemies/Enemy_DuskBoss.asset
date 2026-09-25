@@ -1,0 +1,102 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a9c1201ef2f941a886a97c2b147bc7d, type: 3}
+  m_Name: Enemy_DuskBoss
+  m_EditorClassIdentifier: Bouncer.Enemies::Bouncer.Enemies.DuskBossDefinition
+  displayName: "\u0422\u043E\u0442, \u043A\u0442\u043E \u0432 \u0441\u0443\u043C\u0435\u0440\u043A\u0430\u0445"
+  hitsToKill: 120
+  phase2At: 0.7
+  phase3At: 0.35
+  phase2Time: 55
+  phase3Time: 115
+  abilityInterval: {x: 7, y: 6, z: 5}
+  firstAbility: 5
+  moveSpeed: 2.6
+  keepDistance: 7
+  turnSpeed: 75
+  appearTime: 1.4
+  swipeRange: 3.4
+  swipeWindup: 0.6
+  swipeTime: 0.2
+  swipeRecover: 0.6
+  swipeCooldown: 1.8
+  swipeReach: 4
+  swipeHalfAngle: 80
+  swipeDamage: 1
+  swipeKnockback: 14
+  throwMinRange: 5
+  throwMaxRange: 22
+  throwWindup: 0.5
+  throwCooldown: 4
+  ballSpeed: 18
+  ballGravity: 2
+  ballDamage: 1
+  ballKnockback: 8
+  catchRadius: 2.4
+  catchHalfAngle: 70
+  maxHeld: 2
+  answerDelay: 0.5
+  answerBalls: 3
+  answerSpread: 30
+  answerSpeed: 16
+  sackCapacity: 12
+  sweepRadius: 4
+  sweepStops: 2
+  sweepCrouch: 0.5
+  sweepSpeedMultiplier: 1.7
+  sweepTimeout: 3
+  sweepMinBalls: 2
+  sackGrowth: 0.06
+  spillStagger: 1.2
+  vaultWindup: 0.65
+  vaultTime: 0.85
+  vaultHeight: 4
+  vaultRadius: 3.2
+  vaultDamage: 1
+  vaultKnockback: 13
+  vaultStuck: 1.3
+  vaultCount: {x: 1, y: 2, z: 3}
+  vaultLead: 0.35
+  carouselWindup: 0.6
+  carouselTime: 3
+  carouselInterval: 0.2
+  carouselArms: {x: 2, y: 2, z: 3}
+  carouselTurn: 26
+  carouselBallSpeed: 9
+  carouselBallGravity: 1.5
+  carouselDizzy: 1.3
+  countTime: 5
+  searchTime: 0.8
+  foundVolley: 3
+  foundInterval: 0.25
+  confusedTime: 2
+  eyeHeight: 4.2
+  lightsCast: 1
+  lightsOutTime: 9
+  shadowCount: {x: 2, y: 3, z: 4}
+  shadowDistance: {x: 6, y: 10}
+  crowsCast: 0.8
+  crowCount: {x: 3, y: 4, z: 6}
+  hideVanish: 0.8
+  hideRise: 0.8
+  hideTime: 9
+  decoyCount: {x: 2, y: 3, z: 4}
+  decoyMinDistance: 6
+  decoySpacing: 5
+  revealDamageMultiplier: 2
+  revealStagger: 1.5
+  eyePulse: {x: 0.5, y: 1.1}
+  decoyCrows: 3
+  rageVaultInterval: 2.2
+  rageVaultWindup: 0.45
+  rageStagger: 1.2
+  debrisForce: 6

@@ -28,6 +28,8 @@ namespace Bouncer.Run
         public string sceneName = "Yard";
         [Tooltip("Название на плашке в начале арены — строка таблицы «UI»")]
         public LocalizedString title;
+        [Tooltip("Подсказка под названием, если погода ясная (финал: «Продержись до зова мамы»). Пусто — нет")]
+        public LocalizedString introHint;
         public WaveDefinition wave;
         [Tooltip("Время суток по ходу боя: ключи равномерно распределены от начала до конца волн")]
         public TimeOfDayProfile[] timeOfDay;

@@ -346,6 +346,10 @@ MonoBehaviour:
     m_Localized: PE Teacher Mannequin
     m_Metadata:
       m_Items: []
+  - m_Id: 377579491024896
+    m_Localized: The One in the Dusk
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

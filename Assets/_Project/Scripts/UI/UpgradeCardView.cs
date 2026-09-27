@@ -57,7 +57,7 @@ namespace Bouncer.UI
             description.text = card.description.GetLocalizedString();
             category.text = card.rarity == CardRarity.Common
                 ? CategoryName(card)
-                : $"{CategoryName(card)} · {RarityName(card.rarity)}";
+                : $"{CategoryName(card)} · {RarityName(card)}";
             if (rarityFrame)
             {
                 rarityFrame.enabled = card.rarity != CardRarity.Common;
@@ -115,7 +115,9 @@ namespace Bouncer.UI
             _ => "card.category.treat",
         });
 
-        static string RarityName(CardRarity rarity) => Loc.Get(rarity == CardRarity.Gold ? "card.rarity.gold" : "card.rarity.rare");
+        // Золотая берётся одна за прогулку — об этом напоминает сама подпись.
+        static string RarityName(UpgradeCard card) => Loc.Get(card.rarity != CardRarity.Gold ? "card.rarity.rare"
+            : card.IsCombo ? "card.rarity.gold" : "card.rarity.gold_once");
 
 
         static float EaseOutBack(float t)

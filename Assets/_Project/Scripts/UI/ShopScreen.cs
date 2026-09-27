@@ -13,7 +13,8 @@ namespace Bouncer.UI
     /// <summary>
     /// Витрина ларька «Союзпечать»: 4 жвачки с видимыми вкладышами и ценой, замок «отложить», перебор витрины,
     /// лимонад и бутерброд, монетки игрока. Покупка — клик или Enter по карточке, клавиши 1–4; R / Y — перебрать,
-    /// L / X — отложить выбранную; Esc / B или «Дальше» — закрыть. Вся логика — в <see cref="ShopStock"/>,
+    /// L / X — отложить выбранную; P / LB — карманы (продать вкладыш за полцены); Esc / B или «Дальше» — закрыть.
+    /// Карманы полны — покупка не проходит, открываются карманы для продажи. Вся логика — в <see cref="ShopStock"/>,
     /// экран только показывает её и передаёт нажатия.
     /// </summary>
     public sealed class ShopScreen : MonoBehaviour
@@ -47,6 +48,9 @@ namespace Bouncer.UI
         [SerializeField] UnityEngine.UI.Button sandwichButton;
         [SerializeField] TMP_Text sandwichPrice;
         [SerializeField] UnityEngine.UI.Button leaveButton;
+        [Tooltip("Карманы: продать вкладыш")]
+        [SerializeField] UnityEngine.UI.Button pocketsButton;
+        [SerializeField] TMP_Text pocketsLabel;
 
         [Header("Вид")]
         [SerializeField] Color affordableColor = new(0.96f, 0.95f, 0.92f);
@@ -78,7 +82,29 @@ namespace Bouncer.UI
             Bind(lemonadeButton, () => Feedback(_stock?.BuyLemonade()));
             Bind(sandwichButton, () => Feedback(_stock?.BuySandwich()));
             Bind(leaveButton, () => _closeRequested = true);
+            Bind(pocketsButton, OpenPockets);
             SetVisible(false);
+        }
+
+        static bool PocketsOpen => PocketsPanel.Instance != null && PocketsPanel.Instance.IsOpen;
+
+        void OpenPockets()
+        {
+            if (!_open || !AcceptsInput || _stock == null || PocketsPanel.Instance == null)
+                return;
+            PocketsPanel.Instance.Closed -= OnPocketsClosed;
+            PocketsPanel.Instance.Closed += OnPocketsClosed;
+            PocketsPanel.Instance.OpenSell(_stock);
+        }
+
+        void OnPocketsClosed()
+        {
+            if (PocketsPanel.Instance != null)
+                PocketsPanel.Instance.Closed -= OnPocketsClosed;
+            if (!_open)
+                return;
+            Refresh();
+            SelectFirst();
         }
 
         void OnDestroy() => Unbind();
@@ -101,6 +127,9 @@ namespace Bouncer.UI
             RefreshCoins();
             if (message)
                 message.alpha = Mathf.Clamp01((_messageUntil - Time.unscaledTime) * 3f);
+            // Открыты карманы — ввод у них.
+            if (PocketsOpen)
+                return;
 
             var events = EventSystem.current;
             if (events != null && events.currentSelectedGameObject == null && NavigationPressed())
@@ -119,6 +148,8 @@ namespace Bouncer.UI
                     Reroll();
                 if (keyboard.lKey.wasPressedThisFrame)
                     ToggleLock(SelectedSlot());
+                if (keyboard.pKey.wasPressedThisFrame)
+                    OpenPockets();
             }
             if (gamepad != null)
             {
@@ -126,6 +157,8 @@ namespace Bouncer.UI
                     Reroll();
                 if (gamepad.buttonWest.wasPressedThisFrame)
                     ToggleLock(SelectedSlot());
+                if (gamepad.leftShoulder.wasPressedThisFrame)
+                    OpenPockets();
             }
         }
 
@@ -133,7 +166,7 @@ namespace Bouncer.UI
         // пока ларёк был открыт (пауза в ларьке не включается).
         void LateUpdate()
         {
-            if (!_open)
+            if (!_open || PocketsOpen)
                 return;
             if (CancelPressed())
                 _closeRequested = true;
@@ -213,6 +246,10 @@ namespace Bouncer.UI
             SetPrice(rerollButton, rerollPrice, _stock.RerollPrice, true);
             SetPrice(lemonadeButton, lemonadePrice, _stock.LemonadePrice, !_stock.HeartsFull);
             SetPrice(sandwichButton, sandwichPrice, _stock.SandwichPrice, !_stock.HeartsFull);
+            if (pocketsLabel)
+                pocketsLabel.text = Loc.Format("shop.pockets", _stock.Customer.PocketsUsed, _stock.Customer.MaxPockets);
+            if (pocketsButton)
+                pocketsButton.interactable = _stock.Customer.PocketsUsed > 0;
             RefreshCoins();
         }
 
@@ -256,6 +293,17 @@ namespace Bouncer.UI
 
         void Feedback(PurchaseResult? result)
         {
+            if (result == PurchaseResult.PocketsFull)
+            {
+                GameEvents.PlaySound(SoundCue.NotEnoughCoins, Vector3.zero);
+                if (message)
+                {
+                    message.text = Loc.Get("shop.pockets_full");
+                    _messageUntil = Time.unscaledTime + messageTime * 1.5f;
+                }
+                OpenPockets();
+                return;
+            }
             if (result != PurchaseResult.NotEnoughCoins)
                 return;
             GameEvents.PlaySound(SoundCue.NotEnoughCoins, Vector3.zero);

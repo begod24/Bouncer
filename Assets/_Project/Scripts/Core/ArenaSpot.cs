@@ -10,6 +10,8 @@ namespace Bouncer.Core
         Bench,
         /// <summary>Калитка в бортах: отсюда выкатывается огромный мяч («Мяч в игре!»).</summary>
         BallGate,
+        /// <summary>Откуда выходит босс арены: ларёк «Игрушки» Трансформера, забор детсада для зайца.</summary>
+        BossEntrance,
     }
 
     /// <summary>
@@ -58,9 +60,23 @@ namespace Bouncer.Core
             return best;
         }
 
+        /// <summary>Первая отметка этого вида. null — нет таких.</summary>
+        public static ArenaSpot Find(ArenaSpotKind kind)
+        {
+            foreach (var spot in s_all)
+                if (spot.kind == kind)
+                    return spot;
+            return null;
+        }
+
         void OnDrawGizmos()
         {
-            Gizmos.color = kind == ArenaSpotKind.Bench ? new Color(0.4f, 0.8f, 1f) : new Color(1f, 0.6f, 0.2f);
+            Gizmos.color = kind switch
+            {
+                ArenaSpotKind.Bench => new Color(0.4f, 0.8f, 1f),
+                ArenaSpotKind.BossEntrance => new Color(1f, 0.3f, 0.3f),
+                _ => new Color(1f, 0.6f, 0.2f),
+            };
             Gizmos.DrawWireSphere(transform.position + Vector3.up * 0.5f, 0.5f);
             Gizmos.DrawLine(transform.position + Vector3.up * 0.5f, transform.position + Vector3.up * 0.5f + Inward * 1.5f);
         }

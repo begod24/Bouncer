@@ -40,6 +40,10 @@ namespace Bouncer.UI
         [SerializeField] Color candleColor = new(0.96f, 0.82f, 0.24f);
         [Tooltip("Горячая картошка: следующий бросок взорвётся")]
         [SerializeField] Color hotColor = new(0.93f, 0.33f, 0.16f);
+        [Tooltip("Чужой пойманный мяч в руках — одноразовый")]
+        [SerializeField] Color borrowedColor = new(0.72f, 0.45f, 1f);
+        [Tooltip("Последнее сердце мигает: столько раз в секунду")]
+        [SerializeField] float lastHeartPulse = 2.5f;
         [SerializeField] TMP_Text candleLabel;
 
         [Header("Ловля и рывок")]
@@ -168,6 +172,19 @@ namespace Bouncer.UI
             Resize(_hearts, livesRow, health.Max);
             for (int i = 0; i < _hearts.Count; i++)
                 SetIcon(_hearts[i], i < health.Current, heartFull, heartEmpty, heartColor);
+            // Последнее сердце мигает и пульсирует — видно краем глаза.
+            bool last = health.Current == 1 && !player.IsDead;
+            for (int i = 0; i < _hearts.Count; i++)
+            {
+                float scale = 1f;
+                if (last && i == 0)
+                {
+                    float wave = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * lastHeartPulse * Mathf.PI * 2f);
+                    scale = 1f + 0.22f * wave;
+                    _hearts[i].color = Color.Lerp(heartColor, Color.white, 0.55f * wave);
+                }
+                _hearts[i].rectTransform.localScale = Vector3.one * scale;
+            }
         }
 
         void UpdateBalls()
@@ -178,8 +195,10 @@ namespace Bouncer.UI
             Color full = balls.CandleReady ? Color.Lerp(candleColor, Color.white, pulse)
                 : balls.CatchPerksReady ? Color.Lerp(hotColor, ballColor, pulse)
                 : ballColor;
+            // Чужие (одноразовые) мячи — последние в ряду и своего цвета.
+            int own = balls.Balls - balls.BorrowedBalls;
             for (int i = 0; i < _balls.Count; i++)
-                SetIcon(_balls[i], i < balls.Balls, ballFull, ballEmpty, full);
+                SetIcon(_balls[i], i < balls.Balls, ballFull, ballEmpty, i < own ? full : borrowedColor);
             if (candleLabel)
                 candleLabel.gameObject.SetActive(balls.CandleReady && !player.IsDead);
         }
@@ -256,8 +275,8 @@ namespace Bouncer.UI
             }
             else
             {
-                int seconds = Mathf.FloorToInt(session.SurvivalTime);
-                timerLabel.text = $"{seconds / 60}:{seconds % 60:00}";
+                // Часы всей прогулки (для спидранов): с первой арены, без пауз.
+                timerLabel.text = RunRecords.FormatTime(RunState.Active ? RunState.RunClock : session.SurvivalTime);
             }
             if (session.RunKills != _killsShown)
             {

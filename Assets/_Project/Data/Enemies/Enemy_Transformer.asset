@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82a29f9d43f9e4944967ce723aa2d0f2, type: 3}
+  m_Name: Enemy_Transformer
+  m_EditorClassIdentifier: Bouncer.Enemies::Bouncer.Enemies.TransformerDefinition
+  displayName: "\u0422\u0440\u0430\u043D\u0441\u0444\u043E\u0440\u043C\u0435\u0440
+    \u0438\u0437 \u043B\u0430\u0440\u044C\u043A\u0430"
+  hitsToKill: 34
+  driveSpeed: 7
+  driveTime: 2.2
+  revTime: 0.75
+  ramSpeed: 14
+  ramTime: 1.6
+  ramDamage: 1
+  ramKnockback: 14
+  breakRadius: 1.9
+  breakForce: 8
+  crashStun: 1.4
+  ramsPerCar: 3
+  rcCars: 2
+  maxRcCars: 3
+  transformTime: 1.3
+  walkSpeed: 2.2
+  turnSpeed: 140
+  preferredDistance: 9
+  robotTime: 11
+  actionPause: 1.4
+  volleyCount: 5
+  volleySpread: 50
+  volleyWindup: 0.6
+  ballSpeed: 14
+  ballGravity: 3
+  ballDamage: 1
+  ballKnockback: 7
+  openAfterVolley: 1
+  mines: 3
+  mineWindup: 0.5
+  mineFlightTime: 0.9
+  mineFuse: 1.3
+  mineRadius: 1.6
+  mineDamage: 1
+  mineKnockback: 10
+  mineScatter: 2.4
+  debrisForce: 8

@@ -24,7 +24,7 @@ namespace Bouncer.Upgrades
         [Header("Броски, рывок и ловля")]
         [Tooltip("Прибавка к урону каждого броска")]
         [Min(0)] public int bonusDamage;
-        [Tooltip("Подкат: рывок бьёт задетых врагов с таким уроном и сбивает с ног")]
+        [Tooltip("Подкат: больше 0 — рывок сбивает задетых врагов с ног и оглушает (урона нет)")]
         [Min(0)] public int tackleDamage;
         [Tooltip("«Замри!»: на сколько секунд удачная ловля замедляет всё вокруг")]
         [Min(0f)] public float catchFreeze;
@@ -48,7 +48,8 @@ namespace Bouncer.Upgrades
         [Min(0)] public int arenaHeal;
         [Tooltip("«Резиновые сапоги»: песок и лужи не замедляют")]
         public bool ignoreGround;
-        [Tooltip("«Кувырок»: рывок сквозь вражеский мяч ловит его")]
+        [Tooltip("«Кувырок»: мяч или удар, прошедший рядом во время рывка, — уворот в последний момент " +
+                 "(замедление и бросок с силой «свечки»)")]
         public bool dashCatch;
         [Tooltip("«Шпаргалка»: столько переборов витрины в каждом ларьке бесплатно")]
         [Min(0)] public int freeRerolls;
@@ -85,7 +86,7 @@ namespace Bouncer.Upgrades
             mods.DashCatch |= dashCatch;
             mods.FreeRerolls += freeRerolls;
             mods.ExtraChoices += extraChoices;
-            if (extraBalls > 0)
+            if (extraBalls > 0 && !Rebuilding)
                 player.Balls.GiveBall(extraBalls);
             else if (extraBalls < 0)
             {

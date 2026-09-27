@@ -15,15 +15,15 @@ MonoBehaviour:
   palette: {fileID: 2800000, guid: eb102b3da9fd241bfad5e37de49d381c, type: 3}
   emissionStrength: 1.6
   sunColor: {r: 0.5, g: 0.6, b: 0.95, a: 1}
-  sunIntensity: 0.1
+  sunIntensity: 0.3
   sunElevation: 45
   sunAzimuth: 210
   shadowStrength: 0.35
-  ambientSky: {r: 0.07, g: 0.075, b: 0.14, a: 1}
-  ambientEquator: {r: 0.05, g: 0.055, b: 0.1, a: 1}
-  ambientGround: {r: 0.025, g: 0.025, b: 0.04, a: 1}
+  ambientSky: {r: 0.16, g: 0.17, b: 0.28, a: 1}
+  ambientEquator: {r: 0.12, g: 0.13, b: 0.21, a: 1}
+  ambientGround: {r: 0.06, g: 0.06, b: 0.09, a: 1}
   fogColor: {r: 0.04, g: 0.05, b: 0.1, a: 1}
-  fogStart: 18
-  fogEnd: 48
+  fogStart: 24
+  fogEnd: 68
   skyColor: {r: 0.03, g: 0.04, b: 0.1, a: 1}
   volumeProfile: {fileID: 11400000, guid: 2ee38a9c180ef4d55a59dd40c54cd61d, type: 2}

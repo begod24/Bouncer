@@ -240,7 +240,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Bouncer.Core::Bouncer.Core.EnemyReward
   coins: 3
-  chance: 1
+  chance: 0.35
   portfolio: 0
 --- !u!1 &5540013646393338022
 GameObject:

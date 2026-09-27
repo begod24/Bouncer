@@ -67,7 +67,7 @@ namespace Bouncer.Enemies
             _agent.speed = definition.moveSpeed;
             _agent.acceleration = 14f;
             _agent.stoppingDistance = 0.5f;
-            _health.Configure(definition.hitsToKill, 0f);
+            _health.Configure(EnemyScaling.Hits(definition.hitsToKill), 0f);
         }
 
         public void OnSpawned()
@@ -116,7 +116,7 @@ namespace Bouncer.Enemies
             {
                 case State.Approach:
                     _agent.isStopped = !hasTarget;
-                    _agent.speed = definition.moveSpeed * GumSpot.EnemyMoveMultiplierAt(transform.position)
+                    _agent.speed = definition.moveSpeed * _self.SpeedMultiplier * GumSpot.EnemyMoveMultiplierAt(transform.position)
                                                         * GroundZone.MoveMultiplierAt(transform.position);
                     if (!hasTarget)
                         break;
@@ -168,7 +168,7 @@ namespace Bouncer.Enemies
         void Charge(float dt)
         {
             Vector3 before = transform.position;
-            float step = definition.chargeSpeed * dt;
+            float step = definition.chargeSpeed * _self.SpeedMultiplier * dt;
             _agent.Move(_chargeDirection * step);
             float moved = Flat(transform.position - before).magnitude;
             LeaveFire(moved);

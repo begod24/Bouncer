@@ -81,7 +81,7 @@ namespace Bouncer.Enemies
             _agent.speed = definition.moveSpeed;
             _agent.acceleration = 12f;
             _agent.stoppingDistance = definition.attackRange * 0.8f;
-            _health.Configure(definition.hitsToKill, 0f);
+            _health.Configure(EnemyScaling.Hits(definition.hitsToKill), 0f);
         }
 
         public void OnSpawned()
@@ -124,7 +124,7 @@ namespace Bouncer.Enemies
             Vector3 toTarget = hasTarget ? Flat(_target.Position - transform.position) : Vector3.zero;
             float distance = toTarget.magnitude;
 
-            _agent.speed = definition.moveSpeed * GumSpot.EnemyMoveMultiplierAt(transform.position)
+            _agent.speed = definition.moveSpeed * _self.SpeedMultiplier * GumSpot.EnemyMoveMultiplierAt(transform.position)
                                                 * GroundZone.MoveMultiplierAt(transform.position);
             if (_knockback.sqrMagnitude > 0.01f)
             {

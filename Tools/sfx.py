@@ -522,9 +522,90 @@ def sfx_final():
     write("DoorOpen", reverb(door, 0.6, 0.25))
 
 
+# ---------------------------------------------------------------- барахолка и детский сад
+
+def sfx_content():
+    # Свой генератор шума: звуки не зависят от того, что синтезировано до них.
+    rng = np.random.default_rng(61)
+
+    def hiss(n, lo=None, hi=None):
+        return spectral(rng.uniform(-1.0, 1.0, n), lo=lo, hi=hi)
+
+    # Сирена милицейских «Жигулей»: игрушечное «уи-уи» — тон качается вверх-вниз.
+    n = int(SR * 1.5)
+    t = np.arange(n) / SR
+    f = 950 + 380 * np.sin(2 * np.pi * 1.6 * t - np.pi / 2)
+    tone = spectral(0.5 * osc(f, n, "square") + 0.5 * osc(f, n, "triangle"), lo=400, hi=4000)
+    write("Siren", tone * np.clip(t / 0.05, 0, 1) * np.clip((1.5 - t) / 0.25, 0, 1))
+
+    # Превращение Трансформера: воет привод, трещат шестерёнки, дважды лязгает железо.
+    n = int(SR * 1.2)
+    t = np.arange(n) / SR
+    whine = spectral(osc(sweep(260, 820, n), n, "saw"), lo=200, hi=3000)
+    clank = 0.3 * whine * np.clip(t / 0.1, 0, 1) * np.clip((1.2 - t) / 0.2, 0, 1)
+    at = 0.05
+    while at < 1.0:
+        m = int(SR * 0.012)
+        place(clank, 0.35 * hiss(m, lo=2500) * decay(m, 0.003), at)
+        at += 0.055
+    for at, freq in ((0.45, 196.0), (0.95, 147.0)):
+        place(clank, 0.8 * bell(freq, 0.35, 1.6) + place(pad(0.35), thump(0.2, 120, 60, 0.05), 0), at)
+    write("TransformClank", clank)
+
+    # Плюшевый заяц приземлился: мягкое тяжёлое «пуф» без щелчка.
+    n = int(SR * 0.6)
+    puff = hiss(n, lo=80, hi=700) * attack_decay(n, 0.015, 0.15)
+    write("PlushThump", 1.2 * place(pad(0.6), thump(0.45, 80, 38, 0.12), 0) + 0.7 * puff)
+
+    # Шов рвётся: трескучий шорох ткани и выдох ваты.
+    n = int(SR * 0.7)
+    t = np.arange(n) / SR
+    grains = np.convolve((rng.uniform(0, 1, n) < 0.02).astype(float), np.hanning(64), mode="same")
+    tear = hiss(n, lo=900, hi=7000) * (0.35 + 0.65 * np.clip(grains, 0, 1))
+    tear *= np.clip(t / 0.02, 0, 1) * np.exp(-np.maximum(0.0, t - 0.35) / 0.1)
+    write("SeamRip", tear + 0.5 * hiss(n, lo=100, hi=900) * attack_decay(n, 0.3, 0.2))
+
+    # Кукла-плакса: электронное «уа-уа», тон поднимается и опускается.
+    cry = pad(1.1)
+    for at in (0.0, 0.5):
+        m = int(SR * 0.42)
+        tt = np.arange(m) / SR
+        f0 = (480 + 160 * np.sin(np.pi * tt / 0.42)) * (1 + 0.02 * np.sin(2 * np.pi * 7 * tt))
+        voice = vowel(osc(f0, m, "saw"), [(850.0, 200.0, 1.0), (1250.0, 250.0, 0.7), (2800.0, 400.0, 0.2)])
+        place(cry, voice * np.clip(tt / 0.05, 0, 1) * np.clip((0.42 - tt) / 0.1, 0, 1), at)
+    write("DollCry", cry)
+
+    # Пионерский барабан: удар по пластику с шорохом пружин.
+    n = int(SR * 0.4)
+    write("DrumBeat", 0.9 * osc(sweep(220, 160, n), n) * decay(n, 0.07) + 0.7 * hiss(n, lo=1500, hi=9000) * decay(n, 0.1))
+
+    # Лягушку заводят ключиком: треск храповика, всё чаще.
+    wind = pad(0.9)
+    at, gap = 0.0, 0.07
+    while at < 0.8:
+        m = int(SR * 0.012)
+        place(wind, 0.8 * hiss(m, lo=2500, hi=9000) * decay(m, 0.002), at)
+        place(wind, 0.25 * pluck(1800, 0.03), at + 0.003)
+        at += gap
+        gap *= 0.93
+    write("WindUp", wind)
+
+    # Пистолет от «Денди»: восьмибитное «пиу» вниз.
+    n = int(SR * 0.25)
+    write("ZapperShot", 0.6 * spectral(osc(sweep(1800, 180, n), n, "square") * attack_decay(n, 0.002, 0.08), hi=6000))
+
+    # Моторчик машинки: жужжание набирает обороты.
+    n = int(SR * 0.8)
+    t = np.arange(n) / SR
+    f = sweep(90, 260, n) * (1 + 0.03 * np.sin(2 * np.pi * 18 * t))
+    motor = spectral(osc(f, n, "saw") + 0.5 * osc(f * 2.01, n, "square"), lo=120, hi=3500)
+    write("EngineRev", motor * np.clip(t / 0.05, 0, 1) * np.clip((0.8 - t) / 0.12, 0, 1))
+
+
 if __name__ == "__main__":
     sfx_player()
     sfx_enemies()
     sfx_run()
     sfx_dusk()
     sfx_final()
+    sfx_content()

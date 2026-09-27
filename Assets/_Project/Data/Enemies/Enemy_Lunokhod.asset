@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78cfcfa89e1494d13b1d7bab0a00071c, type: 3}
+  m_Name: Enemy_Lunokhod
+  m_EditorClassIdentifier: Bouncer.Enemies::Bouncer.Enemies.LunokhodDefinition
+  displayName: "\u041B\u0443\u043D\u043E\u0445\u043E\u0434"
+  hitsToKill: 5
+  moveSpeed: 1.3
+  turnSpeed: 55
+  preferredDistance: 12
+  minDistance: 8
+  fireInterval: 4.5
+  firstFireDelay: 3
+  lidOpenTime: 0.55
+  volleyCount: 3
+  volleySpread: 18
+  ballSpeed: 10
+  ballGravity: 7
+  ballDamage: 1
+  ballKnockback: 6
+  lead: 0.5
+  openAfterVolley: 1.3
+  lidCloseTime: 0.4
+  maxFireRange: 18
+  knockbackScale: 0.08
+  debrisForce: 5

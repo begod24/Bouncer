@@ -137,7 +137,7 @@ namespace Bouncer.Enemies
             _agent.speed = definition.sneakSpeed;
             _agent.acceleration = 40f;
             _agent.stoppingDistance = definition.attackRange * 0.7f;
-            _health.Configure(definition.hitsToKill, 0f);
+            _health.Configure(EnemyScaling.Hits(definition.hitsToKill), 0f);
         }
 
         public void OnSpawned()
@@ -195,7 +195,7 @@ namespace Bouncer.Enemies
                         break;
                     }
                     _agent.isStopped = false;
-                    _agent.speed = definition.sneakSpeed * GumSpot.EnemyMoveMultiplierAt(transform.position)
+                    _agent.speed = definition.sneakSpeed * _self.SpeedMultiplier * GumSpot.EnemyMoveMultiplierAt(transform.position)
                                                          * GroundZone.MoveMultiplierAt(transform.position);
                     Vector3 velocity = Flat(_agent.velocity);
                     Face(velocity.sqrMagnitude > 0.3f ? velocity : toTarget, dt);

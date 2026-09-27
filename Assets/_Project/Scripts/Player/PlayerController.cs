@@ -9,10 +9,11 @@ namespace Bouncer.Player
     /// <summary>
     /// Связывает модули игрока: берёт намерение (локальный ввод, позже — сеть),
     /// раздаёт его движению, прицелу и мячам. Принимает попадания мячей и удары.
-    /// Здесь же эффекты карточек, которые не про мяч: подкат рывком, «Замри!» и «Свисток» после ловли,
-    /// «Крышка от кастрюли» (блок удара), «Домино» (выбитый враг сбивает соседей), «Второе дыхание»
-    /// и «Кувырок» (рывок ловит мячи). Взгляд игрока (под ним замирают манекены), «Зеркальце» и «Фонарик»
-    /// передаются в <see cref="Targetable"/> — враги читают их оттуда.
+    /// Здесь же эффекты карточек, которые не про мяч: подкат рывком (сбивает с ног без урона), «Замри!» и «Свисток»
+    /// после ловли, «Крышка от кастрюли» (блок удара), «Домино» (выбитый враг сбивает соседей), «Второе дыхание»
+    /// и «Кувырок» (уворот в последний момент: мяч или удар прошёл рядом во время рывка — замедление и бросок
+    /// с силой «свечки»). Идеальная ловля лечит не чаще раза в catchHealCooldown. Взгляд игрока (под ним замирают
+    /// манекены), «Зеркальце» и «Фонарик» передаются в <see cref="Targetable"/> — враги читают их оттуда.
     /// </summary>
     [RequireComponent(typeof(PlayerMotor), typeof(PlayerAim), typeof(PlayerBallHandler))]
     [RequireComponent(typeof(Health), typeof(Targetable))]
@@ -27,6 +28,10 @@ namespace Bouncer.Player
         readonly List<IDamageable> _tackled = new();
         readonly List<(Vector3 position, float at)> _dominoes = new();
         float _tackleDashStart = float.NegativeInfinity;
+        bool _tackleThisDash;
+        float _nextTackleAt;
+        float _dodgedDashStart = float.NegativeInfinity;
+        float _nextCatchHealAt;
         float _lidReadyAt;
         IPlayerIntentSource _intentSource;
 
@@ -51,6 +56,14 @@ namespace Bouncer.Player
         public event Action LidBlocked;
         /// <summary>«Второе дыхание» спасло от выбывания (для визуала).</summary>
         public event Action SecondWindUsed;
+        /// <summary>«Кувырок»: уворот в последний момент (для визуала).</summary>
+        public event Action Dodged;
+        /// <summary>Сбит с ног медболом (для визуала).</summary>
+        public event Action KnockedDown;
+
+        /// <summary>1 — идеальная ловля снова лечит, 0 — только что вылечила.</summary>
+        public float CatchHeal01 => stats.catchHealCooldown <= 0f ? 1f
+            : Mathf.Clamp01(1f - (_nextCatchHealAt - Time.time) / stats.catchHealCooldown);
 
         public bool HasLid => Modifiers.LidCooldown > 0f;
         public bool LidReady => HasLid && Time.time >= _lidReadyAt;
@@ -105,7 +118,8 @@ namespace Bouncer.Player
 
             float dt = Time.deltaTime;
             UpdateDominoes();
-            bool canAct = !IsDead && GameSession.IsPlayerActive;
+            // Сбитый с ног (медбол) не бросает, не ловит и не бегает.
+            bool canAct = !IsDead && GameSession.IsPlayerActive && !Motor.IsDown;
             if (!canAct)
             {
                 Balls.Tick(intent, Aim, false, false);
@@ -130,12 +144,14 @@ namespace Bouncer.Player
             if (Modifiers.TackleDamage > 0 && Motor.IsDashing)
                 Tackle();
             if (Modifiers.DashCatch && Motor.IsDashing)
-                DashCatchNearby();
+                WatchDodge();
         }
 
-        /// <summary>«Кувырок»: рывок подхватывает летящие рядом мячи врага.</summary>
-        void DashCatchNearby()
+        /// <summary>«Кувырок»: мяч врага пролетел рядом, пока идёт рывок, — уворот в последний момент.</summary>
+        void WatchDodge()
         {
+            if (_dodgedDashStart == Motor.DashStartTime)
+                return;
             Vector3 chest = transform.position + Vector3.up * stats.throwHeight;
             float radiusSqr = stats.dashCatchRadius * stats.dashCatchRadius;
             var balls = Ball.Active;
@@ -144,13 +160,30 @@ namespace Bouncer.Player
                 var ball = balls[i];
                 if (ball.State != BallState.Live || ball.IsPhantom || !ball.Team.IsHostileTo(Team.Player))
                     continue;
-                if ((ball.Position - chest).sqrMagnitude > radiusSqr)
-                    continue;
-                Balls.TryDashCatch(ball);
+                if ((ball.Position - chest).sqrMagnitude <= radiusSqr)
+                {
+                    PerfectDodge();
+                    return;
+                }
             }
         }
 
-        /// <summary>Подкат: рывок сбивает с ног врагов на пути — каждого по разу за рывок.</summary>
+        /// <summary>Уворот в последний момент: на полсекунды замедление, следующий бросок — с силой «свечки».</summary>
+        void PerfectDodge()
+        {
+            if (!Modifiers.DashCatch || _dodgedDashStart == Motor.DashStartTime)
+                return;
+            _dodgedDashStart = Motor.DashStartTime;
+            GameFeel.BulletTime(stats.dodgeTimeScale, stats.dodgeSlowTime);
+            Balls.ArmCandle();
+            GameEvents.PlaySound(SoundCue.CatchCandle, transform.position);
+            Dodged?.Invoke();
+        }
+
+        /// <summary>
+        /// Подкат: рывок сбивает с ног врагов на пути — каждого по разу за рывок. Урона нет, сбитый оглушён;
+        /// срабатывает не чаще раза в tackleCooldown (рывок между ними — обычный).
+        /// </summary>
         void Tackle()
         {
             // Новый рывок — снова можно сбить и тех, кого сбил прошлый.
@@ -158,7 +191,12 @@ namespace Bouncer.Player
             {
                 _tackleDashStart = Motor.DashStartTime;
                 _tackled.Clear();
+                _tackleThisDash = Time.time >= _nextTackleAt;
+                if (_tackleThisDash)
+                    _nextTackleAt = Time.time + stats.tackleCooldown;
             }
+            if (!_tackleThisDash)
+                return;
 
             Vector3 direction = Motor.DashDirection;
             Vector3 center = transform.position + Vector3.up * 0.6f + direction * 0.4f;
@@ -177,7 +215,7 @@ namespace Bouncer.Player
                 Vector3 push = direction + (away.sqrMagnitude > 1e-4f ? away.normalized * 0.5f : Vector3.zero);
                 target.ApplyHit(new HitInfo
                 {
-                    Damage = Modifiers.TackleDamage,
+                    Damage = 0,
                     Point = other.ClosestPoint(center),
                     Direction = push.normalized,
                     Force = stats.tackleKnockback,
@@ -185,6 +223,8 @@ namespace Bouncer.Player
                     Source = gameObject,
                     Flags = HitFlags.Tackle | HitFlags.Charged,
                 });
+                if (other.GetComponentInParent<Targetable>() is { } stunned)
+                    stunned.Freeze(stats.tackleStun);
             }
         }
 
@@ -207,10 +247,10 @@ namespace Bouncer.Player
             if (IsDead || IsScripted || !ball.Team.IsHostileTo(Team.Player))
                 return BallContactResult.PassThrough;
 
-            // «Кувырок»: мяч, в который влетел рывок, пойман.
-            if (Modifiers.DashCatch && Motor.IsDashing && Balls.TryDashCatch(ball))
-                return BallContactResult.Caught;
-            // Окно ловли открыто и мяч прилетел спереди — пойман, даже если врезался в тело.
+            // «Кувырок»: мяч, в который влетел рывок, пролетает сквозь — это уворот в последний момент.
+            if (Modifiers.DashCatch && Motor.IsDashInvulnerable)
+                PerfectDodge();
+            // Окно ловли открыто и мяч прилетел спереди — пойман, даже если врезался в тело. Ёжик колется — попадание.
             if (Balls.TryCatch(ball))
                 return BallContactResult.Caught;
             if (!Motor.IsDashInvulnerable && !Health.IsInvulnerable && TryLidBlock(hit.point))
@@ -233,7 +273,16 @@ namespace Bouncer.Player
 
         public bool ApplyHit(in HitInfo hit)
         {
-            if (IsDead || IsScripted || Motor.IsDashInvulnerable || Health.IsInvulnerable)
+            if (IsDead || IsScripted)
+                return false;
+            if (Motor.IsDashInvulnerable)
+            {
+                // Удар прошёл сквозь рывок — «Кувырок» считает это увортом.
+                if (Modifiers.DashCatch)
+                    PerfectDodge();
+                return false;
+            }
+            if (Health.IsInvulnerable)
                 return false;
             if (TryLidBlock(hit.Point))
                 return false;
@@ -245,6 +294,9 @@ namespace Bouncer.Player
 
             Health.SetInvulnerable(stats.hurtInvulnerability);
             Motor.AddKnockback(hit.Direction * hit.Force);
+            // Тёмный мяч Бабая: ноги вязнут.
+            if (hit.Has(HitFlags.Dark))
+                Motor.Slow(stats.darkSlowMultiplier, stats.darkSlowTime);
             Balls.CancelCharge();
             GameFeel.HitStop(0.1f);
             GameFeel.Shake(0.9f);
@@ -342,9 +394,28 @@ namespace Bouncer.Player
 
         void OnCaught(CatchInfo info)
         {
-            // Лечит только мяч врага, пойманный в последний момент.
-            if (info.EnemyBall)
-                Health.Heal(info.Perfect ? stats.catchHeal : stats.earlyCatchHeal);
+            // Лечит только мяч врага, пойманный в последний момент, и не чаще раза в catchHealCooldown.
+            if (info.EnemyBall && Time.time >= _nextCatchHealAt && Health.Current < Health.Max)
+            {
+                int heal = info.Perfect ? stats.catchHeal : stats.earlyCatchHeal;
+                if (heal > 0)
+                {
+                    Health.Heal(heal);
+                    _nextCatchHealAt = Time.time + stats.catchHealCooldown;
+                }
+            }
+            // Сильный мяч пойман, но толкает назад; медбол сбивает с ног.
+            if (info.Heavy)
+            {
+                Motor.KnockDown(stats.heavyKnockdown);
+                Motor.AddKnockback(info.Direction * stats.heavyPush);
+                Balls.CancelCharge();
+                KnockedDown?.Invoke();
+            }
+            else if (info.Strong && info.Perfect)
+            {
+                Motor.AddKnockback(info.Direction * stats.strongCatchPush);
+            }
             GameFeel.HitStop(info.Candle || info.Perfect ? 0.06f : 0.04f);
             GameFeel.Shake(0.25f);
             if (Modifiers.CatchFreeze > 0f)

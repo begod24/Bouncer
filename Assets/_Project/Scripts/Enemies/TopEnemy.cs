@@ -48,7 +48,7 @@ namespace Bouncer.Enemies
             ApplyDefinition();
         }
 
-        public void ApplyDefinition() => _health.Configure(definition.hitsToKill, 0f);
+        public void ApplyDefinition() => _health.Configure(EnemyScaling.Hits(definition.hitsToKill), 0f);
 
         public void OnSpawned()
         {
@@ -100,7 +100,7 @@ namespace Bouncer.Enemies
             Vector3 toTarget = Flat(target.Position - _rb.position);
             Vector3 direction = toTarget.sqrMagnitude > 1e-4f ? toTarget.normalized : Vector3.forward;
             direction = Quaternion.Euler(0f, Mathf.Sin(_arcPhase) * definition.arcAngle, 0f) * direction;
-            float speed = definition.moveSpeed * GumSpot.EnemyMoveMultiplierAt(_rb.position) * GroundZone.MoveMultiplierAt(_rb.position);
+            float speed = definition.moveSpeed * _self.SpeedMultiplier * GumSpot.EnemyMoveMultiplierAt(_rb.position) * GroundZone.MoveMultiplierAt(_rb.position);
             _velocity = Vector3.MoveTowards(_velocity, direction * speed, definition.acceleration * dt);
         }
 

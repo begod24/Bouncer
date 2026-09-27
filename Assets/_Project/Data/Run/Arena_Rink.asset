@@ -22,6 +22,15 @@ MonoBehaviour:
     m_FallbackState: 0
     m_WaitForCompletion: 0
     m_LocalVariables: []
+  introHint:
+    m_TableReference:
+      m_TableCollectionName: 
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
   wave: {fileID: 11400000, guid: f46818b1d471e40e5a4a819b5dda78c8, type: 2}
   timeOfDay:
   - {fileID: 11400000, guid: 2b9cd486f59314604b346d7e4f9dd3e8, type: 2}
@@ -37,7 +46,11 @@ MonoBehaviour:
     m_FallbackState: 0
     m_WaitForCompletion: 0
     m_LocalVariables: []
+  enemyHitsMultiplier: 1.5
+  elitePortfolios: 1
   portfolioFinds: 1
+  findLemonade: {fileID: 6283736896973188395, guid: de3d569ea533f450a94e6fa14799721c, type: 3}
+  findCoins: 12
   portfolioWindow: {x: 0.3, y: 0.6}
   weatherChance: 0.3
   weathers: 010000000200000003000000

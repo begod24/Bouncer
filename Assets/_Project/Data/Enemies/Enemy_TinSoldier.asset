@@ -30,7 +30,8 @@ MonoBehaviour:
   damage: 1
   knockback: 5
   lead: 0.6
+  strongThrow: 0
   staggerTime: 0.6
   knockbackScale: 0.25
   debrisForce: 4
-  dropBallOnDeath: 1
+  dropBallOnDeath: 0

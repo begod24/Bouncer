@@ -1,0 +1,221 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &6187550252527098639
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3738134270756246078}
+  - component: {fileID: 8222736953886896926}
+  - component: {fileID: 2745558015429421736}
+  - component: {fileID: 8169275646125435612}
+  - component: {fileID: 2922993166848541084}
+  m_Layer: 9
+  m_Name: Bazaar_Stall_Toys
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3738134270756246078
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6187550252527098639}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 5373131537030621076}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &8222736953886896926
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6187550252527098639}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2.25, y: 1.95, z: 1.3}
+  m_Center: {x: 0, y: 0.98, z: -0.12}
+--- !u!114 &2745558015429421736
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6187550252527098639}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e3fdca004f2d45fe8abbed571a8abd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshModifier
+  m_SerializedVersion: 0
+  m_OverrideArea: 0
+  m_Area: 0
+  m_OverrideGenerateLinks: 0
+  m_GenerateLinks: 0
+  m_IgnoreFromBuild: 1
+  m_ApplyToChildren: 1
+  m_AffectedAgents: ffffffff
+--- !u!208 &8169275646125435612
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6187550252527098639}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 1.15, y: 1, z: 0.675}
+  m_MoveThreshold: 0.2
+  m_Carve: 1
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 1, z: -0.12}
+  m_TimeToStationary: 0.5
+--- !u!114 &2922993166848541084
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6187550252527098639}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bcb47a394d6e343e68bc7bbc5ccfa77e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Bouncer.Arena::Bouncer.Arena.BreakableProp
+  parts:
+  - {fileID: 2895668710521655350}
+  - {fileID: 183380479913145839}
+  - {fileID: 5985497424793271771}
+  - {fileID: 8497238324465804733}
+  blockers:
+  - {fileID: 8222736953886896926}
+  obstacle: {fileID: 8169275646125435612}
+  pieceMass: 3
+  lifetime: 2.5
+  shrinkTime: 0.5
+  scatter: 0.6
+--- !u!1001 &5556188322077196415
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 3738134270756246078}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 44c5b1e2d57ae4a85a0fb2bb6a161ed3, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 44c5b1e2d57ae4a85a0fb2bb6a161ed3, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 44c5b1e2d57ae4a85a0fb2bb6a161ed3, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 44c5b1e2d57ae4a85a0fb2bb6a161ed3, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 44c5b1e2d57ae4a85a0fb2bb6a161ed3, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 44c5b1e2d57ae4a85a0fb2bb6a161ed3, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 44c5b1e2d57ae4a85a0fb2bb6a161ed3, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 44c5b1e2d57ae4a85a0fb2bb6a161ed3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 44c5b1e2d57ae4a85a0fb2bb6a161ed3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 44c5b1e2d57ae4a85a0fb2bb6a161ed3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7950698302896779422, guid: 44c5b1e2d57ae4a85a0fb2bb6a161ed3, type: 3}
+      propertyPath: m_Layer
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: -7400313943952676419, guid: 44c5b1e2d57ae4a85a0fb2bb6a161ed3, type: 3}
+      propertyPath: m_Layer
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 44c5b1e2d57ae4a85a0fb2bb6a161ed3, type: 3}
+      propertyPath: m_Name
+      value: Bazaar_Stall_Toys
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 44c5b1e2d57ae4a85a0fb2bb6a161ed3, type: 3}
+      propertyPath: m_Layer
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 6250870628838404886, guid: 44c5b1e2d57ae4a85a0fb2bb6a161ed3, type: 3}
+      propertyPath: m_Layer
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 7785806898585564686, guid: 44c5b1e2d57ae4a85a0fb2bb6a161ed3, type: 3}
+      propertyPath: m_Layer
+      value: 9
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 44c5b1e2d57ae4a85a0fb2bb6a161ed3, type: 3}
+--- !u!4 &183380479913145839 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -3490021136683272816, guid: 44c5b1e2d57ae4a85a0fb2bb6a161ed3, type: 3}
+  m_PrefabInstance: {fileID: 5556188322077196415}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &2895668710521655350 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7292718193176383561, guid: 44c5b1e2d57ae4a85a0fb2bb6a161ed3, type: 3}
+  m_PrefabInstance: {fileID: 5556188322077196415}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &5373131537030621076 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 44c5b1e2d57ae4a85a0fb2bb6a161ed3, type: 3}
+  m_PrefabInstance: {fileID: 5556188322077196415}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &5985497424793271771 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -7058466741830763100, guid: 44c5b1e2d57ae4a85a0fb2bb6a161ed3, type: 3}
+  m_PrefabInstance: {fileID: 5556188322077196415}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &8497238324465804733 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4104972696424244674, guid: 44c5b1e2d57ae4a85a0fb2bb6a161ed3, type: 3}
+  m_PrefabInstance: {fileID: 5556188322077196415}
+  m_PrefabAsset: {fileID: 0}

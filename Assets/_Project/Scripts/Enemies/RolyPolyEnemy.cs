@@ -43,6 +43,9 @@ namespace Bouncer.Enemies
         Targetable _target;
         Vector3 _attackDirection;
         float _waddlePhase;
+        BossSplit _boss;
+        readonly BossArmor _armor = new();
+        float _openUntil;
 
         public EnemyDefinition Definition => definition;
         public bool IsStunned => _state == State.Stunned;
@@ -54,6 +57,7 @@ namespace Bouncer.Enemies
             _agent = GetComponent<NavMeshAgent>();
             _health = GetComponent<Health>();
             _self = GetComponent<Targetable>();
+            _boss = GetComponent<BossSplit>();
 
             _agent.updatePosition = false;
             _agent.updateRotation = false;
@@ -73,7 +77,8 @@ namespace Bouncer.Enemies
             _agent.speed = definition.moveSpeed;
             _agent.acceleration = 40f;
             _agent.stoppingDistance = definition.stopDistance;
-            _health.Configure(definition.hitsToKill, definition.comboResetTime);
+            _health.Configure(_boss != null || GetComponent<BossSplit>() ? EnemyScaling.BossHits(definition.hitsToKill)
+                : EnemyScaling.Hits(definition.hitsToKill), definition.comboResetTime);
         }
 
         public void OnSpawned()
@@ -85,6 +90,8 @@ namespace Bouncer.Enemies
             _nextRepath = 0f;
             _nextAttack = Time.time + 0.6f;
             _waddlePhase = Random.value * 10f;
+            _armor.Reset();
+            _openUntil = 0f;
             Enter(State.Chase);
             SyncAgent(force: true);
         }
@@ -157,7 +164,8 @@ namespace Bouncer.Enemies
                         break;
                     }
                     bool usePath = _agent.isOnNavMesh && !_agent.pathPending && _agent.hasPath;
-                    Vector3 desired = usePath ? _agent.desiredVelocity : targetDirection * definition.moveSpeed;
+                    _agent.speed = definition.moveSpeed * _self.SpeedMultiplier;
+                    Vector3 desired = usePath ? _agent.desiredVelocity : targetDirection * (definition.moveSpeed * _self.SpeedMultiplier);
                     Drive(distance < definition.stopDistance ? Vector3.zero : desired);
                     break;
 
@@ -242,7 +250,7 @@ namespace Bouncer.Enemies
         void Drive(Vector3 desired)
         {
             desired.y = 0f;
-            desired = Vector3.ClampMagnitude(desired, definition.moveSpeed * GroundZone.MoveMultiplierAt(_rb.position)
+            desired = Vector3.ClampMagnitude(desired, definition.moveSpeed * _self.SpeedMultiplier * GroundZone.MoveMultiplierAt(_rb.position)
                                                       * GumSpot.EnemyMoveMultiplierAt(_rb.position));
             Vector3 velocity = _rb.linearVelocity;
             Vector3 horizontal = new(velocity.x, 0f, velocity.z);
@@ -290,6 +298,16 @@ namespace Bouncer.Enemies
             return BallContactResult.Hit;
         }
 
+        /// <summary>
+        /// Часть босса «Большая неваляшка» открыта (попадания в полтора раза): отдыхает после своего тарана
+        /// или только что бросила маленькую. Оглушение от попаданий окном не считается — иначе быстрые броски
+        /// держали бы босса открытым всё время.
+        /// </summary>
+        public bool IsBossOpen => _state == State.Recover || Time.time < _openUntil;
+
+        /// <summary>Босс открыт столько секунд (после броска маленькой неваляшки).</summary>
+        public void MarkOpen(float seconds) => _openUntil = Mathf.Max(_openUntil, Time.time + seconds);
+
         public bool ApplyHit(in HitInfo hit)
         {
             if (_health.IsDead)
@@ -298,11 +316,21 @@ namespace Bouncer.Enemies
             // Без стоп-кадра: вздрагивает сама неваляшка (HitPunch), камеру трясёт слегка.
             bool strong = hit.Has(HitFlags.Charged);
             GameFeel.Shake(strong ? 0.25f : 0.1f);
-            if (hitFlash)
+            var counted = hit;
+            if (_boss != null && !hit.Has(HitFlags.Despawn))
+            {
+                bool open = IsBossOpen;
+                counted.Damage = _armor.Take(hit.Damage, open);
+                BossArmor.Flash(hitFlash, open);
+            }
+            else if (hitFlash)
+            {
                 hitFlash.Flash(Color.white, 0.12f);
+            }
             GameEvents.PlaySound(strong ? SoundCue.EnemyHitStrong : SoundCue.EnemyHit, hit.Point);
 
-            _health.TryDamage(hit);
+            if (counted.Damage > 0 || hit.Has(HitFlags.Despawn))
+                _health.TryDamage(counted);
             if (!_health.IsDead)
             {
                 Knock(hit.Direction, hit.Force);

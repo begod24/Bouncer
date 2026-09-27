@@ -29,6 +29,8 @@ namespace Bouncer.Core
         bool _flashSearched;
         Vector3 _lastPosition;
         float _frozenUntil;
+        float _hurryUntil;
+        float _hurryBoost = 1f;
 
         public Team Team
         {
@@ -66,6 +68,25 @@ namespace Bouncer.Core
         /// <summary>Автоприцел не берёт эту цель: ворона кружит высоко, босс растворился в темноте.</summary>
         public bool HiddenFromAim { get; set; }
 
+        /// <summary>Своя прибавка к скорости: свойство элитки «Шустрый». 1 — нет.</summary>
+        public float SpeedBoost { get; set; } = 1f;
+
+        /// <summary>
+        /// Во сколько раз быстрее ходит этот враг: уровень опасности, «Шустрый» и «Командир» рядом.
+        /// Враги умножают на неё свою скорость бега (у игрока всегда 1).
+        /// </summary>
+        public float SpeedMultiplier => team != Team.Enemy ? 1f
+            : Danger.EnemySpeed * SpeedBoost * (Time.time < _hurryUntil ? _hurryBoost : 1f);
+
+        /// <summary>Подогнать на время: «Командир» ускоряет соседей. Берётся самое сильное из действующих.</summary>
+        public void Hurry(float boost, float seconds)
+        {
+            if (Time.time >= _hurryUntil)
+                _hurryBoost = 1f;
+            _hurryBoost = Mathf.Max(_hurryBoost, boost);
+            _hurryUntil = Mathf.Max(_hurryUntil, Time.time + seconds);
+        }
+
         /// <summary>Заморожен: стоит на месте и не атакует, но попадания по нему проходят.</summary>
         public bool IsFrozen => Time.time < _frozenUntil || (team == Team.Enemy && Time.time < s_enemiesFrozenUntil);
 
@@ -95,6 +116,9 @@ namespace Bouncer.Core
             Velocity = Vector3.zero;
             _frozenUntil = 0f;
             HiddenFromAim = false;
+            SpeedBoost = 1f;
+            _hurryUntil = 0f;
+            _hurryBoost = 1f;
         }
 
         void OnDisable() => s_all.Remove(this);

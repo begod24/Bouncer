@@ -41,10 +41,20 @@ namespace Bouncer.Run
         [Tooltip("Надпись у стрелки, которая ведёт СЮДА с прошлой арены (например, «В коробку →») — строка таблицы «UI»")]
         public LocalizedString arrivalLabel;
 
+        [Header("Враги и добыча")]
+        [Tooltip("Во сколько раз больше попаданий нужно врагам этой арены (однохитовым — нет; боссам — нет)")]
+        [Min(1f)] public float enemyHitsMultiplier = 1f;
+        [Tooltip("Сколько портфелей за бой дают элитки (остальные — только монетки)")]
+        [Min(0)] public int elitePortfolios = 1;
+
         [Header("Находки")]
-        [Tooltip("Сколько портфелей за бой находится на арене")]
+        [Tooltip("Сколько находок (монетки или лимонад) за бой появляется на арене")]
         [Min(0)] public int portfolioFinds = 1;
-        [Tooltip("Портфель появляется в случайный момент между этими долями боя")]
+        [Tooltip("Находка-лимонад (+1 сердце). Пусто — находки только монетками")]
+        public HealPickup findLemonade;
+        [Tooltip("Находка-монетки: столько кучкой")]
+        [Min(0)] public int findCoins = 12;
+        [Tooltip("Находка появляется в случайный момент между этими долями боя")]
         public Vector2 portfolioWindow = new(0.3f, 0.6f);
 
         [Header("Погода — случайное событие")]

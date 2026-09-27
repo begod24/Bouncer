@@ -21,13 +21,17 @@ MonoBehaviour:
   dashDistance: 4.5
   dashDuration: 0.16
   dashCooldown: 0.9
+  dashCooldownMin: 0.6
   dashInvulnerability: 0.22
   maxLives: 3
   hurtInvulnerability: 1.2
   knockbackDamping: 10
   startBalls: 2
   maxBalls: 3
-  pickupRadius: 1.1
+  pickupRadius: 1.5
+  grabRadius: 2.5
+  grabBlockRadius: 5
+  lostBallReturnDelay: 1.5
   throwHeight: 1.1
   throwForwardOffset: 0.6
   tapThreshold: 0.15
@@ -45,10 +49,34 @@ MonoBehaviour:
   candleCatchHeight: 3.2
   catchHeal: 1
   earlyCatchHeal: 0
+  catchHealCooldown: 10
+  strongCatchPush: 15
+  heavyKnockdown: 0.8
+  heavyPush: 12
   fumbleBounce: {x: 2.5, y: 3.5}
   tackleRadius: 1.1
   tackleKnockback: 14
+  tackleStun: 0.8
+  tackleCooldown: 0.8
   freezeTimeScale: 0.3
+  dominoRadius: 2.3
+  dominoDelay: 0.08
+  dominoKnockback: 8
+  gazeHalfAngle: 35
+  whistleRadius: 6
+  secondWindInvulnerability: 2
+  dashCatchRadius: 1.3
+  dodgeTimeScale: 0.3
+  dodgeSlowTime: 0.5
+  darkSlowTime: 2
+  darkSlowMultiplier: 0.55
+  flashlightBattery: 3
+  flashlightRecharge: 8
+  flashlightRange: 9
+  flashlightHalfAngle: 26
+  flashlightBurnInterval: 0.5
+  flashlightCardBattery: 2
+  flashlightCardRange: 3
   aimPlaneHeight: 0.8
   stickDeadzone: 0.25
   autoAimRange: 18

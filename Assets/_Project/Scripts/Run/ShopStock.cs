@@ -13,11 +13,14 @@ namespace Bouncer.Run
         NotEnoughCoins,
         /// <summary>Нечего покупать: жвачка продана, сердца полные и т.п.</summary>
         Unavailable,
+        /// <summary>Карманы полны: сначала продать карточку.</summary>
+        PocketsFull,
     }
 
     /// <summary>
-    /// Витрина ларька «Союзпечать» на одну стоянку: жвачки с видимыми вкладышами по цене их редкости,
-    /// перебор витрины (каждый раз дороже), замок (жвачка ждёт в следующем ларьке), лимонад и бутерброд.
+    /// Витрина ларька «Союзпечать» на одну стоянку: жвачки с видимыми вкладышами по цене их редкости
+    /// (каждая покупка делает следующие дороже), перебор витрины (каждый раз дороже), замок (жвачка ждёт
+    /// в следующем ларьке), лимонад и бутерброд, продажа карточки из кармана за полцены.
     /// Монетки — в <see cref="RunState"/>, отложенные жвачки — в <see cref="RunCards.Locked"/>.
     /// </summary>
     public sealed class ShopStock
@@ -37,6 +40,7 @@ namespace Bouncer.Run
         readonly int _arenaIndex;
         readonly List<Slot> _slots = new();
         int _rerolls;
+        int _purchases;
 
         public IReadOnlyList<Slot> Slots => _slots;
         /// <summary>Цена перебора: «Шпаргалка» делает первые переборы в этом ларьке бесплатными.</summary>
@@ -48,8 +52,11 @@ namespace Bouncer.Run
                 return _rerolls < free ? 0 : _deck.rerollPrice + _deck.rerollStep * (_rerolls - free);
             }
         }
-        public int LemonadePrice => _deck.lemonadePrice;
-        public int SandwichPrice => _deck.sandwichPrice;
+        public int LemonadePrice => _deck.HealPrice(_deck.lemonadePrice, _arenaIndex);
+        public int SandwichPrice => _deck.HealPrice(_deck.sandwichPrice, _arenaIndex);
+        public PlayerCards Customer => _cards;
+        /// <summary>Сколько дадут за карточку из кармана.</summary>
+        public int SellPriceOf(UpgradeCard card) => _deck.SellPrice(card, _arenaIndex);
         public bool HeartsFull => _cards.Player.Health.Current >= _cards.Player.Health.Max;
 
         /// <summary>Витрина или цены изменились.</summary>
@@ -72,12 +79,29 @@ namespace Bouncer.Run
             var slot = _slots[index];
             if (slot.Card == null || slot.Sold || !_cards.CanOffer(slot.Card))
                 return PurchaseResult.Unavailable;
+            if (_cards.PocketsFullFor(slot.Card))
+                return PurchaseResult.PocketsFull;
             if (!RunState.TrySpend(slot.Price))
                 return PurchaseResult.NotEnoughCoins;
             slot.Sold = true;
             slot.Locked = false;
             RunCards.Locked.Remove(slot.Card);
             _cards.Take(slot.Card);
+            _purchases++;
+            UpdatePrices();
+            GameEvents.PlaySound(SoundCue.Purchase, Vector3.zero);
+            Changed?.Invoke();
+            return PurchaseResult.Ok;
+        }
+
+        /// <summary>Продать карточку из кармана: монетки за неё, карточка возвращается в колоду.</summary>
+        public PurchaseResult Sell(UpgradeCard card)
+        {
+            if (!card || !_cards.Owns(card) || !card.TakesPocket || _cards.IsAbsorbed(card))
+                return PurchaseResult.Unavailable;
+            int price = SellPriceOf(card);
+            _cards.Discard(card);
+            RunState.AddCoins(price);
             GameEvents.PlaySound(SoundCue.Purchase, Vector3.zero);
             Changed?.Invoke();
             return PurchaseResult.Ok;
@@ -173,9 +197,15 @@ namespace Bouncer.Run
                 slot.Sold = false;
                 next++;
             }
-            foreach (var slot in _slots)
-                slot.Price = slot.Card ? _deck.PriceOf(slot.Card.rarity, _arenaIndex) : 0;
+            UpdatePrices();
             s_rolled.Clear();
+        }
+
+        void UpdatePrices()
+        {
+            foreach (var slot in _slots)
+                if (!slot.Sold)
+                    slot.Price = slot.Card ? _deck.PriceOf(slot.Card.rarity, _arenaIndex, _purchases) : 0;
         }
     }
 }

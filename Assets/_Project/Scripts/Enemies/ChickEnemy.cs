@@ -81,7 +81,7 @@ namespace Bouncer.Enemies
         public void ApplyDefinition()
         {
             _rb.mass = definition.mass;
-            _health.Configure(definition.hitsToKill, 0f);
+            _health.Configure(EnemyScaling.Hits(definition.hitsToKill), 0f);
         }
 
         public void OnSpawned()
@@ -151,7 +151,7 @@ namespace Bouncer.Enemies
                             _direction = toTarget.normalized;
                     }
                     Face(_direction, dt);
-                    Vector3 step = _direction * definition.runSpeed;
+                    Vector3 step = _direction * (definition.runSpeed * _self.SpeedMultiplier);
                     _rb.linearVelocity = new Vector3(step.x, _rb.linearVelocity.y, step.z);
                     if (_stateTime >= definition.maxRunTime || HitsWall(dt) || NearPlayer(target))
                         Explode(Team.Enemy);
@@ -160,7 +160,7 @@ namespace Bouncer.Enemies
         }
 
         bool HitsWall(float dt) =>
-            Physics.SphereCast(_rb.position + Vector3.up * 0.35f, 0.25f, _direction, out _, definition.runSpeed * dt + 0.15f,
+            Physics.SphereCast(_rb.position + Vector3.up * 0.35f, 0.25f, _direction, out _, definition.runSpeed * _self.SpeedMultiplier * dt + 0.15f,
                 Layers.EnvironmentMask, QueryTriggerInteraction.Ignore);
 
         bool NearPlayer(Targetable target)

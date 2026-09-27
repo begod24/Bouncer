@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fac8fe698972e4d46be0450aa56c8152, type: 3}
+  m_Name: Arena_Bazaar
+  m_EditorClassIdentifier: Bouncer.Run::Bouncer.Run.ArenaDefinition
+  sceneName: Bazaar
+  title:
+    m_TableReference:
+      m_TableCollectionName: UI
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: arena.bazaar
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  introHint:
+    m_TableReference:
+      m_TableCollectionName: 
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  wave: {fileID: 11400000, guid: 1d7c04c06d5da4ffc817e5c72d4851ac, type: 2}
+  timeOfDay:
+  - {fileID: 11400000, guid: 2b9cd486f59314604b346d7e4f9dd3e8, type: 2}
+  - {fileID: 11400000, guid: cd4069f6b5eac4375aca27b8f0ff61a2, type: 2}
+  goal: 0
+  kiosk: 1
+  arrivalLabel:
+    m_TableReference:
+      m_TableCollectionName: UI
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: exit.bazaar
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  enemyHitsMultiplier: 1.5
+  elitePortfolios: 1
+  portfolioFinds: 1
+  findLemonade: {fileID: 6283736896973188395, guid: de3d569ea533f450a94e6fa14799721c, type: 3}
+  findCoins: 12
+  portfolioWindow: {x: 0.3, y: 0.6}
+  weatherChance: 0.3
+  weathers: 010000000200000003000000
+  references:
+    version: 2
+    RefIds: []

@@ -41,7 +41,7 @@ namespace Bouncer.Player
         public int ArenaHeal;
         /// <summary>«Резиновые сапоги»: песок и лужи не замедляют.</summary>
         public bool IgnoreGround;
-        /// <summary>«Кувырок»: рывок сквозь вражеский мяч ловит его.</summary>
+        /// <summary>«Кувырок»: мяч или удар, прошедший рядом во время рывка, — уворот в последний момент.</summary>
         public bool DashCatch;
         /// <summary>«Шпаргалка»: столько переборов витрины в каждом ларьке бесплатно.</summary>
         public int FreeRerolls;
@@ -56,5 +56,35 @@ namespace Bouncer.Player
         public event Action Changed;
 
         public void NotifyChanged() => Changed?.Invoke();
+
+        /// <summary>Как в начале прогулки: без карточек. Нужно, чтобы выкинутая из кармана карточка перестала действовать.</summary>
+        public void Reset()
+        {
+            MoveSpeed = 1f;
+            DashDistance = 1f;
+            DashCooldown = 1f;
+            CatchWindow = 1f;
+            CatchRadius = 1f;
+            PickupRadius = 1f;
+            ExtraBalls = 0;
+            BonusDamage = 0;
+            TackleDamage = 0;
+            CatchFreeze = 0f;
+            DominoDamage = 0;
+            CoinInterest = 0;
+            LidCooldown = 0f;
+            MirrorAngle = 0f;
+            LanternRadius = 0f;
+            WhistleFreeze = 0f;
+            SecondWind = false;
+            ArenaHeal = 0;
+            IgnoreGround = false;
+            DashCatch = false;
+            FreeRerolls = 0;
+            ExtraChoices = 0;
+            Perks = default;
+            CatchPerks = default;
+            HasCatchPerks = false;
+        }
     }
 }

@@ -62,7 +62,7 @@ namespace Bouncer.Enemies
         public void ApplyDefinition()
         {
             _rb.mass = definition.mass;
-            _health.Configure(definition.hitsToKill, 0f);
+            _health.Configure(EnemyScaling.Hits(definition.hitsToKill), 0f);
         }
 
         public void OnSpawned()
@@ -125,7 +125,7 @@ namespace Bouncer.Enemies
                         break;
                     }
                     // Рядом с вожаком (пупс в чепчике) рой бегает быстрее.
-                    float speed = definition.moveSpeed * SwarmLeader.SpeedMultiplierAt(_rb.position);
+                    float speed = definition.moveSpeed * _self.SpeedMultiplier * SwarmLeader.SpeedMultiplierAt(_rb.position);
                     Vector3 desired = ChaseDirection(targetDirection, distance)
                                       * (speed * GroundZone.MoveMultiplierAt(_rb.position) * GumSpot.EnemyMoveMultiplierAt(_rb.position))
                                       + Separation() * definition.separationStrength;
@@ -222,7 +222,7 @@ namespace Bouncer.Enemies
 
         // ---------- Тело ----------
 
-        void Drive(Vector3 desired) => Drive(desired, definition.moveSpeed);
+        void Drive(Vector3 desired) => Drive(desired, definition.moveSpeed * _self.SpeedMultiplier);
 
         void Drive(Vector3 desired, float maxSpeed)
         {

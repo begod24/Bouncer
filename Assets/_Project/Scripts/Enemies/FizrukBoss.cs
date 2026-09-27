@@ -30,7 +30,18 @@ namespace Bouncer.Enemies
             Aim,
             Whistle,
             Penalty,
+            /// <summary>Финт: замахнулся, но не бросил — сейчас бросит по-настоящему.</summary>
+            Feint,
         }
+
+        /// <summary>Сколько длится финт, с.</summary>
+        const float FeintTime = 0.35f;
+        /// <summary>После «Штрафного» и «Мяча в игре» Физрук открыт столько секунд.</summary>
+        const float OpenAfterRule = 1.4f;
+        /// <summary>Каждый какой сильный бросок — медбол.</summary>
+        const int HeavyEvery = 3;
+        const float CurveChance = 0.35f;
+        const float CurveOffset = 22f;
 
         public enum Rule
         {
@@ -64,6 +75,8 @@ namespace Bouncer.Enemies
 
         [Header("Мячи")]
         [SerializeField] Ball ballPrefab;
+        [Tooltip("Медбол: каждый третий сильный бросок. Пойманный сбивает с ног")]
+        [SerializeField] Ball medicineBallPrefab;
         [Tooltip("Откуда вылетают мячи")]
         [SerializeField] Transform hand;
         [SerializeField] GiantBall giantBallPrefab;
@@ -95,8 +108,17 @@ namespace Bouncer.Enemies
         Quaternion _bodyRest, _headRest, _armLRest, _armRRest, _legLRest, _legRRest;
         Vector3 _bodyEuler, _headEuler, _armLEuler, _armREuler, _legLEuler, _legREuler;
         float _walkPhase;
+        readonly BossArmor _armor = new();
+        float _openUntil;
+        bool _feinted;
+        int _strongThrows;
 
         public FizrukDefinition Definition => definition;
+        /// <summary>
+        /// Физрук открыт (попадания засчитываются в полтора раза): отдыхает после удара, свистит, стоит на «Замри!»
+        /// и сразу после «Штрафного» и «Мяча в игре». В остальное время держит удар (вполовину).
+        /// </summary>
+        public bool IsOpen => _state is State.Recover or State.Whistle || _self.IsFrozen || Time.time < _openUntil;
         bool Angry => _health.Current <= _health.Max * definition.angryAt;
         Vector3 HandPosition => hand ? hand.position : transform.position + Vector3.up * 2.6f + transform.forward * 0.6f;
 
@@ -124,7 +146,7 @@ namespace Bouncer.Enemies
             _agent.speed = definition.moveSpeed;
             _agent.acceleration = 10f;
             _agent.stoppingDistance = definition.attackRange * 0.8f;
-            _health.Configure(definition.hitsToKill, 0f);
+            _health.Configure(EnemyScaling.BossHits(definition.hitsToKill), 0f);
         }
 
         public void OnSpawned()
@@ -139,6 +161,10 @@ namespace Bouncer.Enemies
             _bag.Clear();
             _hasLastRule = false;
             _nextSubstitute = 0;
+            _armor.Reset();
+            _openUntil = 0f;
+            _feinted = false;
+            _strongThrows = 0;
             if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 3f, NavMesh.AllAreas))
                 _agent.Warp(hit.position);
             Enter(State.Chase);
@@ -189,7 +215,7 @@ namespace Bouncer.Enemies
                     _agent.isStopped = !hasTarget;
                     if (!hasTarget)
                         break;
-                    _agent.speed = definition.moveSpeed * GumSpot.EnemyMoveMultiplierAt(transform.position);
+                    _agent.speed = definition.moveSpeed * _self.SpeedMultiplier * GumSpot.EnemyMoveMultiplierAt(transform.position);
                     Vector3 velocity = Flat(_agent.velocity);
                     Face(velocity.sqrMagnitude > 0.3f ? velocity : toTarget, dt);
                     if (distance <= definition.attackRange && Time.time >= _nextAttack)
@@ -238,10 +264,28 @@ namespace Bouncer.Enemies
                         Face(toTarget, dt);
                     if (_stateTime >= definition.throwWindup)
                     {
+                        // Финт: замах есть, мяча нет — и сразу настоящий бросок с короткого замаха.
+                        if (!_feinted && hasTarget && Random.value < Danger.FeintChance)
+                        {
+                            _feinted = true;
+                            Enter(State.Feint);
+                            break;
+                        }
+                        _feinted = false;
                         if (hasTarget)
                             ThrowStrong(_target);
                         _nextThrow = Time.time + definition.throwCooldown;
                         Enter(State.Chase);
+                    }
+                    break;
+
+                case State.Feint:
+                    if (hasTarget)
+                        Face(toTarget, dt);
+                    if (_stateTime >= FeintTime)
+                    {
+                        Enter(State.Aim);
+                        _stateTime = definition.throwWindup * 0.45f;
                     }
                     break;
 
@@ -259,6 +303,7 @@ namespace Bouncer.Enemies
                     {
                         if (hasTarget)
                             ThrowFan(_target);
+                        _openUntil = Time.time + OpenAfterRule;
                         Enter(State.Chase);
                     }
                     break;
@@ -357,6 +402,7 @@ namespace Bouncer.Enemies
                 direction = gate.Inward;
             var ball = PoolService.Spawn(giantBallPrefab, new Vector3(position.x, 0f, position.z), Quaternion.identity);
             ball.Launch(direction);
+            _openUntil = Time.time + OpenAfterRule;
         }
 
         void CallSubstitutes()
@@ -403,11 +449,26 @@ namespace Bouncer.Enemies
             }
         }
 
-        /// <summary>Сильный мяч: удержит только идеальная ловля.</summary>
-        void ThrowStrong(Targetable target) =>
-            ThrowAt(target, 0f, definition.ballSpeed, definition.ballGravity, HitFlags.Charged, SoundCue.ThrowCharged);
+        /// <summary>
+        /// Сильный мяч: удержит только идеальная ловля. Каждый третий — медбол (пойманный сбивает с ног),
+        /// иногда — кручёный (летит дугой).
+        /// </summary>
+        void ThrowStrong(Targetable target)
+        {
+            _strongThrows++;
+            bool heavy = _strongThrows % HeavyEvery == 0;
+            if (heavy)
+            {
+                ThrowAt(target, 0f, definition.ballSpeed * 0.8f, definition.ballGravity, HitFlags.Charged | HitFlags.Heavy,
+                    SoundCue.ThrowCharged, medicineBallPrefab ? medicineBallPrefab : ballPrefab);
+                return;
+            }
+            bool curve = Random.value < CurveChance;
+            ThrowAt(target, 0f, definition.ballSpeed, definition.ballGravity, HitFlags.Charged, SoundCue.ThrowCharged,
+                null, curve);
+        }
 
-        /// <summary>«Штрафной!»: веер обычных мячей — их можно поймать.</summary>
+        /// <summary>«Штрафной!»: веер мячей — обычные можно поймать, через один летят ёжики.</summary>
         void ThrowFan(Targetable target)
         {
             int count = Mathf.Max(1, definition.penaltyBalls);
@@ -415,14 +476,16 @@ namespace Bouncer.Enemies
             {
                 float t = count == 1 ? 0.5f : i / (count - 1f);
                 float angle = Mathf.Lerp(-definition.penaltySpread * 0.5f, definition.penaltySpread * 0.5f, t);
-                ThrowAt(target, angle, definition.penaltySpeed, definition.ballGravity, HitFlags.None,
+                ThrowAt(target, angle, definition.penaltySpeed, definition.ballGravity, i % 2 == 1 ? HitFlags.Spiky : HitFlags.None,
                     i == 0 ? SoundCue.SoldierThrow : (SoundCue?)null);
             }
         }
 
-        void ThrowAt(Targetable target, float angle, float speed, float gravity, HitFlags flags, SoundCue? cue)
+        void ThrowAt(Targetable target, float angle, float speed, float gravity, HitFlags flags, SoundCue? cue,
+            Ball prefab = null, bool curve = false)
         {
-            if (ballPrefab == null || target == null)
+            prefab = prefab ? prefab : ballPrefab;
+            if (prefab == null || target == null)
                 return;
             Vector3 origin = HandPosition;
             Vector3 aim = target.AimPoint;
@@ -434,14 +497,23 @@ namespace Bouncer.Enemies
                 return;
             float time = distance / speed;
             float up = (aim.y - origin.y + 0.5f * gravity * time * time) / time;
+            // Кручёный: вылетает в сторону и дугой заворачивает к цели.
+            var perks = default(BallPerks);
+            if (curve)
+            {
+                float side = Random.value < 0.5f ? -1f : 1f;
+                angle += CurveOffset * side;
+                perks.curve = -2f * CurveOffset * side / Mathf.Max(0.2f, time);
+            }
             Vector3 direction = Quaternion.Euler(0f, angle, 0f) * (flat / distance);
-            var ball = PoolService.Spawn(ballPrefab, origin, Quaternion.identity);
+            var ball = PoolService.Spawn(prefab, origin, Quaternion.identity);
             ball.Launch(new BallThrow
             {
                 Origin = origin,
                 Direction = direction,
                 Team = Team.Enemy,
                 Thrower = gameObject,
+                Perks = perks,
                 Stats = new ThrowStats
                 {
                     Speed = speed,
@@ -502,12 +574,15 @@ namespace Bouncer.Enemies
         {
             if (_health.IsDead)
                 return false;
+            bool open = IsOpen;
             bool strong = hit.Has(HitFlags.Charged);
             GameFeel.Shake(strong ? 0.3f : 0.12f);
-            if (hitFlash)
-                hitFlash.Flash(Color.white, 0.12f);
-            GameEvents.PlaySound(strong ? SoundCue.EnemyHitStrong : SoundCue.EnemyHit, hit.Point);
-            _health.TryDamage(hit);
+            BossArmor.Flash(hitFlash, open);
+            GameEvents.PlaySound(strong || open ? SoundCue.EnemyHitStrong : SoundCue.EnemyHit, hit.Point);
+            var counted = hit;
+            counted.Damage = _armor.Take(hit.Damage, open);
+            if (counted.Damage > 0)
+                _health.TryDamage(counted);
             return true;
         }
 
@@ -567,6 +642,12 @@ namespace Bouncer.Enemies
                         follow = 20f;
                         break;
                     }
+                    case State.Feint:
+                        // Рука «бросила» вперёд, а мяча нет.
+                        bodyE = new Vector3(10f, 12f, 0f);
+                        armRE = new Vector3(-40f, 0f, 10f);
+                        follow = 45f;
+                        break;
                     case State.Whistle:
                         // Свисток у рта, голова запрокинута — сейчас засвистит.
                         armRE = new Vector3(-135f, 0f, -35f);

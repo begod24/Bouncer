@@ -18,6 +18,8 @@ namespace Bouncer.Player
         public float dashDistance = 4.5f;
         public float dashDuration = 0.16f;
         public float dashCooldown = 0.9f;
+        [Tooltip("Перезарядка рывка не короче этого, как бы карточки её ни сокращали")]
+        public float dashCooldownMin = 0.6f;
         [Tooltip("Сколько секунд от начала рывка мячи и удары проходят сквозь игрока")]
         public float dashInvulnerability = 0.22f;
 
@@ -28,9 +30,17 @@ namespace Bouncer.Player
         public float knockbackDamping = 10f;
 
         [Header("Мячи")]
+        [Tooltip("Больше не используется: на арене игрок сразу со всеми своими мячами (maxBalls)")]
         [Min(0)] public int startBalls = 2;
+        [Tooltip("Сколько своих мячей у игрока (и сколько помещается в руки)")]
         [Min(1)] public int maxBalls = 3;
-        public float pickupRadius = 1.1f;
+        public float pickupRadius = 1.5f;
+        [Tooltip("Хват ПКМ: лежащий мяч ближе этого (м) летит в руки, если рядом нет мяча, который можно поймать")]
+        public float grabRadius = 2.5f;
+        [Tooltip("Хват не срабатывает, если ближе этого (м) летит мяч, который можно поймать: тогда ПКМ — ловля")]
+        public float grabBlockRadius = 5f;
+        [Tooltip("Свой мяч, пропавший не в руках (выпал за арену и т.п.), возвращается через столько секунд")]
+        public float lostBallReturnDelay = 1.5f;
         [Tooltip("Высота, с которой вылетает мяч")]
         public float throwHeight = 1.1f;
         public float throwForwardOffset = 0.6f;
@@ -64,6 +74,14 @@ namespace Bouncer.Player
         [Min(0)] public int catchHeal = 1;
         [Tooltip("Сколько жизней даёт мяч врага, пойманный рано (не идеально)")]
         [Min(0)] public int earlyCatchHeal;
+        [Tooltip("Идеальная ловля лечит не чаще раза в столько секунд")]
+        public float catchHealCooldown = 10f;
+        [Tooltip("Сильный мяч, пойманный идеально, отталкивает назад: скорость отброса (15 ≈ 1,5 м)")]
+        public float strongCatchPush = 15f;
+        [Tooltip("Медбол Физрука: пойманный сбивает с ног на столько секунд")]
+        public float heavyKnockdown = 0.8f;
+        [Tooltip("Медбол: скорость отброса пойманного")]
+        public float heavyPush = 12f;
         [Tooltip("С какой скоростью сильный мяч, выбитый из рук, отскакивает вперёд и вверх")]
         public Vector2 fumbleBounce = new(2.5f, 3.5f);
 
@@ -72,6 +90,10 @@ namespace Bouncer.Player
         public float tackleRadius = 1.1f;
         [Tooltip("Подкат: сила отброса сбитого врага")]
         public float tackleKnockback = 14f;
+        [Tooltip("Подкат: сбитый враг оглушён столько секунд (урона нет)")]
+        public float tackleStun = 0.8f;
+        [Tooltip("Подкат срабатывает не чаще раза в столько секунд")]
+        public float tackleCooldown = 0.8f;
         [Tooltip("«Замри!»: скорость времени вокруг после удачной ловли")]
         [Range(0.05f, 1f)] public float freezeTimeScale = 0.3f;
         [Tooltip("«Домино»: на каком расстоянии выбитый враг сбивает соседей, м")]
@@ -88,8 +110,31 @@ namespace Bouncer.Player
         public float whistleRadius = 6f;
         [Tooltip("«Второе дыхание»: сколько секунд игрок неуязвим после спасения")]
         public float secondWindInvulnerability = 2f;
-        [Tooltip("«Кувырок»: на каком расстоянии рывок подхватывает вражеский мяч, м")]
+        [Tooltip("«Кувырок»: мяч врага ближе этого (м) во время рывка — уворот в последний момент")]
         public float dashCatchRadius = 1.3f;
+        [Tooltip("«Кувырок»: скорость времени после уворота")]
+        [Range(0.05f, 1f)] public float dodgeTimeScale = 0.3f;
+        [Tooltip("«Кувырок»: сколько секунд длится замедление после уворота")]
+        public float dodgeSlowTime = 0.5f;
+        [Tooltip("Тёмный мяч Бабая: попадание замедляет на столько секунд…")]
+        public float darkSlowTime = 2f;
+        [Tooltip("…до такой доли скорости")]
+        [Range(0.1f, 1f)] public float darkSlowMultiplier = 0.55f;
+
+        [Header("Наводящий фонарик (тёмные арены)")]
+        [Tooltip("Сколько секунд луч светит на полном заряде")]
+        public float flashlightBattery = 3f;
+        [Tooltip("За сколько секунд заряд восстанавливается с нуля")]
+        public float flashlightRecharge = 8f;
+        public float flashlightRange = 9f;
+        [Tooltip("Половина угла луча, градусы")]
+        public float flashlightHalfAngle = 26f;
+        [Tooltip("Тень в луче теряет попадание раз в столько секунд")]
+        public float flashlightBurnInterval = 0.5f;
+        [Tooltip("Карточка «Фонарик»: заряд дольше на столько секунд…")]
+        public float flashlightCardBattery = 2f;
+        [Tooltip("…и луч длиннее на столько метров")]
+        public float flashlightCardRange = 3f;
 
         [Header("Прицел")]
         [Tooltip("Высота плоскости, на которую проецируется курсор (уровень груди врагов)")]

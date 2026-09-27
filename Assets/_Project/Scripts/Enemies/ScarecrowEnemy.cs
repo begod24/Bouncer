@@ -79,7 +79,7 @@ namespace Bouncer.Enemies
             // Двигается только прыжками (agent.Move), агент нужен для NavMesh и обхода соседей.
             _agent.speed = 0.01f;
             _agent.acceleration = 8f;
-            _health.Configure(definition.hitsToKill, 0f);
+            _health.Configure(EnemyScaling.Hits(definition.hitsToKill), 0f);
         }
 
         public void OnSpawned()
@@ -274,7 +274,8 @@ namespace Bouncer.Enemies
                     Gravity = definition.throwGravity,
                     Damage = definition.throwDamage,
                     Knockback = definition.throwKnockback,
-                    Flags = definition.throwStrong ? HitFlags.Charged : HitFlags.None,
+                    // Чучело в ушанке возвращает мяч в репьях — колючим, ловить нельзя.
+                    Flags = definition.throwStrong ? HitFlags.Charged | HitFlags.Spiky : HitFlags.None,
                 },
             });
             GameEvents.PlaySound(definition.throwStrong ? SoundCue.ThrowCharged : SoundCue.SoldierThrow, origin);

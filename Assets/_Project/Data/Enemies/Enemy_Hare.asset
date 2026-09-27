@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da01cc2b815b64dec8e2de60cfd473dc, type: 3}
+  m_Name: Enemy_Hare
+  m_EditorClassIdentifier: Bouncer.Enemies::Bouncer.Enemies.HareDefinition
+  displayName: "\u0411\u043E\u043B\u044C\u0448\u043E\u0439 \u043F\u043B\u044E\u0448\u0435\u0432\u044B\u0439
+    \u0437\u0430\u044F\u0446"
+  hitsToKill: 60
+  hopSpeed: 3.2
+  turnSpeed: 180
+  hopRate: 1.6
+  slamCooldown: 5
+  firstSlamDelay: 3
+  crouchTime: 0.7
+  jumpTime: 1.1
+  jumpHeight: 5
+  slamRadius: 4
+  slamDamage: 1
+  slamKnockback: 14
+  stuckTime: 1.4
+  cloudsPerSlam: 3
+  cloudsPerSlamRipped: 5
+  cloudRadius: 2.2
+  cloudLife: 5
+  cloudSlow: 0.55
+  carrotCooldown: 7
+  carrotWindup: 0.5
+  carrotRange: 13
+  carrotFlightTime: 2.2
+  carrotDamage: 1
+  carrotKnockback: 8
+  carrotRadius: 0.8
+  whipRange: 3.2
+  whipHalfAngle: 65
+  whipWindup: 0.45
+  whipCooldown: 2.5
+  whipDamage: 1
+  whipKnockback: 16
+  ripAt: 0.5
+  rippedSpeedMultiplier: 1.3
+  rippedCooldownMultiplier: 0.7
+  trailCloudInterval: 3.5
+  debrisForce: 7

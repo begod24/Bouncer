@@ -12,7 +12,8 @@ namespace Bouncer.Run
     /// Арена в прогулке. Узнаёт по <see cref="RunState.ArenaIndex"/>, какую арену играет сцена, и настраивает её:
     /// волны, время суток, ларёк, стрелку дальше. Следит за условием победы; когда оно выполнено — оставшиеся враги
     /// исчезают, монетки слетаются к игроку, после босса предлагается карточка, открывается ларёк и появляется
-    /// стрелка на следующую арену. На последней арене победа заканчивает прогулку.
+    /// стрелка на следующую арену (на развилке — две, по одной на каждую арену этапа). На последней арене победа
+    /// заканчивает прогулку.
     /// Ещё раскладывает на арене найденный портфель.
     /// </summary>
     [DefaultExecutionOrder(-80)]
@@ -28,6 +29,8 @@ namespace Bouncer.Run
         [SerializeField] LootDropper loot;
         [SerializeField] Kiosk kiosk;
         [SerializeField] ArenaExit exit;
+        [Tooltip("Вторая стрелка — на другую арену развилки (если на следующем этапе она есть)")]
+        [SerializeField] ArenaExit forkExit;
         [Tooltip("Где может лежать найденный портфель. Пусто — точки спавна врагов")]
         [SerializeField] Transform[] portfolioSpots;
         [Tooltip("Портфель не кладётся ближе этого к игроку, м")]
@@ -41,6 +44,8 @@ namespace Bouncer.Run
         public RunDefinition Run => run;
         public ArenaDefinition Arena { get; private set; }
         public int ArenaIndex { get; private set; }
+        /// <summary>Какая арена этапа играется: 0 — основная, 1 и дальше — развилки.</summary>
+        public int ArenaVariant { get; private set; }
         public bool IsLastArena => run == null || run.IsLast(ArenaIndex);
         public ArenaDefinition NextArena => run ? run.Get(ArenaIndex + 1) : null;
         /// <summary>Арена пройдена (ларёк и стрелка открыты).</summary>
@@ -49,8 +54,10 @@ namespace Bouncer.Run
         public WeatherKind Weather { get; private set; }
         /// <summary>Секунды боя на арене — по часам волн.</summary>
         public float ArenaTime => spawner ? spawner.WaveTime : GameSession.Instance ? GameSession.Instance.SurvivalTime : 0f;
-        /// <summary>Сколько длится бой по волнам арены, с (финал: время до зова мамы).</summary>
-        public float ArenaDuration => Arena != null && Arena.wave ? Arena.wave.duration : 0f;
+        /// <summary>Сколько длится бой по волнам арены, с (финал: время до зова мамы; на 5-й опасности зовёт позже).</summary>
+        public float ArenaDuration => Arena != null && Arena.wave
+            ? Arena.wave.duration + (Arena.goal == ArenaGoal.SurviveUntilCall ? Danger.FinalExtraTime : 0f)
+            : 0f;
         public Kiosk Kiosk => kiosk;
         public ArenaExit Exit => exit;
 
@@ -63,18 +70,22 @@ namespace Bouncer.Run
 
             string scene = SceneManager.GetActiveScene().name;
             int index = RunState.Active ? RunState.ArenaIndex : defaultArena;
-            var candidate = run.Get(index);
+            int variant = RunState.Active ? RunState.ArenaVariant : 0;
+            var candidate = run.Get(index, variant);
             if (candidate == null || candidate.sceneName != scene)
             {
                 // Сцену запустили саму по себе (в редакторе): прогулка начинается с неё.
-                index = run.IndexOfScene(scene);
-                if (index < 0)
+                if (!run.FindScene(scene, out index, out variant))
+                {
                     index = Mathf.Clamp(defaultArena, 0, run.Count - 1);
-                if (RunState.Active && index != RunState.ArenaIndex)
-                    RunState.BeginAt(index);
+                    variant = 0;
+                }
+                if (RunState.Active && (index != RunState.ArenaIndex || variant != RunState.ArenaVariant))
+                    RunState.BeginAt(index, variant);
             }
             ArenaIndex = index;
-            Arena = run.Get(index);
+            ArenaVariant = variant;
+            Arena = run.Get(index, variant);
             Apply();
         }
 
@@ -99,12 +110,17 @@ namespace Bouncer.Run
         {
             if (Arena == null)
                 return;
+            EnemyScaling.ArenaHits = Arena.enemyHitsMultiplier;
+            if (loot)
+                loot.ElitePortfolioLimit = Arena.elitePortfolios;
             if (spawner && Arena.wave)
                 spawner.Wave = Arena.wave;
             if (timeOfDay && Arena.timeOfDay != null && Arena.timeOfDay.Length > 0)
                 timeOfDay.Configure(Arena.timeOfDay, Arena.wave ? Arena.wave.duration : 0f);
             if (exit)
                 exit.Hide();
+            if (forkExit)
+                forkExit.Hide();
             Weather = RollWeather();
             if (weather)
                 weather.Begin(Weather);
@@ -137,7 +153,7 @@ namespace Bouncer.Run
                 PlaceFoundPortfolio();
             }
 
-            float duration = Arena.wave ? Arena.wave.duration : 0f;
+            float duration = ArenaDuration;
             switch (Arena.goal)
             {
                 case ArenaGoal.SurviveAndClear:
@@ -190,21 +206,33 @@ namespace Bouncer.Run
             if (kiosk && Arena.kiosk && _player)
                 kiosk.Open(_player, ArenaIndex);
             if (exit)
+                exit.Show(ArrivalLabel(NextArena), 0);
+            // Развилка: вторая стрелка ведёт на другую арену следующего этапа.
+            if (forkExit)
             {
-                var next = NextArena;
-                string label = next != null && !next.arrivalLabel.IsEmpty ? next.arrivalLabel.GetLocalizedString() : "→";
-                exit.Show(label);
+                var fork = run ? run.Get(ArenaIndex + 1, 1) : null;
+                if (fork != null)
+                    forkExit.Show(ArrivalLabel(fork), 1);
+                else
+                    forkExit.Hide();
             }
         }
 
-        /// <summary>Игрок дошёл до стрелки: следующая арена. false — уйти сейчас нельзя.</summary>
-        public bool LeaveArena()
+        static string ArrivalLabel(ArenaDefinition next) =>
+            next != null && !next.arrivalLabel.IsEmpty ? next.arrivalLabel.GetLocalizedString() : "→";
+
+        /// <summary>
+        /// Игрок дошёл до стрелки: следующая арена (variant — по какой стрелке: 0 — основная, 1 — развилка).
+        /// false — уйти сейчас нельзя.
+        /// </summary>
+        public bool LeaveArena(int variant = 0)
         {
             var session = GameSession.Instance;
-            var next = NextArena;
+            var next = run ? run.Get(ArenaIndex + 1, variant) : null;
             if (!_complete || session == null || next == null || session.State != SessionState.Cleared)
                 return false;
             int lives = _player ? _player.Player.Health.Current : 0;
+            RunState.NextVariant = variant;
             session.LeaveArena(next.sceneName, lives);
             return true;
         }
@@ -232,7 +260,7 @@ namespace Bouncer.Run
             }
             if (best == null)
                 return;
-            loot.PlacePortfolio(best.position);
+            loot.PlaceFind(best.position, Arena.findLemonade, Arena.findCoins);
             GameEvents.PlaySound(SoundCue.Portfolio, best.position);
         }
     }

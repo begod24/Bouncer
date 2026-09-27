@@ -1,7 +1,10 @@
 {
     "name": "Bouncer.Editor",
     "rootNamespace": "Bouncer.EditorTools",
-    "references": [],
+    "references": [
+        "Unity.Localization",
+        "Unity.Localization.Editor"
+    ],
     "includePlatforms": [
         "Editor"
     ],

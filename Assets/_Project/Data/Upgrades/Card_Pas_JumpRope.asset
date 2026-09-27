@@ -34,9 +34,10 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: e6195deacfd2b4f9c990392d8d291ab7, type: 3}
   wrapperColor: {r: 0.95, g: 0.62, b: 0.3, a: 1}
   rarity: 0
-  maxStacks: 3
+  maxStacks: 2
   weight: 1
   requires: []
+  freePocket: 0
   moveSpeed: 0
   dashDistance: 0.3
   dashCooldown: -0.2

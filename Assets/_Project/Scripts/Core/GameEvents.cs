@@ -21,6 +21,8 @@ namespace Bouncer.Core
         public static event Action<SpawnRequest> SpawnRequested;
         /// <summary>Финал: мама позвала домой — открыт подъезд, сумеречные разбегаются.</summary>
         public static event Action MomCalled;
+        /// <summary>Прогулка кончилась: true — победа, false — игрока выбили.</summary>
+        public static event Action<bool> RunFinished;
 
         public static void RaiseEnemyKilled(GameObject enemy, in HitInfo hit) => EnemyKilled?.Invoke(enemy, hit);
         public static void RaisePlayerDied(GameObject player) => PlayerDied?.Invoke(player);
@@ -29,6 +31,7 @@ namespace Bouncer.Core
         public static void Announce(in Announcement announcement) => Announced?.Invoke(announcement);
         public static void RequestSpawn(in SpawnRequest request) => SpawnRequested?.Invoke(request);
         public static void RaiseMomCalled() => MomCalled?.Invoke();
+        public static void RaiseRunFinished(bool victory) => RunFinished?.Invoke(victory);
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()

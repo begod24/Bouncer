@@ -19,8 +19,15 @@ namespace Bouncer.Player
         float _dashEnd = float.NegativeInfinity;
         float _dashReadyAt;
         Vector3 _dashDirection;
+        float _slowUntil;
+        float _slowMultiplier = 1f;
+        float _downUntil;
 
         public bool IsDashing => Time.time < _dashEnd;
+        /// <summary>Сбит с ног (медбол): не бегает и не делает рывок.</summary>
+        public bool IsDown => Time.time < _downUntil;
+        /// <summary>Замедлен (тёмный мяч Бабая).</summary>
+        public bool IsSlowed => Time.time < _slowUntil;
         public bool IsDashInvulnerable => Time.time < _dashStart + _stats.dashInvulnerability;
         public bool DashReady => Time.time >= _dashReadyAt;
         /// <summary>Когда начался последний рывок (Time.time) — по нему видно, что рывок новый.</summary>
@@ -36,7 +43,7 @@ namespace Bouncer.Player
             }
         }
         public Vector3 Velocity => (IsDashing ? DashVelocity : _velocity) + _knockback;
-        float DashCooldown => _stats.dashCooldown * _mods.DashCooldown;
+        float DashCooldown => Mathf.Max(_stats.dashCooldownMin, _stats.dashCooldown * _mods.DashCooldown);
         Vector3 DashVelocity => _dashDirection * (_stats.dashDistance * _mods.DashDistance / Mathf.Max(0.01f, _stats.dashDuration));
 
         void Awake() => _controller = GetComponent<CharacterController>();
@@ -49,7 +56,7 @@ namespace Bouncer.Player
 
         public bool TryDash(Vector3 direction)
         {
-            if (!DashReady || IsDashing)
+            if (!DashReady || IsDashing || IsDown)
                 return false;
             direction.y = 0f;
             if (direction.sqrMagnitude < 0.01f)
@@ -72,7 +79,10 @@ namespace Bouncer.Player
 
             // Песок и лужи замедляют бег, но не рывок — им из песочницы и выбираются. В резиновых сапогах — не замедляют.
             float ground = _mods.IgnoreGround ? 1f : GroundZone.MoveMultiplierAt(transform.position);
-            Vector3 target = move * (_stats.moveSpeed * _mods.MoveSpeed * speedMultiplier * ground);
+            float slow = IsSlowed ? _slowMultiplier : 1f;
+            if (IsDown)
+                move = Vector3.zero;
+            Vector3 target = move * (_stats.moveSpeed * _mods.MoveSpeed * speedMultiplier * ground * slow);
             float rate = target.sqrMagnitude >= _velocity.sqrMagnitude ? _stats.acceleration : _stats.deceleration;
             _velocity = Vector3.MoveTowards(_velocity, target, rate * dt);
             _knockback = Vector3.Lerp(_knockback, Vector3.zero, 1f - Mathf.Exp(-_stats.knockbackDamping * dt));
@@ -99,6 +109,23 @@ namespace Bouncer.Player
         {
             velocity.y = 0f;
             _knockback += velocity;
+        }
+
+        /// <summary>Замедлить бег на время (берётся самое сильное из действующих).</summary>
+        public void Slow(float multiplier, float seconds)
+        {
+            if (!IsSlowed)
+                _slowMultiplier = 1f;
+            _slowMultiplier = Mathf.Min(_slowMultiplier, Mathf.Clamp01(multiplier));
+            _slowUntil = Mathf.Max(_slowUntil, Time.time + seconds);
+        }
+
+        /// <summary>Сбить с ног на время: стоит, рывка нет.</summary>
+        public void KnockDown(float seconds)
+        {
+            _downUntil = Mathf.Max(_downUntil, Time.time + seconds);
+            _velocity = Vector3.zero;
+            _dashEnd = float.NegativeInfinity;
         }
 
         public void Stop()

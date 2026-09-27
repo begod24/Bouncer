@@ -4,6 +4,7 @@
     "references": [
         "Bouncer.Core",
         "Bouncer.Balls",
+        "Bouncer.Player",
         "Unity.AI.Navigation",
         "Unity.Localization"
     ],

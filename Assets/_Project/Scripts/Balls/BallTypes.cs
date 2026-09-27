@@ -56,11 +56,15 @@ namespace Bouncer.Balls
         public bool twinSplit;
         [Tooltip("Гиря: урон по площади оглушает задетых на столько секунд. 0 — нет")]
         [Min(0f)] public float areaStun;
+        [Tooltip("Кручёный мяч: летит дугой, поворачивая на столько градусов в секунду (знак — в какую сторону). 0 — прямо")]
+        public float curve;
 
         /// <summary>
         /// Что достаётся мячу-двойнику: бьёт и летит так же (цепочка, площадь, отскоки, жвачка, змейка, стеночка,
-        /// рогатка, доводка, оглушение гири), но не взрывается и не возвращается в руки — иначе двойники
-        /// превращались бы в лишние мячи. Раскалывается двойник только с «Градом», и только один раз.
+        /// рогатка, оглушение гири), но не взрывается, не возвращается в руки и не доворачивает к врагам
+        /// («Глаз-алмаз» — только у основного мяча): иначе веер и раскол умножали бы всё сразу.
+        /// Прибавку к урону («Хулиганство») двойник тоже не получает — см. <see cref="ThrowStats.BonusDamage"/>.
+        /// Раскалывается двойник только с «Градом», и только один раз.
         /// </summary>
         public BallPerks ForTwin() => new()
         {
@@ -74,7 +78,6 @@ namespace Bouncer.Balls
             grazeRadius = grazeRadius,
             wallDamage = wallDamage,
             chargedPierce = chargedPierce,
-            homing = homing,
             areaStun = areaStun,
         };
 
@@ -102,7 +105,17 @@ namespace Bouncer.Balls
             bounceBlastDamage = Mathf.Max(a.bounceBlastDamage, b.bounceBlastDamage),
             twinSplit = a.twinSplit || b.twinSplit,
             areaStun = Mathf.Max(a.areaStun, b.areaStun),
+            curve = a.curve + b.curve,
         };
+    }
+
+    /// <summary>
+    /// Перехватчик мяча игрока до попадания (элитка-«Ловкач» ловит каждый третий). true — мяч забран,
+    /// попадания нет.
+    /// </summary>
+    public interface IBallInterceptor
+    {
+        bool TryIntercept(Ball ball);
     }
 
     /// <summary>Тот, кому мяч может вернуться в руки сам (бумеранг, мяч на резинке).</summary>
@@ -141,10 +154,21 @@ namespace Bouncer.Balls
         public float UpVelocity;
         public float Gravity;
         public int Damage;
+        /// <summary>Сколько из урона — прибавка карточек («Хулиганство»): двойникам она не достаётся.</summary>
+        public int BonusDamage;
         public float Knockback;
         public HitFlags Flags;
 
         public bool Has(HitFlags flag) => (Flags & flag) != 0;
+
+        /// <summary>Те же параметры, но без прибавки карточек — для двойников.</summary>
+        public ThrowStats WithoutBonus()
+        {
+            var stats = this;
+            stats.Damage = Mathf.Max(0, Damage - BonusDamage);
+            stats.BonusDamage = 0;
+            return stats;
+        }
     }
 
     public struct BallThrow
@@ -158,5 +182,13 @@ namespace Bouncer.Balls
         public BallPerks Perks;
         /// <summary>Мяч-двойник (веер теннисных, раскол): бьёт как обычный, но исчезает, коснувшись пола.</summary>
         public bool Phantom;
+        /// <summary>
+        /// Чей это мяч из запаса: игрок, который его бросил. Пусто у мячей врагов и у пойманных чужих —
+        /// такие исчезают, упав на землю. Мяч, который бросает враг, но он уже чей-то (чучело, мишка, мешок Бабая),
+        /// остаётся мячом хозяина: Launch не стирает владельца.
+        /// </summary>
+        public GameObject Owner;
+        /// <summary>Йо-йо: этот мяч — на нитке (он один), возвращается в руки после попадания.</summary>
+        public bool YoyoString;
     }
 }

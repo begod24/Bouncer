@@ -37,6 +37,7 @@ MonoBehaviour:
   maxStacks: 1
   weight: 1
   requires: []
+  freePocket: 1
   moveSpeed: 0
   dashDistance: 0
   dashCooldown: 0

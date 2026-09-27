@@ -17,3 +17,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a42301e7198f245bf8f9a95df8ee6f35, type: 2}
   - {fileID: 11400000, guid: bb331432d13734a62a85897b96d582d6, type: 2}
   - {fileID: 11400000, guid: 36753048b9e4b404a8952b80cc154441, type: 2}
+  forks:
+  - stage: 1
+    arena: {fileID: 11400000, guid: bd2b2c79c288743eebe8d37b770ae6c5, type: 2}
+  - stage: 2
+    arena: {fileID: 11400000, guid: 4f845a197bba74538872a7b9fab88fa8, type: 2}

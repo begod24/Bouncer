@@ -13,6 +13,9 @@ namespace Bouncer.Waves
     /// целиком, сообщает <see cref="GameEvents.BossDefeated"/>; что дальше, решает арена.
     /// Врагов с <see cref="SpawnPreference"/> (тень) выпускает только в тёмных точках, а подмогу, которую зовёт
     /// босс (<see cref="GameEvents.SpawnRequested"/>), — у названной точки, тоже с метками.
+    /// Элитки получают свойство (<see cref="EliteAffix"/>); со 2-й опасности на арене на одну элитку больше.
+    /// Раз в секунду проверяет, не вылетел ли кто из врагов за проходимую часть арены (отброс сквозь тонкую стену),
+    /// и возвращает его на ближайшее проходимое место.
     /// </summary>
     public sealed class WaveSpawner : MonoBehaviour
     {
@@ -46,9 +49,18 @@ namespace Bouncer.Waves
         readonly List<GameObject> _spawned = new();
         readonly List<Transform> _offScreen = new();
         readonly List<Transform> _onScreen = new();
+        /// <summary>Лишние элитки опасности: копии первой элитки волны, по своему времени.</summary>
+        readonly List<SpawnBurst> _extraBursts = new();
+        readonly List<bool> _extraDone = new();
         float[] _nextTrackTime;
         bool[] _burstDone;
         bool _bossSpawned;
+        float _nextStrayCheck;
+
+        /// <summary>Враг дальше этого от проходимого места — вылетел за арену.</summary>
+        const float StrayDistance = 1.2f;
+        /// <summary>Выше этого над землёй — летает (вороны), не трогаем.</summary>
+        const float StrayMaxHeight = 1.5f;
 
         /// <summary>Волны арены. Арена прогулки задаёт свои (<c>ArenaDirector</c>) до начала боя.</summary>
         public WaveDefinition Wave
@@ -72,6 +84,9 @@ namespace Bouncer.Waves
                 if (_burstDone == null || _burstDone.Length != wave.bursts.Count)
                     return wave.bursts.Count == 0;
                 foreach (bool done in _burstDone)
+                    if (!done)
+                        return false;
+                foreach (bool done in _extraDone)
                     if (!done)
                         return false;
                 return true;
@@ -112,10 +127,44 @@ namespace Bouncer.Waves
             CheckVictory();
             EnsureSchedule();
             WaveTime += Time.deltaTime;
+            ReturnStrays();
             if (!spawning)
                 return;
             RunBursts();
             RunTracks();
+        }
+
+        /// <summary>Враг вылетел за проходимую часть арены — вернуть на ближайшее проходимое место.</summary>
+        void ReturnStrays()
+        {
+            if (Time.time < _nextStrayCheck)
+                return;
+            _nextStrayCheck = Time.time + 1f;
+            var all = Targetable.All;
+            for (int i = all.Count - 1; i >= 0; i--)
+            {
+                var target = all[i];
+                if (target.Team != Team.Enemy || !target.IsAlive)
+                    continue;
+                Vector3 position = target.Position;
+                if (position.y > StrayMaxHeight)
+                    continue;
+                Vector3 probe = new(position.x, 0.1f, position.z);
+                if (NavMesh.SamplePosition(probe, out NavMeshHit near, StrayDistance, NavMesh.AllAreas))
+                    continue;
+                if (!NavMesh.SamplePosition(probe, out NavMeshHit back, 30f, NavMesh.AllAreas))
+                    continue;
+                Vector3 inside = back.position;
+                if (target.TryGetComponent(out NavMeshAgent agent) && agent.enabled)
+                    agent.Warp(inside);
+                if (target.TryGetComponent(out Rigidbody body))
+                {
+                    body.linearVelocity = Vector3.zero;
+                    body.angularVelocity = Vector3.zero;
+                    body.position = inside + Vector3.up * 0.05f;
+                }
+                target.transform.position = inside + Vector3.up * 0.05f;
+            }
         }
 
         /// <summary>
@@ -142,7 +191,47 @@ namespace Bouncer.Waves
                     _nextTrackTime[i] = wave.tracks[i].from + wave.tracks[i].firstDelay;
             }
             if (_burstDone == null || _burstDone.Length != wave.bursts.Count)
+            {
                 _burstDone = new bool[wave.bursts.Count];
+                BuildExtraElites();
+            }
+        }
+
+        /// <summary>Опасность 2+: ещё одна элитка — между первыми двумя (или через 45 с после первой).</summary>
+        void BuildExtraElites()
+        {
+            _extraBursts.Clear();
+            _extraDone.Clear();
+            int extra = Danger.ExtraElites;
+            if (extra <= 0)
+                return;
+            SpawnBurst first = null, second = null;
+            foreach (var burst in wave.bursts)
+            {
+                if (!burst.elite || burst.boss)
+                    continue;
+                if (first == null)
+                    first = burst;
+                else if (second == null)
+                    second = burst;
+            }
+            if (first == null)
+                return;
+            for (int i = 0; i < extra; i++)
+            {
+                float time = second != null ? (first.time + second.time) * 0.5f : first.time + 45f;
+                _extraBursts.Add(new SpawnBurst
+                {
+                    name = "Лишняя элитка",
+                    prefab = first.prefab,
+                    variants = first.variants,
+                    time = time + i * 20f,
+                    count = 1,
+                    elite = true,
+                    layout = first.layout,
+                });
+                _extraDone.Add(false);
+            }
         }
 
         void RunTracks()
@@ -178,6 +267,14 @@ namespace Bouncer.Waves
                     continue;
                 _burstDone[i] = true;
                 QueueGroup(burst.PickPrefab(), burst.count, burst.layout, burst.boss, burst.elite);
+            }
+            for (int i = 0; i < _extraBursts.Count; i++)
+            {
+                var burst = _extraBursts[i];
+                if (_extraDone[i] || WaveTime < burst.time)
+                    continue;
+                _extraDone[i] = true;
+                QueueGroup(burst.PickPrefab(), burst.count, burst.layout, false, true);
             }
         }
 
@@ -304,6 +401,10 @@ namespace Bouncer.Waves
             for (int i = 0; i < _spawned.Count; i++)
                 if (_spawned[i].TryGetComponent(out IGroupMember member))
                     member.OnGroupSpawned(_spawned, i);
+            // Свойство элитки: на 1-й опасности через раз, дальше — всегда.
+            if (group.Elite)
+                foreach (var spawned in _spawned)
+                    EliteAffix.Assign(spawned, Random.value < Danger.EliteAffixChance ? EliteAffix.RandomKind() : AffixKind.None);
         }
 
         void ClearPending()

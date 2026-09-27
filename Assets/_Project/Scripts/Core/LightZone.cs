@@ -85,7 +85,7 @@ namespace Bouncer.Core
         /// </summary>
         public static bool IsLit(Vector3 position)
         {
-            if (Flashing)
+            if (Flashing || LightBeams.Contains(position))
                 return true;
             foreach (var zone in s_all)
                 if (zone.IsOn && zone.Contains(position))

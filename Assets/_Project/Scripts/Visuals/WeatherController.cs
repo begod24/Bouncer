@@ -88,6 +88,7 @@ namespace Bouncer.Visuals
         public void Begin(WeatherKind kind)
         {
             Kind = kind;
+            Weather.Current = kind;
             if (rain)
             {
                 if (Rainy)

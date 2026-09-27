@@ -20,6 +20,7 @@ namespace Bouncer.Player
         InputAction _dash;
         InputAction _pause;
         InputAction _interact;
+        InputAction _flashlight;
 
         void Awake()
         {
@@ -35,6 +36,7 @@ namespace Bouncer.Player
             _dash = actions.FindAction("Player/Dash", true);
             _pause = actions.FindAction("Player/Pause", true);
             _interact = actions.FindAction("Player/Interact", true);
+            _flashlight = actions.FindAction("Player/Flashlight");
         }
 
         public PlayerIntent ReadIntent()
@@ -78,6 +80,7 @@ namespace Bouncer.Player
             intent.DashPressed = _dash.WasPressedThisFrame();
             intent.PausePressed = _pause.WasPressedThisFrame();
             intent.InteractPressed = _interact.WasPressedThisFrame();
+            intent.FlashlightHeld = _flashlight != null && _flashlight.IsPressed();
             return intent;
         }
 

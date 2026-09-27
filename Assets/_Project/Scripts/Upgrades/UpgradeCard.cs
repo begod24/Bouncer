@@ -48,6 +48,8 @@ namespace Bouncer.Upgrades
         [Min(0f)] public float weight = 1f;
         [Tooltip("Комбо-карточка: выпадает, только когда у игрока уже есть все эти карточки")]
         public UpgradeCard[] requires = System.Array.Empty<UpgradeCard>();
+        [Tooltip("Карточка-деньги («Копилка», «Шпаргалка», «Счастливый фантик»): не занимает карман")]
+        public bool freePocket;
 
         /// <summary>
         /// Карточки заново применяются на новой арене (сцена новая — игрок тоже). В это время мгновенные эффекты
@@ -55,7 +57,16 @@ namespace Bouncer.Upgrades
         /// </summary>
         public static bool Replaying { get; internal set; }
 
+        /// <summary>
+        /// Карточки применяются заново посреди арены, потому что одну выкинули из кармана: ничего не выдаётся
+        /// (мячи уже в руках или на арене).
+        /// </summary>
+        public static bool Rebuilding { get; internal set; }
+
         public bool IsCombo => requires != null && requires.Length > 0;
+
+        /// <summary>Занимает ли карман: тип мяча, утешительный вкладыш и карточки-деньги — нет.</summary>
+        public bool TakesPocket => category != UpgradeCategory.Ball && category != UpgradeCategory.Treat && !freePocket;
 
         /// <summary>Можно ли предложить карточку сейчас. stacks — сколько раз её уже взяли.</summary>
         public virtual bool CanOffer(PlayerController player, int stacks) => stacks < maxStacks;

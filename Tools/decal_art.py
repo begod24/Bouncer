@@ -182,6 +182,70 @@ def _bolt(d, s):
     d.polygon([(x * w, y * h) for x, y in pts], fill=255)
 
 
+def _sun(d, s):
+    """Солнышко с мозаики детсада: круг с лицом и лучи."""
+    w, h = s
+    cx, cy, r = w / 2, h / 2, min(w, h) * 0.24
+    for k in range(12):
+        a = 2 * math.pi * k / 12
+        stroke(d, [(cx + r * 1.3 * math.cos(a), cy + r * 1.3 * math.sin(a)),
+                   (cx + r * 1.9 * math.cos(a), cy + r * 1.9 * math.sin(a))], max(4, int(w * 0.05)))
+    d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=255)
+    for sx in (-1, 1):
+        d.ellipse((cx + sx * r * 0.38 - r * 0.12, cy - r * 0.3 - r * 0.16, cx + sx * r * 0.38 + r * 0.12,
+                   cy - r * 0.3 + r * 0.16), fill=0)
+    d.line([(cx + r * 0.5 * math.cos(a), cy + r * 0.5 * math.sin(a)) for a in
+            [math.radians(25 + 130 * k / 12) for k in range(13)]], fill=0, width=max(3, int(r * 0.12)), joint="curve")
+
+
+def _flower(d, s):
+    """Ромашка: восемь лепестков и кружок в середине."""
+    w, h = s
+    cx, cy = w / 2, h / 2
+    for k in range(8):
+        a = 2 * math.pi * k / 8
+        px, py = cx + w * 0.26 * math.cos(a), cy + h * 0.26 * math.sin(a)
+        pts = []
+        for j in range(16):
+            t = 2 * math.pi * j / 16
+            ex, ey = w * 0.2 * math.cos(t), w * 0.09 * math.sin(t)
+            pts.append((px + ex * math.cos(a) - ey * math.sin(a), py + ex * math.sin(a) + ey * math.cos(a)))
+        d.polygon(pts, fill=255)
+    r = w * 0.13
+    d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=0)
+    r2 = w * 0.09
+    d.ellipse((cx - r2, cy - r2, cx + r2, cy + r2), fill=255)
+
+
+def _hopscotch(d, s):
+    """Классики мелом: клетки 1–8 снизу вверх и полукруг «НЕБО» сверху."""
+    w, h = s
+    font = hand_font(int(w * 0.4))
+    cell = w / 2
+    rows = [(1,), (2,), (3,), (4, 5), (6,), (7, 8)]
+    y = h - 8
+    for row in rows:
+        top = y - cell
+        if len(row) == 1:
+            x0, x1 = w / 4, w * 3 / 4
+            stroke(d, [(x0, y), (x1, y), (x1, top), (x0, top)], 6, closed=True)
+            n = str(row[0])
+            d.text(((x0 + x1) / 2 - font.getlength(n) / 2, top + cell * 0.12), n, font=font, fill=255)
+        else:
+            for k, n in enumerate(row):
+                x0, x1 = 4 + k * cell, 4 + (k + 1) * cell - 8
+                stroke(d, [(x0, y), (x1, y), (x1, top), (x0, top)], 6, closed=True)
+                d.text(((x0 + x1) / 2 - font.getlength(str(n)) / 2, top + cell * 0.12), str(n), font=font, fill=255)
+        y = top
+    arc = [(w / 2 + (w / 2 - 8) * math.cos(a), y - (w / 2 - 8) * math.sin(a) * 0.55) for a in
+           [math.pi * k / 24 for k in range(25)]]
+    stroke(d, arc, 6)
+    word = "НЕБО"
+    f2 = hand_font(int(w * 0.24))
+    d.text((w / 2 - f2.getlength(word) / 2, y - (w / 2) * 0.45), word, font=f2, fill=255)
+
+
+
 # ================================================================ содержимое атласа (новое — только в конец!)
 
 def entries():
@@ -211,6 +275,20 @@ def entries():
         ("shape_bolt", shape((140, 240), _bolt)),
         ("label_fizika", text_img("ФИЗИКА", sign_font(130), spacing=4)),
         ("label_chipsy", text_img("ЧИПСЫ", sign_font(140), spacing=4)),
+        # этап 3: трансформер, луноход, барахолка, детсад. Мелко и в этом порядке: атлас должен остаться 2048x2048,
+        # иначе сдвинутся UV всех старых надписей.
+        ("sign_militsiya", text_img("МИЛИЦИЯ", sign_font(84), spacing=3)),
+        ("label_sssr", text_img("СССР", sign_font(84), spacing=5)),
+        ("sign_igrushki", text_img("ИГРУШКИ", sign_font(76), spacing=3)),
+        ("sign_kassety", text_img("КАССЕТЫ", sign_font(76), spacing=3)),
+        ("sign_dzhinsy", text_img("ДЖИНСЫ", sign_font(76), spacing=3)),
+        ("doodle_flower", shape((120, 120), _flower)),
+        ("sign_vse_po", text_img("ВСЁ ПО 1000", sign_font(72), spacing=2)),
+        ("sign_rynok", text_img("РЫНОК", sign_font(84), spacing=6)),
+        ("tag_nedorogo", text_img("Недорого!", hand_font(76))),
+        ("sign_detsad", text_img("ДЕТСКИЙ САД «СОЛНЫШКО»", sign_font(60), spacing=2)),
+        ("doodle_sun", shape((150, 150), _sun)),
+        ("chalk_hopscotch", shape((80, 272), _hopscotch)),
     ]
 
 

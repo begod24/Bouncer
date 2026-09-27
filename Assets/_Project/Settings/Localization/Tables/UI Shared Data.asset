@@ -487,6 +487,158 @@ MonoBehaviour:
     m_Key: settings.hints
     m_Metadata:
       m_Items: []
+  - m_Id: 1198883039338496
+    m_Key: pockets.full
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883047727104
+    m_Key: pockets.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883047727105
+    m_Key: pockets.discard
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883047727106
+    m_Key: pockets.skip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883047727107
+    m_Key: pockets.sell.price
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921408
+    m_Key: pockets.hint.discard
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921409
+    m_Key: pockets.hint.sell
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921410
+    m_Key: shop.pockets
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921411
+    m_Key: shop.pockets_full
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921412
+    m_Key: card.rarity.gold_once
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921413
+    m_Key: affix.swift
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921414
+    m_Key: affix.commander
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921415
+    m_Key: affix.catcher
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921416
+    m_Key: danger.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921417
+    m_Key: danger.level
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921418
+    m_Key: danger.1.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921419
+    m_Key: danger.2.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921420
+    m_Key: danger.3.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921421
+    m_Key: danger.4.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921422
+    m_Key: danger.5.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921423
+    m_Key: danger.next
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921424
+    m_Key: victory.record
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921425
+    m_Key: victory.best
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921426
+    m_Key: victory.unlocked
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921427
+    m_Key: records.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921428
+    m_Key: records.line
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921429
+    m_Key: records.empty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921430
+    m_Key: menu.records
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921431
+    m_Key: rule.dark
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921432
+    m_Key: rule.dark.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1280563745906688
+    m_Key: arena.bazaar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1280563750100992
+    m_Key: arena.kindergarten
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1280563750100993
+    m_Key: exit.bazaar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1280563750100994
+    m_Key: exit.kindergarten
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1281280669900800
+    m_Key: rule.transformer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1281280669900801
+    m_Key: rule.transformer.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1281280669900802
+    m_Key: rule.hare_rip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1281280669900803
+    m_Key: rule.hare_rip.hint
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

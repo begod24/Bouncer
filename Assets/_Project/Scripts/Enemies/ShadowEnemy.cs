@@ -13,7 +13,7 @@ namespace Bouncer.Enemies
     /// Элитная тень гасит фонари, мимо которых пролетает. Вокруг тела всё время клубится дым.
     /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
-    public sealed class ShadowEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable
+    public sealed class ShadowEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, IBurnable
     {
         enum State
         {
@@ -68,6 +68,9 @@ namespace Bouncer.Enemies
         /// Твёрдая: мячи и удары по ней проходят. На свету — всегда, в темноте — только пока замахивается и бьёт.
         /// Пока проявляется из темноты — бесплотна в любом случае.
         /// </summary>
+        /// <summary>Луч наводящего фонарика жжёт тень (<see cref="LightBeams"/>).</summary>
+        public bool BurnsInLight => !_health.IsDead;
+
         public bool IsSolid => _state != State.Emerge
                                && (_state is State.Windup or State.Strike || LightZone.IsLit(transform.position));
 
@@ -96,7 +99,7 @@ namespace Bouncer.Enemies
             _agent.speed = definition.moveSpeed;
             _agent.acceleration = 16f;
             _agent.stoppingDistance = definition.attackRange * 0.7f;
-            _health.Configure(definition.hitsToKill, 0f);
+            _health.Configure(EnemyScaling.Hits(definition.hitsToKill), 0f);
         }
 
         public void OnSpawned()
@@ -172,7 +175,7 @@ namespace Bouncer.Enemies
                     _agent.isStopped = !hasTarget;
                     if (!hasTarget)
                         break;
-                    _agent.speed = definition.moveSpeed * GumSpot.EnemyMoveMultiplierAt(transform.position);
+                    _agent.speed = definition.moveSpeed * _self.SpeedMultiplier * GumSpot.EnemyMoveMultiplierAt(transform.position);
                     Vector3 velocity = Flat(_agent.velocity);
                     Face(velocity.sqrMagnitude > 0.3f ? velocity : toTarget, dt);
                     if (distance <= definition.attackRange && Time.time >= _nextAttack)

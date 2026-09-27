@@ -70,14 +70,19 @@ MonoBehaviour:
     rare: 32
     gold: 8
   comboBoost: 4
+  pockets: 6
+  maxGolds: 1
+  maxCombos: 2
   shopSlots: 4
-  priceCommon: 20
-  priceRare: 40
-  priceGold: 75
-  priceGrowth: 0.15
+  priceCommon: 25
+  priceRare: 50
+  priceGold: 90
+  priceGrowth: 0.2
+  purchaseGrowth: 0.1
+  sellShare: 0.5
   rerollPrice: 5
-  rerollStep: 3
-  lemonadePrice: 10
+  rerollStep: 5
+  lemonadePrice: 15
   lemonadeHeal: 1
-  sandwichPrice: 25
+  sandwichPrice: 40
   interestPer: 10

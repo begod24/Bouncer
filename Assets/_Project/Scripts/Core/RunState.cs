@@ -16,6 +16,10 @@ namespace Bouncer.Core
         public static int RunId { get; private set; }
         /// <summary>Номер арены в прогулке: 0 — первая.</summary>
         public static int ArenaIndex { get; private set; }
+        /// <summary>Какая арена этапа выбрана на развилке: 0 — основная, 1 и дальше — другие (см. RunDefinition).</summary>
+        public static int ArenaVariant { get; private set; }
+        /// <summary>По какой стрелке уходит игрок: станет <see cref="ArenaVariant"/> следующей арены.</summary>
+        public static int NextVariant { get; set; }
         public static int Coins { get; private set; }
         /// <summary>Сколько сердец было у игрока в конце прошлой арены. 0 — не задано, начать с полными.</summary>
         public static int Lives { get; set; }
@@ -32,6 +36,12 @@ namespace Bouncer.Core
         public static int CoinsEarned { get; private set; }
         /// <summary>«Второе дыхание» уже спасло игрока в этой прогулке (действует раз за прогулку).</summary>
         public static bool SecondWindUsed { get; set; }
+        /// <summary>Уровень опасности прогулки (1–5), см. <see cref="Bouncer.Core.Danger"/>.</summary>
+        public static int Danger { get; private set; } = 1;
+        /// <summary>
+        /// Часы прогулки для таймера и рекордов: всё время с первой арены, кроме паузы и затемнений между аренами.
+        /// </summary>
+        public static float RunClock { get; set; }
 
         /// <summary>Монеток стало больше или меньше: изменение (может быть отрицательным).</summary>
         public static event Action<int> CoinsChanged;
@@ -42,6 +52,8 @@ namespace Bouncer.Core
             Active = true;
             RunId++;
             ArenaIndex = 0;
+            ArenaVariant = 0;
+            NextVariant = 0;
             Coins = 0;
             Lives = 0;
             ContinuesRun = false;
@@ -50,6 +62,8 @@ namespace Bouncer.Core
             PastKills = 0;
             CoinsEarned = 0;
             SecondWindUsed = false;
+            Danger = Bouncer.Core.Danger.Selected;
+            RunClock = 0f;
             CoinsChanged?.Invoke(0);
         }
 
@@ -58,6 +72,8 @@ namespace Bouncer.Core
         {
             Active = false;
             ArenaIndex = 0;
+            ArenaVariant = 0;
+            NextVariant = 0;
             Coins = 0;
             Lives = 0;
             ContinuesRun = false;
@@ -66,13 +82,15 @@ namespace Bouncer.Core
             PastKills = 0;
             CoinsEarned = 0;
             SecondWindUsed = false;
+            RunClock = 0f;
         }
 
         /// <summary>Сцена отдельной арены запущена сама (редактор): прогулка начинается с неё, тоже со стартовой карточкой.</summary>
-        public static void BeginAt(int arenaIndex)
+        public static void BeginAt(int arenaIndex, int variant = 0)
         {
             BeginNew();
             ArenaIndex = Mathf.Max(0, arenaIndex);
+            ArenaVariant = Mathf.Max(0, variant);
         }
 
         public static void AddCoins(int amount)
@@ -100,6 +118,8 @@ namespace Bouncer.Core
             PastKills += arenaKills;
             Lives = lives;
             ArenaIndex++;
+            ArenaVariant = Mathf.Max(0, NextVariant);
+            NextVariant = 0;
             ContinuesRun = true;
         }
 

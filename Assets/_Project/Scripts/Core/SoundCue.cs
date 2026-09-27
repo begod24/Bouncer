@@ -91,5 +91,25 @@ namespace Bouncer.Core
         MomCall,
         /// <summary>Дверь подъезда: скрип и хлопок на пружине.</summary>
         DoorOpen,
+
+        // Барахолка и детский сад
+        /// <summary>Сирена милицейских «Жигулей» Трансформера.</summary>
+        Siren,
+        /// <summary>Трансформер превращается: привод, шестерёнки, лязг.</summary>
+        TransformClank,
+        /// <summary>Плюшевый заяц приземлился.</summary>
+        PlushThump,
+        /// <summary>У зайца рвётся шов.</summary>
+        SeamRip,
+        /// <summary>Кукла-плакса плачет.</summary>
+        DollCry,
+        /// <summary>Удар пионерского барабана.</summary>
+        DrumBeat,
+        /// <summary>Заводную лягушку заводят ключиком.</summary>
+        WindUp,
+        /// <summary>Выстрел пистолета от «Денди».</summary>
+        ZapperShot,
+        /// <summary>Моторчик машинки набирает обороты.</summary>
+        EngineRev,
     }
 }

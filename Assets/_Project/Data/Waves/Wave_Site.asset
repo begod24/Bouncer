@@ -49,6 +49,28 @@ MonoBehaviour:
     groupEnd: 2
     layout: 0
     maxAlive: 4
+  - name: "\u0411\u0430\u043B\u0435\u0440\u0438\u043D\u044B"
+    prefab: {fileID: 8349818569729780404, guid: 6376411b11cab408693469a8cfcc445f, type: 3}
+    from: 20
+    to: 272
+    firstDelay: 0
+    intervalStart: 26
+    intervalEnd: 16
+    groupStart: 1
+    groupEnd: 1
+    layout: 0
+    maxAlive: 3
+  - name: "\u041B\u0443\u043D\u043E\u0445\u043E\u0434\u044B"
+    prefab: {fileID: 2517791369550793326, guid: d2dbb83b8a7b7468da843cb73f732e76, type: 3}
+    from: 50
+    to: 272
+    firstDelay: 0
+    intervalStart: 45
+    intervalEnd: 30
+    groupStart: 1
+    groupEnd: 1
+    layout: 0
+    maxAlive: 2
   bursts:
   - name: "\u042D\u043B\u0438\u0442\u043A\u0430 1"
     prefab: {fileID: 4377954695402079543, guid: 3781a7ab4b0634838bbfda856b199ffe, type: 3}

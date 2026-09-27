@@ -110,6 +110,10 @@ namespace Bouncer.Core
         {
             if (IsPlaying)
                 SurvivalTime += Time.deltaTime;
+            // Часы прогулки идут всё время, кроме паузы и затемнений: бой, ларёк, выбор карточки.
+            if (RunState.Active && State is (SessionState.Playing or SessionState.Cleared or SessionState.Shop or SessionState.Upgrade)
+                && !GameFeel.Paused && !ScreenFade.IsBusy)
+                RunState.RunClock += Time.unscaledDeltaTime;
             if (CanRestart && RestartPressed())
                 Restart();
         }
@@ -218,6 +222,7 @@ namespace Bouncer.Core
             _gameOverTime = Time.unscaledTime;
             GameFeel.SlowMotion(0.3f, 1.5f);
             GameEvents.PlaySound(SoundCue.Victory, Vector3.zero);
+            GameEvents.RaiseRunFinished(true);
         }
 
         void OnEnemyKilled(GameObject enemy, HitInfo hit)
@@ -237,6 +242,7 @@ namespace Bouncer.Core
             _gameOverTime = Time.unscaledTime;
             GameFeel.SlowMotion(0.25f, 1.2f);
             GameEvents.PlaySound(SoundCue.GameOver, Vector3.zero);
+            GameEvents.RaiseRunFinished(false);
         }
 
         // Enter и A нажимают кнопки на экране — здесь только быстрые клавиши.

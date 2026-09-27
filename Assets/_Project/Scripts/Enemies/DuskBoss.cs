@@ -12,7 +12,10 @@ namespace Bouncer.Enemies
     /// Всегда: скользит к игроку и медленно поворачивается; вблизи бьёт клюкой, издалека бросает сильный мяч;
     /// «Ловец» — хватает все мячи спереди, даже заряженные, и отвечает веером сильных (бить сбоку и сзади).
     /// Умения по очереди из мешка, без повторов подряд, новые — с каждой фазой (по жизням или по времени боя):
-    /// 1 — «Прыжок на шесте», «Мешок», «Вороньё»; 2 — «Карусель», «Считалочка», «Гасит свет»; 3 — «Прятки».
+    /// 1 — «Прыжок на шесте», «Мешок», «Вороньё», «Из мешка» (веер тёмных мячей: попадание замедляет);
+    /// 2 — «Карусель» (через раз летят ёжики), «Считалочка», «Гасит свет»; 3 — «Прятки».
+    /// Держит удар (<see cref="BossArmor"/>): открыт после прыжка (шест воткнут), когда кружится после карусели,
+    /// шатается, растерян или найден в «Прятках». Обычный бросок иногда с финтом и кручёный.
     /// Мама позвала (<see cref="GameEvents.MomCalled"/>) — мелочь разбегается, а он прыгает на игрока,
     /// пока тот бежит к подъезду; в свет из двери не заходит. Жизнь — на полосе босса (<see cref="BossSplit"/>).
     /// </summary>
@@ -28,6 +31,8 @@ namespace Bouncer.Enemies
             Count,
             Lights,
             Hide,
+            /// <summary>«Из мешка»: веер тёмных мячей — попадание замедляет.</summary>
+            DarkBalls,
         }
 
         enum State
@@ -55,13 +60,25 @@ namespace Bouncer.Enemies
             HideVanish,
             Hidden,
             Stagger,
+            /// <summary>Замах броска оказался финтом: сейчас бросит по-настоящему.</summary>
+            Feint,
+            /// <summary>«Из мешка»: лезет в мешок за тёмными мячами.</summary>
+            DarkWindup,
         }
 
         const float RepathInterval = 0.3f;
+        const float FeintTime = 0.35f;
+        const float CurveChance = 0.35f;
+        const float CurveOffset = 24f;
+        /// <summary>«Карусель»: каждый какой мяч — ёжик.</summary>
+        const int CarouselSpikyEvery = 3;
+        const float DarkWindupTime = 0.7f;
+        const int DarkBallCount = 5;
+        const float DarkBallSpread = 50f;
         const float ChestHeight = 2.2f;
         static readonly Ability[][] PhaseAbilities =
         {
-            new[] { Ability.Vault, Ability.Sack, Ability.Crows },
+            new[] { Ability.Vault, Ability.Sack, Ability.Crows, Ability.DarkBalls },
             new[] { Ability.Carousel, Ability.Count, Ability.Lights },
             new[] { Ability.Hide },
         };
@@ -153,6 +170,9 @@ namespace Bouncer.Enemies
         Vector3 _sweepPoint;
         float _nextCarouselShot;
         float _carouselAngle;
+        int _carouselShots;
+        bool _feinted;
+        readonly BossArmor _armor = new();
         int _ticks;
         int _volleyLeft;
         float _nextVolley;
@@ -224,7 +244,7 @@ namespace Bouncer.Enemies
             _agent.speed = definition.moveSpeed;
             _agent.acceleration = 8f;
             _agent.stoppingDistance = definition.keepDistance;
-            _health.Configure(definition.hitsToKill, 0f);
+            _health.Configure(EnemyScaling.BossHits(definition.hitsToKill), 0f);
         }
 
         public void OnSpawned()
@@ -236,6 +256,9 @@ namespace Bouncer.Enemies
             _fresh.Clear();
             _hasLastAbility = false;
             _called = false;
+            _feinted = false;
+            _carouselShots = 0;
+            _armor.Reset();
             _held.Clear();
             _answerAt.Clear();
             _sack.Clear();
@@ -343,11 +366,42 @@ namespace Bouncer.Enemies
                         Face(toTarget, dt, 1.5f);
                     if (_stateTime >= definition.throwWindup)
                     {
+                        // Финт: замахнулся — и не бросил; настоящий бросок с короткого замаха.
+                        if (!_feinted && hasTarget && Random.value < Danger.FeintChance)
+                        {
+                            _feinted = true;
+                            _throwPose = 1f;
+                            Enter(State.Feint, FeintTime);
+                            break;
+                        }
+                        _feinted = false;
                         if (hasTarget && !LightZone.Repels(_target.Position))
-                            ThrowAt(_target, 0f, definition.ballSpeed, HitFlags.Charged, SoundCue.ThrowCharged, null);
+                            ThrowAt(_target, 0f, definition.ballSpeed, HitFlags.Charged, SoundCue.ThrowCharged, null,
+                                Random.value < CurveChance);
                         _throwPose = 1f;
                         _nextThrow = Time.time + definition.throwCooldown;
                         Enter(State.Stalk);
+                    }
+                    break;
+                case State.Feint:
+                    if (hasTarget)
+                        Face(toTarget, dt, 1.5f);
+                    if (_stateTime >= _stateLength)
+                    {
+                        Enter(State.Aim);
+                        _stateTime = definition.throwWindup * 0.45f;
+                    }
+                    break;
+                case State.DarkWindup:
+                    Halt();
+                    if (hasTarget)
+                        Face(toTarget, dt, 2f);
+                    if (_stateTime >= DarkWindupTime)
+                    {
+                        if (hasTarget)
+                            ThrowDarkFan(_target);
+                        _throwPose = 1f;
+                        EndAbility();
                     }
                     break;
                 case State.SweepMove:
@@ -484,7 +538,7 @@ namespace Bouncer.Enemies
             else
                 _agent.stoppingDistance = definition.keepDistance;
             _agent.isStopped = false;
-            _agent.speed = definition.moveSpeed * (_called ? 1.5f : 1f) * GumSpot.EnemyMoveMultiplierAt(transform.position);
+            _agent.speed = definition.moveSpeed * _self.SpeedMultiplier * (_called ? 1.5f : 1f) * GumSpot.EnemyMoveMultiplierAt(transform.position);
             if (_repathNow || !_agent.hasPath)
                 _agent.SetDestination(goal);
             Vector3 velocity = Flat(_agent.velocity);
@@ -592,6 +646,10 @@ namespace Bouncer.Enemies
                     Announce("rule.lights", definition.lightsCast + definition.lightsOutTime);
                     GameEvents.PlaySound(SoundCue.BabaiLaugh, transform.position);
                     Enter(State.LightsCast);
+                    return true;
+                case Ability.DarkBalls:
+                    Announce("rule.dark", DarkWindupTime + 1.5f);
+                    Enter(State.DarkWindup);
                     return true;
                 case Ability.Hide:
                     if (_decoys.Count > 0)
@@ -742,7 +800,19 @@ namespace Bouncer.Enemies
         }
 
         /// <summary>Мяч в игрока с упреждением; reuse — бросить пойманный мяч, а не новый из пула.</summary>
-        void ThrowAt(Targetable target, float angle, float speed, HitFlags flags, SoundCue? cue, Ball reuse)
+        /// <summary>«Из мешка»: веер тёмных мячей — попадание замедляет (ловить можно, как обычные).</summary>
+        void ThrowDarkFan(Targetable target)
+        {
+            for (int i = 0; i < DarkBallCount; i++)
+            {
+                float k = DarkBallCount == 1 ? 0.5f : i / (DarkBallCount - 1f);
+                float angle = Mathf.Lerp(-DarkBallSpread * 0.5f, DarkBallSpread * 0.5f, k);
+                ThrowAt(target, angle, definition.ballSpeed * 0.8f, HitFlags.Dark, i == 0 ? SoundCue.ThrowCharged : (SoundCue?)null, null);
+            }
+            Burst(smokePrefab, SackPosition, 0.8f);
+        }
+
+        void ThrowAt(Targetable target, float angle, float speed, HitFlags flags, SoundCue? cue, Ball reuse, bool curve = false)
         {
             if (target == null || (reuse == null && ballPrefab == null))
                 return;
@@ -757,6 +827,14 @@ namespace Bouncer.Enemies
             float gravity = definition.ballGravity;
             float time = distance / speed;
             float up = (aim.y - origin.y + 0.5f * gravity * time * time) / time;
+            // Кручёный: вылетает в сторону и дугой заворачивает к цели.
+            var perks = default(BallPerks);
+            if (curve)
+            {
+                float side = Random.value < 0.5f ? -1f : 1f;
+                angle += CurveOffset * side;
+                perks.curve = -2f * CurveOffset * side / Mathf.Max(0.2f, time);
+            }
             Vector3 direction = Quaternion.Euler(0f, angle, 0f) * (flat / distance);
             var ball = reuse ? reuse : PoolService.Spawn(ballPrefab, origin, Quaternion.identity);
             ball.Launch(new BallThrow
@@ -765,6 +843,7 @@ namespace Bouncer.Enemies
                 Direction = direction,
                 Team = Team.Enemy,
                 Thrower = gameObject,
+                Perks = perks,
                 Stats = new ThrowStats
                 {
                     Speed = speed,
@@ -1021,6 +1100,8 @@ namespace Bouncer.Enemies
                 var direction = new Vector3(Mathf.Sin(angle), 0f, Mathf.Cos(angle));
                 Vector3 origin = center + direction * 1.3f;
                 var ball = PoolService.Spawn(ballPrefab, origin, Quaternion.identity);
+                // Через раз с обычными (их ловят — главный источник сердец в дуэли) летят ёжики.
+                _carouselShots++;
                 ball.Launch(new BallThrow
                 {
                     Origin = origin,
@@ -1034,7 +1115,7 @@ namespace Bouncer.Enemies
                         Gravity = definition.carouselBallGravity,
                         Damage = definition.ballDamage,
                         Knockback = definition.ballKnockback * 0.6f,
-                        Flags = HitFlags.None,
+                        Flags = _carouselShots % CarouselSpikyEvery == 0 ? HitFlags.Spiky : HitFlags.None,
                     },
                 });
             }
@@ -1361,21 +1442,30 @@ namespace Bouncer.Enemies
             return BallContactResult.Hit;
         }
 
+        /// <summary>
+        /// Открыт — попадания засчитываются в полтора раза: шест воткнут после прыжка, кружится после карусели,
+        /// шатается (мешок порвали, прыжок в ярости), растерян после «Считалочки», найден в «Прятках».
+        /// </summary>
+        public bool IsOpen => _state is State.VaultStuck or State.Dizzy or State.Stagger or State.Confused or State.Hidden;
+
         public bool ApplyHit(in HitInfo hit)
         {
             if (_health.IsDead || _state == State.HideVanish)
                 return false;
             var damage = hit;
             bool found = _state == State.Hidden && !hit.Has(HitFlags.Despawn);
+            bool open = IsOpen || hit.Has(HitFlags.Despawn);
             // Нашли настоящего среди ложных — попадание больнее.
             if (found)
                 damage.Damage *= definition.revealDamageMultiplier;
-            bool strong = hit.Has(HitFlags.Charged) || found;
+            if (!hit.Has(HitFlags.Despawn))
+                damage.Damage = _armor.Take(damage.Damage, open);
+            bool strong = hit.Has(HitFlags.Charged) || found || open;
             GameFeel.Shake(strong ? 0.3f : 0.12f);
-            if (hitFlash)
-                hitFlash.Flash(found ? new Color(1f, 0.85f, 0.4f) : Color.white, 0.12f);
+            BossArmor.Flash(hitFlash, open);
             GameEvents.PlaySound(strong ? SoundCue.EnemyHitStrong : SoundCue.EnemyHit, hit.Point);
-            _health.TryDamage(damage);
+            if (damage.Damage > 0 || hit.Has(HitFlags.Despawn))
+                _health.TryDamage(damage);
             if (found && !_health.IsDead)
                 StopHiding(found: true);
             return true;
@@ -1488,6 +1578,21 @@ namespace Bouncer.Enemies
                     bodyE = new Vector3(-6f * w, -15f * w, 0f);
                     armLE = new Vector3(-165f * w, 0f, -15f * w);
                     follow = 20f;
+                    break;
+                }
+                case State.Feint:
+                    // Рука «бросила» вперёд, а мяча нет.
+                    bodyE = new Vector3(8f, 14f, 0f);
+                    armLE = new Vector3(-45f, 0f, -10f);
+                    follow = 45f;
+                    break;
+                case State.DarkWindup:
+                {
+                    // Тянется рукой за спину, в мешок.
+                    float w = Mathf.Clamp01(_stateTime / DarkWindupTime);
+                    bodyE = new Vector3(-10f * w, 25f * w, 0f);
+                    armRE = new Vector3(40f * w, 0f, 35f * w);
+                    follow = 18f;
                     break;
                 }
                 case State.SweepCrouch:

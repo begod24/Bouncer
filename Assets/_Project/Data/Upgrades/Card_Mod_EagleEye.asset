@@ -37,6 +37,7 @@ MonoBehaviour:
   maxStacks: 1
   weight: 1
   requires: []
+  freePocket: 0
   perks:
     extraShots: 0
     spreadAngle: 0
@@ -54,8 +55,13 @@ MonoBehaviour:
     grazeRadius: 0
     wallDamage: 0
     chargedPierce: 0
-    homing: 240
+    homing: 120
     yoyo: 0
+    bounceBlastRadius: 0
+    bounceBlastDamage: 0
+    twinSplit: 0
+    areaStun: 0
+    curve: 0
   nextThrowAfterCatch: 0
   references:
     version: 2

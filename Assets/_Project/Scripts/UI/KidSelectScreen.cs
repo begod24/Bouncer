@@ -11,6 +11,7 @@ namespace Bouncer.UI
     /// «Кто выходит гулять?» — после «Играть» на заставке. Четверо детей в своих позах (<see cref="KidStage"/>
     /// в RenderTexture), под каждым кнопка с именем: какая кнопка выбрана (мышью, стрелками, геймпадом), тот ребёнок
     /// и в позе, нажал — прогулка начинается с ним. Статы у всех одинаковые, поэтому на экране только имя и характер.
+    /// Справа вверху — уровень опасности прогулки (открытые победами, <see cref="Danger"/>) и что он добавляет.
     /// Открывает и закрывает его <see cref="RunScreens"/>.
     /// </summary>
     public sealed class KidSelectScreen : MonoBehaviour
@@ -23,12 +24,18 @@ namespace Bouncer.UI
         [SerializeField] TMP_Text tagline;
         [Tooltip("Где стоит сцена с детьми — подальше от арены")]
         [SerializeField] Vector3 stagePosition = new(0f, -500f, 0f);
+        [Tooltip("Уровень опасности прогулки")]
+        [SerializeField] ChalkStepper dangerStepper;
+        [Tooltip("Что добавляет выбранный уровень опасности")]
+        [SerializeField] TMP_Text dangerHint;
 
         KidStage _stage;
         int _highlighted = -1;
 
         /// <summary>Игрок выбрал ребёнка (номер в KidRoster) — пора начинать прогулку.</summary>
         public event Action<int> Chosen;
+
+        public KidRoster Roster => roster;
 
         /// <summary>Кнопка ребёнка, с которым гуляли в прошлый раз, — её выбрать при открытии.</summary>
         public Selectable FirstButton => kidButtons.Length > 0 ? kidButtons[Mathf.Clamp(GameSettings.Kid, 0, kidButtons.Length - 1)] : null;
@@ -43,6 +50,35 @@ namespace Bouncer.UI
                     hover = kidButtons[i].gameObject.AddComponent<KidSelectButton>();
                 hover.Bind(this, index);
             }
+            if (dangerStepper)
+                dangerStepper.Changed += index =>
+                {
+                    Danger.Selected = index + 1;
+                    ShowDangerHint();
+                };
+        }
+
+        void RefreshDanger()
+        {
+            if (!dangerStepper)
+                return;
+            int unlocked = Danger.Unlocked;
+            var options = new string[unlocked];
+            for (int i = 0; i < unlocked; i++)
+                options[i] = Loc.Format("danger.level", i + 1);
+            dangerStepper.SetOptions(options, Danger.Selected - 1);
+            ShowDangerHint();
+        }
+
+        void ShowDangerHint()
+        {
+            if (!dangerHint)
+                return;
+            int level = Danger.Selected;
+            string hint = Loc.Get($"danger.{level}.hint");
+            if (Danger.Unlocked < Danger.Max && level == Danger.Unlocked)
+                hint += "  ·  " + Loc.Format("danger.next", level + 1);
+            dangerHint.text = hint;
         }
 
         public void Open()
@@ -58,6 +94,7 @@ namespace Bouncer.UI
             }
             _highlighted = -1;
             Highlight(roster.Clamp(GameSettings.Kid));
+            RefreshDanger();
         }
 
         public void Close()

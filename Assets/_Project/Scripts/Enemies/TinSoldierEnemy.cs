@@ -71,7 +71,7 @@ namespace Bouncer.Enemies
             _agent.acceleration = 20f;
             _agent.stoppingDistance = 0.15f;
             _agent.autoBraking = true;
-            _health.Configure(definition.hitsToKill, definition.comboResetTime);
+            _health.Configure(EnemyScaling.Hits(definition.hitsToKill), definition.comboResetTime);
         }
 
         public void OnSpawned()
@@ -128,7 +128,7 @@ namespace Bouncer.Enemies
             if (!HasBall && Time.time >= _ballBackAt)
                 HasBall = true;
             // В жвачке солдатик вязнет и марширует медленнее.
-            _agent.speed = definition.moveSpeed * GumSpot.EnemyMoveMultiplierAt(transform.position);
+            _agent.speed = definition.moveSpeed * _self.SpeedMultiplier * GumSpot.EnemyMoveMultiplierAt(transform.position);
             if (_knockback.sqrMagnitude > 0.01f)
             {
                 _agent.Move(_knockback * dt);
@@ -246,8 +246,9 @@ namespace Bouncer.Enemies
                     Gravity = definition.ballGravity,
                     Damage = definition.damage,
                     Knockback = definition.knockback,
-                    // Офицер бросает сильный мяч: удержит только идеальная ловля.
-                    Flags = definition.strongThrow ? HitFlags.Charged : HitFlags.None,
+                    // Офицер бросает сильного ёжика — только уворачиваться; солдатик иногда тоже бросает ёжика.
+                    Flags = definition.strongThrow ? HitFlags.Charged | HitFlags.Spiky
+                        : Random.value < Danger.HedgehogChance ? HitFlags.Spiky : HitFlags.None,
                 },
             });
         }

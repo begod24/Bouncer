@@ -225,6 +225,7 @@ MonoBehaviour:
   legL: {fileID: 1584200218868061028}
   legR: {fileID: 5754054319143346487}
   ballPrefab: {fileID: 3678706345379816597, guid: eb88f79586158461db95263becf8da16, type: 3}
+  medicineBallPrefab: {fileID: 9135535968229420765, guid: e92423024997447e6aeaa521347bcf58, type: 3}
   hand: {fileID: 2891416215014632935}
   giantBallPrefab: {fileID: 1548324789795988798, guid: ea4892cce049d4ce7be2c686b3d2b3a2, type: 3}
   substitutes:

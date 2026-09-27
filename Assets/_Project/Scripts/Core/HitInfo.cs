@@ -18,6 +18,16 @@ namespace Bouncer.Core
         Despawn = 1 << 5,
         /// <summary>«Домино»: выбитый враг сбил соседа.</summary>
         Domino = 1 << 6,
+        /// <summary>Колючий мяч-«ёжик»: поймать нельзя — ловля колет, как попадание. Только уворачиваться.</summary>
+        Spiky = 1 << 7,
+        /// <summary>Мокрый мяч (дождь): выскальзывает из рук — ловля не держит и не лечит.</summary>
+        Wet = 1 << 8,
+        /// <summary>Медбол Физрука: пойманный сбивает с ног.</summary>
+        Heavy = 1 << 9,
+        /// <summary>Тёмный мяч из мешка Бабая: попадание замедляет.</summary>
+        Dark = 1 << 10,
+        /// <summary>Луч фонарика жжёт тень.</summary>
+        Burn = 1 << 11,
     }
 
     public struct HitInfo
@@ -39,5 +49,11 @@ namespace Bouncer.Core
     {
         /// <summary>true — удар прошёл (не заблокирован неуязвимостью и т.п.).</summary>
         bool ApplyHit(in HitInfo hit);
+    }
+
+    /// <summary>Враг, которого жжёт луч наводящего фонарика (тень).</summary>
+    public interface IBurnable
+    {
+        bool BurnsInLight { get; }
     }
 }

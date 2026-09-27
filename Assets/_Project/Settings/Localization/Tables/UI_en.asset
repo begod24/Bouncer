@@ -100,9 +100,10 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 155645370388
     m_Localized: "WASD \u2014 run    mouse \u2014 aim    LMB \u2014 throw (hold to
-      charge)\nRMB / E \u2014 catch    Space / Shift \u2014 dash    F \u2014 newsstand   
-      Esc \u2014 pause\nGamepad: left stick, right stick, RT \u2014 throw, LT \u2014
-      catch, A \u2014 dash, X \u2014 newsstand\nH \u2014 hide hints"
+      charge)    Q \u2014 flashlight in the dark\nRMB / E \u2014 catch or grab a
+      ball nearby    Space / Shift \u2014 dash    F \u2014 newsstand    Esc \u2014
+      pause\nGamepad: left stick, right stick, RT \u2014 throw, LT \u2014 catch,
+      A \u2014 dash, LB \u2014 flashlight, X \u2014 newsstand\nH \u2014 hide hints"
     m_Metadata:
       m_Items: []
   - m_Id: 155645370390
@@ -296,8 +297,8 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 133958221160462
     m_Localized: "Click or Enter \u2014 buy    L \u2014 hold    R \u2014 reroll   
-      Esc \u2014 leave\nGamepad: A \u2014 buy    X \u2014 hold    Y \u2014 reroll   
-      B \u2014 leave"
+      P \u2014 pockets    Esc \u2014 leave\nGamepad: A \u2014 buy    X \u2014 hold   
+      Y \u2014 reroll    LB \u2014 pockets    B \u2014 leave"
     m_Metadata:
       m_Items: []
   - m_Id: 133958221160463
@@ -489,12 +490,165 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 441339446550529
-    m_Localized: "\u2190/\u2192 \u2014 choose, Enter / A \u2014 go out, Esc / B \u2014
-      back"
+    m_Localized: "\u2190/\u2192 \u2014 choose, Enter / A \u2014 go out, danger \u2014
+      top right, Esc / B \u2014 back"
     m_Metadata:
       m_Items: []
   - m_Id: 445157471150080
     m_Localized: Hints
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883039338496
+    m_Localized: 'Pockets are full: what do you drop?'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883047727104
+    m_Localized: 'Pockets {0}/{1}: sell a card'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883047727105
+    m_Localized: drop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883047727106
+    m_Localized: skip it
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883047727107
+    m_Localized: 'sell: +{0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921408
+    m_Localized: "A dropped card goes back to the deck. You can skip the new one.   
+      1\u20137 to pick"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921409
+    m_Localized: "A sold card goes back to the deck.    Esc / B \u2014 back"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921410
+    m_Localized: Pockets {0}/{1}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921411
+    m_Localized: "Pockets full \u2014 sell a card first"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921412
+    m_Localized: "GOLD \xB7 ONLY ONE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921413
+    m_Localized: swift
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921414
+    m_Localized: commander
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921415
+    m_Localized: catcher
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921416
+    m_Localized: Danger
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921417
+    m_Localized: Danger {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921418
+    m_Localized: A regular walk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921419
+    m_Localized: +1 elite per arena, elites always have a trait
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921420
+    m_Localized: + enemies 10% faster, more spiky balls
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921421
+    m_Localized: + a quarter fewer coins, pricier healing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921422
+    m_Localized: + tougher bosses with more feints, mom calls later
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921423
+    m_Localized: Win to unlock danger {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921424
+    m_Localized: New record on danger {0}!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921425
+    m_Localized: 'Best on danger {0}: {1}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921426
+    m_Localized: Danger {0} unlocked!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921427
+    m_Localized: RECORDS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921428
+    m_Localized: "Danger {0} \u2014 {1} \xB7 {2} \xB7 cards: {3}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921429
+    m_Localized: No wins yet. Walk all the way home!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921430
+    m_Localized: Records
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921431
+    m_Localized: FROM THE SACK!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1198883051921432
+    m_Localized: "Dark balls slow you down \u2014 dodge them"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1280563745906688
+    m_Localized: "The Flea Market \xB7 evening"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1280563750100992
+    m_Localized: "The Kindergarten \xB7 dusk"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1280563750100993
+    m_Localized: "To the flea market \u2192"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1280563750100994
+    m_Localized: "To the kindergarten \u2192"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1281280669900800
+    m_Localized: It's a robot too!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1281280669900801
+    m_Localized: Hit it while it transforms
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1281280669900802
+    m_Localized: The seam burst!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1281280669900803
+    m_Localized: "Stuffing slows you down \u2014 keep out of the clouds"
     m_Metadata:
       m_Items: []
   references:

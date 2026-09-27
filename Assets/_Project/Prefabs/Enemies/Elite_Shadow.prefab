@@ -286,7 +286,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 798be8e3bd0cb4dcca5d1cecce9c12cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Bouncer.Core::Bouncer.Core.EnemyReward
-  coins: 15
+  coins: 10
   chance: 1
   portfolio: 1
 --- !u!1001 &2528962004550661423

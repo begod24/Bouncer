@@ -33,6 +33,7 @@ namespace Bouncer.UI
             Settings,
             Credits,
             Kids,
+            Records,
         }
 
         [SerializeField] Screen title;
@@ -43,6 +44,9 @@ namespace Bouncer.UI
         [SerializeField] Screen kidSelect;
         [SerializeField] Screen gameOver;
         [SerializeField] Screen victory;
+        [Tooltip("Рекорды: лучшие победы на каждом уровне опасности")]
+        [SerializeField] Screen records;
+        [SerializeField] TMP_Text recordsText;
         [SerializeField] SettingsScreen settingsScreen;
         [SerializeField] KidSelectScreen kidSelectScreen;
         [SerializeField] TMP_Text gameOverStats;
@@ -59,8 +63,13 @@ namespace Bouncer.UI
         [SerializeField] UnityEngine.UI.Button[] creditsButtons;
         [Tooltip("«Назад» на экранах настроек и авторов")]
         [SerializeField] UnityEngine.UI.Button[] backButtons;
+        [SerializeField] UnityEngine.UI.Button[] recordsButtons;
 
         PlayerCards _cards;
+        /// <summary>Итог последней победы: новый рекорд, лучшее время уровня, открыт ли следующий.</summary>
+        bool _newRecord;
+        float _bestTime;
+        int _unlockedDanger;
         Overlay _overlay;
         /// <summary>Кнопка, открывшая экран поверх, — на неё вернуться.</summary>
         GameObject _returnTo;
@@ -77,6 +86,74 @@ namespace Bouncer.UI
             Bind(settingsButtons, () => Open(Overlay.Settings));
             Bind(creditsButtons, () => Open(Overlay.Credits));
             Bind(backButtons, CloseOverlay);
+            Bind(recordsButtons, () => Open(Overlay.Records));
+        }
+
+        void OnEnable() => GameEvents.RunFinished += OnRunFinished;
+
+        void OnDisable() => GameEvents.RunFinished -= OnRunFinished;
+
+        /// <summary>Победа: запомнить рекорд (время, опасность, ребёнок, карманы) и открыть следующую опасность.</summary>
+        void OnRunFinished(bool victory)
+        {
+            _newRecord = false;
+            _unlockedDanger = 0;
+            if (!victory)
+                return;
+            int level = Danger.Level;
+            var record = new RunRecord
+            {
+                time = RunState.RunClock,
+                danger = level,
+                kid = KidName(GameSettings.Kid),
+                cards = CardNames(),
+            };
+            _newRecord = RunRecords.Add(record);
+            var best = RunRecords.Best(level);
+            _bestTime = best != null ? best.time : record.time;
+            if (Danger.UnlockAfterWin(level))
+                _unlockedDanger = level + 1;
+        }
+
+        string KidName(int index)
+        {
+            var roster = kidSelectScreen != null ? kidSelectScreen.Roster : null;
+            var kid = roster != null ? roster[index] : null;
+            return kid != null ? kid.name : string.Empty;
+        }
+
+        string[] CardNames()
+        {
+            if (_cards == null)
+                return Array.Empty<string>();
+            var pockets = _cards.PocketCards;
+            var names = new string[pockets.Count];
+            for (int i = 0; i < pockets.Count; i++)
+                names[i] = pockets[i] ? pockets[i].name : string.Empty;
+            return names;
+        }
+
+        /// <summary>Рекорды: лучшая победа на каждом уровне опасности, от высшего.</summary>
+        void RefreshRecords()
+        {
+            if (recordsText == null)
+                return;
+            var lines = new System.Text.StringBuilder();
+            var roster = kidSelectScreen != null ? kidSelectScreen.Roster : null;
+            for (int level = Danger.Max; level >= 1; level--)
+            {
+                var best = RunRecords.Best(level);
+                if (best == null)
+                    continue;
+                string kid = best.kid;
+                if (roster != null)
+                    for (int i = 0; i < roster.Count; i++)
+                        if (roster[i] != null && roster[i].name == best.kid && !roster[i].displayName.IsEmpty)
+                            kid = roster[i].displayName.GetLocalizedString();
+                lines.AppendLine(Loc.Format("records.line", level, RunRecords.FormatTime(best.time), kid,
+                    best.cards != null ? best.cards.Length : 0));
+            }
+            recordsText.text = lines.Length > 0 ? lines.ToString() : Loc.Get("records.empty");
         }
 
         void Update()
@@ -102,6 +179,7 @@ namespace Bouncer.UI
             Show(settings, _overlay == Overlay.Settings, true);
             Show(credits, _overlay == Overlay.Credits, true);
             Show(kidSelect, _overlay == Overlay.Kids, true);
+            Show(records, _overlay == Overlay.Records, true);
             // Кнопки конца забега оживают не сразу — чтобы случайное нажатие не перезапустило игру.
             Show(gameOver, state == SessionState.GameOver, session.CanRestart);
             Show(victory, state == SessionState.Victory, session.CanRestart);
@@ -159,6 +237,12 @@ namespace Bouncer.UI
                 kidSelectScreen.Open();
                 kidSelect.first = kidSelectScreen.FirstButton;
             }
+            else if (overlay == Overlay.Records)
+            {
+                if (records.group == null)
+                    return;
+                RefreshRecords();
+            }
             _returnTo = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
             _overlay = overlay;
             session.OverlayOpen = true;
@@ -199,13 +283,22 @@ namespace Bouncer.UI
             return cancel != null && cancel.WasPressedThisFrame();
         }
 
-        /// <summary>Итоги всей прогулки: время, выбитые, карточки, заработанные монетки.</summary>
+        /// <summary>
+        /// Итоги всей прогулки: время (часы прогулки), выбитые, карточки, заработанные монетки; у победы — рекорд
+        /// и открытая опасность.
+        /// </summary>
         string Stats(GameSession session, string key)
         {
-            int seconds = Mathf.FloorToInt(session.RunTime);
-            string time = $"{seconds / 60}:{seconds % 60:00}";
+            string time = RunRecords.FormatTime(RunState.RunClock > 0f ? RunState.RunClock : session.RunTime);
             int cards = _cards != null ? _cards.Count : 0;
-            return Loc.Format(key, time, session.RunKills, cards, RunState.CoinsEarned);
+            string stats = Loc.Format(key, time, session.RunKills, cards, RunState.CoinsEarned);
+            if (session.State != SessionState.Victory)
+                return stats;
+            stats += "\n" + (_newRecord ? Loc.Format("victory.record", Danger.Level)
+                : Loc.Format("victory.best", Danger.Level, RunRecords.FormatTime(_bestTime)));
+            if (_unlockedDanger > 0)
+                stats += "\n" + Loc.Format("victory.unlocked", _unlockedDanger);
+            return stats;
         }
 
         static void Session(Action<GameSession> action)

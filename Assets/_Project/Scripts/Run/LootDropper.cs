@@ -5,7 +5,9 @@ namespace Bouncer.Run
 {
     /// <summary>
     /// Добыча с выбитых врагов: монетки по <see cref="EnemyReward"/> (мелочь раскладывается по номиналам:
-    /// тенге, пятаки, тиыны) и портфель у элитных. Врагов, исчезнувших в конце арены, не трогает.
+    /// тенге, пятаки, тиыны) и портфель у элитных — но не больше <see cref="ElitePortfolioLimit"/> за арену
+    /// (остальные элитки дают только монетки). Находка на арене — кучка монеток или лимонад.
+    /// На 4-й опасности монеток меньше. Врагов, исчезнувших в конце арены, не трогает.
     /// </summary>
     public sealed class LootDropper : MonoBehaviour
     {
@@ -14,6 +16,11 @@ namespace Bouncer.Run
         [SerializeField] CoinPickup coinFive;
         [SerializeField] CoinPickup coinOne;
         [SerializeField] PortfolioPickup portfolio;
+
+        int _elitePortfolios;
+
+        /// <summary>Сколько портфелей за арену дают элитки. Задаёт арена.</summary>
+        public int ElitePortfolioLimit { get; set; } = 1;
 
         void OnEnable() => GameEvents.EnemyKilled += OnEnemyKilled;
 
@@ -25,10 +32,18 @@ namespace Bouncer.Run
                 return;
             Vector3 at = enemy.transform.position;
             at.y = Mathf.Max(at.y, 0.2f);
-            if (reward.Coins > 0 && Random.value <= reward.Chance)
-                DropCoins(reward.Coins, at);
-            if (reward.Portfolio)
+            // Опасность урезает монетки: с мелочи — реже, с крупных — меньше.
+            float multiplier = Danger.CoinMultiplier;
+            bool small = reward.Coins <= 2;
+            float chance = reward.Chance * (small ? multiplier : 1f);
+            int coins = small ? reward.Coins : Mathf.Max(1, Mathf.RoundToInt(reward.Coins * multiplier));
+            if (coins > 0 && Random.value <= chance)
+                DropCoins(coins, at);
+            if (reward.Portfolio && _elitePortfolios < ElitePortfolioLimit)
+            {
+                _elitePortfolios++;
                 DropPortfolio(at);
+            }
         }
 
         /// <summary>Рассыпать столько тиынов: крупными монетами, сколько получится, остаток мелочью.</summary>
@@ -42,12 +57,23 @@ namespace Bouncer.Run
         public PortfolioPickup DropPortfolio(Vector3 at) =>
             portfolio ? PoolService.Spawn(portfolio, at, Quaternion.identity) : null;
 
-        /// <summary>Положить портфель на землю (находка на арене).</summary>
+        /// <summary>Положить портфель на землю.</summary>
         public void PlacePortfolio(Vector3 at)
         {
             var pickup = DropPortfolio(at);
             if (pickup)
                 pickup.PlaceOnGround();
+        }
+
+        /// <summary>Находка на арене: кучка монеток или лимонад — пополам.</summary>
+        public void PlaceFind(Vector3 at, HealPickup lemonade, int coins)
+        {
+            if (lemonade && Random.value < 0.5f)
+            {
+                PoolService.Spawn(lemonade, at, Quaternion.identity);
+                return;
+            }
+            DropCoins(Mathf.Max(1, Mathf.RoundToInt(coins * Danger.CoinMultiplier)), at + Vector3.up * 0.3f);
         }
 
         static int Drop(CoinPickup prefab, int amount, Vector3 at)

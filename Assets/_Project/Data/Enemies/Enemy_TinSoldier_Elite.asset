@@ -34,4 +34,4 @@ MonoBehaviour:
   staggerTime: 0.6
   knockbackScale: 0.25
   debrisForce: 4
-  dropBallOnDeath: 1
+  dropBallOnDeath: 0

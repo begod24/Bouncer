@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e99545f4b8a2746e5886d2c316f2292a, type: 3}
+  m_Name: Enemy_RCCar
+  m_EditorClassIdentifier: Bouncer.Enemies::Bouncer.Enemies.RCCarDefinition
+  displayName: "\u041C\u0430\u0448\u0438\u043D\u043A\u0430 \u043D\u0430 \u043F\u0443\u043B\u044C\u0442\u0435"
+  hitsToKill: 2
+  cruiseSpeed: 5.5
+  turnSpeed: 300
+  orbitDistance: 7
+  chargeRange: 12
+  chargeCooldown: 1.6
+  revTime: 0.55
+  chargeSpeed: 10
+  chargeTime: 1.3
+  skidTime: 0.55
+  skidTurn: 160
+  hitDistance: 0.9
+  damage: 1
+  knockback: 10
+  flipTime: 1.3
+  knockbackScale: 0.4
+  debrisForce: 5

@@ -287,7 +287,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Bouncer.Core::Bouncer.Core.EnemyReward
   coins: 2
-  chance: 1
+  chance: 0.35
   portfolio: 0
 --- !u!1001 &2730832923333205880
 PrefabInstance:

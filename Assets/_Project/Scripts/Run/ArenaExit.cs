@@ -6,7 +6,8 @@ namespace Bouncer.Run
 {
     /// <summary>
     /// Стрелка мелом на следующую арену («В коробку →»). Появляется, когда арена пройдена; игрок заходит на неё —
-    /// и прогулка идёт дальше (<see cref="ArenaDirector.LeaveArena"/>).
+    /// и прогулка идёт дальше (<see cref="ArenaDirector.LeaveArena"/>). На развилке стрелок две: каждая помнит,
+    /// на какую арену этапа ведёт.
     /// </summary>
     public sealed class ArenaExit : MonoBehaviour
     {
@@ -20,6 +21,7 @@ namespace Bouncer.Run
         Vector3 _pulseScale = Vector3.one;
         bool _shown;
         bool _left;
+        int _variant;
 
         public bool IsShown => _shown;
 
@@ -30,10 +32,12 @@ namespace Bouncer.Run
             SetShown(false);
         }
 
-        public void Show(string text)
+        /// <summary>Показать стрелку; variant — на какую арену следующего этапа она ведёт (0 — основная).</summary>
+        public void Show(string text, int variant = 0)
         {
             if (label)
                 label.text = text;
+            _variant = variant;
             SetShown(true);
         }
 
@@ -64,7 +68,7 @@ namespace Bouncer.Run
                 delta.y = 0f;
                 if (delta.sqrMagnitude > radius * radius)
                     continue;
-                if (ArenaDirector.Instance != null && ArenaDirector.Instance.LeaveArena())
+                if (ArenaDirector.Instance != null && ArenaDirector.Instance.LeaveArena(_variant))
                     _left = true;
                 return;
             }

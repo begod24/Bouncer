@@ -7,6 +7,21 @@ using UnityEngine.Serialization;
 
 namespace Bouncer.Upgrades
 {
+    /// <summary>Что будет с карманами, если взять карточку (подпись на вкладыше в выборе и в ларьке).</summary>
+    public enum PocketNeed
+    {
+        /// <summary>Займёт свободный карман.</summary>
+        New,
+        /// <summary>Уже есть: повтор ляжет в тот же карман.</summary>
+        Stack,
+        /// <summary>Тип мяча, утешительный вкладыш, карточка-деньги: кармана не занимает.</summary>
+        Free,
+        /// <summary>Комбо: заберёт свои части и освободит карман.</summary>
+        Combo,
+        /// <summary>Нужен карман, а свободных нет: придётся выкинуть или продать одну.</summary>
+        Full,
+    }
+
     /// <summary>Откуда выбор «1 из 3».</summary>
     public enum OfferKind
     {
@@ -26,7 +41,8 @@ namespace Bouncer.Upgrades
     /// Сборка ограничена: карманов <see cref="CardDeck.pockets"/> (повторы — один карман, комбо вбирает свои
     /// части), золотых и комбо за прогулку — не больше <see cref="CardDeck.maxGolds"/> / <see cref="CardDeck.maxCombos"/>.
     /// Если карманы полны, выбранная карточка ждёт (<see cref="PendingCard"/>), пока игрок не выкинет одну
-    /// (<see cref="ResolveDiscard"/>); выкинутая возвращается в колоду, её действие снимается.
+    /// (<see cref="ResolveDiscard"/>); выкинутая возвращается в колоду, её действие снимается. Само предложение
+    /// при этом не пропадает: можно вернуться к нему и взять другую (<see cref="CancelDiscard"/>).
     /// </summary>
     [RequireComponent(typeof(PlayerController))]
     public sealed class PlayerCards : MonoBehaviour
@@ -46,7 +62,8 @@ namespace Bouncer.Upgrades
         /// <summary>Карточки на выбор. Пусто — выбора сейчас нет.</summary>
         public IReadOnlyList<UpgradeCard> Offer => _offer;
         public OfferKind OfferKind { get; private set; }
-        public bool IsChoosing => _offer.Count > 0;
+        /// <summary>Открыт выбор «1 из 3» (а не решение, что выкинуть ради выбранной).</summary>
+        public bool IsChoosing => _offer.Count > 0 && PendingCard == null;
         /// <summary>Сколько карточек взято за прогулку.</summary>
         public int Count => RunCards.Taken.Count;
         public int MaxPockets => deck ? deck.pockets : 6;
@@ -141,8 +158,40 @@ namespace Bouncer.Upgrades
         }
 
         /// <summary>Этой карточке нужен свободный карман, а его нет.</summary>
-        public bool PocketsFullFor(UpgradeCard card) =>
-            card && card.TakesPocket && !card.IsCombo && !Owns(card) && PocketsUsed >= MaxPockets;
+        public bool PocketsFullFor(UpgradeCard card) => card && NeedFor(card) == PocketNeed.Full;
+
+        /// <summary>Что будет с карманами, если взять карточку.</summary>
+        public PocketNeed NeedFor(UpgradeCard card)
+        {
+            if (!card || !card.TakesPocket)
+                return PocketNeed.Free;
+            if (card.IsCombo)
+                return PocketNeed.Combo;
+            if (Owns(card))
+                return PocketNeed.Stack;
+            return PocketsUsed >= MaxPockets ? PocketNeed.Full : PocketNeed.New;
+        }
+
+        /// <summary>
+        /// Взятые карточки, которые кармана не занимают: мяч, которым игрок бросает сейчас (последний взятый тип
+        /// мяча), и карточки-деньги по порядку взятия. Утешительные вкладыши не считаются.
+        /// </summary>
+        public void GetFreeCards(List<UpgradeCard> result)
+        {
+            result.Clear();
+            UpgradeCard ball = null;
+            foreach (var card in RunCards.Taken)
+            {
+                if (!card || card.TakesPocket || card.category == UpgradeCategory.Treat)
+                    continue;
+                if (card.category == UpgradeCategory.Ball)
+                    ball = card;
+                else if (!result.Contains(card))
+                    result.Add(card);
+            }
+            if (ball)
+                result.Insert(0, ball);
+        }
 
         /// <summary>
         /// Выкинуть карточку из кармана (у комбо — вместе с частями): она возвращается в колоду, действие снимается.
@@ -170,6 +219,7 @@ namespace Bouncer.Upgrades
             if (card == null)
                 return;
             PendingCard = null;
+            _offer.Clear();
             if (victim != null && victim != card)
             {
                 Discard(victim);
@@ -178,6 +228,16 @@ namespace Bouncer.Upgrades
             }
             DiscardChanged?.Invoke();
             ContinueChoices();
+        }
+
+        /// <summary>Не выкидывать ничего и вернуться к выбору «1 из 3»: взять другую карточку.</summary>
+        public void CancelDiscard()
+        {
+            if (PendingCard == null)
+                return;
+            PendingCard = null;
+            DiscardChanged?.Invoke();
+            OfferChanged?.Invoke();
         }
 
         /// <summary>Снять действие всех карточек и применить заново те, что остались (после выкидывания).</summary>
@@ -255,12 +315,12 @@ namespace Bouncer.Upgrades
 
         public void Choose(int index)
         {
-            if (index < 0 || index >= _offer.Count)
+            if (!IsChoosing || index < 0 || index >= _offer.Count)
                 return;
 
             var card = _offer[index];
-            _offer.Clear();
-            // Карманы полны — сначала выбрать, что выкинуть; игра стоит, пока не решено.
+            // Карманы полны — сначала выбрать, что выкинуть; игра стоит, пока не решено. Предложение ждёт:
+            // передумал — можно вернуться и взять другую.
             if (PocketsFullFor(card))
             {
                 PendingCard = card;
@@ -268,6 +328,7 @@ namespace Bouncer.Upgrades
                 DiscardChanged?.Invoke();
                 return;
             }
+            _offer.Clear();
             Take(card);
             GameEvents.PlaySound(SoundCue.CardPick, transform.position);
             ContinueChoices();

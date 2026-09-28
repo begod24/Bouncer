@@ -617,7 +617,7 @@ namespace Bouncer.Enemies
                     StartVault(DuskBossDefinition.ByPhase(definition.vaultCount, _phase), rage: false);
                     return true;
                 case Ability.Sack:
-                    if (Ball.LooseCount < definition.sweepMinBalls || _sack.Count >= definition.sackCapacity
+                    if (Ball.ForeignLooseCount < definition.sweepMinBalls || _sack.Count >= definition.sackCapacity
                         || !FindLooseCluster(out _sweepPoint))
                         return false;
                     _sweepStopsLeft = definition.sweepStops;
@@ -742,7 +742,8 @@ namespace Bouncer.Enemies
                 var reuse = middle && caught != null && caught.State == BallState.Stuck ? caught : null;
                 ThrowAt(_target, angle, definition.answerSpeed, HitFlags.Charged, i == 0 ? SoundCue.ThrowCharged : (SoundCue?)null, reuse);
             }
-            if (caught != null && caught.State == BallState.Stuck && count % 2 == 0)
+            // Пойманный так и не полетел (игрок вплотную — бросать некуда): падает под ноги, а не висит в воздухе.
+            if (caught != null && caught.State == BallState.Stuck)
                 caught.Drop(caught.Position, transform.forward * 2f);
             _throwPose = 1f;
         }
@@ -864,7 +865,10 @@ namespace Bouncer.Enemies
 
         // ---------- «Мешок» ----------
 
-        /// <summary>Куча лежащих мячей: точка, вокруг которой их больше всего (из равных — ближе к нему).</summary>
+        /// <summary>Мешок берёт только чужие лежащие мячи: мячи игрока ему не достаются.</summary>
+        static bool CanSack(Ball ball) => ball.State == BallState.Loose && !ball.IsOwn;
+
+        /// <summary>Куча чужих лежащих мячей: точка, вокруг которой их больше всего (из равных — ближе к нему).</summary>
         bool FindLooseCluster(out Vector3 point)
         {
             point = default;
@@ -874,12 +878,12 @@ namespace Bouncer.Enemies
             float bestDistance = float.PositiveInfinity;
             for (int i = 0; i < balls.Count; i++)
             {
-                if (balls[i].State != BallState.Loose)
+                if (!CanSack(balls[i]))
                     continue;
                 Vector3 p = balls[i].Position;
                 int count = 0;
                 for (int j = 0; j < balls.Count; j++)
-                    if (balls[j].State == BallState.Loose && Flat(balls[j].Position - p).sqrMagnitude <= radiusSqr)
+                    if (CanSack(balls[j]) && Flat(balls[j].Position - p).sqrMagnitude <= radiusSqr)
                         count++;
                 float distance = Flat(p - transform.position).sqrMagnitude;
                 if (count > bestCount || (count == bestCount && distance < bestDistance))
@@ -910,7 +914,7 @@ namespace Bouncer.Enemies
             Face(velocity.sqrMagnitude > 0.3f ? velocity : to, dt, 1.5f);
         }
 
-        /// <summary>Нагнулся — и все мячи вокруг улетели в мешок.</summary>
+        /// <summary>Нагнулся — и все чужие мячи вокруг улетели в мешок (мячи игрока остаются лежать).</summary>
         void SweepUp()
         {
             var balls = Ball.Active;
@@ -919,7 +923,7 @@ namespace Bouncer.Enemies
             for (int i = balls.Count - 1; i >= 0; i--)
             {
                 var ball = balls[i];
-                if (ball.State != BallState.Loose || Flat(ball.Position - transform.position).sqrMagnitude > radiusSqr)
+                if (!CanSack(ball) || Flat(ball.Position - transform.position).sqrMagnitude > radiusSqr)
                     continue;
                 if (StuffBall(ball, sound: false))
                     stuffed++;
@@ -933,10 +937,10 @@ namespace Bouncer.Enemies
                 EndAbility();
         }
 
-        /// <summary>Мяч в мешок (сам сгрёб или принесла ворона). false — мешок полон.</summary>
+        /// <summary>Чужой мяч в мешок (сам сгрёб или принесла ворона). false — мешок полон или мяч игрока.</summary>
         public bool StuffBall(Ball ball, bool sound = true)
         {
-            if (ball == null || _health.IsDead || _sack.Count >= definition.sackCapacity)
+            if (ball == null || ball.IsOwn || _health.IsDead || _sack.Count >= definition.sackCapacity)
                 return false;
             ball.Stick(SackPosition);
             _sack.Add(ball);

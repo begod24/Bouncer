@@ -491,24 +491,8 @@ MonoBehaviour:
     m_Key: pockets.full
     m_Metadata:
       m_Items: []
-  - m_Id: 1198883047727104
-    m_Key: pockets.title
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198883047727105
-    m_Key: pockets.discard
-    m_Metadata:
-      m_Items: []
   - m_Id: 1198883047727106
     m_Key: pockets.skip
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198883047727107
-    m_Key: pockets.sell.price
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198883051921408
-    m_Key: pockets.hint.discard
     m_Metadata:
       m_Items: []
   - m_Id: 1198883051921409
@@ -637,6 +621,142 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 1281280669900803
     m_Key: rule.hare_rip.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507264
+    m_Key: pockets.view.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507265
+    m_Key: pockets.view.subtitle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507266
+    m_Key: pockets.view.empty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507267
+    m_Key: pockets.free
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507268
+    m_Key: pockets.slot.empty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507269
+    m_Key: pockets.close
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507270
+    m_Key: pockets.back
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507271
+    m_Key: pockets.pick
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507272
+    m_Key: pockets.replace.subtitle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507273
+    m_Key: pockets.replace.new
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507274
+    m_Key: pockets.replace.drop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507275
+    m_Key: pockets.replace.stamp
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507276
+    m_Key: pockets.replace.pick
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507277
+    m_Key: pockets.replace.confirm
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507278
+    m_Key: pockets.sell.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507279
+    m_Key: pockets.sell.subtitle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507280
+    m_Key: pockets.sell.swap_subtitle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507281
+    m_Key: pockets.sell.buy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507282
+    m_Key: pockets.sell.give
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507283
+    m_Key: pockets.sell.stamp
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507284
+    m_Key: pockets.sell.pick
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507285
+    m_Key: pockets.sell.confirm
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507286
+    m_Key: pockets.sell.swap
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507287
+    m_Key: pockets.sell.short
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507288
+    m_Key: pockets.hint.view
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507289
+    m_Key: pockets.hint.replace
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507290
+    m_Key: pockets.strip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507291
+    m_Key: pockets.strip.choice
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507292
+    m_Key: pockets.tag.new
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507293
+    m_Key: pockets.tag.stack
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507294
+    m_Key: pockets.tag.free
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507295
+    m_Key: pockets.tag.combo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507296
+    m_Key: pockets.tag.full
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507297
+    m_Key: pause.pockets
     m_Metadata:
       m_Items: []
   m_Metadata:

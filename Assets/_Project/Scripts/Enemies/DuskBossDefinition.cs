@@ -63,7 +63,7 @@ namespace Bouncer.Enemies
         public float answerSpread = 30f;
         public float answerSpeed = 16f;
 
-        [Header("«Мешок»: собирает мячи с земли")]
+        [Header("«Мешок»: собирает с земли чужие мячи (мячи игрока не трогает)")]
         [Min(1)] public int sackCapacity = 12;
         [Tooltip("Сгребает мячи в этом радиусе вокруг себя, м")]
         public float sweepRadius = 4f;
@@ -73,7 +73,7 @@ namespace Bouncer.Enemies
         public float sweepSpeedMultiplier = 1.7f;
         [Tooltip("Дольше этого к куче не идёт — сгребает там, где стоит")]
         public float sweepTimeout = 3f;
-        [Tooltip("Умение берётся, только если на земле лежит столько мячей")]
+        [Tooltip("Умение берётся, только если на земле лежит столько чужих мячей")]
         [Min(1)] public int sweepMinBalls = 2;
         [Tooltip("Насколько больше становится мешок с каждым мячом")]
         public float sackGrowth = 0.06f;

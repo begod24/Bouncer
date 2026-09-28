@@ -795,7 +795,18 @@ def icons():
     c.save("Icons/Icon_LuckyWrapper.png", grain=0.3, color=INK)
 
 
+# ================================================================ Карманы
+
+def pockets():
+    # Пустой карман: пунктир мелом — ряд карманов на HUD, на экране выбора, в ларьке и на экране карманов.
+    c = Canvas(128, 128, 70)
+    frame = wobble(c.round_rect_pts(10, 10, 118, 118, 18), 0.8, 70)
+    c.stroke(dense(frame + [frame[0]], 2.0), 5, opacity=0.9, dash=12)
+    c.save("Pocket_Slot.png")
+
+
 if __name__ == "__main__":
     hud()
     card_frames()
     icons()
+    pockets()

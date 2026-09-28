@@ -37,7 +37,7 @@ namespace Bouncer.Enemies
         [Tooltip("Задевает игрока ближе этого, м")]
         public float hitRadius = 0.8f;
 
-        [Header("Кража мячей: хватает с земли и несёт в мешок босса")]
+        [Header("Кража мячей: хватает с земли чужой мяч и несёт в мешок босса")]
         [Range(0f, 1f)] public float stealChance = 0.35f;
         [Tooltip("Берёт мяч не ближе этого к игроку, м")]
         public float stealMinDistance = 3f;

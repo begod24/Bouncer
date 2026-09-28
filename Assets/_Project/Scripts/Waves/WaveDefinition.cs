@@ -27,11 +27,29 @@ namespace Bouncer.Waves
         [Min(1)] public int maxAliveStart = 14;
         [Min(1)] public int maxAliveEnd = 36;
 
+        [Header("Ритм: передышки и элитки")]
+        [Tooltip("Каждые столько секунд — передышка: последние breatherLength секунд круга дорожки молчат. 0 — без передышек. " +
+                 "Разовые выходы (элитки, босс) и подмога боссов идут как обычно")]
+        [Min(0f)] public float breatherEvery;
+        [Tooltip("Сколько длится передышка, с")]
+        [Min(0f)] public float breatherLength = 10f;
+        [Tooltip("Пока на арене жива элитка, дорожки идут во столько раз реже. 1 — как обычно")]
+        [Min(1f)] public float eliteSlowdown = 1f;
+
         public List<SpawnTrack> tracks = new();
         public List<SpawnBurst> bursts = new();
 
         public int MaxAliveAt(float time) =>
             Mathf.RoundToInt(Mathf.Lerp(maxAliveStart, maxAliveEnd, Mathf.Clamp01(time / duration)));
+
+        /// <summary>Идёт передышка: конец круга breatherEvery (при 60 и 10 — с 50-й по 60-ю секунду каждой минуты).</summary>
+        public bool IsBreather(float time)
+        {
+            if (breatherEvery <= 0f || breatherLength <= 0f)
+                return false;
+            float quietFrom = breatherEvery - Mathf.Min(breatherLength, breatherEvery);
+            return time >= quietFrom && time % breatherEvery >= quietFrom;
+        }
     }
 
     /// <summary>Дорожка: один вид врагов, появляющийся группами с растущим темпом.</summary>

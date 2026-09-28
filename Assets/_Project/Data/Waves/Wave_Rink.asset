@@ -13,130 +13,133 @@ MonoBehaviour:
   m_Name: Wave_Rink
   m_EditorClassIdentifier: Bouncer.Waves::Bouncer.Waves.WaveDefinition
   duration: 300
-  maxAliveStart: 18
-  maxAliveEnd: 40
+  maxAliveStart: 14
+  maxAliveEnd: 30
+  breatherEvery: 60
+  breatherLength: 10
+  eliteSlowdown: 1.5
   tracks:
   - name: "\u041D\u0435\u0432\u0430\u043B\u044F\u0448\u043A\u0438"
     prefab: {fileID: 188804801301329896, guid: c4b9f7220404f4a3481d1c5c9e2173f2, type: 3}
     from: 0
-    to: 262
+    to: 255
     firstDelay: 0.75
-    intervalStart: 5.2
-    intervalEnd: 2.6
+    intervalStart: 4.6
+    intervalEnd: 2.4
     groupStart: 2
-    groupEnd: 3
+    groupEnd: 2
     layout: 0
-    maxAlive: 12
+    maxAlive: 10
   - name: "\u041F\u0443\u043F\u0441\u044B"
     prefab: {fileID: 2124556403835334173, guid: c4e890b4fcc064153b2a377a9c3a1ff5, type: 3}
-    from: 18
-    to: 262
+    from: 15
+    to: 110
     firstDelay: 0
-    intervalStart: 17
-    intervalEnd: 8
-    groupStart: 5
-    groupEnd: 8
+    intervalStart: 12.5
+    intervalEnd: 8.6
+    groupStart: 4
+    groupEnd: 5
     layout: 0
-    maxAlive: 24
+    maxAlive: 12
+  - name: "\u041B\u044F\u0433\u0443\u0448\u043A\u0438"
+    prefab: {fileID: 7306685930854910410, guid: 4732770aad31f4bab9aa6b8fc75fa546, type: 3}
+    from: 20
+    to: 110
+    firstDelay: 0
+    intervalStart: 13.3
+    intervalEnd: 9.3
+    groupStart: 1
+    groupEnd: 2
+    layout: 0
+    maxAlive: 3
   - name: "\u0421\u043E\u043B\u0434\u0430\u0442\u0438\u043A\u0438"
     prefab: {fileID: 7471714542055159759, guid: 0f3b097281a5942a6abc0e12ce480b0f, type: 3}
-    from: 30
-    to: 262
+    from: 25
+    to: 170
     firstDelay: 0
-    intervalStart: 30
-    intervalEnd: 18
+    intervalStart: 24.6
+    intervalEnd: 16.4
     groupStart: 3
-    groupEnd: 4
+    groupEnd: 3
     layout: 1
-    maxAlive: 8
+    maxAlive: 6
   - name: "\u0426\u044B\u043F\u043B\u044F\u0442\u0430"
     prefab: {fileID: 2642837128033992027, guid: f194bfe63c83c48cfab3d782e096b1d3, type: 3}
-    from: 40
-    to: 262
+    from: 60
+    to: 170
     firstDelay: 0
-    intervalStart: 15
-    intervalEnd: 8
-    groupStart: 1
-    groupEnd: 2
-    layout: 0
-    maxAlive: 4
-  - name: "\u041C\u0430\u043D\u0435\u043A\u0435\u043D\u044B"
-    prefab: {fileID: 3330391762857217134, guid: f31e70a1a818f4c34bf35acd2af9033c, type: 3}
-    from: 45
-    to: 262
-    firstDelay: 0
-    intervalStart: 24
-    intervalEnd: 11
-    groupStart: 1
-    groupEnd: 2
-    layout: 0
-    maxAlive: 4
-  - name: "\u041B\u043E\u0448\u0430\u0434\u043A\u0438"
-    prefab: {fileID: 5263590373635438490, guid: 3a965426630434226b88e356a0aac765, type: 3}
-    from: 55
-    to: 262
-    firstDelay: 0
-    intervalStart: 28
-    intervalEnd: 18
+    intervalStart: 11.3
+    intervalEnd: 8.5
     groupStart: 1
     groupEnd: 1
     layout: 0
     maxAlive: 2
-  - name: "\u042E\u043B\u044B"
-    prefab: {fileID: 7639004335897309999, guid: 8e91cb7fd4cd44c728953b5b65f7a70d, type: 3}
+  - name: "\u041C\u0430\u043D\u0435\u043A\u0435\u043D\u044B"
+    prefab: {fileID: 3330391762857217134, guid: f31e70a1a818f4c34bf35acd2af9033c, type: 3}
     from: 70
-    to: 262
+    to: 255
     firstDelay: 0
-    intervalStart: 22
-    intervalEnd: 13
+    intervalStart: 14.7
+    intervalEnd: 9
     groupStart: 1
     groupEnd: 1
     layout: 0
     maxAlive: 3
-  - name: "\u041C\u0438\u0448\u043A\u0438"
-    prefab: {fileID: 3818713001533430314, guid: 3527dc997b1524daea8e6077fe595ca1, type: 3}
-    from: 90
-    to: 262
-    firstDelay: 0
-    intervalStart: 36
-    intervalEnd: 24
-    groupStart: 1
-    groupEnd: 1
-    layout: 0
-    maxAlive: 2
-  - name: "\u041B\u044F\u0433\u0443\u0448\u043A\u0438"
-    prefab: {fileID: 7306685930854910410, guid: 4732770aad31f4bab9aa6b8fc75fa546, type: 3}
-    from: 25
-    to: 262
-    firstDelay: 0
-    intervalStart: 16
-    intervalEnd: 10
-    groupStart: 1
-    groupEnd: 2
-    layout: 0
-    maxAlive: 4
   - name: "\u0421\u043E\u043B\u0434\u0430\u0442\u0438\u043A\u0438 \u0441 \u043A\u0440\u044B\u0448\u043A\u043E\u0439"
     prefab: {fileID: 2234386866115496053, guid: 235aa2d7f80864d5dbe3cf7f7c628c40, type: 3}
-    from: 35
-    to: 262
+    from: 120
+    to: 255
     firstDelay: 0
-    intervalStart: 26
-    intervalEnd: 16
+    intervalStart: 16.9
+    intervalEnd: 11.2
     groupStart: 1
     groupEnd: 2
     layout: 1
-    maxAlive: 4
-  - name: "\u0411\u0430\u0440\u0430\u0431\u0430\u043D\u0449\u0438\u043A\u0438"
-    prefab: {fileID: 5456473976788259259, guid: 687f93d3a729b44a4a43413c4d4db3a4, type: 3}
-    from: 60
-    to: 262
+    maxAlive: 3
+  - name: "\u042E\u043B\u044B"
+    prefab: {fileID: 7639004335897309999, guid: 8e91cb7fd4cd44c728953b5b65f7a70d, type: 3}
+    from: 124
+    to: 170
     firstDelay: 0
-    intervalStart: 40
-    intervalEnd: 26
+    intervalStart: 10.4
+    intervalEnd: 7.5
     groupStart: 1
     groupEnd: 1
     layout: 0
     maxAlive: 2
+  - name: "\u041B\u043E\u0448\u0430\u0434\u043A\u0438"
+    prefab: {fileID: 5263590373635438490, guid: 3a965426630434226b88e356a0aac765, type: 3}
+    from: 180
+    to: 255
+    firstDelay: 0
+    intervalStart: 15
+    intervalEnd: 10
+    groupStart: 1
+    groupEnd: 1
+    layout: 0
+    maxAlive: 2
+  - name: "\u0411\u0430\u0440\u0430\u0431\u0430\u043D\u0449\u0438\u043A\u0438"
+    prefab: {fileID: 5456473976788259259, guid: 687f93d3a729b44a4a43413c4d4db3a4, type: 3}
+    from: 184
+    to: 255
+    firstDelay: 0
+    intervalStart: 17
+    intervalEnd: 12.3
+    groupStart: 1
+    groupEnd: 1
+    layout: 0
+    maxAlive: 1
+  - name: "\u041F\u0443\u043F\u0441\u044B \u2014 \u0444\u0438\u043D\u0430\u043B"
+    prefab: {fileID: 2124556403835334173, guid: c4e890b4fcc064153b2a377a9c3a1ff5, type: 3}
+    from: 190
+    to: 255
+    firstDelay: 0
+    intervalStart: 9
+    intervalEnd: 6.3
+    groupStart: 5
+    groupEnd: 6
+    layout: 0
+    maxAlive: 12
   bursts:
   - name: "\u042D\u043B\u0438\u0442\u043A\u0430 1"
     prefab: {fileID: 188804801301329896, guid: 82a7b5db940874a67824ed841dfaf38e, type: 3}

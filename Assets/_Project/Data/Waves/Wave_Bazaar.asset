@@ -13,119 +13,133 @@ MonoBehaviour:
   m_Name: Wave_Bazaar
   m_EditorClassIdentifier: Bouncer.Waves::Bouncer.Waves.WaveDefinition
   duration: 300
-  maxAliveStart: 18
-  maxAliveEnd: 40
+  maxAliveStart: 14
+  maxAliveEnd: 30
+  breatherEvery: 60
+  breatherLength: 10
+  eliteSlowdown: 1.5
   tracks:
   - name: "\u041D\u0435\u0432\u0430\u043B\u044F\u0448\u043A\u0438"
     prefab: {fileID: 188804801301329896, guid: c4b9f7220404f4a3481d1c5c9e2173f2, type: 3}
     from: 0
-    to: 262
+    to: 255
     firstDelay: 0.75
-    intervalStart: 5.5
-    intervalEnd: 2.8
+    intervalStart: 4.4
+    intervalEnd: 2.3
     groupStart: 2
-    groupEnd: 3
+    groupEnd: 2
     layout: 0
-    maxAlive: 12
+    maxAlive: 10
   - name: "\u041F\u0443\u043F\u0441\u044B"
     prefab: {fileID: 2124556403835334173, guid: c4e890b4fcc064153b2a377a9c3a1ff5, type: 3}
     from: 15
-    to: 262
+    to: 110
     firstDelay: 0
-    intervalStart: 17
-    intervalEnd: 8
-    groupStart: 5
-    groupEnd: 8
+    intervalStart: 12.5
+    intervalEnd: 8.6
+    groupStart: 4
+    groupEnd: 5
     layout: 0
-    maxAlive: 24
-  - name: "\u0421\u043E\u043B\u0434\u0430\u0442\u0438\u043A\u0438"
-    prefab: {fileID: 7471714542055159759, guid: 0f3b097281a5942a6abc0e12ce480b0f, type: 3}
-    from: 30
-    to: 262
-    firstDelay: 0
-    intervalStart: 30
-    intervalEnd: 18
-    groupStart: 3
-    groupEnd: 4
-    layout: 1
-    maxAlive: 8
-  - name: "\u0426\u044B\u043F\u043B\u044F\u0442\u0430"
-    prefab: {fileID: 2642837128033992027, guid: f194bfe63c83c48cfab3d782e096b1d3, type: 3}
-    from: 40
-    to: 262
-    firstDelay: 0
-    intervalStart: 16
-    intervalEnd: 9
-    groupStart: 1
-    groupEnd: 2
-    layout: 0
-    maxAlive: 4
-  - name: "\u041C\u0438\u0448\u043A\u0438"
-    prefab: {fileID: 3818713001533430314, guid: 3527dc997b1524daea8e6077fe595ca1, type: 3}
-    from: 90
-    to: 262
-    firstDelay: 0
-    intervalStart: 36
-    intervalEnd: 24
-    groupStart: 1
-    groupEnd: 1
-    layout: 0
-    maxAlive: 2
+    maxAlive: 12
   - name: "\u041C\u0430\u0448\u0438\u043D\u043A\u0438 \u043D\u0430 \u043F\u0443\u043B\u044C\u0442\u0435"
     prefab: {fileID: 9121931090188895690, guid: 02bab389db282411480563efffb536de, type: 3}
     from: 20
-    to: 262
+    to: 170
     firstDelay: 0
-    intervalStart: 18
-    intervalEnd: 10
+    intervalStart: 11.2
+    intervalEnd: 7.4
     groupStart: 1
     groupEnd: 2
     layout: 0
-    maxAlive: 4
-  - name: "\u041F\u0438\u0441\u0442\u043E\u043B\u0435\u0442\u044B \u043E\u0442 \xAB\u0414\u0435\u043D\u0434\u0438\xBB"
-    prefab: {fileID: 2840256107119146395, guid: 63cb86659e34c45fda5507c29a11e125, type: 3}
-    from: 50
-    to: 262
+    maxAlive: 3
+  - name: "\u0421\u043E\u043B\u0434\u0430\u0442\u0438\u043A\u0438"
+    prefab: {fileID: 7471714542055159759, guid: 0f3b097281a5942a6abc0e12ce480b0f, type: 3}
+    from: 30
+    to: 110
     firstDelay: 0
-    intervalStart: 32
-    intervalEnd: 20
+    intervalStart: 20.6
+    intervalEnd: 13.7
+    groupStart: 3
+    groupEnd: 3
+    layout: 1
+    maxAlive: 6
+  - name: "\u0426\u044B\u043F\u043B\u044F\u0442\u0430"
+    prefab: {fileID: 2642837128033992027, guid: f194bfe63c83c48cfab3d782e096b1d3, type: 3}
+    from: 60
+    to: 170
+    firstDelay: 0
+    intervalStart: 11.3
+    intervalEnd: 8.5
     groupStart: 1
     groupEnd: 1
     layout: 0
     maxAlive: 2
   - name: "\u041B\u044F\u0433\u0443\u0448\u043A\u0438"
     prefab: {fileID: 7306685930854910410, guid: 4732770aad31f4bab9aa6b8fc75fa546, type: 3}
-    from: 35
-    to: 262
+    from: 120
+    to: 170
     firstDelay: 0
-    intervalStart: 20
-    intervalEnd: 12
+    intervalStart: 11.6
+    intervalEnd: 7.8
     groupStart: 1
     groupEnd: 2
     layout: 0
     maxAlive: 3
-  - name: "\u0421\u043E\u043B\u0434\u0430\u0442\u0438\u043A\u0438 \u0441 \u043A\u0440\u044B\u0448\u043A\u043E\u0439"
-    prefab: {fileID: 2234386866115496053, guid: 235aa2d7f80864d5dbe3cf7f7c628c40, type: 3}
-    from: 45
-    to: 262
+  - name: "\u041F\u0438\u0441\u0442\u043E\u043B\u0435\u0442\u044B \u043E\u0442 \xAB\u0414\u0435\u043D\u0434\u0438\xBB"
+    prefab: {fileID: 2840256107119146395, guid: 63cb86659e34c45fda5507c29a11e125, type: 3}
+    from: 124
+    to: 255
     firstDelay: 0
-    intervalStart: 28
-    intervalEnd: 18
-    groupStart: 1
-    groupEnd: 2
-    layout: 1
-    maxAlive: 4
-  - name: "\u0411\u0430\u0440\u0430\u0431\u0430\u043D\u0449\u0438\u043A\u0438"
-    prefab: {fileID: 5456473976788259259, guid: 687f93d3a729b44a4a43413c4d4db3a4, type: 3}
-    from: 70
-    to: 262
-    firstDelay: 0
-    intervalStart: 42
-    intervalEnd: 28
+    intervalStart: 9.4
+    intervalEnd: 6.3
     groupStart: 1
     groupEnd: 1
     layout: 0
     maxAlive: 2
+  - name: "\u0421\u043E\u043B\u0434\u0430\u0442\u0438\u043A\u0438 \u0441 \u043A\u0440\u044B\u0448\u043A\u043E\u0439"
+    prefab: {fileID: 2234386866115496053, guid: 235aa2d7f80864d5dbe3cf7f7c628c40, type: 3}
+    from: 128
+    to: 255
+    firstDelay: 0
+    intervalStart: 17.9
+    intervalEnd: 11.9
+    groupStart: 1
+    groupEnd: 2
+    layout: 1
+    maxAlive: 3
+  - name: "\u0411\u0430\u0440\u0430\u0431\u0430\u043D\u0449\u0438\u043A\u0438"
+    prefab: {fileID: 5456473976788259259, guid: 687f93d3a729b44a4a43413c4d4db3a4, type: 3}
+    from: 184
+    to: 255
+    firstDelay: 0
+    intervalStart: 17
+    intervalEnd: 12.3
+    groupStart: 1
+    groupEnd: 1
+    layout: 0
+    maxAlive: 1
+  - name: "\u041C\u0438\u0448\u043A\u0438"
+    prefab: {fileID: 3818713001533430314, guid: 3527dc997b1524daea8e6077fe595ca1, type: 3}
+    from: 190
+    to: 255
+    firstDelay: 0
+    intervalStart: 19.4
+    intervalEnd: 15.6
+    groupStart: 1
+    groupEnd: 1
+    layout: 0
+    maxAlive: 1
+  - name: "\u041F\u0443\u043F\u0441\u044B \u2014 \u0444\u0438\u043D\u0430\u043B"
+    prefab: {fileID: 2124556403835334173, guid: c4e890b4fcc064153b2a377a9c3a1ff5, type: 3}
+    from: 190
+    to: 255
+    firstDelay: 0
+    intervalStart: 9
+    intervalEnd: 6.3
+    groupStart: 5
+    groupEnd: 6
+    layout: 0
+    maxAlive: 12
   bursts:
   - name: "\u042D\u043B\u0438\u0442\u043A\u0430 1"
     prefab: {fileID: 188804801301329896, guid: 82a7b5db940874a67824ed841dfaf38e, type: 3}

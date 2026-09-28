@@ -7,8 +7,8 @@ namespace Bouncer.Enemies
     /// <summary>
     /// Ворона из стаи «Того, кто в сумерках». Кружит высоко над игроком — мячом не достать, автоприцел её не видит,
     /// а где она, выдаёт тень на асфальте. Потом пикирует по прямой через то место, где стоит игрок: полоса
-    /// на асфальте мигает заранее. Низко над землёй её сбивает любой мяч. Иногда вместо пике хватает мяч
-    /// с земли и несёт боссу в мешок; сбитая — роняет его. Через несколько заходов улетает.
+    /// на асфальте мигает заранее. Низко над землёй её сбивает любой мяч. Иногда вместо пике хватает чужой мяч
+    /// с земли (мячи игрока не трогает) и несёт боссу в мешок; сбитая — роняет его. Через несколько заходов улетает.
     /// </summary>
     [RequireComponent(typeof(Health), typeof(Targetable))]
     public sealed class CrowEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable
@@ -325,7 +325,7 @@ namespace Bouncer.Enemies
             float minSqr = definition.stealMinDistance * definition.stealMinDistance;
             foreach (var ball in Ball.Active)
             {
-                if (ball.State != BallState.Loose || Flat(ball.Position - _target.Position).sqrMagnitude < minSqr)
+                if (ball.State != BallState.Loose || ball.IsOwn || Flat(ball.Position - _target.Position).sqrMagnitude < minSqr)
                     continue;
                 float distance = (ball.Position - transform.position).sqrMagnitude;
                 if (distance < best)

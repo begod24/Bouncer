@@ -71,7 +71,7 @@ namespace Bouncer.Enemies
             ApplyDefinition();
         }
 
-        public void ApplyDefinition() => _health.Configure(EnemyScaling.Hits(definition.hitsToKill), 0f);
+        public void ApplyDefinition() => _health.Configure(EnemyScaling.Hits(definition.hitsToKill, gameObject), 0f);
 
         public void OnSpawned()
         {

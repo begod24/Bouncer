@@ -79,7 +79,7 @@ namespace Bouncer.Enemies
             // Двигается только прыжками (agent.Move), агент нужен для NavMesh и обхода соседей.
             _agent.speed = 0.01f;
             _agent.acceleration = 8f;
-            _health.Configure(EnemyScaling.Hits(definition.hitsToKill), 0f);
+            _health.Configure(EnemyScaling.Hits(definition.hitsToKill, gameObject), 0f);
         }
 
         public void OnSpawned()

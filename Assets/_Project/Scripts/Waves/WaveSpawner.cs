@@ -14,6 +14,8 @@ namespace Bouncer.Waves
     /// Врагов с <see cref="SpawnPreference"/> (тень) выпускает только в тёмных точках, а подмогу, которую зовёт
     /// босс (<see cref="GameEvents.SpawnRequested"/>), — у названной точки, тоже с метками.
     /// Элитки получают свойство (<see cref="EliteAffix"/>); со 2-й опасности на арене на одну элитку больше.
+    /// Ритм волн (если он задан в <see cref="WaveDefinition"/>): в передышку дорожки молчат, а пока жива элитка —
+    /// идут реже. Дорожки, которые ещё не начались, не сдвигаются: фазы арены остаются на своих секундах.
     /// Раз в секунду проверяет, не вылетел ли кто из врагов за проходимую часть арены (отброс сквозь тонкую стену),
     /// и возвращает его на ближайшее проходимое место.
     /// </summary>
@@ -52,6 +54,8 @@ namespace Bouncer.Waves
         /// <summary>Лишние элитки опасности: копии первой элитки волны, по своему времени.</summary>
         readonly List<SpawnBurst> _extraBursts = new();
         readonly List<bool> _extraDone = new();
+        /// <summary>Вышедшие элитки: пока хоть одна жива, дорожки идут реже.</summary>
+        readonly List<Targetable> _elites = new();
         float[] _nextTrackTime;
         bool[] _burstDone;
         bool _bossSpawned;
@@ -103,6 +107,23 @@ namespace Bouncer.Waves
         }
         public int AliveCount => Targetable.CountAlive(Team.Enemy);
         public int MaxAlive => wave ? wave.MaxAliveAt(WaveTime) : 0;
+        /// <summary>Сейчас передышка: дорожки молчат.</summary>
+        public bool InBreather => wave && wave.IsBreather(WaveTime);
+
+        /// <summary>На арене жива хоть одна вышедшая элитка.</summary>
+        public bool EliteAlive
+        {
+            get
+            {
+                for (int i = _elites.Count - 1; i >= 0; i--)
+                {
+                    var elite = _elites[i];
+                    if (!elite || !elite.gameObject.activeInHierarchy || !elite.IsAlive)
+                        _elites.RemoveAt(i);
+                }
+                return _elites.Count > 0;
+            }
+        }
         public IReadOnlyList<SpawnTrack> Tracks => wave ? wave.tracks : System.Array.Empty<SpawnTrack>();
 
         // Поле направлений роя строится при загрузке, а не посреди боя, когда появится первый пупс.
@@ -130,8 +151,24 @@ namespace Bouncer.Waves
             ReturnStrays();
             if (!spawning)
                 return;
+            HoldTrackClocks();
             RunBursts();
             RunTracks();
+        }
+
+        /// <summary>
+        /// Ритм волн: в передышку часы начавшихся дорожек стоят, пока жива элитка — идут медленнее
+        /// (паузы между группами растягиваются в <see cref="WaveDefinition.eliteSlowdown"/> раз).
+        /// </summary>
+        void HoldTrackClocks()
+        {
+            float rate = InBreather ? 0f : EliteAlive ? 1f / Mathf.Max(1f, wave.eliteSlowdown) : 1f;
+            float lag = Time.deltaTime * (1f - rate);
+            if (lag <= 0f)
+                return;
+            for (int i = 0; i < wave.tracks.Count; i++)
+                if (WaveTime >= wave.tracks[i].from)
+                    _nextTrackTime[i] += lag;
         }
 
         /// <summary>Враг вылетел за проходимую часть арены — вернуть на ближайшее проходимое место.</summary>
@@ -236,6 +273,8 @@ namespace Bouncer.Waves
 
         void RunTracks()
         {
+            if (InBreather)
+                return;
             int cap = MaxAlive;
             int total = AliveCount + PendingCount(null);
             for (int i = 0; i < wave.tracks.Count; i++)
@@ -404,7 +443,11 @@ namespace Bouncer.Waves
             // Свойство элитки: на 1-й опасности через раз, дальше — всегда.
             if (group.Elite)
                 foreach (var spawned in _spawned)
+                {
                     EliteAffix.Assign(spawned, Random.value < Danger.EliteAffixChance ? EliteAffix.RandomKind() : AffixKind.None);
+                    if (spawned.TryGetComponent(out Targetable target))
+                        _elites.Add(target);
+                }
         }
 
         void ClearPending()

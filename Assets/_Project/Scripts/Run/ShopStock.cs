@@ -20,7 +20,8 @@ namespace Bouncer.Run
     /// <summary>
     /// Витрина ларька «Союзпечать» на одну стоянку: жвачки с видимыми вкладышами по цене их редкости
     /// (каждая покупка делает следующие дороже), перебор витрины (каждый раз дороже), замок (жвачка ждёт
-    /// в следующем ларьке), лимонад и бутерброд, продажа карточки из кармана за полцены.
+    /// в следующем ларьке), лимонад и бутерброд, продажа карточки из кармана за полцены — отдельно или обменом
+    /// на жвачку, когда карманы полны.
     /// Монетки — в <see cref="RunState"/>, отложенные жвачки — в <see cref="RunCards.Locked"/>.
     /// </summary>
     public sealed class ShopStock
@@ -72,15 +73,22 @@ namespace Bouncer.Run
             Fill(keepLocked: true);
         }
 
+        /// <summary>Жвачку с этого места можно купить сейчас (не продана, карточку можно взять).</summary>
+        public bool CanBuy(int index) =>
+            index >= 0 && index < _slots.Count && _slots[index].Card != null && !_slots[index].Sold
+            && _cards.CanOffer(_slots[index].Card);
+
+        /// <summary>
+        /// Купить жвачку. Карманы полны — <see cref="PurchaseResult.PocketsFull"/>, если продажа одной из карточек
+        /// покроет цену (тогда её можно обменять, <see cref="SellAndBuy"/>), иначе — не хватает монеток.
+        /// </summary>
         public PurchaseResult Buy(int index)
         {
-            if (index < 0 || index >= _slots.Count)
+            if (!CanBuy(index))
                 return PurchaseResult.Unavailable;
             var slot = _slots[index];
-            if (slot.Card == null || slot.Sold || !_cards.CanOffer(slot.Card))
-                return PurchaseResult.Unavailable;
             if (_cards.PocketsFullFor(slot.Card))
-                return PurchaseResult.PocketsFull;
+                return RunState.Coins + BestSellPrice() >= slot.Price ? PurchaseResult.PocketsFull : PurchaseResult.NotEnoughCoins;
             if (!RunState.TrySpend(slot.Price))
                 return PurchaseResult.NotEnoughCoins;
             slot.Sold = true;
@@ -97,7 +105,7 @@ namespace Bouncer.Run
         /// <summary>Продать карточку из кармана: монетки за неё, карточка возвращается в колоду.</summary>
         public PurchaseResult Sell(UpgradeCard card)
         {
-            if (!card || !_cards.Owns(card) || !card.TakesPocket || _cards.IsAbsorbed(card))
+            if (!CanSell(card))
                 return PurchaseResult.Unavailable;
             int price = SellPriceOf(card);
             _cards.Discard(card);
@@ -105,6 +113,36 @@ namespace Bouncer.Run
             GameEvents.PlaySound(SoundCue.Purchase, Vector3.zero);
             Changed?.Invoke();
             return PurchaseResult.Ok;
+        }
+
+        public bool CanSell(UpgradeCard card) => card && _cards.Owns(card) && card.TakesPocket && !_cards.IsAbsorbed(card);
+
+        /// <summary>Хватит ли монеток на жвачку index, если продать card.</summary>
+        public bool SwapAffordable(int index, UpgradeCard card) =>
+            CanBuy(index) && RunState.Coins + SellPriceOf(card) >= _slots[index].Price;
+
+        /// <summary>
+        /// Карманы полны: продать card и сразу купить жвачку index. Если монеток и после продажи не хватит,
+        /// ничего не продаётся.
+        /// </summary>
+        public PurchaseResult SellAndBuy(int index, UpgradeCard card)
+        {
+            if (!CanBuy(index) || !CanSell(card))
+                return PurchaseResult.Unavailable;
+            if (!SwapAffordable(index, card))
+                return PurchaseResult.NotEnoughCoins;
+            Sell(card);
+            return Buy(index);
+        }
+
+        /// <summary>Сколько дадут за самую дорогую карточку в карманах.</summary>
+        int BestSellPrice()
+        {
+            int best = 0;
+            foreach (var card in _cards.PocketCards)
+                if (CanSell(card))
+                    best = Mathf.Max(best, SellPriceOf(card));
+            return best;
         }
 
         /// <summary>Показать другие жвачки на всех местах, кроме отложенных.</summary>

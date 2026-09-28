@@ -67,7 +67,7 @@ namespace Bouncer.Enemies
             _agent.speed = definition.moveSpeed;
             _agent.acceleration = 14f;
             _agent.stoppingDistance = 0.5f;
-            _health.Configure(EnemyScaling.Hits(definition.hitsToKill), 0f);
+            _health.Configure(EnemyScaling.Hits(definition.hitsToKill, gameObject), 0f);
         }
 
         public void OnSpawned()

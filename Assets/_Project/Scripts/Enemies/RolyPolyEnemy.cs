@@ -78,7 +78,7 @@ namespace Bouncer.Enemies
             _agent.acceleration = 40f;
             _agent.stoppingDistance = definition.stopDistance;
             _health.Configure(_boss != null || GetComponent<BossSplit>() ? EnemyScaling.BossHits(definition.hitsToKill)
-                : EnemyScaling.Hits(definition.hitsToKill), definition.comboResetTime);
+                : EnemyScaling.Hits(definition.hitsToKill, gameObject), definition.comboResetTime);
         }
 
         public void OnSpawned()

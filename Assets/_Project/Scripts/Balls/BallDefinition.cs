@@ -82,6 +82,9 @@ namespace Bouncer.Balls
         public float looseDamping = 0.6f;
         [Tooltip("Сколько мячей может лежать на арене; лишние исчезают, начиная со старых")]
         [Min(1)] public int maxLooseBalls = 14;
+        [Tooltip("Сколько чужих мячей (врагов, пойманных и брошенных обратно) лежит на арене, чтобы было чем отбиваться. " +
+                 "Упал ещё один — самый старый чужой тает. Мячи игрока не считаются и не тают.")]
+        [Min(0)] public int maxForeignLoose = 7;
 
         public ThrowStats GetThrowStats(float charge01, bool candle)
         {

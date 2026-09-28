@@ -13,7 +13,8 @@ namespace Bouncer.UI
     /// Экраны поверх прогулки: заставка, выбор ребёнка, пауза, настройки, авторы, «Выбит!» и победа — с кнопками
     /// для мыши, клавиатуры и геймпада. Какой экран показать, решает состояние <see cref="GameSession"/>; кнопки только
     /// зовут её методы. «Играть» открывает выбор ребёнка, выбор начинает прогулку. Настройки открываются с заставки
-    /// и паузы, авторы и выбор — с заставки; Esc / B возвращают назад.
+    /// и паузы, авторы и выбор — с заставки; Esc / B возвращают назад. Карманы (<see cref="PocketsPanel"/>) — кнопкой
+    /// в паузе или Tab / Select прямо в бою: тогда игра встаёт на паузу, а закрыл карманы — бой идёт дальше.
     /// </summary>
     public sealed class RunScreens : MonoBehaviour
     {
@@ -34,6 +35,7 @@ namespace Bouncer.UI
             Credits,
             Kids,
             Records,
+            Pockets,
         }
 
         [SerializeField] Screen title;
@@ -64,8 +66,12 @@ namespace Bouncer.UI
         [Tooltip("«Назад» на экранах настроек и авторов")]
         [SerializeField] UnityEngine.UI.Button[] backButtons;
         [SerializeField] UnityEngine.UI.Button[] recordsButtons;
+        [Tooltip("«Карманы» в паузе")]
+        [SerializeField] UnityEngine.UI.Button[] pocketsButtons;
 
         PlayerCards _cards;
+        /// <summary>Карманы открыты клавишей прямо в бою: закрылись — снять паузу.</summary>
+        bool _pocketsResume;
         /// <summary>Итог последней победы: новый рекорд, лучшее время уровня, открыт ли следующий.</summary>
         bool _newRecord;
         float _bestTime;
@@ -87,6 +93,7 @@ namespace Bouncer.UI
             Bind(creditsButtons, () => Open(Overlay.Credits));
             Bind(backButtons, CloseOverlay);
             Bind(recordsButtons, () => Open(Overlay.Records));
+            Bind(pocketsButtons, () => Open(Overlay.Pockets));
         }
 
         void OnEnable() => GameEvents.RunFinished += OnRunFinished;
@@ -167,6 +174,7 @@ namespace Bouncer.UI
                 if (player != null)
                     player.TryGetComponent(out _cards);
             }
+            UpdatePockets(session);
 
             var state = session.State;
             bool paused = state is (SessionState.Playing or SessionState.Cleared) && GameFeel.Paused;
@@ -188,6 +196,39 @@ namespace Bouncer.UI
                 gameOverStats.text = Stats(session, "gameover.stats");
             else if (state == SessionState.Victory)
                 victoryStats.text = Stats(session, "victory.stats");
+        }
+
+        /// <summary>
+        /// Tab / Select: карманы из паузы или прямо из боя (игра встаёт на паузу). Карманы закрылись сами
+        /// (Tab, Esc, «Закрыть») — вернуться в паузу или в бой.
+        /// </summary>
+        void UpdatePockets(GameSession session)
+        {
+            var pockets = PocketsPanel.Instance;
+            if (pockets == null)
+                return;
+            if (_overlay == Overlay.Pockets)
+            {
+                if (!pockets.IsOpen)
+                    CloseOverlay();
+                return;
+            }
+            if (_overlay != Overlay.None || pockets.IsOpen || pockets.ClosedFrame == Time.frameCount || !PocketsPanel.TogglePressed())
+                return;
+            if (session.State is (SessionState.Playing or SessionState.Cleared) && GameFeel.Paused)
+            {
+                Open(Overlay.Pockets);
+                return;
+            }
+            if (!session.PlayerCanAct || _cards == null || _cards.Player.IsDead)
+                return;
+            session.TogglePause();
+            if (!GameFeel.Paused)
+                return;
+            Open(Overlay.Pockets);
+            _pocketsResume = _overlay == Overlay.Pockets;
+            if (!_pocketsResume)
+                session.TogglePause();
         }
 
         // Esc и B закрывают экран поверх. Здесь, а не в Update: тот же Esc — это и кнопка паузы, и к этому
@@ -243,6 +284,15 @@ namespace Bouncer.UI
                     return;
                 RefreshRecords();
             }
+            else if (overlay == Overlay.Pockets)
+            {
+                var pockets = PocketsPanel.Instance;
+                if (pockets == null)
+                    return;
+                pockets.OpenView();
+                if (!pockets.IsOpen)
+                    return;
+            }
             _returnTo = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
             _overlay = overlay;
             session.OverlayOpen = true;
@@ -256,9 +306,21 @@ namespace Bouncer.UI
                 settingsScreen.Save();
             else if (_overlay == Overlay.Kids)
                 kidSelectScreen.Close();
+            else if (_overlay == Overlay.Pockets && PocketsPanel.Instance != null)
+                PocketsPanel.Instance.Close();
             _overlay = Overlay.None;
-            if (GameSession.Instance != null)
-                GameSession.Instance.OverlayOpen = false;
+            var session = GameSession.Instance;
+            if (session != null)
+            {
+                session.OverlayOpen = false;
+                // Карманы открыли клавишей прямо в бою — закрыл, и бой идёт дальше, без меню паузы.
+                if (_pocketsResume && GameFeel.Paused)
+                {
+                    _returnTo = null;
+                    session.TogglePause();
+                }
+            }
+            _pocketsResume = false;
         }
 
         /// <summary>«Играть»: сначала выбрать, с кем гулять (если экрана выбора нет — сразу в прогулку).</summary>

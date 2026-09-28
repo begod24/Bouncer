@@ -101,9 +101,10 @@ MonoBehaviour:
   - m_Id: 155645370388
     m_Localized: "WASD \u2014 run    mouse \u2014 aim    LMB \u2014 throw (hold to
       charge)    Q \u2014 flashlight in the dark\nRMB / E \u2014 catch or grab a
-      ball nearby    Space / Shift \u2014 dash    F \u2014 newsstand    Esc \u2014
-      pause\nGamepad: left stick, right stick, RT \u2014 throw, LT \u2014 catch,
-      A \u2014 dash, LB \u2014 flashlight, X \u2014 newsstand\nH \u2014 hide hints"
+      ball nearby    Space / Shift \u2014 dash    F \u2014 newsstand    Tab \u2014
+      pockets    Esc \u2014 pause\nGamepad: left stick, right stick, RT \u2014 throw,
+      LT \u2014 catch, A \u2014 dash, LB \u2014 flashlight, X \u2014 newsstand, Select
+      \u2014 pockets\nH \u2014 hide hints"
     m_Metadata:
       m_Items: []
   - m_Id: 155645370390
@@ -297,8 +298,8 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 133958221160462
     m_Localized: "Click or Enter \u2014 buy    L \u2014 hold    R \u2014 reroll   
-      P \u2014 pockets    Esc \u2014 leave\nGamepad: A \u2014 buy    X \u2014 hold   
-      Y \u2014 reroll    LB \u2014 pockets    B \u2014 leave"
+      P / Tab \u2014 pockets    Esc \u2014 leave\nGamepad: A \u2014 buy    X \u2014
+      hold    Y \u2014 reroll    LB / Select \u2014 pockets    B \u2014 leave"
     m_Metadata:
       m_Items: []
   - m_Id: 133958221160463
@@ -499,32 +500,17 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1198883039338496
-    m_Localized: 'Pockets are full: what do you drop?'
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198883047727104
-    m_Localized: 'Pockets {0}/{1}: sell a card'
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198883047727105
-    m_Localized: drop
+    m_Localized: Pockets are full!
     m_Metadata:
       m_Items: []
   - m_Id: 1198883047727106
-    m_Localized: skip it
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198883047727107
-    m_Localized: 'sell: +{0}'
-    m_Metadata:
-      m_Items: []
-  - m_Id: 1198883051921408
-    m_Localized: "A dropped card goes back to the deck. You can skip the new one.   
-      1\u20137 to pick"
+    m_Localized: Skip the new one
     m_Metadata:
       m_Items: []
   - m_Id: 1198883051921409
-    m_Localized: "A sold card goes back to the deck.    Esc / B \u2014 back"
+    m_Localized: "Click or Enter \u2014 mark, again \u2014 sell    1\u20136 \u2014
+      quick pick    Esc \u2014 back\nGamepad: A \u2014 mark and confirm, B \u2014
+      back"
     m_Metadata:
       m_Items: []
   - m_Id: 1198883051921410
@@ -532,7 +518,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1198883051921411
-    m_Localized: "Pockets full \u2014 sell a card first"
+    m_Localized: "Pockets full \u2014 sell one to buy"
     m_Metadata:
       m_Items: []
   - m_Id: 1198883051921412
@@ -649,6 +635,147 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 1281280669900803
     m_Localized: "Stuffing slows you down \u2014 keep out of the clouds"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507264
+    m_Localized: Pockets {0}/{1}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507265
+    m_Localized: What's in your pockets
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507266
+    m_Localized: 'Your pockets are empty: cards from school bags and the newsstand
+      go here'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507267
+    m_Localized: no pocket
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507268
+    m_Localized: empty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507269
+    m_Localized: Close
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507270
+    m_Localized: "\u2190 Back to cards"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507271
+    m_Localized: Pick a card
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507272
+    m_Localized: "To take \u201C{0}\u201D, drop one of yours \u2014 it goes back
+      to the deck"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507273
+    m_Localized: TAKING
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507274
+    m_Localized: DROPPING
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507275
+    m_Localized: DROP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507276
+    m_Localized: Pick above which one to drop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507277
+    m_Localized: Drop and take
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507278
+    m_Localized: Sell a card
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507279
+    m_Localized: A sold card goes back to the deck
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507280
+    m_Localized: "To buy \u201C{0}\u201D, sell one of yours"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507281
+    m_Localized: "BUYING \xB7 {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507282
+    m_Localized: "SELLING \xB7 +{0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507283
+    m_Localized: SELL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507284
+    m_Localized: Pick above which one to sell
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507285
+    m_Localized: Sell for {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507286
+    m_Localized: Sell and buy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507287
+    m_Localized: Not enough coins
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507288
+    m_Localized: "Tab / Esc \u2014 close    You can drop a card when your pockets
+      are full, or sell one at the newsstand\nGamepad: Select / B \u2014 close"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507289
+    m_Localized: "Click or Enter \u2014 mark, again \u2014 drop    1\u20136 \u2014
+      quick pick    Esc \u2014 back to cards\nGamepad: A \u2014 mark and confirm,
+      B \u2014 back"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507290
+    m_Localized: "pockets {0}/{1} \xB7 Tab"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507291
+    m_Localized: "Your pockets {0}/{1}    Tab \u2014 details"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507292
+    m_Localized: "new pocket \xB7 {0}/{1}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507293
+    m_Localized: "upgrade \xB7 same pocket"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507294
+    m_Localized: no pocket
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507295
+    m_Localized: "combo \xB7 frees a pocket"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507296
+    m_Localized: "pockets full \xB7 drop one"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1427114170507297
+    m_Localized: Pockets
     m_Metadata:
       m_Items: []
   references:

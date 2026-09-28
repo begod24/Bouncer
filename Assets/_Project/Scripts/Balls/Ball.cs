@@ -27,9 +27,11 @@ namespace Bouncer.Balls
     /// и предсказуемые, мяч не пролетает сквозь тонкие стены. Лежащий мяч — обычная физика.
     /// По персонажам «живой» мяч бьёт столбом — от земли до своей высоты: камера смотрит сверху, и мяч, пролетевший
     /// над головой низкого пупса, на экране прошёл сквозь него.
-    /// У мяча есть хозяин (<see cref="Owner"/>): мячи из запаса игрока остаются на арене, чужие (врагов, пойманные
-    /// и брошенные обратно) исчезают через секунду на земле. Свой мяч, до которого не добраться (застрял на скосе,
-    /// за препятствием), сам выкатывается к месту, куда можно подойти; потерянный — сообщает хозяину.
+    /// У мяча есть хозяин (<see cref="Owner"/>): мячи из запаса игрока остаются на арене всегда, чужих (врагов,
+    /// пойманных и брошенных обратно) лежит не больше <see cref="BallDefinition.maxForeignLoose"/> — упал лишний,
+    /// самый старый чужой тает. Так на земле всегда есть чем отбиваться. Свой мяч, до которого не добраться
+    /// (застрял на скосе, за препятствием), сам выкатывается к месту, куда можно подойти, чужой — тает;
+    /// потерянный свой — сообщает хозяину.
     /// Эффекты типа мяча и карточек (<see cref="BallPerks"/>) срабатывают здесь же: цепочка, урон по площади,
     /// раскол на двойников, бумеранг и возврат на резинке, отскоки от асфальта, взрыв, след жвачки,
     /// полёт змейкой и задевание врагов по пути. Борта с <see cref="RicochetSurface"/> отражают мяч «идеально».
@@ -42,9 +44,7 @@ namespace Bouncer.Balls
         const float KillY = -5f;
         /// <summary>С какого расстояния вернувшийся мяч попадает в руки.</summary>
         const float ReceiveDistance = 1.2f;
-        /// <summary>Чужой мяч исчезает через столько секунд на земле.</summary>
-        const float ForeignVanishDelay = 1f;
-        /// <summary>За сколько секунд до исчезновения чужой мяч начинает сжиматься.</summary>
+        /// <summary>За сколько секунд тает лишний или недоступный чужой мяч (сжимается до нуля).</summary>
         const float VanishShrinkTime = 0.35f;
         /// <summary>«Свечка» дольше этого — застряла где-то наверху.</summary>
         const float PoppedMaxTime = 2.5f;
@@ -83,6 +83,19 @@ namespace Bouncer.Balls
 
         public static IReadOnlyList<Ball> Active => s_active;
         public static int LooseCount => s_loose.Count;
+
+        /// <summary>Сколько чужих мячей лежит на арене (тающие не считаются).</summary>
+        public static int ForeignLooseCount
+        {
+            get
+            {
+                int count = 0;
+                foreach (var ball in s_loose)
+                    if (!ball.IsOwn && ball._vanishAt <= 0f)
+                        count++;
+                return count;
+            }
+        }
 
         /// <summary>
         /// Мяч игрока пропал не у него в руках (выпал за арену, его «съели»): хозяин получит его обратно.
@@ -446,10 +459,10 @@ namespace Bouncer.Balls
                         if (TickVanish())
                             break;
                     }
-                    else if (IsOwn)
+                    else
                     {
                         WatchReachable();
-                        if (_rolling)
+                        if (_rolling || _vanishAt > 0f)
                             break;
                     }
                     // В песке мяч быстро останавливается.
@@ -760,13 +773,14 @@ namespace Bouncer.Balls
             _rolling = false;
             _unreachableSince = -1f;
             _nextReachCheck = Time.time + ReachCheckInterval;
-            // На арене остаются только мячи игрока: чужой полежит секунду и исчезнет.
-            _vanishAt = IsOwn ? 0f : Time.time + ForeignVanishDelay;
+            _vanishAt = 0f;
             SetState(BallState.Loose);
 
             s_loose.Remove(this);
             s_loose.Add(this);
-            // Лишние лежащие мячи исчезают, начиная со старых чужих; мячи игрока не трогаем.
+            // Чужих лежит не больше maxForeignLoose: лишний — самый старый — тает. Мячи игрока не трогаем.
+            if (!IsOwn)
+                TrimForeign(definition.maxForeignLoose);
             while (s_loose.Count > definition.maxLooseBalls)
             {
                 int oldest = s_loose.FindIndex(ball => !ball.IsOwn);
@@ -777,6 +791,27 @@ namespace Bouncer.Balls
         }
 
         // ---------- Лежащий мяч: исчезновение и застревание ----------
+
+        /// <summary>Чужих лежащих мячей больше limit — самые старые начинают таять.</summary>
+        static void TrimForeign(int limit)
+        {
+            int extra = ForeignLooseCount - limit;
+            for (int i = 0; i < s_loose.Count && extra > 0; i++)
+            {
+                var ball = s_loose[i];
+                if (ball.IsOwn || ball._vanishAt > 0f)
+                    continue;
+                ball.Vanish();
+                extra--;
+            }
+        }
+
+        /// <summary>Лежащий чужой мяч начинает таять (сжимается и исчезает).</summary>
+        void Vanish()
+        {
+            if (_vanishAt <= 0f)
+                _vanishAt = Time.time + VanishShrinkTime;
+        }
 
         /// <summary>Чужой мяч на земле сжимается и исчезает. true — уже исчез.</summary>
         bool TickVanish()
@@ -798,7 +833,10 @@ namespace Bouncer.Balls
                 mesh.localScale = Vector3.one * (definition.radius * 2f);
         }
 
-        /// <summary>Свой лежащий мяч: если до него не дойти дольше UnreachableTime — выкатить к проходимому месту.</summary>
+        /// <summary>
+        /// Лежащий мяч, до которого не дойти дольше UnreachableTime: свой выкатывается к проходимому месту,
+        /// чужой тает (на арене лежат другие).
+        /// </summary>
         void WatchReachable()
         {
             if (Time.time < _nextReachCheck)
@@ -830,7 +868,7 @@ namespace Bouncer.Balls
         }
 
         /// <summary>
-        /// Мяч застрял: «свечка» зависла наверху или лежащий мяч не достать. Чужой просто исчезает,
+        /// Мяч застрял: «свечка» зависла наверху или лежащий мяч не достать. Чужой тает,
         /// свой выпрыгивает к ближайшему проходимому месту (нет навмеша — к игроку).
         /// </summary>
         void RollOut()
@@ -838,10 +876,15 @@ namespace Bouncer.Balls
             Vector3 from = _rb.position;
             if (State != BallState.Loose)
             {
-                // Сначала обычное падение: чужой начнёт исчезать, мяч на резинке полетит в руки.
+                // Сначала обычное падение: мяч на резинке полетит в руки.
                 BecomeLoose(from, Vector3.zero);
-                if (State != BallState.Loose || !IsOwn)
+                if (State != BallState.Loose)
                     return;
+            }
+            if (!IsOwn)
+            {
+                Vanish();
+                return;
             }
             Vector3 probe = new(from.x, 0.1f, from.z);
             Vector3 to;

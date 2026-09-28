@@ -42,7 +42,7 @@ namespace Bouncer.Run
         public LocalizedString arrivalLabel;
 
         [Header("Враги и добыча")]
-        [Tooltip("Во сколько раз больше попаданий нужно врагам этой арены (однохитовым — нет; боссам — нет)")]
+        [Tooltip("Во сколько раз больше попаданий нужно врагам этой арены (однохитовым — нет; элиткам — половина прибавки; боссам — нет)")]
         [Min(1f)] public float enemyHitsMultiplier = 1f;
         [Tooltip("Сколько портфелей за бой дают элитки (остальные — только монетки)")]
         [Min(0)] public int elitePortfolios = 1;

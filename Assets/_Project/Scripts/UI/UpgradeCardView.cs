@@ -8,9 +8,10 @@ using UnityEngine.EventSystems;
 namespace Bouncer.UI
 {
     /// <summary>
-    /// Один вкладыш на экране выбора и на витрине ларька: цвет обёртки, картинка, название, описание, редкость
-    /// (рамка и подпись у редких и золотых), сколько раз уже взят. Выбранный (мышью, стрелками, геймпадом)
-    /// чуть больше, ровный и подсвечен. Анимации — по реальному времени, потому что игра на время выбора стоит.
+    /// Один вкладыш на экране выбора, на витрине ларька и на экране карманов: цвет обёртки, картинка, название,
+    /// описание, редкость (рамка и подпись у редких и золотых), сколько раз уже взят, плашка про карман
+    /// (<see cref="ShowPocketNeed"/>). Выбранный (мышью, стрелками, геймпадом) чуть больше, ровный и подсвечен.
+    /// Анимации — по реальному времени, потому что игра на время выбора стоит.
     /// </summary>
     public sealed class UpgradeCardView : MonoBehaviour, IPointerEnterHandler, ISelectHandler, IDeselectHandler
     {
@@ -32,6 +33,16 @@ namespace Bouncer.UI
         [Header("Цвет рамки редкости")]
         [SerializeField] Color rareColor = new(0.45f, 0.72f, 1f);
         [SerializeField] Color goldColor = new(1f, 0.82f, 0.25f);
+
+        [Header("Плашка про карман (выбор и ларёк)")]
+        [Tooltip("Плашка на нижнем крае вкладыша: займёт ли он карман. Пусто — плашки нет")]
+        [SerializeField] GameObject pocketTag;
+        [SerializeField] TMP_Text pocketTagText;
+        [SerializeField] Color tagNewColor = new(0.96f, 0.95f, 0.92f);
+        [SerializeField] Color tagStackColor = new(0.58f, 0.86f, 0.42f);
+        [SerializeField] Color tagFreeColor = new(0.55f, 0.8f, 1f);
+        [SerializeField] Color tagComboColor = new(1f, 0.82f, 0.25f);
+        [SerializeField] Color tagFullColor = new(1f, 0.45f, 0.38f);
 
         [Header("Анимация")]
         [SerializeField] float appearTime = 0.35f;
@@ -65,6 +76,7 @@ namespace Bouncer.UI
             }
             stacks.text = card.maxStacks > 1 && card.category != UpgradeCategory.Treat ? $"{taken + 1}/{card.maxStacks}" : string.Empty;
             hotkey.text = number > 0 ? number.ToString() : string.Empty;
+            HidePocketTag();
 
             _appearAt = Time.unscaledTime + delay;
             _tilt = UnityEngine.Random.Range(-maxTilt, maxTilt);
@@ -72,6 +84,36 @@ namespace Bouncer.UI
             IsSelected = false;
             gameObject.SetActive(true);
             Animate();
+        }
+
+        /// <summary>Плашка: займёт ли карточка карман (used/max — сколько карманов занято сейчас).</summary>
+        public void ShowPocketNeed(PocketNeed need, int used, int max)
+        {
+            if (!pocketTag)
+                return;
+            pocketTag.SetActive(true);
+            pocketTagText.text = need switch
+            {
+                PocketNeed.New => Loc.Format("pockets.tag.new", used + 1, max),
+                PocketNeed.Stack => Loc.Get("pockets.tag.stack"),
+                PocketNeed.Free => Loc.Get("pockets.tag.free"),
+                PocketNeed.Combo => Loc.Get("pockets.tag.combo"),
+                _ => Loc.Get("pockets.tag.full"),
+            };
+            pocketTagText.color = need switch
+            {
+                PocketNeed.New => tagNewColor,
+                PocketNeed.Stack => tagStackColor,
+                PocketNeed.Free => tagFreeColor,
+                PocketNeed.Combo => tagComboColor,
+                _ => tagFullColor,
+            };
+        }
+
+        public void HidePocketTag()
+        {
+            if (pocketTag)
+                pocketTag.SetActive(false);
         }
 
         void Update() => Animate();

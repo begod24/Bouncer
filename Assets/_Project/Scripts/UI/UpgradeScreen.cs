@@ -10,8 +10,9 @@ namespace Bouncer.UI
     /// <summary>
     /// Экран выбора вкладыша «1 из 3» (старт прогулки, портфель, босс; со «Счастливым фантиком» — из 4):
     /// показывает предложение <see cref="PlayerCards"/> и передаёт выбор. Выбор — мышью, стрелками/WASD + Enter,
-    /// геймпадом или клавишами 1–4. Первые доли секунды ввод не принимается, чтобы случайный клик или бросок
-    /// не выбрал карточку вслепую.
+    /// геймпадом или клавишами 1–4. На каждой карточке — плашка, займёт ли она карман; внизу — свои карманы
+    /// (<see cref="PocketStrip"/>), Tab / Select открывает их подробно. Первые доли секунды ввод не принимается,
+    /// чтобы случайный клик или бросок не выбрал карточку вслепую.
     /// </summary>
     public sealed class UpgradeScreen : MonoBehaviour
     {
@@ -22,8 +23,10 @@ namespace Bouncer.UI
         [SerializeField] float inputDelay = 0.45f;
         [Tooltip("Пауза между появлением соседних карточек, с")]
         [SerializeField] float cardStagger = 0.07f;
+        [Tooltip("Масштаб ряда из трёх карточек: снизу нужно место для карманов")]
+        [SerializeField] float threeCardsScale = 0.9f;
         [Tooltip("Масштаб ряда, когда карточек четыре («Счастливый фантик»): чтобы влезли и на узком экране")]
-        [SerializeField] float fourCardsScale = 0.88f;
+        [SerializeField] float fourCardsScale = 0.82f;
 
         PlayerCards _cards;
         float _openedAt;
@@ -74,16 +77,24 @@ namespace Bouncer.UI
 
             var offer = _cards.Offer;
             if (cards.Length > 0 && cards[0].transform.parent)
-                cards[0].transform.parent.localScale = Vector3.one * (offer.Count > 3 ? fourCardsScale : 1f);
+                cards[0].transform.parent.localScale = Vector3.one * (offer.Count > 3 ? fourCardsScale : threeCardsScale);
             for (int i = 0; i < cards.Length; i++)
             {
                 if (i < offer.Count)
+                {
                     cards[i].Show(offer[i], _cards.StacksOf(offer[i]), i + 1, i * cardStagger);
+                    cards[i].ShowPocketNeed(_cards.NeedFor(offer[i]), _cards.PocketsUsed, _cards.MaxPockets);
+                }
                 else
+                {
                     cards[i].gameObject.SetActive(false);
+                }
             }
             Select(0);
         }
+
+        /// <summary>Поверх открыты карманы (Tab): ввод у них.</summary>
+        static bool PocketsOpen => PocketsPanel.Instance != null && PocketsPanel.Instance.IsOpen;
 
         void Close()
         {
@@ -102,7 +113,7 @@ namespace Bouncer.UI
 
         void Update()
         {
-            if (!_open)
+            if (!_open || PocketsOpen)
                 return;
 
             // Мышь кликнула мимо карточек — стрелки и геймпад снова должны что-то выбирать.
@@ -129,7 +140,7 @@ namespace Bouncer.UI
 
         void OnCardClicked(UpgradeCardView card)
         {
-            if (_open && AcceptsInput)
+            if (_open && AcceptsInput && !PocketsOpen)
                 Pick(System.Array.IndexOf(cards, card));
         }
 

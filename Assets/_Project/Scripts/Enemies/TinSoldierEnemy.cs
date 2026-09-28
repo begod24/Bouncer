@@ -71,7 +71,7 @@ namespace Bouncer.Enemies
             _agent.acceleration = 20f;
             _agent.stoppingDistance = 0.15f;
             _agent.autoBraking = true;
-            _health.Configure(EnemyScaling.Hits(definition.hitsToKill), definition.comboResetTime);
+            _health.Configure(EnemyScaling.Hits(definition.hitsToKill, gameObject), definition.comboResetTime);
         }
 
         public void OnSpawned()

@@ -52,17 +52,17 @@ MonoBehaviour:
     groupEnd: 1
     layout: 0
     maxAlive: 2
-  - name: "\u0422\u0435\u043D\u0438"
-    prefab: {fileID: 8164200646972820754, guid: b5c42fce3f0a946ed94490f26960df1d, type: 3}
+  - name: "\u0427\u0443\u0447\u0435\u043B\u0430"
+    prefab: {fileID: 5532231852749314023, guid: b4ce4b33207364e9395ac0c99a2d1c8b, type: 3}
     from: 25
     to: 255
     firstDelay: 0
     intervalStart: 14.3
     intervalEnd: 8.2
     groupStart: 1
-    groupEnd: 2
+    groupEnd: 1
     layout: 0
-    maxAlive: 4
+    maxAlive: 3
   - name: "\u042E\u043B\u044B"
     prefab: {fileID: 7639004335897309999, guid: 8e91cb7fd4cd44c728953b5b65f7a70d, type: 3}
     from: 60
@@ -142,7 +142,7 @@ MonoBehaviour:
     - {fileID: 2124556403835334173, guid: 017cd34e9dbc849b4a27151f1e0069ce, type: 3}
     - {fileID: 3551966787156909914, guid: 9b6c61d06bd824b95aefe53d279425ff, type: 3}
     - {fileID: 3722696818943739250, guid: 61fbe89f7685a46169058d95a5deb1ee, type: 3}
-    - {fileID: 7394618913065957709, guid: 73a8bf21d4a7944e7abf6b0245c8cc54, type: 3}
+    - {fileID: 8266572699192250298, guid: ca8148ada10f34e4b9608b1480b3a0cf, type: 3}
   - name: "\u042D\u043B\u0438\u0442\u043A\u0430 2"
     prefab: {fileID: 188804801301329896, guid: 82a7b5db940874a67824ed841dfaf38e, type: 3}
     time: 190
@@ -155,7 +155,7 @@ MonoBehaviour:
     - {fileID: 2124556403835334173, guid: 017cd34e9dbc849b4a27151f1e0069ce, type: 3}
     - {fileID: 3551966787156909914, guid: 9b6c61d06bd824b95aefe53d279425ff, type: 3}
     - {fileID: 3722696818943739250, guid: 61fbe89f7685a46169058d95a5deb1ee, type: 3}
-    - {fileID: 7394618913065957709, guid: 73a8bf21d4a7944e7abf6b0245c8cc54, type: 3}
+    - {fileID: 8266572699192250298, guid: ca8148ada10f34e4b9608b1480b3a0cf, type: 3}
   - name: "\u0411\u043E\u043B\u044C\u0448\u043E\u0439 \u043F\u043B\u044E\u0448\u0435\u0432\u044B\u0439
       \u0437\u0430\u044F\u0446"
     prefab: {fileID: 3840786014626224190, guid: efd9da75d3cc0476e9d68f977b8655f4, type: 3}

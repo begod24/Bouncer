@@ -72,7 +72,7 @@ MonoBehaviour:
   lights:
   - {fileID: 5295340118934928259}
   zone: {fileID: 294982200028806713}
-  alwaysOn: 1
+  alwaysOn: 0
   onFromEmission: 0.15
   fullAtEmission: 0.8
   flicker: 0.03

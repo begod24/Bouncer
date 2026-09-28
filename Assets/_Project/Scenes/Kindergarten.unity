@@ -541,50 +541,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
   m_Asset: {fileID: 1242331910}
   m_ActionId: 0489e84a-4833-4c40-bfae-cea84b696689
---- !u!1 &122884811
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 122884813}
-  - component: {fileID: 122884812}
-  m_Layer: 0
-  m_Name: Darkness
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &122884812
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 122884811}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bc8a032b5e8ff4fa19447de5a0e28487, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Bouncer.Core::Bouncer.Core.DarkArena
---- !u!4 &122884813
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 122884811}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &124553997
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3436,9 +3392,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Bouncer.Visuals::Bouncer.Visuals.TimeOfDayController
   keys:
-  - {fileID: 11400000, guid: 3f1c378d9726e47b7ae62b0ccd71074a, type: 2}
-  - {fileID: 11400000, guid: f059208a361ce46b8a0728dba1323284, type: 2}
-  progress: 0.3
+  - {fileID: 11400000, guid: a6ade025717bc4861ab8e5069e8ccd25, type: 2}
+  progress: 0
   runDuration: 300
   sun: {fileID: 410087040}
   targetCamera: {fileID: 330585545}
@@ -6988,6 +6943,7 @@ MonoBehaviour:
   loot: {fileID: 1596687393}
   kiosk: {fileID: 471891381}
   exit: {fileID: 12640706}
+  forkExit: {fileID: 0}
   portfolioSpots: []
   portfolioMinDistance: 8
 --- !u!4 &1596687395
@@ -10123,6 +10079,5 @@ SceneRoots:
   - {fileID: 12640705}
   - {fileID: 1596687395}
   - {fileID: 1441389604}
-  - {fileID: 122884813}
   - {fileID: 1376012342}
   - {fileID: 861543227}

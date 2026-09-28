@@ -33,8 +33,7 @@ MonoBehaviour:
     m_LocalVariables: []
   wave: {fileID: 11400000, guid: f46818b1d471e40e5a4a819b5dda78c8, type: 2}
   timeOfDay:
-  - {fileID: 11400000, guid: 2b9cd486f59314604b346d7e4f9dd3e8, type: 2}
-  - {fileID: 11400000, guid: cd4069f6b5eac4375aca27b8f0ff61a2, type: 2}
+  - {fileID: 11400000, guid: a6ade025717bc4861ab8e5069e8ccd25, type: 2}
   goal: 0
   kiosk: 1
   arrivalLabel:

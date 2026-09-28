@@ -85,7 +85,7 @@ UI,arena.cleared.hint,"Загляни в ларёк, потом — к стре�
 UI,arena.yard_morning,Двор · утро,The Yard · morning,
 UI,arena.yard_evening,Двор · вечер,The Yard · evening,
 UI,exit.yard_evening,До вечера →,Until evening →,
-UI,arena.rink,Хоккейная коробка · вечер,The Hockey Box · evening,
+UI,arena.rink,Хоккейная коробка · день,The Hockey Box · day,
 UI,arena.site,Стройка · сумерки,The Construction Site · dusk,
 UI,exit.rink,В коробку →,To the box →,
 UI,exit.site,На стройку →,To the site →,

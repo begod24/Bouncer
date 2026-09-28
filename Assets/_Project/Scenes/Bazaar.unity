@@ -3457,9 +3457,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Bouncer.Visuals::Bouncer.Visuals.TimeOfDayController
   keys:
-  - {fileID: 11400000, guid: 3f1c378d9726e47b7ae62b0ccd71074a, type: 2}
-  - {fileID: 11400000, guid: f059208a361ce46b8a0728dba1323284, type: 2}
-  progress: 0.3
+  - {fileID: 11400000, guid: a6ade025717bc4861ab8e5069e8ccd25, type: 2}
+  progress: 0
   runDuration: 300
   sun: {fileID: 410087040}
   targetCamera: {fileID: 330585545}

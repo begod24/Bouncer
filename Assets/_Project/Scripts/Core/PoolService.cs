@@ -19,7 +19,11 @@ namespace Bouncer.Core
         static PoolService s_instance;
 
         readonly Dictionary<GameObject, Stack<GameObject>> _free = new();
-        readonly List<IPoolable> _poolables = new();
+        /// <summary>
+        /// Свободные списки под колбэки. Колбэк может сам выдать или вернуть объект пула (босс ставит метку,
+        /// пускает дым), поэтому у вложенного вызова свой список — общий менялся бы прямо под перебором.
+        /// </summary>
+        readonly Stack<List<IPoolable>> _poolableLists = new();
 
         static PoolService Instance
         {
@@ -84,15 +88,17 @@ namespace Bouncer.Core
 
         void Notify(GameObject instance, bool spawned)
         {
-            instance.GetComponentsInChildren(true, _poolables);
-            foreach (var poolable in _poolables)
+            var poolables = _poolableLists.Count > 0 ? _poolableLists.Pop() : new List<IPoolable>();
+            instance.GetComponentsInChildren(true, poolables);
+            foreach (var poolable in poolables)
             {
                 if (spawned)
                     poolable.OnSpawned();
                 else
                     poolable.OnDespawned();
             }
-            _poolables.Clear();
+            poolables.Clear();
+            _poolableLists.Push(poolables);
         }
 
         void OnDestroy()

@@ -8,6 +8,7 @@ namespace Bouncer.UI
     /// <summary>
     /// Плашка посреди экрана: название арены, когда начинается бой («Двор · утро»), с погодой, если она выпала
     /// («Дождь: в лужах мяч гаснет»), и «Пройдено!» с подсказкой про ларёк и стрелку, когда арена пройдена.
+    /// В обучении вместо названия арены — «Тренировка».
     /// </summary>
     public sealed class ArenaBanner : MonoBehaviour
     {
@@ -30,6 +31,11 @@ namespace Bouncer.UI
             var director = ArenaDirector.Instance;
             if (session != null && director != null && director.Arena != null)
             {
+                if (!_introShown && session.State == SessionState.Playing && Tutorial.Active)
+                {
+                    _introShown = true;
+                    Show(Loc.Get("tutorial.banner"), Loc.Get("tutorial.banner.hint"), introTime + 1.2f);
+                }
                 if (!_introShown && session.State == SessionState.Playing && !director.Arena.title.IsEmpty)
                 {
                     _introShown = true;

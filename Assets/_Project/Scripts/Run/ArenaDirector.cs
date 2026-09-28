@@ -14,7 +14,9 @@ namespace Bouncer.Run
     /// исчезают, монетки слетаются к игроку, после босса предлагается карточка, открывается ларёк и появляется
     /// стрелка на следующую арену (на развилке — две, по одной на каждую арену этапа). На последней арене победа
     /// заканчивает прогулку.
-    /// Ещё раскладывает на арене найденный портфель.
+    /// Ещё раскладывает на арене найденный портфель и открывает в бестиарии выбитого босса (<see cref="BestiaryProgress"/>).
+    /// В обучении (<see cref="Tutorial"/>) арена только ставит время суток: волн, находок и погоды нет —
+    /// врагов выпускает <see cref="TutorialDirector"/>.
     /// </summary>
     [DefaultExecutionOrder(-80)]
     public sealed class ArenaDirector : MonoBehaviour
@@ -95,9 +97,17 @@ namespace Bouncer.Run
                 Instance = null;
         }
 
-        void OnEnable() => GameEvents.BossDefeated += OnBossDefeated;
+        void OnEnable()
+        {
+            GameEvents.BossDefeated += OnBossDefeated;
+            GameEvents.RunFinished += OnRunFinished;
+        }
 
-        void OnDisable() => GameEvents.BossDefeated -= OnBossDefeated;
+        void OnDisable()
+        {
+            GameEvents.BossDefeated -= OnBossDefeated;
+            GameEvents.RunFinished -= OnRunFinished;
+        }
 
         void Start()
         {
@@ -121,11 +131,19 @@ namespace Bouncer.Run
                 exit.Hide();
             if (forkExit)
                 forkExit.Hide();
+            _portfolioTimes.Clear();
+            if (Tutorial.Active)
+            {
+                if (spawner)
+                    spawner.Spawning = false;
+                if (weather)
+                    weather.Begin(WeatherKind.Clear);
+                return;
+            }
             Weather = RollWeather();
             if (weather)
                 weather.Begin(Weather);
 
-            _portfolioTimes.Clear();
             float duration = Arena.wave ? Arena.wave.duration : 300f;
             for (int i = 0; i < Arena.portfolioFinds; i++)
                 _portfolioTimes.Add(Random.Range(Arena.portfolioWindow.x, Arena.portfolioWindow.y) * duration);
@@ -169,8 +187,34 @@ namespace Bouncer.Run
 
         void OnBossDefeated()
         {
+            OpenBossPages();
             if (Arena != null && Arena.goal is (ArenaGoal.DefeatBoss or ArenaGoal.SurviveUntilCall))
                 Complete(boss: Arena.goal == ArenaGoal.DefeatBoss, bossDefeated: true);
+        }
+
+        /// <summary>Прогулка выиграна: босс финала побеждён, даже если его не выбили, а дождались мамы.</summary>
+        void OnRunFinished(bool victory)
+        {
+            if (victory)
+                OpenBossPages();
+        }
+
+        /// <summary>Бестиарий: открыть страницу босса этой арены (по имени префаба из его выхода в волнах).</summary>
+        void OpenBossPages()
+        {
+            if (Arena == null || Arena.wave == null || Tutorial.Active)
+                return;
+            foreach (var burst in Arena.wave.bursts)
+            {
+                if (!burst.boss)
+                    continue;
+                if (burst.prefab)
+                    BestiaryProgress.Open(burst.prefab.name);
+                if (burst.variants != null)
+                    foreach (var variant in burst.variants)
+                        if (variant)
+                            BestiaryProgress.Open(variant.name);
+            }
         }
 
         /// <summary>Условие победы выполнено. boss — предложить карточку за босса.</summary>

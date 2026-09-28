@@ -19,6 +19,8 @@ namespace Bouncer.Core
             get => resetAfterSeconds;
             set => resetAfterSeconds = Mathf.Max(0f, value);
         }
+        /// <summary>Ниже стольких жизней урон не опускает (обучение: игрока не выбить). 0 — как обычно.</summary>
+        public int Floor { get; set; }
 
         public event Action<HitInfo> Damaged;
         public event Action<HitInfo> Died;
@@ -51,7 +53,7 @@ namespace Bouncer.Core
             if (IsDead || IsInvulnerable || hit.Damage <= 0)
                 return false;
 
-            Current = Mathf.Max(0, Current - hit.Damage);
+            Current = Mathf.Max(Mathf.Min(Floor, Current), Current - hit.Damage);
             _lastDamageTime = Time.time;
             Damaged?.Invoke(hit);
             if (Current == 0)

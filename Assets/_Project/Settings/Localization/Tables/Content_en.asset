@@ -387,6 +387,459 @@ MonoBehaviour:
     m_Localized: Big Plush Bunny
     m_Metadata:
       m_Items: []
+  - m_Id: 1455588239204352
+    m_Localized: Roly-Poly
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398656
+    m_Localized: Waddles toward you and body-slams. A hit knocks it over; it rocks
+      and gets back up on its own.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398657
+    m_Localized: "One hit does it. When they bunch up, hit the outermost one \u2014
+      a falling roly-poly knocks over its neighbours."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398658
+    m_Localized: Baby Doll
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398659
+    m_Localized: Runs in a swarm, shoving its neighbours; up close it crouches and
+      leaps to bite.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398660
+    m_Localized: "Goes down in one hit, and the ball passes right through \u2014
+      throw along the swarm."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398661
+    m_Localized: Tin Soldier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398662
+    m_Localized: 'Marches in formation: the line stops at range, winds up together
+      and throws in turn. Sometimes throws a spiky hedgehog.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398663
+    m_Localized: "Catch his balls \u2014 they are your main supply of balls and hearts.
+      Don't catch a hedgehog (red and glowing) \u2014 dodge it."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398664
+    m_Localized: Teddy Bear
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398665
+    m_Localized: "A slow tank that plows ahead and swipes with its paw up close.
+      Balls get stuck in its belly \u2014 one ball fewer for you."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398666
+    m_Localized: Another hit knocks the stuck ball onto the floor, and a knocked-out
+      bear drops them all. Stay out of paw reach.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398667
+    m_Localized: Wind-up Chick
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398668
+    m_Localized: Winds up (the key spins and sparks), runs straight to where you
+      stood and explodes. The blast hits everyone around, enemies too.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398669
+    m_Localized: "Step aside while it winds up. Hit by a ball, it blows up on the
+      spot \u2014 detonate it in a crowd."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398670
+    m_Localized: Spinning Top
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398671
+    m_Localized: Spins and rolls toward you in an arc, knocking you over on contact.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398672
+    m_Localized: "A hit sends it flying like a billiard ball \u2014 aim so it ploughs
+      into other enemies."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398673
+    m_Localized: Rocking Horse
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398674
+    m_Localized: Rocks harder and harder, then charges in a straight line.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398675
+    m_Localized: "A hit while it rocks breaks the charge. After a charge it rocks
+      in place \u2014 that's your window."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398676
+    m_Localized: Pot-Lid Soldier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398677
+    m_Localized: 'Advances holding a pot lid in front of him: balls bounce off it
+      like off a wall. Up close he swings a ladle.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398678
+    m_Localized: Hit him from the side, from behind, off a ricochet or with a boomerang.
+      A charged ball knocks the lid away for a couple of seconds.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398679
+    m_Localized: Pioneer Drummer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398680
+    m_Localized: 'Doesn''t attack himself: hangs back and beats his drum. His drumbeat
+      makes nearby enemies run faster.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398681
+    m_Localized: Take him out first. A hit throws off his rhythm and the drum goes
+      quiet.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398682
+    m_Localized: Wind-up Frog
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398683
+    m_Localized: Leaps at you in an arc; the landing hits a circle that shows on
+      the ground beforehand.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398684
+    m_Localized: "A ball mid-jump flips her on her back. When she runs down she sits
+      and rewinds \u2014 a window for throws."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398685
+    m_Localized: RC Car
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398686
+    m_Localized: Zooms around in circles, revs in place, then rams in a straight
+      line and skids out.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398687
+    m_Localized: "A ball flips it wheels-up \u2014 helpless for a couple of seconds.
+      When its wheels spin, get off its line."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398688
+    m_Localized: Dendy Light Gun
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398689
+    m_Localized: 'Hops on its grip and keeps its distance, then aims a laser: the
+      beam and a line on the ground track you and freeze right before the shot.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398690
+    m_Localized: "The shot can't be caught \u2014 it's light. When the line freezes,
+      step off it. A hit spoils its aim."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398691
+    m_Localized: Mannequin
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398692
+    m_Localized: Freezes while you look at it, striking a new pose each time. Look
+      away and it sneaks up fast and strikes.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398693
+    m_Localized: 'Keep it in front of you and keep hitting: you can always hit it,
+      and your gaze stops even its swing.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398694
+    m_Localized: Scarecrow
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398695
+    m_Localized: Hops on its pole and keeps its distance. Its arms catch balls from
+      the front and throw them back a second later.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398696
+    m_Localized: "Hit it from the side or back \u2014 it turns slowly. A charged
+      ball breaks through its arms, and you can catch its return throw."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398697
+    m_Localized: Shadow
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398698
+    m_Localized: Comes out of the dark and drifts toward you. In the dark balls pass
+      right through it; under a lamp it's solid.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398699
+    m_Localized: Stand under a lamp so it has to step into the light. It turns solid
+      anywhere as it winds up, and the flashlight (Q) burns it.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398700
+    m_Localized: Music-Box Ballerina
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398701
+    m_Localized: 'Spins on her stand and glides toward you: a ball thrown into her
+      pirouette circles her and flies back at you.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398702
+    m_Localized: Hit her after the pirouette while she curtsies. A charged ball breaks
+      through the pirouette, and you can catch a deflected one.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398703
+    m_Localized: Lunokhod
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398704
+    m_Localized: Crawls along on eight wheels, keeping its distance. Raises its solar-panel
+      lid and fires a fan of spiky hedgehogs.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398705
+    m_Localized: "Hedgehogs can't be caught \u2014 dodge them. With the lid shut
+      a hit counts half, with it open \u2014 one and a half: strike while it fires."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398706
+    m_Localized: Crybaby Doll
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398707
+    m_Localized: 'Walks up and bursts into tears: the crying waves slow you down,
+      and every other time she calls baby dolls.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398708
+    m_Localized: A hit interrupts the crying. Take her out before the swarm gathers.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398709
+    m_Localized: Crow
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398710
+    m_Localized: From the Bogeyman's flock. Circles too high to hit; its shadow on
+      the asphalt gives it away. Dives through where you stand and sometimes carries
+      off a stray ball.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398711
+    m_Localized: "A line flashes on the asphalt before the dive \u2014 step off it.
+      Low over the ground any ball knocks a crow down."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398712
+    m_Localized: Golden Matryoshka
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398713
+    m_Localized: A tough matryoshka in a kokoshnik. Knocked out, she opens up and
+      two roly-polys step out.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398714
+    m_Localized: Keep balls ready for the two little ones.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398715
+    m_Localized: Baby Doll in a Bonnet
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398716
+    m_Localized: 'Swarm leader with a pacifier: while he lives, nearby baby dolls
+      run faster, and he whimpers to call more.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398717
+    m_Localized: "Take him out first \u2014 without the leader the swarm is back
+      to normal."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398718
+    m_Localized: Officer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398719
+    m_Localized: An officer with a sabre who comes with his own line, commands their
+      volleys and throws a strong spiky hedgehog himself.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398720
+    m_Localized: "Don't catch his hedgehog \u2014 dash away. Hit him while the line
+      winds up."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398721
+    m_Localized: Sailor Bear
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398722
+    m_Localized: Holds two balls in his belly at once and spits them back at you.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398723
+    m_Localized: "The spat-out balls can be caught \u2014 a perfect catch heals."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398724
+    m_Localized: Rooster
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398725
+    m_Localized: Runs at you, turning toward you twice on the way, and explodes bigger
+      than a chick.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398726
+    m_Localized: Dash away at the last moment or knock it out with a ball while it's
+      still far away.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398727
+    m_Localized: Sputnik Top
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398728
+    m_Localized: A big top with antennas. Knocked out, it splits into two mini tops.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398729
+    m_Localized: Launch it into a crowd like a normal top, and save balls for the
+      mini tops.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398730
+    m_Localized: Fire Horse
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398731
+    m_Localized: Charges like a rocking horse but leaves a trail of fire behind.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398732
+    m_Localized: Stay off the charge line and don't run through the trail. A hit
+      breaks its rocking.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398733
+    m_Localized: Department-Store Mannequin
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398734
+    m_Localized: In a red dress and a hat. Freezes under your gaze like any mannequin,
+      but turn away and she throws a strong ball at your back.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398735
+    m_Localized: Don't turn your back on her. Only a perfect catch holds a strong
+      ball.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398736
+    m_Localized: Scarecrow in an Ushanka
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398737
+    m_Localized: In a padded jacket with glowing eyes. Catches even charged balls,
+      holds two and answers with a strong spiky hedgehog.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398738
+    m_Localized: "Only from the side or back. Don't catch its hedgehog \u2014 dodge
+      it."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398739
+    m_Localized: Shadow in a Hat
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398740
+    m_Localized: A shadow that puts out the lamps it flies past, leaving less light
+      in the arena.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398741
+    m_Localized: Meet it with the flashlight (Q) and hit it as it winds up, while
+      it's solid.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398742
+    m_Localized: 'Queen of the yard: plows ahead, body-slams and lobs little roly-polys.
+      Knocked out, she splits into two smaller ones, and those split again.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398743
+    m_Localized: 'Keep your distance and watch the halves: when there are four, take
+      them one at a time.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398744
+    m_Localized: 'Boss of the hockey box. Throws strong balls and every few seconds
+      whistles a new rule: Freeze!, Penalty!, Ball in play! or Substitution!'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398745
+    m_Localized: 'Read the rule on screen: don''t run during Freeze!, catch the fan
+      during Penalty! (not the hedgehogs), dash away from the giant ball.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398746
+    m_Localized: A police Zhiguli that turns into a robot. As a car it rams and smashes
+      stalls; as a robot it fires fans of balls, drops battery mines and calls in
+      RC cars.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398747
+    m_Localized: "Make him crash into a wall \u2014 stunned, he's open. Hit him while
+      he transforms and right after a volley."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398748
+    m_Localized: Hops after you and slams down in a circle, leaving cotton clouds
+      that bog you down. Throws a carrot boomerang, whips with his ears up close,
+      and at half health his seam rips.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398749
+    m_Localized: "Leave the circle before he lands \u2014 after a jump he sits wide
+      open. Steer clear of the cotton clouds."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398750
+    m_Localized: The Bogeyman with a sack. Catches every ball from the front and
+      answers with a fan, sweeps stray balls into his sack, puts out the lights,
+      calls crows, vaults on his pole, hides among scarecrows and counts to five.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398751
+    m_Localized: "Hit him from the side or back \u2014 he turns slowly. A hit on
+      the sack spills the balls; hide behind cover while he counts. Or just hold
+      out until mom calls you home."
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

@@ -8,7 +8,8 @@ namespace Bouncer.UI
     /// <summary>
     /// Пункт меню «мелом» (кнопка, ползунок, переключатель): надпись, под которой появляется меловое
     /// подчёркивание, когда пункт выбран (стрелками, геймпадом) или под мышью. Мышь выбирает пункт
-    /// наведением — так у всех способов ввода одна и та же подсветка.
+    /// наведением — так у всех способов ввода одна и та же подсветка. Главная кнопка («Играть») может быть
+    /// подчёркнута всегда.
     /// </summary>
     [RequireComponent(typeof(UnityEngine.UI.Selectable))]
     public sealed class ChalkButton : MonoBehaviour, ISelectHandler, IDeselectHandler, IPointerEnterHandler
@@ -18,6 +19,8 @@ namespace Bouncer.UI
         [SerializeField] float selectedScale = 1.1f;
         [Tooltip("Подчёркивание по ширине надписи — для строк, где надпись прижата влево и меняется с языком")]
         [SerializeField] bool fitUnderline;
+        [Tooltip("Подчёркнута всегда, а не только выбранная — главная кнопка экрана")]
+        [SerializeField] bool alwaysUnderlined;
 
         UnityEngine.UI.Selectable _selectable;
         TMP_Text _labelText;
@@ -64,7 +67,7 @@ namespace Bouncer.UI
             if (label)
                 label.localScale = Vector3.one * _scale;
             if (underline)
-                underline.enabled = _selected;
+                underline.enabled = _selected || alwaysUnderlined;
             if (_selected && fitUnderline && underline && _labelText && !ReferenceEquals(_labelText.text, _fittedText))
             {
                 _fittedText = _labelText.text;

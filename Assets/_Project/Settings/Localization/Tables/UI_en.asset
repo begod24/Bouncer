@@ -778,6 +778,266 @@ MonoBehaviour:
     m_Localized: Pockets
     m_Metadata:
       m_Items: []
+  - m_Id: 1455588411170816
+    m_Localized: Bestiary
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170817
+    m_Localized: FIRST TIME IN THE YARD?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170818
+    m_Localized: "A couple of minutes of practice: running, throwing, catching, dashing,
+      cards and the newsstand. You can also take it later: Notebook \u2192 How to
+      play."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170819
+    m_Localized: Yes, teach me
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170820
+    m_Localized: No, let's play
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170821
+    m_Localized: Practice in the yard
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170822
+    m_Localized: "Your tasks are on the left. Esc \u2014 pause: restart or quit from
+      there"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170823
+    m_Localized: "TUTORIAL \xB7 {0} of {1}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170824
+    m_Localized: Done!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170825
+    m_Localized: '{0} / {1}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170826
+    m_Localized: Run around the yard
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170827
+    m_Localized: WASD or the left stick
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170828
+    m_Localized: Knock out the roly-polys
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170829
+    m_Localized: "Aim with the mouse or the right stick. LMB or RT \u2014 throw.
+      One hit is enough for a roly-poly"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170830
+    m_Localized: Pick up your balls
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170831
+    m_Localized: Walk up to a ball and it jumps into your hands. RMB / E / LT next
+      to a ball grabs it
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170832
+    m_Localized: Charged throw
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170833
+    m_Localized: 'Hold LMB / RT until the bar over your head fills up, then let go:
+      the ball flies faster, farther and hits twice as hard'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170834
+    m_Localized: Catch the soldier's ball
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170835
+    m_Localized: "When a ball flies at you from the front, press RMB / E / LT. Press
+      at the last moment for a golden perfect catch \u2014 it heals a heart"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170836
+    m_Localized: Dash
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170837
+    m_Localized: "Space / Shift / A \u2014 dash. Balls and hits pass through you
+      mid-dash"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170838
+    m_Localized: Knock them all out!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170839
+    m_Localized: "Catch the soldiers' balls \u2014 they keep you stocked with balls
+      and hearts. Baby dolls are fast but fall to one hit"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170840
+    m_Localized: Elite!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170841
+    m_Localized: 'A golden mark on the ground means an elite: tougher than usual,
+      with a trick of its own. The golden matryoshka opens into two roly-polys'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170842
+    m_Localized: School bag
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170843
+    m_Localized: "The elite dropped a school bag \u2014 pick it up and choose a card.
+      Cards power you up until the end of the walk"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170844
+    m_Localized: Pockets
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170845
+    m_Localized: "The card went into a pocket. Tab / Select \u2014 open your pockets
+      to see what each card does. You only have six"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170846
+    m_Localized: The newsstand
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170847
+    m_Localized: "After an arena the newsstand opens: walk up and press F / X. Coins
+      drop from enemies \u2014 here's a bit extra for the first time. It sells gum
+      with cards, lemonade and a sandwich"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170848
+    m_Localized: READY TO PLAY!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170849
+    m_Localized: "A walk goes from the yard to the hockey box or the flea market,
+      then the construction site or the kindergarten \u2014 and home before mom calls.
+      The newsstand opens after every arena. The Bestiary in the Notebook tells you
+      about every enemy."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170850
+    m_Localized: Let's go!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170851
+    m_Localized: BESTIARY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170852
+    m_Localized: Enemies
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170853
+    m_Localized: Elites
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170854
+    m_Localized: Bosses
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170855
+    m_Localized: 'Hits: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170856
+    m_Localized: "Elite \xB7 hits: {0} \xB7 may drop a school bag"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170857
+    m_Localized: "Boss \xB7 hits: {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588415365120
+    m_Localized: 'Where: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588415365121
+    m_Localized: How to beat it
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588415365122
+    m_Localized: ???
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588415365123
+    m_Localized: "Boss \xB7 not defeated yet"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588415365124
+    m_Localized: Defeat it to fill in this page.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588415365125
+    m_Localized: 'Unlocked: {0} of {1}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588415365126
+    m_Localized: "Arrows / stick \u2014 choose    \u2190/\u2192 \u2014 section   
+      Q / E, LB / RB \u2014 page    Esc / B \u2014 back"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1461472117907456
+    m_Localized: Notebook
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1461472126296064
+    m_Localized: How to play
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1461472126296065
+    m_Localized: new!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1461472126296066
+    m_Localized: "Q / E, LB / RB \u2014 page    Esc / B \u2014 back"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1461472126296067
+    m_Localized: Controls
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1461472126296068
+    m_Localized: "WASD / left stick \u2014 run\nmouse / right stick \u2014 aim\nLMB
+      / RT \u2014 throw, hold to charge\nRMB / E / LT \u2014 catch or grab a ball
+      nearby\nSpace / Shift / A \u2014 dash\nQ / LB \u2014 flashlight in the dark\nF
+      / X \u2014 newsstand    Tab / Select \u2014 pockets\nEsc / Start \u2014 pause   
+      H \u2014 in-game hints"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1461472126296069
+    m_Localized: Yard rules
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1461472126296070
+    m_Localized: "Knock out the toys with a ball and catch their balls: a caught
+      ball is yours, and a perfect last-moment catch heals a heart. Don't catch the
+      red spiky hedgehog \u2014 dodge it.\n\nEnemies drop coins, elites (golden mark)
+      drop a school bag with cards. Cards go into six pockets.\n\nAfter an arena
+      the newsstand opens, then an arrow leads on \u2014 pick your path at the fork.
+      In the final, hold out until mom calls and run to the entrance. A win unlocks
+      the next danger level."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1461472126296071
+    m_Localized: Take the practice
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

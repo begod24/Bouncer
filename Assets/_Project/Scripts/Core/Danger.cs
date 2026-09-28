@@ -43,12 +43,12 @@ namespace Bouncer.Core
         // 2: +1 элитка на арену, у элиток всегда есть свойство.
         public static int ExtraElites => Level >= 2 ? 1 : 0;
         public static bool EliteAffixAlways => Level >= 2;
-        /// <summary>С каким шансом элитка получает свойство («шустрый», «командир», «ловкач»).</summary>
-        public static float EliteAffixChance => EliteAffixAlways ? 1f : 0.5f;
+        /// <summary>С каким шансом элитка получает свойство («шустрый», «командир», «ловкач»). В обучении — без свойств.</summary>
+        public static float EliteAffixChance => Tutorial.Active ? 0f : EliteAffixAlways ? 1f : 0.5f;
 
-        // 3: враги на 10% быстрее, солдатики чаще кидают ёжиков.
+        // 3: враги на 10% быстрее, солдатики чаще кидают ёжиков (в обучении — никогда: там учатся ловить).
         public static float EnemySpeed => Level >= 3 ? 1.1f : 1f;
-        public static float HedgehogChance => Level >= 3 ? 0.35f : 0.2f;
+        public static float HedgehogChance => Tutorial.Active ? 0f : Level >= 3 ? 0.35f : 0.2f;
 
         // 4: монеток на четверть меньше, лечение в ларьке в полтора раза дороже.
         public static float CoinMultiplier => Level >= 4 ? 0.75f : 1f;

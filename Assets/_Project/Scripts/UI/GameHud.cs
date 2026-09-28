@@ -132,9 +132,10 @@ namespace Bouncer.UI
                 GameSettings.ShowHints = !GameSettings.ShowHints;
                 GameSettings.Save();
             }
-            // Подсказка только посреди игры: под паузой, карточками и «Выбит!» она мешает.
+            // Подсказка только посреди игры: под паузой, карточками и «Выбит!» она мешает. В обучении управление
+            // объясняют задания.
             if (help)
-                help.SetActive(GameSettings.ShowHints && GameSession.IsGameplayActive);
+                help.SetActive(GameSettings.ShowHints && GameSession.IsGameplayActive && !Tutorial.Active);
             var session = GameSession.Instance;
             if (hudGroup)
             {
@@ -272,6 +273,11 @@ namespace Bouncer.UI
                     _homeShown = true;
                     timerLabel.text = Loc.Get("hud.call.home");
                 }
+            }
+            else if (Tutorial.Active)
+            {
+                // Тренировка без часов: спешить некуда.
+                timerLabel.text = string.Empty;
             }
             else
             {

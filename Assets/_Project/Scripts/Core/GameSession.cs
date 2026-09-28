@@ -24,6 +24,7 @@ namespace Bouncer.Core
     /// <summary>
     /// Арена в прогулке: заставка, бой, выбор карточки, ларёк после боя, пауза, конец игры и рестарт.
     /// Что переходит между аренами (монетки, сердца, итоги), лежит в <see cref="RunState"/>.
+    /// Первая арена может загрузиться и тренировкой (<see cref="Tutorial"/>): тогда сразу бой, но без волн.
     /// </summary>
     [DefaultExecutionOrder(-90)]
     public sealed class GameSession : MonoBehaviour
@@ -69,7 +70,13 @@ namespace Bouncer.Core
             // Темнота «Гасит свет» и заморозка врагов прошлой сцены (финал, «Замри!») в новую не переходят.
             LightsOut.Clear();
             Targetable.ClearEnemyFreeze();
-            if (RunState.ContinuesRun)
+            if (Tutorial.Begin())
+            {
+                // Тренировка во дворе: сразу на арену, шаги ведёт TutorialDirector.
+                RunState.BeginTutorial();
+                State = SessionState.Playing;
+            }
+            else if (RunState.ContinuesRun)
             {
                 // Следующая арена той же прогулки: сразу бой.
                 RunState.ConsumeContinuation();
@@ -138,8 +145,20 @@ namespace Bouncer.Core
                 GameFeel.Paused = !GameFeel.Paused;
         }
 
-        /// <summary>Заново всю прогулку с первой арены, без заставки.</summary>
-        public void Restart() => Reload(skipTitle: true);
+        /// <summary>Заново всю прогулку с первой арены, без заставки. В обучении — обучение с начала.</summary>
+        public void Restart()
+        {
+            if (Tutorial.Active)
+                Tutorial.Request();
+            Reload(skipTitle: true);
+        }
+
+        /// <summary>Тренировка во дворе: первая арена грузится заново, без волн, с заданиями.</summary>
+        public void StartTutorial()
+        {
+            Tutorial.Request();
+            Reload(skipTitle: true);
+        }
 
         /// <summary>К заставке: первая арена грузится заново и ждёт кнопку «Играть».</summary>
         public void ToTitle() => Reload(skipTitle: false);

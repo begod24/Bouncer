@@ -11,7 +11,7 @@ namespace Bouncer.UI
 {
     /// <summary>
     /// Экран «Настройки» с вкладками: игра (тряска, прицел, подсказки), видео (окно, разрешение, синхронизация),
-    /// звук (громкости) и язык. Всё меняется сразу и пишется в <see cref="GameSettings"/>; на диск — при
+    /// звук (громкости), язык и авторы (только надписи, пунктов нет). Всё меняется сразу и пишется в <see cref="GameSettings"/>; на диск — при
     /// закрытии (<see cref="Save"/>). Язык выбирает и запоминает пакет Localization. Вкладки листаются
     /// стрелками на ряду вкладок, Q / E или LB / RB откуда угодно и кликом мыши. Открывает и закрывает экран
     /// <see cref="RunScreens"/>. Разрешение и режим окна в редакторе не меняются — только в билде.
@@ -27,7 +27,7 @@ namespace Bouncer.UI
             public UnityEngine.UI.Selectable[] items;
         }
 
-        [Header("Вкладки: игра, видео, звук, язык")]
+        [Header("Вкладки: игра, видео, звук, язык, авторы")]
         [SerializeField] ChalkTabs tabs;
         [SerializeField] Page[] pages;
         [SerializeField] UnityEngine.UI.Selectable backButton;
@@ -172,11 +172,12 @@ namespace Bouncer.UI
                 };
             }
 
-            // Выбранный пункт остался на спрятанной вкладке — переходим на первый пункт новой.
+            // Выбранный пункт остался на спрятанной вкладке — переходим на первый пункт новой (у «Авторов» пунктов
+            // нет — на ряд вкладок).
             var events = EventSystem.current;
             var selected = events != null ? events.currentSelectedGameObject : null;
-            if (selected != null && !selected.activeInHierarchy && pages[index].items.Length > 0)
-                events.SetSelectedGameObject(pages[index].items[0].gameObject);
+            if (selected != null && !selected.activeInHierarchy)
+                events.SetSelectedGameObject(pages[index].items.Length > 0 ? pages[index].items[0].gameObject : tabsItem.gameObject);
         }
 
         static int TabStepPressed()

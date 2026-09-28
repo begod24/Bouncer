@@ -759,6 +759,238 @@ MonoBehaviour:
     m_Key: pause.pockets
     m_Metadata:
       m_Items: []
+  - m_Id: 1455588411170816
+    m_Key: menu.bestiary
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170817
+    m_Key: tutorial.ask.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170818
+    m_Key: tutorial.ask.body
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170819
+    m_Key: tutorial.ask.yes
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170820
+    m_Key: tutorial.ask.no
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170821
+    m_Key: tutorial.banner
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170822
+    m_Key: tutorial.banner.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170823
+    m_Key: tutorial.step
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170824
+    m_Key: tutorial.step_done
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170825
+    m_Key: tutorial.progress
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170826
+    m_Key: tutorial.move.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170827
+    m_Key: tutorial.move.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170828
+    m_Key: tutorial.throw.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170829
+    m_Key: tutorial.throw.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170830
+    m_Key: tutorial.pickup.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170831
+    m_Key: tutorial.pickup.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170832
+    m_Key: tutorial.charge.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170833
+    m_Key: tutorial.charge.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170834
+    m_Key: tutorial.catch.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170835
+    m_Key: tutorial.catch.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170836
+    m_Key: tutorial.dash.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170837
+    m_Key: tutorial.dash.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170838
+    m_Key: tutorial.fight.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170839
+    m_Key: tutorial.fight.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170840
+    m_Key: tutorial.elite.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170841
+    m_Key: tutorial.elite.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170842
+    m_Key: tutorial.portfolio.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170843
+    m_Key: tutorial.portfolio.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170844
+    m_Key: tutorial.pockets.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170845
+    m_Key: tutorial.pockets.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170846
+    m_Key: tutorial.kiosk.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170847
+    m_Key: tutorial.kiosk.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170848
+    m_Key: tutorial.done.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170849
+    m_Key: tutorial.done.body
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170850
+    m_Key: tutorial.done.play
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170851
+    m_Key: bestiary.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170852
+    m_Key: bestiary.tab.enemies
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170853
+    m_Key: bestiary.tab.elites
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170854
+    m_Key: bestiary.tab.bosses
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170855
+    m_Key: bestiary.hits
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170856
+    m_Key: bestiary.hits.elite
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588411170857
+    m_Key: bestiary.hits.boss
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588415365120
+    m_Key: bestiary.where
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588415365121
+    m_Key: bestiary.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588415365122
+    m_Key: bestiary.locked.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588415365123
+    m_Key: bestiary.locked.stats
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588415365124
+    m_Key: bestiary.locked.body
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588415365125
+    m_Key: bestiary.bosses.count
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588415365126
+    m_Key: bestiary.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1461472117907456
+    m_Key: menu.notebook
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1461472126296064
+    m_Key: notebook.tab.howto
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1461472126296065
+    m_Key: notebook.new
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1461472126296066
+    m_Key: notebook.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1461472126296067
+    m_Key: notebook.howto.controls_title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1461472126296068
+    m_Key: notebook.howto.controls
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1461472126296069
+    m_Key: notebook.howto.rules_title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1461472126296070
+    m_Key: notebook.howto.rules
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1461472126296071
+    m_Key: notebook.howto.tutorial
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

@@ -67,6 +67,14 @@ namespace Bouncer.Core
             CoinsChanged?.Invoke(0);
         }
 
+        /// <summary>Обучение: прогулка с первой арены на первой опасности, без стартовой карточки — её даст шаг обучения.</summary>
+        public static void BeginTutorial()
+        {
+            BeginNew();
+            NeedsStartCard = false;
+            Danger = 1;
+        }
+
         /// <summary>Прогулки нет (заставка) — следующая начнётся заново.</summary>
         public static void Clear()
         {

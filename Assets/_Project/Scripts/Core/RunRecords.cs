@@ -19,10 +19,12 @@ namespace Bouncer.Core
 
     /// <summary>
     /// Локальные рекорды: лучшие победы (по времени) на каждом уровне опасности. Лежат в PlayerPrefs одним JSON.
+    /// Новый рекорд помечается «новое!» в тетрадке, пока игрок не откроет страницу рекордов (<see cref="MarkSeen"/>).
     /// </summary>
     public static class RunRecords
     {
         const string Key = "bouncer.records";
+        const string UnseenKey = "bouncer.records.unseen";
         /// <summary>Сколько побед хранить на одном уровне опасности.</summary>
         const int KeepPerDanger = 5;
 
@@ -60,6 +62,18 @@ namespace Bouncer.Core
 
         public static IReadOnlyList<RunRecord> All => Data.runs;
 
+        /// <summary>Есть рекорд, которого игрок ещё не видел в тетрадке.</summary>
+        public static bool HasUnseen => PlayerPrefs.GetInt(UnseenKey, 0) == 1;
+
+        /// <summary>Страницу рекордов открыли — «новое!» больше не показывать.</summary>
+        public static void MarkSeen()
+        {
+            if (!HasUnseen)
+                return;
+            PlayerPrefs.DeleteKey(UnseenKey);
+            PlayerPrefs.Save();
+        }
+
         /// <summary>Лучшая победа на этом уровне опасности. null — побед ещё нет.</summary>
         public static RunRecord Best(int danger)
         {
@@ -94,6 +108,8 @@ namespace Bouncer.Core
                 kept[danger] = count + 1;
             }
             PlayerPrefs.SetString(Key, JsonUtility.ToJson(Data));
+            if (isBest)
+                PlayerPrefs.SetInt(UnseenKey, 1);
             PlayerPrefs.Save();
             return isBest;
         }

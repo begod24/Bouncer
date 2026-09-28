@@ -371,6 +371,394 @@ MonoBehaviour:
     m_Key: boss.hare
     m_Metadata:
       m_Items: []
+  - m_Id: 1455588239204352
+    m_Key: bestiary.rolypoly.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398656
+    m_Key: bestiary.rolypoly.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398657
+    m_Key: bestiary.rolypoly.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398658
+    m_Key: bestiary.pupsik.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398659
+    m_Key: bestiary.pupsik.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398660
+    m_Key: bestiary.pupsik.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398661
+    m_Key: bestiary.tinsoldier.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398662
+    m_Key: bestiary.tinsoldier.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398663
+    m_Key: bestiary.tinsoldier.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398664
+    m_Key: bestiary.bear.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398665
+    m_Key: bestiary.bear.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398666
+    m_Key: bestiary.bear.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398667
+    m_Key: bestiary.chick.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398668
+    m_Key: bestiary.chick.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398669
+    m_Key: bestiary.chick.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398670
+    m_Key: bestiary.top.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398671
+    m_Key: bestiary.top.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398672
+    m_Key: bestiary.top.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398673
+    m_Key: bestiary.rockinghorse.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398674
+    m_Key: bestiary.rockinghorse.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398675
+    m_Key: bestiary.rockinghorse.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398676
+    m_Key: bestiary.shieldsoldier.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398677
+    m_Key: bestiary.shieldsoldier.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398678
+    m_Key: bestiary.shieldsoldier.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398679
+    m_Key: bestiary.drummer.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398680
+    m_Key: bestiary.drummer.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398681
+    m_Key: bestiary.drummer.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398682
+    m_Key: bestiary.frog.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398683
+    m_Key: bestiary.frog.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398684
+    m_Key: bestiary.frog.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398685
+    m_Key: bestiary.rccar.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398686
+    m_Key: bestiary.rccar.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398687
+    m_Key: bestiary.rccar.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398688
+    m_Key: bestiary.dendygun.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398689
+    m_Key: bestiary.dendygun.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398690
+    m_Key: bestiary.dendygun.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398691
+    m_Key: bestiary.mannequin.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398692
+    m_Key: bestiary.mannequin.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398693
+    m_Key: bestiary.mannequin.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398694
+    m_Key: bestiary.scarecrow.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398695
+    m_Key: bestiary.scarecrow.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398696
+    m_Key: bestiary.scarecrow.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398697
+    m_Key: bestiary.shadow.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398698
+    m_Key: bestiary.shadow.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398699
+    m_Key: bestiary.shadow.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398700
+    m_Key: bestiary.ballerina.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398701
+    m_Key: bestiary.ballerina.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398702
+    m_Key: bestiary.ballerina.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398703
+    m_Key: bestiary.lunokhod.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398704
+    m_Key: bestiary.lunokhod.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398705
+    m_Key: bestiary.lunokhod.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398706
+    m_Key: bestiary.crydoll.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398707
+    m_Key: bestiary.crydoll.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398708
+    m_Key: bestiary.crydoll.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398709
+    m_Key: bestiary.crow.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398710
+    m_Key: bestiary.crow.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398711
+    m_Key: bestiary.crow.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398712
+    m_Key: bestiary.elite_rolypoly.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398713
+    m_Key: bestiary.elite_rolypoly.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398714
+    m_Key: bestiary.elite_rolypoly.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398715
+    m_Key: bestiary.elite_pupsik.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398716
+    m_Key: bestiary.elite_pupsik.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398717
+    m_Key: bestiary.elite_pupsik.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398718
+    m_Key: bestiary.elite_tinsoldier.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398719
+    m_Key: bestiary.elite_tinsoldier.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398720
+    m_Key: bestiary.elite_tinsoldier.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398721
+    m_Key: bestiary.elite_bear.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398722
+    m_Key: bestiary.elite_bear.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398723
+    m_Key: bestiary.elite_bear.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398724
+    m_Key: bestiary.elite_chick.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398725
+    m_Key: bestiary.elite_chick.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398726
+    m_Key: bestiary.elite_chick.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398727
+    m_Key: bestiary.elite_top.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398728
+    m_Key: bestiary.elite_top.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398729
+    m_Key: bestiary.elite_top.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398730
+    m_Key: bestiary.elite_rockinghorse.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398731
+    m_Key: bestiary.elite_rockinghorse.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398732
+    m_Key: bestiary.elite_rockinghorse.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398733
+    m_Key: bestiary.elite_mannequin.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398734
+    m_Key: bestiary.elite_mannequin.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398735
+    m_Key: bestiary.elite_mannequin.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398736
+    m_Key: bestiary.elite_scarecrow.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398737
+    m_Key: bestiary.elite_scarecrow.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398738
+    m_Key: bestiary.elite_scarecrow.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398739
+    m_Key: bestiary.elite_shadow.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398740
+    m_Key: bestiary.elite_shadow.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398741
+    m_Key: bestiary.elite_shadow.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398742
+    m_Key: bestiary.boss_rolypoly_big.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398743
+    m_Key: bestiary.boss_rolypoly_big.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398744
+    m_Key: bestiary.boss_fizruk.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398745
+    m_Key: bestiary.boss_fizruk.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398746
+    m_Key: bestiary.boss_transformer.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398747
+    m_Key: bestiary.boss_transformer.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398748
+    m_Key: bestiary.boss_hare.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398749
+    m_Key: bestiary.boss_hare.tip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398750
+    m_Key: bestiary.boss_dusk.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1455588243398751
+    m_Key: bestiary.boss_dusk.tip
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

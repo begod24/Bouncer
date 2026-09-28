@@ -10,11 +10,14 @@ using UnityEngine.InputSystem.UI;
 namespace Bouncer.UI
 {
     /// <summary>
-    /// Экраны поверх прогулки: заставка, выбор ребёнка, пауза, настройки, авторы, «Выбит!» и победа — с кнопками
+    /// Экраны поверх прогулки: заставка, выбор ребёнка, пауза, настройки, тетрадка, «Выбит!» и победа — с кнопками
     /// для мыши, клавиатуры и геймпада. Какой экран показать, решает состояние <see cref="GameSession"/>; кнопки только
-    /// зовут её методы. «Играть» открывает выбор ребёнка, выбор начинает прогулку. Настройки открываются с заставки
-    /// и паузы, авторы и выбор — с заставки; Esc / B возвращают назад. Карманы (<see cref="PocketsPanel"/>) — кнопкой
-    /// в паузе или Tab / Select прямо в бою: тогда игра встаёт на паузу, а закрыл карманы — бой идёт дальше.
+    /// зовут её методы. На заставке четыре пункта: «Играть» (выбор ребёнка, выбор начинает прогулку; самое первое
+    /// «Играть» сперва спрашивает «Пройти обучение?», <see cref="Tutorial"/>), «Тетрадка» (<see cref="NotebookScreen"/>:
+    /// бестиарий, рекорды, «Как играть» с тренировкой; «новое!» на кнопке, пока там есть непросмотренное),
+    /// «Настройки» (там же «Авторы») и «Выход». Настройки открываются с заставки и паузы; Esc / B возвращают назад.
+    /// Карманы (<see cref="PocketsPanel"/>) — кнопкой в паузе или Tab / Select прямо в бою: тогда игра встаёт
+    /// на паузу, а закрыл карманы — бой идёт дальше.
     /// </summary>
     public sealed class RunScreens : MonoBehaviour
     {
@@ -32,23 +35,27 @@ namespace Bouncer.UI
         {
             None,
             Settings,
-            Credits,
             Kids,
-            Records,
             Pockets,
+            Notebook,
+            /// <summary>«Пройти обучение?» — перед самой первой прогулкой.</summary>
+            TutorialAsk,
         }
 
         [SerializeField] Screen title;
         [SerializeField] Screen pause;
         [SerializeField] Screen settings;
-        [SerializeField] Screen credits;
         [Tooltip("«Кто выходит гулять?» — после «Играть»")]
         [SerializeField] Screen kidSelect;
         [SerializeField] Screen gameOver;
         [SerializeField] Screen victory;
-        [Tooltip("Рекорды: лучшие победы на каждом уровне опасности")]
-        [SerializeField] Screen records;
-        [SerializeField] TMP_Text recordsText;
+        [Tooltip("Тетрадка: бестиарий, рекорды, «Как играть»")]
+        [SerializeField] Screen notebook;
+        [SerializeField] NotebookScreen notebookScreen;
+        [Tooltip("«новое!» на кнопке «Тетрадка»")]
+        [SerializeField] GameObject notebookNew;
+        [Tooltip("«Пройти обучение?» — перед самой первой прогулкой")]
+        [SerializeField] Screen tutorialAsk;
         [SerializeField] SettingsScreen settingsScreen;
         [SerializeField] KidSelectScreen kidSelectScreen;
         [SerializeField] TMP_Text gameOverStats;
@@ -62,12 +69,15 @@ namespace Bouncer.UI
         [SerializeField] UnityEngine.UI.Button[] menuButtons;
         [SerializeField] UnityEngine.UI.Button[] quitButtons;
         [SerializeField] UnityEngine.UI.Button[] settingsButtons;
-        [SerializeField] UnityEngine.UI.Button[] creditsButtons;
-        [Tooltip("«Назад» на экранах настроек и авторов")]
+        [Tooltip("«Назад» на экранах поверх заставки")]
         [SerializeField] UnityEngine.UI.Button[] backButtons;
-        [SerializeField] UnityEngine.UI.Button[] recordsButtons;
         [Tooltip("«Карманы» в паузе")]
         [SerializeField] UnityEngine.UI.Button[] pocketsButtons;
+        [Tooltip("«Пройти тренировку» в тетрадке и «Да» в вопросе про обучение")]
+        [SerializeField] UnityEngine.UI.Button[] tutorialButtons;
+        [Tooltip("«Нет, сразу гулять» в вопросе про обучение")]
+        [SerializeField] UnityEngine.UI.Button[] skipTutorialButtons;
+        [SerializeField] UnityEngine.UI.Button[] notebookButtons;
 
         PlayerCards _cards;
         /// <summary>Карманы открыты клавишей прямо в бою: закрылись — снять паузу.</summary>
@@ -90,10 +100,11 @@ namespace Bouncer.UI
             Bind(menuButtons, () => Session(s => s.ToTitle()));
             Bind(quitButtons, Quit);
             Bind(settingsButtons, () => Open(Overlay.Settings));
-            Bind(creditsButtons, () => Open(Overlay.Credits));
             Bind(backButtons, CloseOverlay);
-            Bind(recordsButtons, () => Open(Overlay.Records));
             Bind(pocketsButtons, () => Open(Overlay.Pockets));
+            Bind(tutorialButtons, StartTutorial);
+            Bind(skipTutorialButtons, SkipTutorial);
+            Bind(notebookButtons, () => Open(Overlay.Notebook));
         }
 
         void OnEnable() => GameEvents.RunFinished += OnRunFinished;
@@ -140,29 +151,6 @@ namespace Bouncer.UI
             return names;
         }
 
-        /// <summary>Рекорды: лучшая победа на каждом уровне опасности, от высшего.</summary>
-        void RefreshRecords()
-        {
-            if (recordsText == null)
-                return;
-            var lines = new System.Text.StringBuilder();
-            var roster = kidSelectScreen != null ? kidSelectScreen.Roster : null;
-            for (int level = Danger.Max; level >= 1; level--)
-            {
-                var best = RunRecords.Best(level);
-                if (best == null)
-                    continue;
-                string kid = best.kid;
-                if (roster != null)
-                    for (int i = 0; i < roster.Count; i++)
-                        if (roster[i] != null && roster[i].name == best.kid && !roster[i].displayName.IsEmpty)
-                            kid = roster[i].displayName.GetLocalizedString();
-                lines.AppendLine(Loc.Format("records.line", level, RunRecords.FormatTime(best.time), kid,
-                    best.cards != null ? best.cards.Length : 0));
-            }
-            recordsText.text = lines.Length > 0 ? lines.ToString() : Loc.Get("records.empty");
-        }
-
         void Update()
         {
             var session = GameSession.Instance;
@@ -177,6 +165,12 @@ namespace Bouncer.UI
             UpdatePockets(session);
 
             var state = session.State;
+            // Из обучения по «Гулять!»: заставка сразу открывает выбор ребёнка (кадр спустя — пусть экран разложится).
+            if (Tutorial.OpenKidsOnTitle && state == SessionState.Title && _overlay == Overlay.None && Time.timeSinceLevelLoad > 0.1f)
+            {
+                Tutorial.OpenKidsOnTitle = false;
+                Open(Overlay.Kids);
+            }
             bool paused = state is (SessionState.Playing or SessionState.Cleared) && GameFeel.Paused;
             bool titleOrPause = state == SessionState.Title || paused;
             if (_overlay != Overlay.None && !titleOrPause)
@@ -185,12 +179,20 @@ namespace Bouncer.UI
             Show(title, state == SessionState.Title && noOverlay, true);
             Show(pause, paused && noOverlay, true);
             Show(settings, _overlay == Overlay.Settings, true);
-            Show(credits, _overlay == Overlay.Credits, true);
             Show(kidSelect, _overlay == Overlay.Kids, true);
-            Show(records, _overlay == Overlay.Records, true);
+            Show(notebook, _overlay == Overlay.Notebook, true);
+            Show(tutorialAsk, _overlay == Overlay.TutorialAsk, true);
             // Кнопки конца забега оживают не сразу — чтобы случайное нажатие не перезапустило игру.
             Show(gameOver, state == SessionState.GameOver, session.CanRestart);
             Show(victory, state == SessionState.Victory, session.CanRestart);
+
+            // «новое!» на «Тетрадке»: открылся босс или побит рекорд, а в тетрадку ещё не заглядывали.
+            if (notebookNew && state == SessionState.Title && noOverlay)
+            {
+                bool hasNew = notebookScreen != null && notebookScreen.HasNew;
+                if (notebookNew.activeSelf != hasNew)
+                    notebookNew.SetActive(hasNew);
+            }
 
             if (state == SessionState.GameOver)
                 gameOverStats.text = Stats(session, "gameover.stats");
@@ -278,11 +280,16 @@ namespace Bouncer.UI
                 kidSelectScreen.Open();
                 kidSelect.first = kidSelectScreen.FirstButton;
             }
-            else if (overlay == Overlay.Records)
+            else if (overlay == Overlay.Notebook)
             {
-                if (records.group == null)
+                if (notebook.group == null || notebookScreen == null)
                     return;
-                RefreshRecords();
+                notebook.first = notebookScreen.Open();
+            }
+            else if (overlay == Overlay.TutorialAsk)
+            {
+                if (tutorialAsk.group == null)
+                    return;
             }
             else if (overlay == Overlay.Pockets)
             {
@@ -306,6 +313,8 @@ namespace Bouncer.UI
                 settingsScreen.Save();
             else if (_overlay == Overlay.Kids)
                 kidSelectScreen.Close();
+            else if (_overlay == Overlay.Notebook && notebookScreen != null)
+                notebookScreen.Close();
             else if (_overlay == Overlay.Pockets && PocketsPanel.Instance != null)
                 PocketsPanel.Instance.Close();
             _overlay = Overlay.None;
@@ -323,13 +332,34 @@ namespace Bouncer.UI
             _pocketsResume = false;
         }
 
-        /// <summary>«Играть»: сначала выбрать, с кем гулять (если экрана выбора нет — сразу в прогулку).</summary>
+        /// <summary>
+        /// «Играть»: сначала выбрать, с кем гулять (если экрана выбора нет — сразу в прогулку). Самый первый раз —
+        /// вопрос про обучение.
+        /// </summary>
         void Play()
         {
-            if (kidSelectScreen != null)
+            if (Tutorial.ShouldAsk && tutorialAsk.group != null)
+                Open(Overlay.TutorialAsk);
+            else if (kidSelectScreen != null)
                 Open(Overlay.Kids);
             else
                 Session(s => s.StartRun());
+        }
+
+        /// <summary>«Пройти тренировку» или «Да, научи»: тренировка во дворе.</summary>
+        void StartTutorial()
+        {
+            Tutorial.MarkOffered();
+            CloseOverlay();
+            Session(s => s.StartTutorial());
+        }
+
+        /// <summary>«Нет, сразу гулять»: больше не спрашивать, дальше как обычно — выбор ребёнка.</summary>
+        void SkipTutorial()
+        {
+            Tutorial.MarkOffered();
+            CloseOverlay();
+            Play();
         }
 
         void OnKidChosen(int kid)

@@ -30,6 +30,7 @@ namespace Bouncer.UI
         [SerializeField] TMP_Text dangerHint;
 
         KidStage _stage;
+        bool _closing;
         int _highlighted = -1;
 
         /// <summary>Игрок выбрал ребёнка (номер в KidRoster) — пора начинать прогулку.</summary>
@@ -83,6 +84,7 @@ namespace Bouncer.UI
 
         public void Open()
         {
+            _closing = false;
             if (_stage == null)
             {
                 _stage = Instantiate(stagePrefab, stagePosition, Quaternion.identity);
@@ -97,8 +99,32 @@ namespace Bouncer.UI
             RefreshDanger();
         }
 
+        /// <summary>
+        /// Убрать сцену с детьми. Экран гаснет плавно, а RawImage без текстуры мелькнул бы белым
+        /// прямоугольником: пока экран видно, дети гаснут вместе с ним, а сцена уходит, когда он погас.
+        /// </summary>
         public void Close()
         {
+            _closing = _stage != null;
+            if (!UiVisibility.IsShown(view))
+                DestroyStage();
+        }
+
+        void Update()
+        {
+            if (_closing && !UiVisibility.IsShown(view))
+                DestroyStage();
+        }
+
+        void OnDisable()
+        {
+            if (_closing)
+                DestroyStage();
+        }
+
+        void DestroyStage()
+        {
+            _closing = false;
             if (_stage != null)
                 Destroy(_stage.gameObject);
             _stage = null;

@@ -118,6 +118,7 @@ namespace Bouncer.Run
 
         void Apply()
         {
+            ArenaMusic.FinalTheme = Arena != null && Arena.finalMusic;
             if (Arena == null)
                 return;
             EnemyScaling.ArenaHits = Arena.enemyHitsMultiplier;

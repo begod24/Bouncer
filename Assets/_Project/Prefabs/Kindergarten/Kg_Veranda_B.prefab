@@ -40,6 +40,7 @@ Transform:
   - {fileID: 7754062978937107079}
   - {fileID: 2595751919754146597}
   - {fileID: 1696005841212398160}
+  - {fileID: 2658070491956490177}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &294982200028806713
@@ -72,7 +73,7 @@ MonoBehaviour:
   lights:
   - {fileID: 5295340118934928259}
   zone: {fileID: 294982200028806713}
-  alwaysOn: 0
+  alwaysOn: 1
   onFromEmission: 0.15
   fullAtEmission: 0.8
   flicker: 0.03
@@ -131,6 +132,59 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 6.2, y: 2.7, z: 0.12}
   m_Center: {x: 0, y: 1.6, z: -1.55}
+--- !u!1 &2110256761017898214
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2658070491956490177}
+  - component: {fileID: 5837922604386629839}
+  m_Layer: 11
+  m_Name: BallWall
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2658070491956490177
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2110256761017898214}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6895170511611850857}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &5837922604386629839
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2110256761017898214}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 6.2, y: 2.9, z: 0.2}
+  m_Center: {x: 0, y: 1.45, z: 1.52}
 --- !u!1 &2380995646162491926
 GameObject:
   m_ObjectHideFlags: 0

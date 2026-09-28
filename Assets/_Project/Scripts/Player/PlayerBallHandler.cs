@@ -568,7 +568,7 @@ namespace Bouncer.Player
         {
             Vector3 chest = transform.position + Vector3.up * _stats.throwHeight;
             float distance = _stats.throwForwardOffset;
-            if (Physics.SphereCast(chest, radius, direction, out RaycastHit hit, distance, Layers.EnvironmentMask,
+            if (Physics.SphereCast(chest, radius, direction, out RaycastHit hit, distance, Layers.BallSolidMask,
                     QueryTriggerInteraction.Ignore))
                 distance = Mathf.Max(0f, hit.distance - 0.02f);
             return chest + direction * distance;

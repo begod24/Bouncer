@@ -6464,7 +6464,17 @@ MonoBehaviour:
     clip: {fileID: 8300000, guid: f47470299644c4dd2932915340750c1c, type: 3}
     volume: 0.55
     loopLength: 186
-  gameTheme:
+  gameThemes:
+  - clip: {fileID: 8300000, guid: f7b5d3bee2418474eacdf369550bd5f3, type: 3}
+    volume: 0.26
+    loopLength: 62.4
+  - clip: {fileID: 8300000, guid: 23f3dede28dad4706a190390b3f96a39, type: 3}
+    volume: 0.25
+    loopLength: 59.625
+  - clip: {fileID: 8300000, guid: b7a21d48e72514804a8491ec0994888f, type: 3}
+    volume: 0.2
+    loopLength: 72
+  finalTheme:
     clip: {fileID: 8300000, guid: 984d61644106a47a78b4e2a7474b8b29, type: 3}
     volume: 0.4
     loopLength: 76.190475

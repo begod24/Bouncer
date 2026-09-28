@@ -34,6 +34,8 @@ namespace Bouncer.Run
         [Tooltip("Время суток по ходу боя: ключи равномерно распределены от начала до конца волн")]
         public TimeOfDayProfile[] timeOfDay;
         public ArenaGoal goal = ArenaGoal.DefeatBoss;
+        [Tooltip("Играет тема финала, а не случайный игровой трек")]
+        public bool finalMusic;
 
         [Header("После боя")]
         [Tooltip("На пройденной арене открывается ларёк «Союзпечать»")]

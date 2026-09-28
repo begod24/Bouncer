@@ -46,14 +46,14 @@ namespace Bouncer.Player
             int count = 2;
             _points[0] = origin;
             // Сдутый мяч пролетает сквозь врагов, задевая их, — линию обрывает только окружение.
-            int mask = definition.perks.grazeRadius > 0f ? Layers.EnvironmentMask : Layers.EnvironmentMask | Layers.EnemyMask;
+            int mask = definition.perks.grazeRadius > 0f ? Layers.BallSolidMask : Layers.BallSolidMask | Layers.EnemyMask;
             if (Physics.SphereCast(origin, definition.radius, direction, out RaycastHit hit, range, mask,
                     QueryTriggerInteraction.Ignore))
             {
                 _points[1] = origin + direction * hit.distance;
                 Vector3 normal = hit.normal;
                 normal.y = 0f;
-                if (hit.collider.gameObject.layer == Layers.Environment && normal.sqrMagnitude > 1e-4f)
+                if (Layers.IsBallSolid(hit.collider.gameObject.layer) && normal.sqrMagnitude > 1e-4f)
                 {
                     Vector3 bounce = Vector3.Reflect(direction, normal.normalized);
                     _points[2] = _points[1] + bounce * Mathf.Min(bounceLength, range - hit.distance);

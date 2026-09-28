@@ -35,6 +35,7 @@ MonoBehaviour:
   timeOfDay:
   - {fileID: 11400000, guid: 17e603b61896d4cfda642da840dd7886, type: 2}
   goal: 2
+  finalMusic: 1
   kiosk: 0
   arrivalLabel:
     m_TableReference:

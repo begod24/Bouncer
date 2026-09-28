@@ -497,7 +497,7 @@ namespace Bouncer.Balls
             Vector3 position = _rb.position;
             float remaining = _velocity.magnitude * dt;
             // Сдутый мяч врагов не сбивает телом, а задевает по пути (Graze) — сталкивается только с окружением.
-            int mask = live && !Grazes ? Layers.LiveBallMask(Team) : Layers.EnvironmentMask;
+            int mask = live && !Grazes ? Layers.LiveBallMask(Team) : Layers.BallSolidMask;
             _ignored.Clear();
 
             for (int i = 0; i < MaxSweepIterations && remaining > 1e-5f; i++)
@@ -658,7 +658,7 @@ namespace Bouncer.Balls
                 {
                     // Мяч появился внутри коллайдера. Персонажа считаем попаданием в упор,
                     // окружение пропускаем, чтобы мяч не застрял.
-                    if (hit.collider.gameObject.layer != Layers.Environment)
+                    if (!Layers.IsBallSolid(hit.collider.gameObject.layer))
                     {
                         hit.point = origin;
                         hit.normal = -direction;
@@ -678,7 +678,7 @@ namespace Bouncer.Balls
                 }
             }
 
-            int characters = mask & ~Layers.EnvironmentMask;
+            int characters = mask & ~Layers.BallSolidMask;
             float bottom = ColumnBottom + definition.radius;
             if (!column || characters == 0 || origin.y <= bottom + 0.05f)
                 return found;
@@ -975,7 +975,7 @@ namespace Bouncer.Balls
         /// <summary>Урон всем противникам в радиусе, кроме exclude: их отбрасывает от центра, stun — оглушает (Гиря).</summary>
         void HitAround(Vector3 center, float radius, int damage, IDamageable exclude, float force, HitFlags flags, float stun = 0f)
         {
-            int mask = Layers.LiveBallMask(Team) & ~Layers.EnvironmentMask;
+            int mask = Layers.LiveBallMask(Team) & ~Layers.BallSolidMask;
             int count = Physics.OverlapSphereNonAlloc(center, radius, s_area, mask, QueryTriggerInteraction.Ignore);
             s_areaDamaged.Clear();
             for (int i = 0; i < count; i++)
@@ -1064,7 +1064,7 @@ namespace Bouncer.Balls
 
         void GrazeAt(Vector3 from, Vector3 to, float radius)
         {
-            int mask = Layers.LiveBallMask(Team) & ~Layers.EnvironmentMask;
+            int mask = Layers.LiveBallMask(Team) & ~Layers.BallSolidMask;
             int count = Physics.OverlapCapsuleNonAlloc(from, to, radius, s_graze, mask, QueryTriggerInteraction.Ignore);
             Vector3 direction = Flat(_velocity);
             direction = direction.sqrMagnitude > 1e-4f ? direction.normalized : Flat(transform.forward).normalized;

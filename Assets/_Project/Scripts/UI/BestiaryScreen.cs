@@ -53,6 +53,7 @@ namespace Bouncer.UI
         readonly List<ArenaDefinition> _arenas = new();
         readonly Vector3[] _corners = new Vector3[4];
         BestiaryStage _stage;
+        bool _closing;
         Selectable _tabsSelectable;
         int _section;
         int _shown = -1;
@@ -82,6 +83,7 @@ namespace Bouncer.UI
         /// </summary>
         public Selectable Open()
         {
+            _closing = false;
             if (_stage == null && stagePrefab != null)
             {
                 _stage = Instantiate(stagePrefab, stagePosition, Quaternion.identity);
@@ -100,8 +102,32 @@ namespace Bouncer.UI
             return _entries.Count > 0 ? _items[start] : _tabsSelectable;
         }
 
+        /// <summary>
+        /// Убрать сцену с врагом. Тетрадка гаснет плавно, а RawImage без текстуры мелькнул бы белым
+        /// прямоугольником: пока страницу видно, враг гаснет вместе с ней, а сцена уходит, когда экран погас.
+        /// </summary>
         public void Close()
         {
+            _closing = _stage != null;
+            if (!UiVisibility.IsShown(view))
+                DestroyStage();
+        }
+
+        void Update()
+        {
+            if (_closing && !UiVisibility.IsShown(view))
+                DestroyStage();
+        }
+
+        void OnDisable()
+        {
+            if (_closing)
+                DestroyStage();
+        }
+
+        void DestroyStage()
+        {
+            _closing = false;
             if (_stage != null)
                 Destroy(_stage.gameObject);
             _stage = null;

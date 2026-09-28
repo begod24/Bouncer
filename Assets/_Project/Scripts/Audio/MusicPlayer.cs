@@ -1,6 +1,7 @@
 using System;
 using Bouncer.Core;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Bouncer.Audio
 {
@@ -19,7 +20,8 @@ namespace Bouncer.Audio
     }
 
     /// <summary>
-    /// Музыка: на заставке — тема меню, в забеге — игровая. Смена трека — через затухание; на паузе музыка
+    /// Музыка: на заставке — тема меню, на арене — случайный игровой трек (не тот, что играл на прошлой арене),
+    /// в финале с Бабаем — своя тема (<see cref="ArenaMusic"/>). Смена трека — через затухание; на паузе музыка
     /// тише и глуше, после «Выбит!» и победы затихает. Переживает перезагрузку сцены, поэтому «Ещё раз»
     /// и «В меню» не обрывают звук, а новый забег начинает игровой трек сначала.
     /// Повтор бесшовный: следующий круг запускается по часам звука (PlayScheduled) ровно через длину петли
@@ -28,7 +30,11 @@ namespace Bouncer.Audio
     public sealed class MusicPlayer : MonoBehaviour
     {
         [SerializeField] MusicTrack menuTheme = new();
-        [SerializeField] MusicTrack gameTheme = new();
+        [Tooltip("Игровые треки: каждая арена берёт случайный, не тот, что играл на прошлой")]
+        [SerializeField] MusicTrack[] gameThemes = Array.Empty<MusicTrack>();
+        [Tooltip("Финал с Бабаем — всегда эта тема")]
+        [FormerlySerializedAs("gameTheme")]
+        [SerializeField] MusicTrack finalTheme = new();
 
         [Tooltip("За сколько секунд трек затихает перед сменой")]
         [SerializeField, Min(0.05f)] float switchFade = 0.7f;
@@ -55,6 +61,9 @@ namespace Bouncer.Audio
         bool _waitingForData;
 
         MusicTrack _playing;
+        GameSession _arenaSession;
+        MusicTrack _arenaTrack;
+        MusicTrack _lastRandom;
         GameSession _session;
         bool _restart;
         float _fade;
@@ -101,13 +110,13 @@ namespace Bouncer.Audio
             var session = GameSession.Instance;
             if (session != _session)
             {
-                // Новая сцена сразу с забегом («Ещё раз», «Заново») — игровой трек начинается сначала.
-                // Следующая арена той же прогулки музыку не обрывает.
+                // Новая сцена сразу с забегом («Ещё раз», «Заново») — игровой трек начинается сначала,
+                // даже если выпал тот же. Следующая арена прогулки берёт свой трек (ArenaTrack).
                 _session = session;
                 _restart = session != null && session.State != SessionState.Title && RunState.ArenaIndex == 0;
             }
 
-            var wanted = session == null || session.State == SessionState.Title ? menuTheme : gameTheme;
+            var wanted = session == null || session.State == SessionState.Title ? menuTheme : ArenaTrack(session);
             float dt = Time.unscaledDeltaTime;
             if (wanted != _playing || _restart)
             {
@@ -134,6 +143,30 @@ namespace Bouncer.Audio
                 _filters[i].cutoffFrequency = cutoff;
             }
             KeepLooping();
+        }
+
+        /// <summary>Трек арены выбирается один раз, когда на ней начинается игра (каждая арена — своя сцена).</summary>
+        MusicTrack ArenaTrack(GameSession session)
+        {
+            if (session != _arenaSession || _arenaTrack == null)
+            {
+                _arenaSession = session;
+                _arenaTrack = PickArenaTrack();
+            }
+            return _arenaTrack;
+        }
+
+        MusicTrack PickArenaTrack()
+        {
+            if (ArenaMusic.FinalTheme || gameThemes.Length == 0)
+                return finalTheme;
+            // Случайный, но не тот, что играл на прошлой арене.
+            int skip = gameThemes.Length > 1 ? Array.IndexOf(gameThemes, _lastRandom) : -1;
+            int index = UnityEngine.Random.Range(0, skip >= 0 ? gameThemes.Length - 1 : gameThemes.Length);
+            if (skip >= 0 && index >= skip)
+                index++;
+            _lastRandom = gameThemes[index];
+            return _lastRandom;
         }
 
         void UpdateMood(GameSession session, float dt)

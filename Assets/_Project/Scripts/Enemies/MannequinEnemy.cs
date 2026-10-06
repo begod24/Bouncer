@@ -5,15 +5,6 @@ using UnityEngine.AI;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Манекен («Море волнуется, раз…»). Пока он в секторе взгляда любого игрока (<see cref="Targetable.Sees"/>),
-    /// стоит как вкопанный — каждый раз в новой позе. Стоит отвернуться — быстро подкрадывается по NavMesh
-    /// и бьёт вблизи; взгляд во время замаха останавливает и удар. Попадать можно всегда: замерший не шатается.
-    /// Элитный манекен ещё и бросает сильный мяч в спину, если на него не смотрят.
-    /// Модель — жёсткие части (корпус, голова, руки, ноги), позы и ходьба задаются в коде.
-    /// По сети смотрит (на всех игроков, и на копии гостей), крадётся и бьёт только у хозяина комнаты; у гостя
-    /// копия встаёт в те же позы по его вестям.
-    /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
     public sealed class MannequinEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
@@ -28,7 +19,6 @@ namespace Bouncer.Enemies
             Stagger,
         }
 
-        /// <summary>Повороты частей модели от их положения покоя, градусы.</summary>
         struct Pose
         {
             public Vector3 Body, Head, ArmL, ArmR, LegL, LegR;
@@ -45,24 +35,15 @@ namespace Bouncer.Enemies
         }
 
         const float RepathInterval = 0.25f;
-        /// <summary>Рука по оси X: минус — вперёд, −180 — вверх. По оси Z левая уходит в сторону минусом, правая плюсом.</summary>
         static readonly Pose[] FrozenPoses =
         {
-            // Тянется вперёд, как зомби.
             new() { Body = new(8f, 0f, 0f), Head = new(12f, 0f, 0f), ArmL = new(-88f, 0f, 6f), ArmR = new(-80f, 0f, -6f), LegL = new(-22f, 0f, 0f), LegR = new(16f, 0f, 0f) },
-            // Замер на полушаге.
             new() { Body = new(4f, 0f, 3f), Head = new(0f, 18f, 0f), ArmL = new(28f, 0f, -4f), ArmR = new(-34f, 0f, 4f), LegL = new(-32f, 0f, 0f), LegR = new(24f, 0f, 0f) },
-            // Машет рукой.
             new() { Body = new(0f, 0f, -4f), Head = new(0f, 0f, 16f), ArmL = new(6f, 0f, -12f), ArmR = new(0f, 0f, 155f), LegL = new(0f, 0f, -6f), LegR = new(0f, 0f, 4f) },
-            // Руки в стороны.
             new() { Body = new(0f, 0f, 0f), Head = new(-10f, 0f, 0f), ArmL = new(0f, 0f, -88f), ArmR = new(0f, 0f, 88f), LegL = new(0f, 0f, -10f), LegR = new(0f, 0f, 10f) },
-            // Закрывает лицо.
             new() { Body = new(14f, 0f, 0f), Head = new(20f, 0f, 0f), ArmL = new(-150f, 0f, 30f), ArmR = new(-150f, 0f, -30f), LegL = new(-8f, 0f, 0f), LegR = new(10f, 0f, 0f) },
-            // Указывает на тебя.
             new() { Body = new(-4f, 12f, 0f), Head = new(0f, -14f, 0f), ArmL = new(12f, 0f, -8f), ArmR = new(-92f, -10f, 0f), LegL = new(-14f, 0f, 0f), LegR = new(8f, 0f, 0f) },
-            // Голова набок, руки за спиной.
             new() { Body = new(-6f, 0f, 0f), Head = new(0f, 0f, 38f), ArmL = new(36f, 0f, 14f), ArmR = new(36f, 0f, -14f), LegL = new(0f, 0f, 0f), LegR = new(0f, 0f, 0f) },
-            // Крадётся на цыпочках.
             new() { Body = new(22f, 0f, 0f), Head = new(-18f, 0f, 0f), ArmL = new(-40f, 0f, -20f), ArmR = new(-40f, 0f, 20f), LegL = new(-40f, 0f, 0f), LegR = new(20f, 0f, 0f) },
         };
 
@@ -106,11 +87,9 @@ namespace Bouncer.Enemies
         Pose _frozenPose;
         int _lastPose = -1;
         float _walkPhase;
-        /// <summary>У гостя: мяч в руке элитного (по вестям хозяина).</summary>
         bool _netHandBall;
 
         public MannequinDefinition Definition => definition;
-        /// <summary>Сейчас замер (на него смотрят или он заморожен).</summary>
         public bool IsStill => _state == State.Frozen;
 
         void Awake()
@@ -156,13 +135,10 @@ namespace Bouncer.Enemies
             _walkPhase = Random.value * 10f;
             if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 3f, NavMesh.AllAreas))
                 _agent.Warp(hit.position);
-            // Появляется замершим — в первой позе.
             FreezeInPose(sound: false);
         }
 
         public void OnDespawned() { }
-
-        // ---------- Мозги ----------
 
         void Update()
         {
@@ -225,7 +201,6 @@ namespace Bouncer.Enemies
                     break;
 
                 case State.Windup:
-                    // Взгляд во время замаха останавливает удар.
                     if (watched)
                     {
                         _nextAttack = Time.time + 0.4f;
@@ -284,7 +259,6 @@ namespace Bouncer.Enemies
             }
         }
 
-        /// <summary>На манекен смотрит хоть один игрок, и между ними нет стены.</summary>
         bool IsWatched()
         {
             Vector3 chest = transform.position + Vector3.up * 1.2f;
@@ -309,7 +283,6 @@ namespace Bouncer.Enemies
             Halt();
             if (_state != State.Frozen)
             {
-                // Каждая остановка — новая поза, не та же, что в прошлый раз.
                 int pose = Random.Range(0, FrozenPoses.Length - 1);
                 if (pose >= _lastPose && _lastPose >= 0)
                     pose++;
@@ -344,7 +317,6 @@ namespace Bouncer.Enemies
             }
         }
 
-        /// <summary>Элитный манекен: сильный мяч в спину — удержит только идеальная ловля, а спиной не поймать вовсе.</summary>
         void Throw(Targetable target)
         {
             _nextThrow = Time.time + definition.backThrowCooldown;
@@ -397,8 +369,6 @@ namespace Bouncer.Enemies
             transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(direction), definition.turnSpeed * dt);
         }
 
-        // ---------- Попадания ----------
-
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)
         {
             if (_health.IsDead)
@@ -431,7 +401,6 @@ namespace Bouncer.Enemies
             _health.TryDamage(hit);
             if (!_health.IsDead && _state != State.Frozen)
             {
-                // Замерший стоит как вкопанный; идущего сбивает с шага.
                 _knockback += Flat(hit.Direction) * (hit.Force * definition.knockbackScale);
                 Halt();
                 Enter(State.Stagger);
@@ -452,8 +421,6 @@ namespace Bouncer.Enemies
             GameFeel.Shake(0.3f);
             PoolService.Despawn(gameObject);
         }
-
-        // ---------- Вид ----------
 
         void LateUpdate()
         {
@@ -529,7 +496,6 @@ namespace Bouncer.Enemies
                     break;
                 default:
                 {
-                    // Ходьба рывками, как на покадровой съёмке: поза меняется ступеньками.
                     Vector3 velocity = NetHooks.IsGuest ? _self.Velocity : _agent.isOnNavMesh ? _agent.velocity : Vector3.zero;
                     float speed01 = Mathf.Clamp01(Flat(velocity).magnitude / Mathf.Max(0.1f, definition.sneakSpeed));
                     _walkPhase += dt * 9f * Mathf.Max(0.2f, speed01);
@@ -559,8 +525,6 @@ namespace Bouncer.Enemies
 
         bool HandBallReady => NetHooks.IsGuest ? _netHandBall
             : ballPrefab && definition.backThrowMinRange > 0f && (Time.time >= _nextThrow || _state == State.Aim);
-
-        // ---------- Сеть ----------
 
         public void WriteNet(NetWriter writer)
         {

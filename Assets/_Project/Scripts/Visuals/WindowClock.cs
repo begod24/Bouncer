@@ -3,12 +3,6 @@ using UnityEngine;
 
 namespace Bouncer.Visuals
 {
-    /// <summary>
-    /// Окна панелек в финале — часы до зова мамы: к ночи люди приходят домой, и окна загораются одно за другим
-    /// в случайном порядке, пока не загорится последнее — наше, с мамой в окне. Накладки лежат поверх окон
-    /// модели: выключенная — окно как есть. Когда босс гасит свет (<see cref="LightsOut"/>), гаснут все окна.
-    /// Сколько прошло, задаёт финал арены (<see cref="Progress01"/>).
-    /// </summary>
     public sealed class WindowClock : MonoBehaviour
     {
         [Tooltip("Светящиеся накладки на окна (без нашего)")]
@@ -27,10 +21,8 @@ namespace Bouncer.Visuals
         bool _ourShown;
         bool _ourWanted;
 
-        /// <summary>0 — начало финала, 1 — время зова: горят все окна, кроме нашего.</summary>
         public float Progress01 { get; set; }
 
-        /// <summary>Наше окно горит, в нём мама.</summary>
         public bool OurWindowLit
         {
             get => _ourWanted;

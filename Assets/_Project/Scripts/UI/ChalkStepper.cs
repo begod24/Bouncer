@@ -7,11 +7,6 @@ using UnityEngine.EventSystems;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// Переключатель «‹ значение ›» для меню. Влево/вправо (стрелки, крестовина, стик) листают значения до края,
-    /// Enter/A — следующее по кругу, клик по левой или правой половине — назад или вперёд по кругу.
-    /// Выбор и навигацию вверх-вниз даёт Selectable на том же объекте.
-    /// </summary>
     [RequireComponent(typeof(UnityEngine.UI.Selectable))]
     public sealed class ChalkStepper : MonoBehaviour, IMoveHandler, ISubmitHandler, IPointerClickHandler
     {
@@ -22,7 +17,6 @@ namespace Bouncer.UI
 
         public int Index { get; private set; }
 
-        /// <summary>Игрок выбрал другое значение (из кода через <see cref="SetOptions"/> не зовётся).</summary>
         public event Action<int> Changed;
 
         void Awake() => _selectable = GetComponent<UnityEngine.UI.Selectable>();
@@ -34,7 +28,6 @@ namespace Bouncer.UI
             Show(index);
         }
 
-        /// <summary>Новые подписи при том же выбранном значении (например, сменился язык).</summary>
         public void SetOptions(IEnumerable<string> options) => SetOptions(options, Index);
 
         public void SetIndex(int index) => Show(index);

@@ -7,11 +7,6 @@ using UnityEngine.UI;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// «Гуляем вместе»: имя во дворе, создать комнату, войти по коду (или по IP хозяина — локальная сеть),
-    /// комната по локальной сети. Пока идёт соединение, кнопки ждут; не вышло — внизу почему. Вошёл —
-    /// <see cref="RoomEntered"/>, и <see cref="RunScreens"/> открывает комнату (<see cref="LobbyScreen"/>).
-    /// </summary>
     public sealed class OnlineScreen : MonoBehaviour
     {
         [SerializeField] NetSession sessionPrefab;
@@ -26,7 +21,6 @@ namespace Bouncer.UI
         NetMode _mode;
         bool _busy;
 
-        /// <summary>Комната создана или найдена — пора открывать её.</summary>
         public event Action RoomEntered;
 
         void Awake()
@@ -39,7 +33,6 @@ namespace Bouncer.UI
             codeField.characterLimit = 15;
         }
 
-        /// <summary>Открыть экран (notice — ключ строки: почему выкинуло из прошлой комнаты). Возвращает, что выбрать.</summary>
         public Selectable Open(NetMode mode, string notice)
         {
             _mode = mode;
@@ -81,7 +74,6 @@ namespace Bouncer.UI
 
         void Done(bool ok, NetSession session)
         {
-            // Пока ждали, экран могли убрать (смена сцены).
             if (this == null)
                 return;
             SetBusy(false);

@@ -7,12 +7,6 @@ using UnityEngine.EventSystems;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// Один вкладыш на экране выбора, на витрине ларька и на экране карманов: цвет обёртки, картинка, название,
-    /// описание, редкость (рамка и подпись у редких и золотых), сколько раз уже взят, плашка про карман
-    /// (<see cref="ShowPocketNeed"/>). Выбранный (мышью, стрелками, геймпадом) чуть больше, ровный и подсвечен.
-    /// Анимации — по реальному времени, потому что игра на время выбора стоит.
-    /// </summary>
     public sealed class UpgradeCardView : MonoBehaviour, IPointerEnterHandler, ISelectHandler, IDeselectHandler
     {
         [SerializeField] UnityEngine.UI.Button button;
@@ -86,7 +80,6 @@ namespace Bouncer.UI
             Animate();
         }
 
-        /// <summary>Плашка: займёт ли карточка карман (used/max — сколько карманов занято сейчас).</summary>
         public void ShowPocketNeed(PocketNeed need, int used, int max)
         {
             if (!pocketTag)
@@ -157,7 +150,6 @@ namespace Bouncer.UI
             _ => "card.category.treat",
         });
 
-        // Золотая берётся одна за прогулку — об этом напоминает сама подпись.
         static string RarityName(UpgradeCard card) => Loc.Get(card.rarity != CardRarity.Gold ? "card.rarity.rare"
             : card.IsCombo ? "card.rarity.gold" : "card.rarity.gold_once");
 

@@ -7,12 +7,6 @@ using UnityEngine.InputSystem;
 
 namespace Bouncer.Net
 {
-    /// <summary>
-    /// Отладка сети по F3, пока есть комната: тип комнаты, пинг (у хозяина — до каждого гостя), кадры в секунду и
-    /// такт сети. Для закрытых тестов — понять, откуда задержка: связь, слабый компьютер или сглаживание.
-    /// По каждому чужому игроку: на сколько он показан в прошлом (буфер), разброс доставки его точек, сколько
-    /// времени точек не хватало («голод» — тогда он бежит наугад) и сколько было рывков-телепортов.
-    /// </summary>
     public sealed class NetStatsOverlay : MonoBehaviour
     {
         NetworkManager _network;
@@ -37,7 +31,6 @@ namespace Bouncer.Net
                 _visible = !_visible;
             float dt = Time.unscaledDeltaTime;
             _frameTime = Mathf.Lerp(_frameTime, dt, 0.1f);
-            // Худший кадр за последнюю секунду — рывки видно, даже когда в среднем всё хорошо.
             if (dt > _worstFrame || Time.unscaledTime > _worstFrameUntil)
             {
                 _worstFrame = dt;

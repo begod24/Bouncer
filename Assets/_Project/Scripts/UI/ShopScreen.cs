@@ -10,14 +10,6 @@ using UnityEngine.InputSystem.UI;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// Витрина ларька «Союзпечать»: 4 жвачки с видимыми вкладышами и ценой, замок «отложить», перебор витрины,
-    /// лимонад и бутерброд, монетки игрока и свои карманы. Покупка — клик или Enter по карточке, клавиши 1–4;
-    /// R / Y — перебрать, L / X — отложить выбранную; P, Tab / LB, Select — карманы (продать вкладыш за полцены);
-    /// Esc / B или «Дальше» — закрыть. На жвачке — плашка, займёт ли она карман; карманы полны — покупка
-    /// открывает обмен: продать одну из своих и сразу купить. Вся логика — в <see cref="ShopStock"/>,
-    /// экран только показывает её и передаёт нажатия.
-    /// </summary>
     public sealed class ShopScreen : MonoBehaviour
     {
         [Serializable]
@@ -87,13 +79,11 @@ namespace Bouncer.UI
             SetVisible(false);
         }
 
-        /// <summary>Открыты карманы — ввод у них (и в кадре, когда они закрылись той же клавишей).</summary>
         static bool PocketsOpen => PocketsPanel.Instance != null
                                    && (PocketsPanel.Instance.IsOpen || PocketsPanel.Instance.ClosedFrame == Time.frameCount);
 
         void OpenPockets() => OpenPockets(-1);
 
-        /// <summary>Карманы для продажи; buySlot ≥ 0 — обмен: продать одну и купить эту жвачку.</summary>
         void OpenPockets(int buySlot)
         {
             if (!_open || !AcceptsInput || _stock == null || PocketsPanel.Instance == null || PocketsOpen)
@@ -133,7 +123,6 @@ namespace Bouncer.UI
             RefreshCoins();
             if (message)
                 message.alpha = Mathf.Clamp01((_messageUntil - Time.unscaledTime) * 3f);
-            // Открыты карманы — ввод у них.
             if (PocketsOpen)
                 return;
 
@@ -170,8 +159,6 @@ namespace Bouncer.UI
             }
         }
 
-        // Esc / B закрывают витрину здесь, а не в Update: тот же Esc — кнопка паузы, и игрок его уже прочитал,
-        // пока ларёк был открыт (пауза в ларьке не включается).
         void LateUpdate()
         {
             if (!_open || PocketsOpen)
@@ -235,7 +222,6 @@ namespace Bouncer.UI
                     view.card.Show(slot.Card, _kiosk.Customer.StacksOf(slot.Card), i + 1, i * cardStagger);
                 }
                 bool available = has && !slot.Sold;
-                // Займёт ли жвачка карман: после каждой покупки и продажи — заново.
                 if (available)
                     view.card.ShowPocketNeed(customer.NeedFor(slot.Card), customer.PocketsUsed, customer.MaxPockets);
                 else if (has)
@@ -284,7 +270,6 @@ namespace Bouncer.UI
                 coins.text = Money.ToString();
         }
 
-        /// <summary>Монетки покупателя у этой витрины.</summary>
         int Money => _stock != null ? RunState.CoinsOf(_stock.Customer.Slot) : 0;
 
         void Buy(int index)
@@ -292,7 +277,6 @@ namespace Bouncer.UI
             if (!_open || !AcceptsInput || _stock == null || PocketsOpen)
                 return;
             var result = _stock.Buy(index);
-            // Карманы полны, но продажа одной из своих покроет цену — обмен: выбрать, что продать.
             if (result == PurchaseResult.PocketsFull)
             {
                 ShowMessage("shop.pockets_full", messageTime * 1.5f);
@@ -332,7 +316,6 @@ namespace Bouncer.UI
             _messageUntil = Time.unscaledTime + seconds;
         }
 
-        /// <summary>Какая карточка витрины сейчас выбрана (или её замок). -1 — ни одна.</summary>
         int SelectedSlot()
         {
             var selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;

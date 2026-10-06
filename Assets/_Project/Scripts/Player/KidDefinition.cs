@@ -3,11 +3,6 @@ using UnityEngine.Localization;
 
 namespace Bouncer.Player
 {
-    /// <summary>
-    /// Один из детей двора. Статы у всех одинаковые — ребёнок отличается только обликом, а сборку делают
-    /// карточки. Модель — Art/Models/Kids/Kid_*.fbx со скелетом Humanoid, клипы у всех общие (Anim_Kids.fbx).
-    /// Для экрана выбора: поза из листа «Дети двора» и реквизит к ней.
-    /// </summary>
     [CreateAssetMenu(menuName = "Bouncer/Kid", fileName = "Kid_")]
     public sealed class KidDefinition : ScriptableObject
     {

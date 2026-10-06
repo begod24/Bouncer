@@ -6,11 +6,6 @@ using UnityEngine.EventSystems;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// Вкладки меню «мелом»: ряд надписей, выбранная — жёлтая и подчёркнута. Сам ряд — пункт меню:
-    /// влево/вправо листают вкладки по кругу, мышью — клик по надписи (надписи — кнопки без навигации).
-    /// Панели не прячет: о смене вкладки сообщает <see cref="Changed"/>.
-    /// </summary>
     [RequireComponent(typeof(UnityEngine.UI.Selectable))]
     public sealed class ChalkTabs : MonoBehaviour, IMoveHandler, ISelectHandler, IDeselectHandler, IPointerEnterHandler
     {
@@ -31,7 +26,6 @@ namespace Bouncer.UI
 
         public int Index { get; private set; }
 
-        /// <summary>Игрок выбрал другую вкладку (из кода через <see cref="Select"/> не зовётся).</summary>
         public event Action<int> Changed;
 
         void Awake()
@@ -50,7 +44,6 @@ namespace Bouncer.UI
             Apply();
         }
 
-        /// <summary>Соседняя вкладка по кругу: -1 — левее, 1 — правее.</summary>
         public void Step(int delta) => Pick((Index + delta + tabs.Length) % tabs.Length);
 
         public void OnMove(AxisEventData eventData)
@@ -97,7 +90,6 @@ namespace Bouncer.UI
                 labels[i].color = i == Index ? activeColor : idleColor;
                 labels[i].rectTransform.localScale = Vector3.one * (i == Index ? _scale : 1f);
             }
-            // Подчёркивание — по ширине надписи: она меняется вместе с языком.
             var active = labels[Index];
             if (underline == null || (Index == _underlinedIndex && ReferenceEquals(active.text, _underlinedText)))
                 return;

@@ -5,12 +5,6 @@ using UnityEngine;
 
 namespace Bouncer.Run
 {
-    /// <summary>
-    /// Находка на арене: бутылка лимонада. Кто подошёл — +1 сердце. С полными сердцами не берётся — ждёт на месте,
-    /// пока не понадобится. Покачивается и поблёскивает, как портфель.
-    /// По сети кому достался лимонад, решает хозяин комнаты (игроку другого компьютера сердце уходит по сети);
-    /// у гостя бутылка — копия (<see cref="IsPuppet"/>).
-    /// </summary>
     [DisallowMultipleComponent]
     public sealed class HealPickup : MonoBehaviour, IPoolable
     {
@@ -22,11 +16,9 @@ namespace Bouncer.Run
         [SerializeField] float bobHeight = 0.12f;
         [SerializeField] float turnSpeed = 60f;
 
-        /// <summary>Бутылка появилась / её выпили (у хозяина комнаты — чтобы показать гостям).</summary>
         public static event Action<HealPickup> Spawned;
         public static event Action<HealPickup> Taken;
 
-        /// <summary>Копия бутылки хозяина у гостя: сама не выпивается.</summary>
         public bool IsPuppet { get; set; }
 
         public void OnSpawned()
@@ -64,7 +56,6 @@ namespace Bouncer.Run
                 delta.y = 0f;
                 if (delta.sqrMagnitude > pickupRadius * pickupRadius || target.Health.Current >= target.Health.Max)
                     continue;
-                // Игрок другого компьютера: его сердца там, лимонад уходит по сети.
                 if (target.TryGetComponent(out PlayerController player) && !player.IsLocal)
                 {
                     if (NetHooks.HealRemotePlayer == null || !NetHooks.HealRemotePlayer(player.gameObject, heal))

@@ -2,11 +2,6 @@ using UnityEngine.Localization.Settings;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// Строки таблицы «UI» пакета Localization для текстов, которые собираются в коде (счёт, уровень,
-    /// статистика). Неизменные надписи в префабах переводит компонент LocalizeStringEvent.
-    /// Подстановки {0}, {1} — как в string.Format.
-    /// </summary>
     public static class Loc
     {
         const string Table = "UI";

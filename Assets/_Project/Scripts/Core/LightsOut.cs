@@ -2,28 +2,18 @@ using UnityEngine;
 
 namespace Bouncer.Core
 {
-    /// <summary>
-    /// «Гасит свет» финального босса: на время гаснут фонари, окна и луна, двор тонет в темноте, а у игрока
-    /// загорается круг света, как на стройке (<see cref="DarkArena.Active"/>). Фонари гаснут здесь же
-    /// (<see cref="LightZone.PutOut"/>), луну и окна приглушают те, кто их ведёт, — по <see cref="Dark01"/>.
-    /// По сети свет гасит хозяин комнаты и сообщает гостям (<see cref="Triggered"/>).
-    /// </summary>
     public static class LightsOut
     {
-        /// <summary>За сколько секунд двор гаснет и за сколько свет возвращается.</summary>
         const float FadeIn = 0.5f;
         const float FadeOut = 1.2f;
 
         static float s_start;
         static float s_until;
 
-        /// <summary>Свет погашен на столько секунд (по сети хозяин показывает это гостям).</summary>
         public static event System.Action<float> Triggered;
 
-        /// <summary>Свет погашен (или ещё гаснет).</summary>
         public static bool Active => Time.time < s_until;
 
-        /// <summary>Сила темноты для экрана: 0 — свет горит, 1 — темно. Плавно входит и выходит.</summary>
         public static float Dark01
         {
             get
@@ -37,7 +27,6 @@ namespace Bouncer.Core
             }
         }
 
-        /// <summary>Погасить весь свет на столько секунд: фонари мигают и тухнут, потом загораются снова.</summary>
         public static void Trigger(float seconds)
         {
             if (seconds <= 0f)
@@ -52,7 +41,6 @@ namespace Bouncer.Core
                 Triggered?.Invoke(seconds);
         }
 
-        /// <summary>Вернуть свет сейчас же (мама позвала — во дворе зажигается всё).</summary>
         public static void End()
         {
             float now = Time.time;
@@ -63,7 +51,6 @@ namespace Bouncer.Core
                 zone.Relight();
         }
 
-        /// <summary>Новая сцена: темнота прошлого боя в неё не переходит.</summary>
         public static void Clear()
         {
             s_start = 0f;

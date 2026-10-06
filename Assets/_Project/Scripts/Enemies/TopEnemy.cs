@@ -5,12 +5,6 @@ using UnityEngine;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Юла. Крутится и катится к игроку по дуге, сбивает при касании. Попадание мячом запускает её, как бильярдный шар:
-    /// она летит по направлению мяча, отскакивает от стен и сбивает врагов на пути, потом снова катится к игроку.
-    /// Тело кинематическое: юла движется сама (как мяч — через SphereCast), чтобы отскоки были точными.
-    /// По сети катится и бьёт только у хозяина комнаты; у гостя копия едет по его вестям.
-    /// </summary>
     [RequireComponent(typeof(Rigidbody), typeof(Health), typeof(Targetable))]
     public sealed class TopEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
@@ -68,7 +62,6 @@ namespace Bouncer.Enemies
             if (NetHooks.IsGuest)
                 return;
             float dt = Time.fixedDeltaTime;
-            // Запущенная ударом юла катится дальше и заморозку не замечает — это уже снаряд игрока.
             if ((!GameSession.IsGameplayActive || _self.IsFrozen) && !_launched)
                 return;
 
@@ -90,7 +83,6 @@ namespace Bouncer.Enemies
             TouchPlayer();
         }
 
-        /// <summary>К игроку по дуге: направление качается то вправо, то влево от прямой.</summary>
         void Chase(float dt)
         {
             var target = Targetable.FindNearest(_rb.position, Team.Player);
@@ -107,7 +99,6 @@ namespace Bouncer.Enemies
             _velocity = Vector3.MoveTowards(_velocity, direction * speed, definition.acceleration * dt);
         }
 
-        /// <summary>Шаг с отскоками от стен (в разгоне) или скольжением вдоль них (когда катится сама).</summary>
         void Move(float dt)
         {
             Vector3 position = _rb.position;
@@ -142,7 +133,6 @@ namespace Bouncer.Enemies
             _rb.MovePosition(position);
         }
 
-        /// <summary>Разогнанная юла сбивает врагов на пути — каждого по разу за разгон.</summary>
         void Bump()
         {
             Vector3 center = _rb.position + Vector3.up * definition.radius;
@@ -192,11 +182,8 @@ namespace Bouncer.Enemies
                 Source = gameObject,
                 Flags = HitFlags.Melee,
             });
-            // Отскочила от игрока — не липнет к нему.
             _velocity = -away.normalized * definition.moveSpeed;
         }
-
-        // ---------- Попадания ----------
 
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)
         {
@@ -228,7 +215,6 @@ namespace Bouncer.Enemies
                 hitFlash.Flash(Color.white, 0.1f);
             GameEvents.PlaySound(strong ? SoundCue.EnemyHitStrong : SoundCue.EnemyHit, hit.Point);
             _health.TryDamage(hit);
-            // Бильярд: удар от игрока запускает юлу; толчок от других врагов — только отбрасывает.
             if (!_health.IsDead && hit.SourceTeam == Team.Player)
             {
                 Vector3 direction = Flat(hit.Direction);
@@ -256,8 +242,6 @@ namespace Bouncer.Enemies
             PoolService.Despawn(gameObject);
         }
 
-        // ---------- Вид ----------
-
         void Update()
         {
             if (!spinner)
@@ -267,13 +251,10 @@ namespace Bouncer.Enemies
             float speed01 = Mathf.Clamp01(Flat(velocity).magnitude / Mathf.Max(0.1f, definition.launchSpeed));
             _spin = (_spin + definition.spinSpeed * (1f + speed01) * dt) % 360f;
             _wobblePhase += dt * 5f;
-            // Ось вращения медленно ходит по кругу — юла «гуляет».
             Vector3 tiltAxis = new Vector3(Mathf.Cos(_wobblePhase), 0f, Mathf.Sin(_wobblePhase));
             float tilt = definition.wobbleAngle * (_launched ? 2f : 1f);
             spinner.localRotation = Quaternion.AngleAxis(tilt, tiltAxis) * Quaternion.Euler(0f, _spin, 0f);
         }
-
-        // ---------- Сеть ----------
 
         public void WriteNet(NetWriter writer) => writer.Bool(_launched);
 

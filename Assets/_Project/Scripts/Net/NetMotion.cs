@@ -4,10 +4,6 @@ using UnityEngine;
 
 namespace Bouncer.Net
 {
-    /// <summary>
-    /// Где был игрок в момент <see cref="Time"/> (часы его компьютера), куда смотрел, как бежал на самом деле
-    /// (скорость контроллера, а не желание стика) и что делал (<see cref="NetPose"/>).
-    /// </summary>
     public struct MotionSample : INetworkSerializable
     {
         public double Time;
@@ -26,35 +22,18 @@ namespace Bouncer.Net
         }
     }
 
-    /// <summary>
-    /// Плавное движение чужого персонажа по присланным точкам («буфер дрожания»).
-    /// Точки подписаны часами того, кто их прислал: эти часы идут ровно, их не двигает синхронизация сети. Здесь
-    /// они переводятся в свои по самой быстрой дошедшей точке (<see cref="Add"/>), а персонаж показывается чуть
-    /// в прошлом — на промежуток между точками плюс запас на их разброс. Часы показа идут ровно и подстраиваются
-    /// мягко, не быстрее ±<see cref="MaxRateChange"/>: персонаж не замедляется и не ускоряется рывками.
-    /// Между точками — кривая по скоростям, без углов. Точки не пришли вовремя — персонаж немного бежит по последней
-    /// скорости, плавно останавливаясь. Скачок из-за новой точки вливается за <see cref="BlendTime"/>; телепорт —
-    /// только настоящий (дальше <see cref="SnapDistance"/>).
-    /// К точке можно приложить состояние (поза игрока, анимация врага) — оно меняется вместе с положением.
-    /// </summary>
     public sealed class MotionBuffer
     {
         const int Capacity = 48;
         const int PayloadSize = 32;
-        /// <summary>Запас на разброс точек: не меньше и не больше, с.</summary>
         const float MinDelay = 0.035f;
         const float MaxDelay = 0.35f;
-        /// <summary>Сколько бежать по последней скорости, когда точки опаздывают, с.</summary>
         const float MaxExtrapolation = 0.2f;
         const float BlendTime = 0.12f;
         const float SnapDistance = 4f;
-        /// <summary>Длиннее этого промежуток между точками — между ними прямая (персонаж стоял), с.</summary>
         const float CurveGap = 0.15f;
-        /// <summary>Часы показа идут быстрее или медленнее не больше чем на столько (0.08 = ±8%).</summary>
         const float MaxRateChange = 0.08f;
-        /// <summary>Так далеко часы показа отстали или убежали — переставить сразу, с.</summary>
         const float ResyncError = 0.3f;
-        /// <summary>Как быстро может вырасти «самая быстрая дорога» точек, с в секунду (связь стала медленнее).</summary>
         const float FloorRise = 0.03f;
 
         struct Point
@@ -69,14 +48,11 @@ namespace Bouncer.Net
 
         readonly List<Point> _samples = new(Capacity);
         readonly Stack<byte[]> _freePayloads = new();
-        /// <summary>Свои часы минус часы отправителя у самой быстрой точки.</summary>
         double _floor;
         double _lastArrival;
         bool _synced;
-        /// <summary>Насколько точки обычно опаздывают сверх самой быстрой (быстро растёт, медленно спадает), с.</summary>
         float _jitter = 0.01f;
         float _interval = 1f / 60f;
-        /// <summary>Момент показа по часам отправителя.</summary>
         double _renderTime;
         bool _rendering;
         Vector3 _correction;
@@ -85,13 +61,9 @@ namespace Bouncer.Net
         float _shown;
 
         public bool HasData => _samples.Count > 0;
-        /// <summary>Насколько в прошлом показывается персонаж сверх самой быстрой доставки, с (отладка).</summary>
         public float Delay => TargetDelay;
-        /// <summary>Разброс доставки точек, с (отладка).</summary>
         public float Jitter => _jitter;
-        /// <summary>Доля времени, когда точек не хватило и персонаж бежал «на угад» (отладка, 0..1).</summary>
         public float StarvedShare => _shown > 0f ? _extrapolated / _shown : 0f;
-        /// <summary>Сколько раз пришлось переставить персонажа рывком (отладка).</summary>
         public int Snaps { get; private set; }
 
         float TargetDelay => Mathf.Clamp(_interval + 1.5f * _jitter + 0.015f, MinDelay, MaxDelay);
@@ -107,9 +79,6 @@ namespace Bouncer.Net
             _rendering = false;
         }
 
-        /// <summary>
-        /// Пришла точка: time — по часам отправителя, localNow — свои часы сейчас.
-        /// </summary>
         public void Add(double time, Vector3 position, Quaternion rotation, Vector3 velocity, double localNow,
             byte[] payload = null, int payloadLength = 0)
         {
@@ -117,7 +86,6 @@ namespace Bouncer.Net
             if (count > 0 && time <= _samples[0].Time)
                 return;
 
-            // Перевод часов: самая быстрая точка задаёт «пол», остальные опаздывают на разброс.
             double offset = localNow - time;
             if (!_synced)
             {
@@ -167,7 +135,6 @@ namespace Bouncer.Net
 
             if (!had)
                 return;
-            // Новая точка поменяла кривую там, где персонаж сейчас: показанное не прыгает, разница вливается.
             Evaluate(_renderTime, out Vector3 after, out Quaternion rotationAfter, out _);
             _correction += before - after;
             _rotationCorrection = _rotationCorrection * rotationBefore * Quaternion.Inverse(rotationAfter);
@@ -179,14 +146,9 @@ namespace Bouncer.Net
             }
         }
 
-        /// <summary>Где показать персонажа сейчас (localNow — свои часы). false — точек ещё нет.</summary>
         public bool Sample(double localNow, float dt, out Vector3 position, out Quaternion rotation, out Vector3 velocity)
             => Sample(localNow, dt, out position, out rotation, out velocity, out _, out _, out _);
 
-        /// <summary>
-        /// Где показать персонажа сейчас и его состояние на этот момент: payload — из последней точки до момента
-        /// показа, age — сколько прошло с неё. false — точек ещё нет.
-        /// </summary>
         public bool Sample(double localNow, float dt, out Vector3 position, out Quaternion rotation, out Vector3 velocity,
             out byte[] payload, out int payloadLength, out float payloadAge)
         {
@@ -199,7 +161,6 @@ namespace Bouncer.Net
             if (_samples.Count == 0)
                 return false;
 
-            // Часы показа: ровно вперёд, с мягкой подстройкой к нужному отставанию.
             double desired = localNow - _floor - TargetDelay;
             if (!_rendering || System.Math.Abs(desired - _renderTime) > ResyncError)
             {
@@ -217,7 +178,6 @@ namespace Bouncer.Net
             _shown += dt;
             if (_renderTime > _samples[_samples.Count - 1].Time + 0.01)
                 _extrapolated += dt;
-            // Отладочная доля — за последние секунды, а не за всю игру.
             if (_shown > 5f)
             {
                 _shown *= 0.5f;
@@ -289,18 +249,15 @@ namespace Bouncer.Net
                 position = Vector3.Lerp(a.Position, b.Position, u);
                 return;
             }
-            // Кривая Эрмита: проходит через обе точки с их скоростями — бег и рывки без изломов.
             float u2 = u * u;
             float u3 = u2 * u;
             position = (2f * u3 - 3f * u2 + 1f) * a.Position + (u3 - 2f * u2 + u) * h * a.Velocity
                        + (-2f * u3 + 3f * u2) * b.Position + (u3 - u2) * h * b.Velocity;
         }
 
-        /// <summary>Точки кончились: бежать дальше по последней скорости, плавно тормозя, и встать.</summary>
         static void Extrapolate(in Point sample, double time, out Vector3 position, out Vector3 velocity)
         {
             float ahead = Mathf.Min((float)(time - sample.Time), MaxExtrapolation);
-            // Скорость спадает до нуля к концу окна: путь = v·(t − t²/2T).
             float k = ahead / MaxExtrapolation;
             position = sample.Position + sample.Velocity * (ahead * (1f - 0.5f * k));
             velocity = sample.Velocity * (1f - k);

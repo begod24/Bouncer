@@ -6,12 +6,6 @@ using UnityEngine;
 
 namespace Bouncer.Run
 {
-    /// <summary>
-    /// Портфель с вкладышами: падает с элитного врага или лежит где-нибудь у края арены. Кто подобрал,
-    /// выбирает 1 карточку из 3 (<see cref="OfferKind.Portfolio"/>). Покачивается и поблёскивает, чтобы его было видно.
-    /// По сети портфели роняет и раздаёт хозяин комнаты: у гостя портфель — копия (<see cref="IsPuppet"/>), а
-    /// подобранный кем угодно портфель ложится в рюкзак подобравшего (<see cref="PlayerCards.AddToBackpack"/>).
-    /// </summary>
     [DisallowMultipleComponent]
     public sealed class PortfolioPickup : MonoBehaviour, IPoolable
     {
@@ -36,18 +30,13 @@ namespace Bouncer.Run
         bool _announce;
         float _spawnTime;
 
-        /// <summary>По сети у гостя: копия портфеля хозяина — подбирает его хозяин.</summary>
         public bool IsPuppet { get; private set; }
-        /// <summary>Как летит, пока не лёг (по сети гостю — чтобы копия летела так же). Лежит — ноль.</summary>
         public Vector3 PopVelocity => _landed ? Vector3.zero : _velocity;
         public bool Landed => _landed;
 
-        /// <summary>Хозяин: портфель появился (выпал или лёг на землю).</summary>
         public static event Action<PortfolioPickup> Spawned;
-        /// <summary>Хозяин: портфель подобран.</summary>
         public static event Action<PortfolioPickup> Taken;
 
-        /// <summary>По сети у гостя: копия портфеля хозяина. popVelocity — ноль, если лежит на земле.</summary>
         public void BeginPuppet(Vector3 popVelocity)
         {
             IsPuppet = true;
@@ -57,7 +46,6 @@ namespace Bouncer.Run
                 _velocity = popVelocity;
         }
 
-        /// <summary>Портфель появился на месте, а не выпал из врага: сразу лежит.</summary>
         public void PlaceOnGround()
         {
             _velocity = Vector3.zero;
@@ -107,7 +95,6 @@ namespace Bouncer.Run
                 visual.localPosition = new Vector3(0f, _landed ? (Mathf.Sin(Time.time * 3f) * 0.5f + 0.5f) * bobHeight : 0f, 0f);
                 visual.localRotation = Quaternion.Euler(0f, turnSpeed * dt, 0f) * visual.localRotation;
             }
-            // Хозяин говорит гостям о портфеле в первом кадре: к этому времени ясно, выпрыгнул он или лёг на землю.
             if (_announce)
             {
                 _announce = false;

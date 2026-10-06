@@ -5,11 +5,6 @@ using UnityEngine.Localization;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Часть босса «Большая неваляшка»: выбитая, раскалывается на несколько неваляшек поменьше
-    /// (большая → две средние → по две маленькие). Держит общий реестр живых частей — по нему
-    /// спавнер понимает, что босс побеждён, а HUD рисует общую полосу здоровья.
-    /// </summary>
     [RequireComponent(typeof(Health))]
     public sealed class BossSplit : MonoBehaviour, IPoolable
     {
@@ -37,7 +32,6 @@ namespace Bouncer.Enemies
         public static IReadOnlyList<BossSplit> Alive => s_alive;
         public LocalizedString BossName => bossName;
 
-        /// <summary>Сколько осталось от всего босса: 1 — целый, 0 — выбит полностью.</summary>
         public static float Remaining01
         {
             get
@@ -65,13 +59,11 @@ namespace Bouncer.Enemies
 
         void OnDied(HitInfo hit)
         {
-            // Арена пройдена и остатки исчезают — половинок не будет. По сети половинок выпускает хозяин комнаты.
             if (childPrefab == null || childCount <= 0 || hit.Has(HitFlags.Despawn) || NetHooks.IsGuest)
                 return;
 
             Vector3 origin = transform.position;
             GameEvents.PlaySound(SoundCue.BossSplit, origin);
-            // Раскол босса — редкий большой момент: ему можно и стоп-кадр, и сильную тряску.
             GameFeel.HitStop(0.08f);
             GameFeel.Shake(0.8f);
             Vector3 away = hit.Direction;
@@ -83,7 +75,6 @@ namespace Bouncer.Enemies
 
             for (int i = 0; i < childCount; i++)
             {
-                // Половинки разлетаются в стороны поперёк удара и немного вперёд по нему.
                 float t = childCount == 1 ? 0f : i / (childCount - 1f) * 2f - 1f;
                 Vector3 offset = side * (t * spread);
                 var child = PoolService.Spawn(childPrefab, origin + offset + Vector3.up * 0.2f, transform.rotation);

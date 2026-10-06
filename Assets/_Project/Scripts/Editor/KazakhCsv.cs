@@ -8,11 +8,6 @@ using UnityEngine.Localization.Tables;
 
 namespace Bouncer.EditorTools
 {
-    /// <summary>
-    /// Перевод на казахский вне Unity: «Export» выгружает все строки таблиц UI и Content в CSV (table, key, ru, en, kk),
-    /// kk заполняется в любом редакторе таблиц (Excel, Google Sheets — UTF-8), «Import» загружает колонку kk обратно.
-    /// Пустые клетки kk не трогаются — там остаётся русский (запасной язык казахской локали).
-    /// </summary>
     public static class KazakhCsv
     {
         const string Path = "Tools/Localization/kk_translation.csv";
@@ -95,7 +90,6 @@ namespace Bouncer.EditorTools
             return value.IndexOfAny(new[] { ',', '"', '\n', '\r' }) >= 0 ? "\"" + value.Replace("\"", "\"\"") + "\"" : value;
         }
 
-        /// <summary>CSV по RFC 4180: запятые и переносы строк внутри кавычек, "" — кавычка.</summary>
         static List<List<string>> Parse(string text)
         {
             var rows = new List<List<string>>();

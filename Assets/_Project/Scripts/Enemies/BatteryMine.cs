@@ -3,12 +3,6 @@ using UnityEngine;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Батарейка «Крона», брошенная роботом-Трансформером: летит дугой, падает, искрит (на земле круг) и через
-    /// секунду взрывается — бьёт игроков в круге. Из пула.
-    /// По сети мину бросает и взрывает хозяин комнаты; гостям он показывает такую же (<see cref="Thrown"/>) —
-    /// у гостя она только летит и мигает (<see cref="IsPuppet"/>), а круг и взрыв приходят от хозяина.
-    /// </summary>
     public sealed class BatteryMine : MonoBehaviour, IPoolable
     {
         [SerializeField] GroundMarker markerPrefab;
@@ -32,10 +26,8 @@ namespace Bouncer.Enemies
         GroundMarker _marker;
         Vector3 _spin;
 
-        /// <summary>По сети у гостя: копия мины хозяина — не бьёт и не взрывается сама.</summary>
         public bool IsPuppet { get; set; }
 
-        /// <summary>Мина брошена: откуда, куда, сколько летит, фитиль, радиус (по сети хозяин показывает гостям).</summary>
         public static event System.Action<BatteryMine, Vector3, Vector3, float, float, float> Thrown;
 
         public void OnSpawned() => IsPuppet = false;
@@ -97,7 +89,6 @@ namespace Bouncer.Enemies
         void Explode()
         {
             HideMarker();
-            // Копия у гостя: взрыв (вспышку, кольцо, звук) и удар показывает хозяин.
             if (IsPuppet)
             {
                 PoolService.Despawn(gameObject);

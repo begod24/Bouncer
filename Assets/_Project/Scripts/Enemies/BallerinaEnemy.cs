@@ -5,13 +5,6 @@ using UnityEngine.AI;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Балерина из музыкальной шкатулки. Кружится на подставке и медленно скользит к игроку: мяч, прилетевший
-    /// в пируэт, облетает её и летит обратно в игрока — его можно поймать (это всё ещё мяч игрока). Сильный мяч
-    /// пробивает пируэт и сбивает его. После пируэта — реверанс: стоит открытая, тут её и бить. Пачка вблизи
-    /// задевает.
-    /// По сети кружит мячи и задевает только у хозяина комнаты; у гостя копия кружится по его вестям.
-    /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
     public sealed class BallerinaEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, IBallInterceptor, INetEnemy
     {
@@ -93,8 +86,6 @@ namespace Bouncer.Enemies
         }
 
         public void OnDespawned() => ReleaseHeld();
-
-        // ---------- Мозги ----------
 
         void Update()
         {
@@ -202,8 +193,6 @@ namespace Bouncer.Enemies
                 definition.turnSpeed * dt);
         }
 
-        // ---------- Отражение: мяч облетает её и летит обратно ----------
-
         public bool TryIntercept(Ball ball)
         {
             if (_state != State.Spin || _held != null || ball == null || _health.IsDead || ball.Stats.Has(HitFlags.Charged))
@@ -245,7 +234,6 @@ namespace Bouncer.Enemies
             float distance = Mathf.Max(0.5f, flat.magnitude);
             float time = distance / definition.reflectSpeed;
             float up = (target.AimPoint.y - origin.y + 0.5f * definition.reflectGravity * time * time) / time;
-            // Хозяин у броска не задан: мяч игрока остаётся мячом игрока, упав — не исчезнет.
             ball.Launch(new BallThrow
             {
                 Origin = origin,
@@ -270,8 +258,6 @@ namespace Bouncer.Enemies
                 _held.Drop(_held.Position, Vector3.up * 2f);
             _held = null;
         }
-
-        // ---------- Попадания ----------
 
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)
         {
@@ -306,7 +292,6 @@ namespace Bouncer.Enemies
             if (!_health.IsDead)
             {
                 _knockback += Flat(hit.Direction) * (hit.Force * definition.knockbackScale);
-                // Сильный удар сбивает пируэт.
                 if (_state == State.Spin && strong)
                 {
                     Halt();
@@ -331,8 +316,6 @@ namespace Bouncer.Enemies
             PoolService.Despawn(gameObject);
         }
 
-        // ---------- Вид ----------
-
         void LateUpdate()
         {
             if (!body)
@@ -346,19 +329,15 @@ namespace Bouncer.Enemies
             float curtsey = _state == State.Rest ? Mathf.Sin(Mathf.Clamp01(_stateTime / 0.5f) * Mathf.PI * 0.5f) * 12f : 0f;
             float wobble = _state == State.Stagger ? Mathf.Sin(_stateTime * 30f) * 14f * (1f - _stateTime / definition.staggerTime) : 0f;
             body.localRotation = _bodyRest * Quaternion.Euler(curtsey, _spinAngle, wobble);
-            // На пружинке покачивается.
             float bob = spinning ? Mathf.Sin(Time.time * 7f) * 0.03f : 0f;
             body.localPosition = _bodyRestPosition + Vector3.up * bob;
 
             _arms = Mathf.MoveTowards(_arms, spinning ? 0f : armsDownAngle, 400f * dt);
-            // Левая рука — на -X в Unity: вниз к боку = поворот вокруг Z в плюс.
             if (armL)
                 armL.localRotation = Quaternion.Euler(0f, 0f, _arms);
             if (armR)
                 armR.localRotation = Quaternion.Euler(0f, 0f, -_arms);
         }
-
-        // ---------- Сеть ----------
 
         public void WriteNet(NetWriter writer)
         {

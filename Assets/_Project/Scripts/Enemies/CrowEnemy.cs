@@ -4,14 +4,6 @@ using UnityEngine;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Ворона из стаи «Того, кто в сумерках». Кружит высоко над игроком — мячом не достать, автоприцел её не видит,
-    /// а где она, выдаёт тень на асфальте. Потом пикирует по прямой через то место, где стоит игрок: полоса
-    /// на асфальте мигает заранее. Низко над землёй её сбивает любой мяч. Иногда вместо пике хватает чужой мяч
-    /// с земли (мячи игрока не трогает) и несёт боссу в мешок; сбитая — роняет его. Через несколько заходов улетает.
-    /// По сети летает, пикирует и ворует только у хозяина комнаты (полосу пике он показывает гостям); у гостя копия
-    /// машет крыльями по его вестям.
-    /// </summary>
     [RequireComponent(typeof(Health), typeof(Targetable))]
     public sealed class CrowEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
@@ -105,14 +97,12 @@ namespace Bouncer.Enemies
             _boss = null;
         }
 
-        /// <summary>Вылетела из стаи босса (с его плеч, из-за края двора или из разбитого чучела).</summary>
         public void Launch(DuskBoss boss)
         {
             _boss = boss;
             GameEvents.PlaySound(SoundCue.CrowCaw, transform.position);
         }
 
-        /// <summary>Улететь со двора: стая разогнана или время вышло.</summary>
         public void FlyAway()
         {
             DropCarried();
@@ -120,8 +110,6 @@ namespace Bouncer.Enemies
             if (_state != State.Leave)
                 Enter(State.Leave, LeaveTime);
         }
-
-        // ---------- Мозги ----------
 
         void Update()
         {
@@ -155,12 +143,10 @@ namespace Bouncer.Enemies
                         ChooseAttack();
                     break;
                 case State.Mark:
-                    // Зависает и примеряется: хлопает крыльями на месте.
                     _velocity = Vector3.MoveTowards(_velocity, Vector3.zero, definition.acceleration * dt);
                     Move(dt);
                     if (_stateTime >= definition.markTime)
                     {
-                        // Пике начинается от того места, где она зависла.
                         _diveFrom = Flat(transform.position);
                         _diveStartHeight = transform.position.y;
                         _hitThisDive = false;
@@ -208,7 +194,6 @@ namespace Bouncer.Enemies
                           + Vector3.up * definition.circleHeight;
         }
 
-        /// <summary>Следующий заход: чаще — пике на игрока, иногда — за мячом с земли в мешок босса.</summary>
         void ChooseAttack()
         {
             if (_boss && _boss.SackCount < _boss.Definition.sackCapacity && Random.value < definition.stealChance
@@ -234,7 +219,6 @@ namespace Bouncer.Enemies
             Enter(State.Mark);
         }
 
-        /// <summary>Пике: снижается к асфальту, проносится над ним и снова набирает высоту.</summary>
         void Dive()
         {
             float t = Mathf.Clamp01(_stateTime / Mathf.Max(0.05f, _stateLength));
@@ -354,8 +338,6 @@ namespace Bouncer.Enemies
             _marker = null;
         }
 
-        // ---------- Полёт ----------
-
         void Steer(Vector3 goal, float speed, float dt)
         {
             Vector3 to = goal - transform.position;
@@ -373,8 +355,6 @@ namespace Bouncer.Enemies
             if (flat.sqrMagnitude > 0.05f)
                 transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(flat), 0.25f);
         }
-
-        // ---------- Попадания ----------
 
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)
         {
@@ -417,8 +397,6 @@ namespace Bouncer.Enemies
             PoolService.Despawn(gameObject);
         }
 
-        // ---------- Вид ----------
-
         void LateUpdate()
         {
             if (_carried != null && _carried.State == BallState.Stuck)
@@ -433,7 +411,6 @@ namespace Bouncer.Enemies
                 wingR.localRotation = _wingRRest * Quaternion.Euler(0f, 0f, -flap);
             if (visual)
             {
-                // Нос вниз на пике, вверх на подъёме.
                 float pitch = _state switch
                 {
                     State.Dive => 12f,
@@ -451,8 +428,6 @@ namespace Bouncer.Enemies
                 shadowBlob.localScale = new Vector3(size, size * 0.7f, 1f);
             }
         }
-
-        // ---------- Сеть ----------
 
         public void WriteNet(NetWriter writer)
         {

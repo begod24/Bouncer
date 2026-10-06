@@ -3,10 +3,6 @@ using UnityEngine.EventSystems;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// Строка списка бестиария: стала выбранной (мышь, стрелки, геймпад) — открыть её страницу; влево/вправо —
-    /// соседний раздел (враги, элитки, боссы), вверх/вниз ведёт обычная навигация кнопки.
-    /// </summary>
     public sealed class BestiaryEntryButton : MonoBehaviour, ISelectHandler, IMoveHandler
     {
         BestiaryScreen _screen;

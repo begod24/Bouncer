@@ -3,10 +3,6 @@ using UnityEngine;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Выбитый враг выпускает других: золотая матрёшка раскрывается и из неё выходят обычные, юла-«спутник»
-    /// раскалывается на мини-юлы. Когда арена пройдена и враги исчезают, никто не выходит.
-    /// </summary>
     [RequireComponent(typeof(Health))]
     public sealed class SpawnOnDeath : MonoBehaviour
     {
@@ -42,7 +38,6 @@ namespace Bouncer.Enemies
                     rolyPoly.Stun(stun);
                 if (child.TryGetComponent(out IDamageable damageable) && child.TryGetComponent(out TopEnemy _))
                 {
-                    // Мини-юлы разлетаются, как от удара.
                     damageable.ApplyHit(new HitInfo
                     {
                         Damage = 0,

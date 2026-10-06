@@ -3,10 +3,6 @@ using UnityEngine.Rendering;
 
 namespace Bouncer.Visuals
 {
-    /// <summary>
-    /// Одно время суток: палитра моделей, солнце, окружающий свет, туман, цвет неба и цветокоррекция.
-    /// Между профилями плавно переходит <see cref="TimeOfDayController"/>.
-    /// </summary>
     [CreateAssetMenu(menuName = "Bouncer/Time Of Day Profile", fileName = "TimeOfDay_")]
     public sealed class TimeOfDayProfile : ScriptableObject
     {

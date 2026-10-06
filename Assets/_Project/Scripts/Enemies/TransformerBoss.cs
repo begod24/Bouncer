@@ -5,17 +5,6 @@ using UnityEngine.AI;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// «Трансформер из ларька» — босс барахолки: милицейские «Жигули», которые превращаются в робота.
-    /// Выезжает из ларька «Игрушки» (<see cref="ArenaSpotKind.BossEntrance"/>) машиной и зовёт машинки на пульте.
-    /// Машина носится, газует на месте (на земле полоса) и таранит по прямой, снося прилавки и горы коробок;
-    /// врезался в стену — стоит оглушённый. После нескольких таранов превращается в робота: робот ходит, стреляет
-    /// из пушки веером (через один — ёжики, иногда кручёный, иногда финт) и бросает батарейки-мины. Потом снова
-    /// машина. Держит удар (<see cref="BossArmor"/>): открыт, пока превращается, оглушён и сразу после залпа.
-    /// Жизнь — на полосе босса (<see cref="BossSplit"/> без половинок).
-    /// По сети ездит, таранит, ломает прилавки, стреляет и бросает мины только у хозяина комнаты; у гостя копия
-    /// превращается, крутит колёсами и мигает по его вестям.
-    /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
     public sealed class TransformerBoss : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
@@ -80,7 +69,6 @@ namespace Bouncer.Enemies
 
         public TransformerDefinition Definition => definition;
         public State CurrentState => _state;
-        /// <summary>Открыт: превращается, оглушён после удара о стену или только что дал залп.</summary>
         public bool IsOpen => _state is State.ToRobot or State.ToCar or State.Crash || Time.time < _openUntil;
 
         void Awake()
@@ -111,7 +99,6 @@ namespace Bouncer.Enemies
             _nextRepath = 0f;
             _feinted = false;
             _announced = false;
-            // Выезжает из ларька «Игрушки».
             var entrance = ArenaSpot.Find(ArenaSpotKind.BossEntrance);
             Vector3 start = entrance ? entrance.Position : transform.position;
             _enterDirection = entrance ? entrance.Inward : -transform.position.normalized;
@@ -129,8 +116,6 @@ namespace Bouncer.Enemies
         }
 
         public void OnDespawned() => HideMarker();
-
-        // ---------- Мозги ----------
 
         void Update()
         {
@@ -162,7 +147,6 @@ namespace Bouncer.Enemies
             switch (_state)
             {
                 case State.Enter:
-                    // Выезжает из ларька тараном: прилавки на пути разлетаются.
                     BreakAhead();
                     _agent.Move(_enterDirection * (definition.driveSpeed * 0.8f * dt));
                     Face(_enterDirection, dt);
@@ -273,7 +257,6 @@ namespace Bouncer.Enemies
                         rig.AimCannon = Mathf.Clamp01(_stateTime / Mathf.Max(0.05f, definition.volleyWindup));
                     if (_stateTime >= definition.volleyWindup)
                     {
-                        // Финт: замахнулся — и не выстрелил; через миг выстрелит по-настоящему.
                         if (!_feinted && Random.value < Danger.FeintChance)
                         {
                             _feinted = true;
@@ -314,7 +297,6 @@ namespace Bouncer.Enemies
             UpdateBeacon();
         }
 
-        /// <summary>Носится кругами неподалёку от игрока.</summary>
         Vector3 DriveGoal()
         {
             Vector3 from = Flat(transform.position - _target.Position);
@@ -362,7 +344,6 @@ namespace Bouncer.Enemies
                     });
                 }
             }
-            // Упёрся в стену (носом или встал на краю навмеша) — оглушён; кончилось время — дальше.
             bool blocked = _stateTime > 0.15f && (moved < step * 0.3f || NoseAgainstWall());
             if (blocked)
             {
@@ -381,7 +362,6 @@ namespace Bouncer.Enemies
             }
         }
 
-        /// <summary>Капот упёрся в то, что не ломается (навмеш запечён под тонкого агента — машина длиннее).</summary>
         bool NoseAgainstWall()
         {
             if (!Physics.SphereCast(transform.position + Vector3.up * 0.7f, 0.6f, _ramDirection, out RaycastHit hit, NoseLength,
@@ -393,7 +373,6 @@ namespace Bouncer.Enemies
             return breakable == null || breakable.IsBroken;
         }
 
-        /// <summary>Прилавки и горы коробок перед капотом разлетаются, тележки отлетают в сторону.</summary>
         void BreakAhead()
         {
             Vector3 front = transform.position + _ramDirection * 1.6f + Vector3.up * 0.6f;
@@ -431,7 +410,6 @@ namespace Bouncer.Enemies
             if (rig)
                 rig.BeginTransform(car);
             GameEvents.PlaySound(SoundCue.TransformClank, transform.position);
-            // Первое превращение в робота — подсказка, что сейчас он открыт.
             if (!car && !_announced)
             {
                 _announced = true;
@@ -461,7 +439,6 @@ namespace Bouncer.Enemies
             });
         }
 
-        /// <summary>Веер из пушки: через один — ёжики; иногда весь залп кручёный.</summary>
         void Volley(Targetable target)
         {
             Vector3 origin = muzzle ? muzzle.position : transform.position + Vector3.up * 2.2f;
@@ -573,8 +550,6 @@ namespace Bouncer.Enemies
             _marker = null;
         }
 
-        // ---------- Попадания ----------
-
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)
         {
             if (_health.IsDead)
@@ -628,8 +603,6 @@ namespace Bouncer.Enemies
             PoolService.Despawn(gameObject);
         }
 
-        // ---------- Сеть ----------
-
         public void WriteNet(NetWriter writer)
         {
             writer.Byte((byte)_state);
@@ -652,7 +625,6 @@ namespace Bouncer.Enemies
                 return;
             bool car = reader.Bool();
             float progress = reader.Byte() / 255f;
-            // Превращение идёт и между вестями: ход по своим часам.
             if (progress < 1f && _state is State.ToRobot or State.ToCar)
                 progress = Mathf.Clamp01(_stateTime / Mathf.Max(0.1f, definition.transformTime));
             rig.SetNet(car, progress);

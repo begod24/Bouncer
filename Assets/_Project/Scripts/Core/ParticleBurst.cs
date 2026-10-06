@@ -2,16 +2,11 @@ using UnityEngine;
 
 namespace Bouncer.Core
 {
-    /// <summary>
-    /// Разовый эффект из частиц (взрыв цыплёнка): при выдаче из пула все дочерние системы частиц играют заново,
-    /// через lifetime эффект возвращается в пул. Масштаб задаёт тот, кто его вызвал (<see cref="Play"/>).
-    /// </summary>
     public sealed class ParticleBurst : MonoBehaviour, IPoolable
     {
         [Tooltip("Через сколько секунд эффект уходит в пул — не меньше самой долгой частицы")]
         [SerializeField, Min(0.1f)] float lifetime = 1.6f;
 
-        /// <summary>Эффект сыгран (по сети хозяин показывает его гостям): эффект и масштаб.</summary>
         public static event System.Action<ParticleBurst, float> Played;
 
         ParticleSystem[] _systems;
@@ -36,7 +31,6 @@ namespace Bouncer.Core
                 system.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
 
-        /// <summary>Эффект побольше или поменьше (взрыв петушка крупнее).</summary>
         public void Play(float scale)
         {
             transform.localScale = Vector3.one * Mathf.Max(0.1f, scale);

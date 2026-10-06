@@ -6,21 +6,6 @@ using UnityEngine.AI;
 
 namespace Bouncer.Waves
 {
-    /// <summary>
-    /// Ведёт волны по <see cref="WaveDefinition"/>: дорожки врагов с растущим темпом, разовые выходы
-    /// и общий лимит живых. Группа появляется в точке спавна вне экрана и не ближе заданного расстояния
-    /// к игрокам; перед появлением на полу мигают метки (у элитных — золотые). Когда вышедший босс выбит
-    /// целиком, сообщает <see cref="GameEvents.BossDefeated"/>; что дальше, решает арена.
-    /// Врагов с <see cref="SpawnPreference"/> (тень) выпускает только в тёмных точках, а подмогу, которую зовёт
-    /// босс (<see cref="GameEvents.SpawnRequested"/>), — у названной точки, тоже с метками.
-    /// Элитки получают свойство (<see cref="EliteAffix"/>); со 2-й опасности на арене на одну элитку больше.
-    /// Ритм волн (если он задан в <see cref="WaveDefinition"/>): в передышку дорожки молчат, а пока жива элитка —
-    /// идут реже. Дорожки, которые ещё не начались, не сдвигаются: фазы арены остаются на своих секундах.
-    /// Раз в секунду проверяет, не вылетел ли кто из врагов за проходимую часть арены (отброс сквозь тонкую стену),
-    /// и возвращает его на ближайшее проходимое место.
-    /// В коопе на каждого второго лишнего игрока на арене на одну элитку больше. По сети врагов выпускает только
-    /// хозяин комнаты; у гостя часы волн просто идут, а метки на полу присылает хозяин (<see cref="GroupQueued"/>).
-    /// </summary>
     public sealed class WaveSpawner : MonoBehaviour
     {
         sealed class PendingGroup
@@ -53,28 +38,19 @@ namespace Bouncer.Waves
         readonly List<GameObject> _spawned = new();
         readonly List<Transform> _offScreen = new();
         readonly List<Transform> _onScreen = new();
-        /// <summary>Лишние элитки опасности: копии первой элитки волны, по своему времени.</summary>
         readonly List<SpawnBurst> _extraBursts = new();
         readonly List<bool> _extraDone = new();
-        /// <summary>Вышедшие элитки: пока хоть одна жива, дорожки идут реже.</summary>
         readonly List<Targetable> _elites = new();
         float[] _nextTrackTime;
         bool[] _burstDone;
         bool _bossSpawned;
         float _nextStrayCheck;
 
-        /// <summary>
-        /// Группа встала в очередь: элитная ли, где метки. По сети хозяин показывает те же метки гостям
-        /// (<see cref="ShowMarkers"/>).
-        /// </summary>
         public static event System.Action<bool, IReadOnlyList<Vector3>> GroupQueued;
 
-        /// <summary>Враг дальше этого от проходимого места — вылетел за арену.</summary>
         const float StrayDistance = 1.2f;
-        /// <summary>Выше этого над землёй — летает (вороны), не трогаем.</summary>
         const float StrayMaxHeight = 1.5f;
 
-        /// <summary>Волны арены. Арена прогулки задаёт свои (<c>ArenaDirector</c>) до начала боя.</summary>
         public WaveDefinition Wave
         {
             get => wave;
@@ -86,7 +62,6 @@ namespace Bouncer.Waves
             }
         }
         public Transform[] SpawnPoints => spawnPoints;
-        /// <summary>Все разовые выходы уже вышли.</summary>
         public bool BurstsDone
         {
             get
@@ -104,10 +79,8 @@ namespace Bouncer.Waves
                 return true;
             }
         }
-        /// <summary>Сколько врагов ждут появления (метки уже на полу).</summary>
         public int PendingEnemies => PendingCount(null);
         public float TelegraphTime => telegraphTime;
-        /// <summary>Секунды забега по часам волн. Отладка может перемотать вперёд.</summary>
         public float WaveTime { get; set; }
         public bool Spawning
         {
@@ -116,10 +89,8 @@ namespace Bouncer.Waves
         }
         public int AliveCount => Targetable.CountAlive(Team.Enemy);
         public int MaxAlive => wave ? wave.MaxAliveAt(WaveTime) : 0;
-        /// <summary>Сейчас передышка: дорожки молчат.</summary>
         public bool InBreather => wave && wave.IsBreather(WaveTime);
 
-        /// <summary>На арене жива хоть одна вышедшая элитка.</summary>
         public bool EliteAlive
         {
             get
@@ -135,7 +106,6 @@ namespace Bouncer.Waves
         }
         public IReadOnlyList<SpawnTrack> Tracks => wave ? wave.tracks : System.Array.Empty<SpawnTrack>();
 
-        // Поле направлений роя строится при загрузке, а не посреди боя, когда появится первый пупс.
         void Start() => _ = EnemyFlowField.Instance;
 
         void OnEnable() => GameEvents.SpawnRequested += OnSpawnRequested;
@@ -144,7 +114,6 @@ namespace Bouncer.Waves
 
         void OnSpawnRequested(SpawnRequest request)
         {
-            // По сети подмогу (замена Физрука, машинки Трансформера, пупсы плаксы) выпускает хозяин комнаты.
             if (!GameSession.IsGameplayActive || NetHooks.IsGuest)
                 return;
             QueueGroupAt(request.Prefab, request.Count, request.Line ? GroupLayout.Line : GroupLayout.Cluster, request.Position);
@@ -153,12 +122,10 @@ namespace Bouncer.Waves
         void Update()
         {
             UpdatePending();
-            // По сети в начале прогулки часы волн ждут, пока все выберут стартовую карточку.
             if (wave == null || !GameSession.IsGameplayActive || Online.WavesHeld)
                 return;
             if (NetHooks.IsGuest)
             {
-                // Гость: врагов выпускает хозяин, часы волн идут для времени суток (хозяин их поправляет).
                 WaveTime += Time.deltaTime;
                 return;
             }
@@ -173,10 +140,6 @@ namespace Bouncer.Waves
             RunTracks();
         }
 
-        /// <summary>
-        /// Ритм волн: в передышку часы начавшихся дорожек стоят, пока жива элитка — идут медленнее
-        /// (паузы между группами растягиваются в <see cref="WaveDefinition.eliteSlowdown"/> раз).
-        /// </summary>
         void HoldTrackClocks()
         {
             float rate = InBreather ? 0f : EliteAlive ? 1f / Mathf.Max(1f, wave.eliteSlowdown) : 1f;
@@ -188,7 +151,6 @@ namespace Bouncer.Waves
                     _nextTrackTime[i] += lag;
         }
 
-        /// <summary>Враг вылетел за проходимую часть арены — вернуть на ближайшее проходимое место.</summary>
         void ReturnStrays()
         {
             if (Time.time < _nextStrayCheck)
@@ -221,10 +183,6 @@ namespace Bouncer.Waves
             }
         }
 
-        /// <summary>
-        /// Босс вышел и выбит вместе со всеми половинками. Проверка кадром позже смерти части —
-        /// к этому моменту её половинки уже появились и учтены.
-        /// </summary>
         void CheckVictory()
         {
             if (!_bossSpawned || BossSplit.Alive.Count > 0)
@@ -251,7 +209,6 @@ namespace Bouncer.Waves
             }
         }
 
-        /// <summary>Опасность 2+: ещё одна элитка — между первыми двумя (или через 45 с после первой).</summary>
         void BuildExtraElites()
         {
             _extraBursts.Clear();
@@ -303,7 +260,6 @@ namespace Bouncer.Waves
                 int room = Mathf.Min(track.maxAlive - CountAlive(track.prefab) - PendingCount(track.prefab), cap - total);
                 if (room <= 0)
                 {
-                    // Места нет — попробуем чуть позже, а не через целый интервал.
                     _nextTrackTime[i] = WaveTime + 0.5f;
                     continue;
                 }
@@ -334,7 +290,6 @@ namespace Bouncer.Waves
             }
         }
 
-        /// <summary>Отладка: сразу выпустить разовый выход (например, босса).</summary>
         public void SpawnBurstNow(int index)
         {
             if (wave == null || index < 0 || index >= wave.bursts.Count)
@@ -345,9 +300,6 @@ namespace Bouncer.Waves
 
         public IReadOnlyList<SpawnBurst> Bursts => wave ? wave.bursts : System.Array.Empty<SpawnBurst>();
 
-        // ---------- Появление ----------
-
-        /// <summary>Поставить группу в очередь: метки на полу сразу, враги — через telegraphTime.</summary>
         public bool QueueGroup(GameObject prefab, int count, GroupLayout layout, bool boss = false, bool elite = false)
         {
             if (prefab == null || count <= 0)
@@ -355,7 +307,6 @@ namespace Bouncer.Waves
             return QueueGroupAt(prefab, count, layout, PickSpawnPoint(prefab), boss, elite);
         }
 
-        /// <summary>Поставить группу в очередь у заданной точки (скамейка запасных).</summary>
         public bool QueueGroupAt(GameObject prefab, int count, GroupLayout layout, Vector3 point, bool boss = false, bool elite = false)
         {
             if (prefab == null || count <= 0)
@@ -388,7 +339,6 @@ namespace Bouncer.Waves
             return true;
         }
 
-        /// <summary>По сети у гостя: метки на полу, как у группы хозяина (враги придут от него же).</summary>
         public void ShowMarkers(bool elite, IReadOnlyList<Vector3> positions)
         {
             var group = _freeGroups.Count > 0 ? _freeGroups.Pop() : new PendingGroup();
@@ -405,7 +355,6 @@ namespace Bouncer.Waves
             _pending.Add(group);
         }
 
-        /// <summary>Отладка: сразу поставить в очередь группу с дорожки, не глядя на лимиты.</summary>
         public void SpawnTrackNow(int index)
         {
             if (wave == null || index < 0 || index >= wave.tracks.Count)
@@ -414,9 +363,6 @@ namespace Bouncer.Waves
             QueueGroup(track.prefab, track.GroupSizeAt(WaveTime), track.layout);
         }
 
-        /// <summary>
-        /// Арена пройдена: ждущие появления группы отменяются, живые враги исчезают — без монеток, счёта и домино.
-        /// </summary>
         public void DespawnAll()
         {
             ClearPending();
@@ -467,7 +413,6 @@ namespace Bouncer.Waves
 
         void SpawnGroup(PendingGroup group)
         {
-            // Только метки (по сети у гостя): врагов пришлёт хозяин.
             if (group.Prefab == null)
                 return;
             if (group.Boss)
@@ -478,7 +423,6 @@ namespace Bouncer.Waves
             for (int i = 0; i < _spawned.Count; i++)
                 if (_spawned[i].TryGetComponent(out IGroupMember member))
                     member.OnGroupSpawned(_spawned, i);
-            // Свойство элитки: на 1-й опасности через раз, дальше — всегда.
             if (group.Elite)
                 foreach (var spawned in _spawned)
                 {
@@ -507,10 +451,6 @@ namespace Bouncer.Waves
             _freeGroups.Push(group);
         }
 
-        /// <summary>
-        /// Точка вне экрана и подальше от игроков; если таких нет — самая дальняя.
-        /// Тень выходит только из темноты: освещённые фонарями точки ей не годятся, пока есть тёмные.
-        /// </summary>
         Vector3 PickSpawnPoint(GameObject prefab)
         {
             if (spawnPoints == null || spawnPoints.Length == 0)
@@ -569,7 +509,6 @@ namespace Bouncer.Waves
             return direction.sqrMagnitude > 0.01f ? direction.normalized : Vector3.forward;
         }
 
-        /// <summary>Раскладка «подсолнух»: плотная кучка без наложений.</summary>
         static Vector3 Sunflower(int index)
         {
             float radius = Mathf.Sqrt(index) * 0.75f;

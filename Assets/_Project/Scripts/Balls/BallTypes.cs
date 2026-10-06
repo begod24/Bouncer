@@ -4,10 +4,6 @@ using UnityEngine;
 
 namespace Bouncer.Balls
 {
-    /// <summary>
-    /// Особые свойства броска: от типа мяча (волейбольный, набивной, теннисный) и от карточек-модификаторов.
-    /// Складываются: тип мяча + все взятые модификаторы.
-    /// </summary>
     [Serializable]
     public struct BallPerks
     {
@@ -59,13 +55,6 @@ namespace Bouncer.Balls
         [Tooltip("Кручёный мяч: летит дугой, поворачивая на столько градусов в секунду (знак — в какую сторону). 0 — прямо")]
         public float curve;
 
-        /// <summary>
-        /// Что достаётся мячу-двойнику: бьёт и летит так же (цепочка, площадь, отскоки, жвачка, змейка, стеночка,
-        /// рогатка, оглушение гири), но не взрывается, не возвращается в руки и не доворачивает к врагам
-        /// («Глаз-алмаз» — только у основного мяча): иначе веер и раскол умножали бы всё сразу.
-        /// Прибавку к урону («Хулиганство») двойник тоже не получает — см. <see cref="ThrowStats.BonusDamage"/>.
-        /// Раскалывается двойник только с «Градом», и только один раз.
-        /// </summary>
         public BallPerks ForTwin() => new()
         {
             chainBounces = chainBounces,
@@ -109,59 +98,42 @@ namespace Bouncer.Balls
         };
     }
 
-    /// <summary>
-    /// Перехватчик мяча игрока до попадания (элитка-«Ловкач» ловит каждый третий). true — мяч забран,
-    /// попадания нет.
-    /// </summary>
     public interface IBallInterceptor
     {
         bool TryIntercept(Ball ball);
     }
 
-    /// <summary>Тот, кому мяч может вернуться в руки сам (бумеранг, мяч на резинке).</summary>
     public interface IBallReceiver
     {
-        /// <summary>Забрать мяч в руки. false — руки заняты или получатель выбит.</summary>
         bool TryReceive(Ball ball);
     }
-    /// <summary>Что произошло, когда летящий мяч коснулся цели.</summary>
     public enum BallContactResult
     {
-        /// <summary>Мяч пролетает насквозь (рывок, неуязвимость).</summary>
         PassThrough,
-        /// <summary>Цель поймала мяч — он уже забран или брошен на землю.</summary>
         Caught,
-        /// <summary>Попадание — мяч отскакивает вверх («свечка»).</summary>
         Hit,
-        /// <summary>Мяч отражается, как от стены.</summary>
         Bounce,
-        /// <summary>Цель выбита, а мяч летит дальше, потеряв часть скорости (лёгкие враги вроде пупсов).</summary>
         Pierce,
-        /// <summary>Цель сама задала мячу новый полёт через <see cref="Ball.Redirect"/> (качели).</summary>
         Redirected,
     }
 
-    /// <summary>Всё, во что может попасть мяч: игроки, враги.</summary>
     public interface IBallTarget
     {
         BallContactResult OnBallContact(Ball ball, in RaycastHit hit);
     }
 
-    /// <summary>Параметры полёта и удара конкретного броска.</summary>
     public struct ThrowStats
     {
         public float Speed;
         public float UpVelocity;
         public float Gravity;
         public int Damage;
-        /// <summary>Сколько из урона — прибавка карточек («Хулиганство»): двойникам она не достаётся.</summary>
         public int BonusDamage;
         public float Knockback;
         public HitFlags Flags;
 
         public bool Has(HitFlags flag) => (Flags & flag) != 0;
 
-        /// <summary>Те же параметры, но без прибавки карточек — для двойников.</summary>
         public ThrowStats WithoutBonus()
         {
             var stats = this;
@@ -174,21 +146,13 @@ namespace Bouncer.Balls
     public struct BallThrow
     {
         public Vector3 Origin;
-        /// <summary>Горизонтальное направление броска.</summary>
         public Vector3 Direction;
         public ThrowStats Stats;
         public Team Team;
         public GameObject Thrower;
         public BallPerks Perks;
-        /// <summary>Мяч-двойник (веер теннисных, раскол): бьёт как обычный, но исчезает, коснувшись пола.</summary>
         public bool Phantom;
-        /// <summary>
-        /// Чей это мяч из запаса: игрок, который его бросил. Пусто у мячей врагов и у пойманных чужих —
-        /// такие исчезают, упав на землю. Мяч, который бросает враг, но он уже чей-то (чучело, мишка, мешок Бабая),
-        /// остаётся мячом хозяина: Launch не стирает владельца.
-        /// </summary>
         public GameObject Owner;
-        /// <summary>Йо-йо: этот мяч — на нитке (он один), возвращается в руки после попадания.</summary>
         public bool YoyoString;
     }
 }

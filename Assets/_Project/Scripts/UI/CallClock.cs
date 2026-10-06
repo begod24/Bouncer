@@ -8,11 +8,6 @@ using UnityEngine.UI;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// Часы до зова мамы в HUD финала: панелька мелом, окна в ней загораются одно за другим, последним — наше
-    /// (с сердечком); под ней — «до зова», а когда мама позвала — «Домой!». На других аренах спрятаны.
-    /// Сколько секунд осталось, показывает таймер HUD (<see cref="GameHud"/>).
-    /// </summary>
     public sealed class CallClock : MonoBehaviour
     {
         [SerializeField] CanvasGroup group;

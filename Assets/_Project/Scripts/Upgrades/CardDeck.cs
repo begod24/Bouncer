@@ -5,7 +5,6 @@ using UnityEngine;
 
 namespace Bouncer.Upgrades
 {
-    /// <summary>Сколько шансов у каждой редкости. Нули — такая редкость отсюда не выпадает.</summary>
     [Serializable]
     public struct RarityWeights
     {
@@ -28,10 +27,6 @@ namespace Bouncer.Upgrades
         };
     }
 
-    /// <summary>
-    /// Колода вкладышей забега: какие карточки есть, откуда какие редкости выпадают (старт, портфель, босс, ларёк)
-    /// и цены в ларьке «Союзпечать».
-    /// </summary>
     [CreateAssetMenu(menuName = "Bouncer/Upgrades/Card Deck", fileName = "CardDeck_")]
     public sealed class CardDeck : ScriptableObject
     {
@@ -89,7 +84,6 @@ namespace Bouncer.Upgrades
         [Tooltip("«Копилка»: +1 монетка за каждые столько монеток в кармане, когда открывается ларёк")]
         [Min(1)] public int interestPer = 10;
 
-        /// <summary>Карманов у каждого игрока: в коопе меньше (вдвоём и втроём — на один, вчетвером — на два).</summary>
         public int PocketsFor(int players) => Mathf.Max(1, players <= 1 ? pockets : players <= 3 ? pockets - 1 : pockets - 2);
 
         public int PriceOf(CardRarity rarity, int arenaIndex, int purchases = 0)
@@ -104,18 +98,12 @@ namespace Bouncer.Upgrades
                                     * Mathf.Pow(1f + purchaseGrowth, Mathf.Max(0, purchases)));
         }
 
-        /// <summary>Лечение в ларьке тоже дорожает с каждой ареной (и на 4-й опасности).</summary>
         public int HealPrice(int basePrice, int arenaIndex) =>
             Mathf.RoundToInt(basePrice * (1f + priceGrowth * Mathf.Max(0, arenaIndex)) * Danger.HealPriceMultiplier);
 
-        /// <summary>Сколько дают за карточку из кармана.</summary>
         public int SellPrice(UpgradeCard card, int arenaIndex) =>
             card ? Mathf.Max(1, Mathf.RoundToInt(PriceOf(card.rarity, arenaIndex) * sellShare)) : 0;
 
-        /// <summary>
-        /// Добавить в result до count разных карточек: сначала по весам выбирается редкость (из тех, что ещё есть),
-        /// потом карточка этой редкости по своему весу. available решает, можно ли карточку предложить сейчас.
-        /// </summary>
         public void Roll(List<UpgradeCard> result, int count, in RarityWeights weights, Predicate<UpgradeCard> available)
         {
             s_candidates.Clear();
@@ -152,7 +140,6 @@ namespace Bouncer.Upgrades
 
         float CardWeight(UpgradeCard card) => card.IsCombo ? card.weight * comboBoost : card.weight;
 
-        /// <summary>Редкость по весам среди тех, что ещё остались в кандидатах.</summary>
         static CardRarity PickRarity(in RarityWeights weights)
         {
             float common = Has(CardRarity.Common) ? weights.common : 0f;

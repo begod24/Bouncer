@@ -4,12 +4,6 @@ using UnityEngine;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Облако ваты из плюшевого зайца: лежит на земле несколько секунд, игрок в нём бежит медленнее.
-    /// Врагов не трогает. Вид — частицы (белые клочья), в конце тает. Из пула.
-    /// По сети облако кладёт хозяин комнаты и показывает гостям такое же (<see cref="Played"/>): у каждого
-    /// оно замедляет своего игрока — бегом каждый управляет у себя.
-    /// </summary>
     public sealed class SlowCloud : MonoBehaviour, IPoolable
     {
         [SerializeField] ParticleSystem puffs;
@@ -20,7 +14,6 @@ namespace Bouncer.Enemies
         float _until;
         bool _fading;
 
-        /// <summary>Облако легло: радиус, сколько лежит, во сколько замедляет (по сети хозяин показывает гостям).</summary>
         public static event System.Action<SlowCloud, float, float, float> Played;
 
         public void OnSpawned() { }

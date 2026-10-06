@@ -5,12 +5,6 @@ using UnityEngine.EventSystems;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// Пункт меню «мелом» (кнопка, ползунок, переключатель): надпись, под которой появляется меловое
-    /// подчёркивание, когда пункт выбран (стрелками, геймпадом) или под мышью. Мышь выбирает пункт
-    /// наведением — так у всех способов ввода одна и та же подсветка. Главная кнопка («Играть») может быть
-    /// подчёркнута всегда.
-    /// </summary>
     [RequireComponent(typeof(UnityEngine.UI.Selectable))]
     public sealed class ChalkButton : MonoBehaviour, ISelectHandler, IDeselectHandler, IPointerEnterHandler
     {

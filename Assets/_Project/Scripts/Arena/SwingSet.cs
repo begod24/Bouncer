@@ -4,11 +4,6 @@ using UnityEngine;
 
 namespace Bouncer.Arena
 {
-    /// <summary>
-    /// Качели: отбивают летящий мяч обратно — быстрее и сильнее, чем он прилетел.
-    /// Отбивает зона между стойками (коллайдер на слое Environment), стойки работают как обычная стена.
-    /// Сиденье качается само, а от удара мяча раскачивается сильнее (маятник, только визуал).
-    /// </summary>
     public sealed class SwingSet : MonoBehaviour, IBallTarget
     {
         [Tooltip("Коллайдер между стойками: мяч, попавший в него, отбивается")]
@@ -61,7 +56,6 @@ namespace Bouncer.Arena
             Vector3 incoming = Flat(ball.Velocity);
             float along = Vector3.Dot(incoming, normal);
             Vector3 sideways = incoming - normal * along;
-            // Мяч отлетает на ту сторону, с которой прилетел, в основном поперёк качелей.
             float side = Vector3.Dot(ball.Position - transform.position, normal) >= 0f ? 1f : -1f;
             float across = Mathf.Max(Mathf.Abs(along), incoming.magnitude * 0.5f, 1f);
             Vector3 direction = (normal * (side * across) + sideways * sidewaysKeep).normalized;
@@ -77,7 +71,6 @@ namespace Bouncer.Arena
 
             _lastBall = ball;
             _lastBallUntil = Time.time + sameBallCooldown;
-            // Положительный угол уводит сиденье к -Z, поэтому толкаем против знака скорости мяча вдоль Z.
             _angularVelocity -= (along >= 0f ? 1f : -1f) * kickPerHit;
             GameFeel.HitStop(0.03f);
             GameFeel.Shake(0.2f);
@@ -90,7 +83,6 @@ namespace Bouncer.Arena
             if (!seat)
                 return;
             float dt = Time.deltaTime;
-            // Маятник: θ'' = -(g / L)·sin θ, плюс затухание. Угол храним в градусах.
             float restoring = -(9.81f / ropeLength) * Mathf.Sin(_angle * Mathf.Deg2Rad) * Mathf.Rad2Deg;
             _angularVelocity += (restoring - swingDamping * _angularVelocity) * dt;
             _angle = Mathf.Clamp(_angle + _angularVelocity * dt, -maxSwingAngle, maxSwingAngle);

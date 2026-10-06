@@ -13,20 +13,9 @@ using UnityEngine.SceneManagement;
 
 namespace Bouncer.Net
 {
-    /// <summary>
-    /// Мир арены по сети, кроме врагов и мячей. Хозяин комнаты показывает гостям то, что случилось у него:
-    /// звуки мира (удары, хлопки, взрывы — свои звуки игрока гость играет сам, см. <see cref="IsLocalCue"/>),
-    /// эффекты (кольца, взрывы, обломки, жвачка), надписи мелом, метки появления врагов, часы волн и общую
-    /// заморозку врагов, погоду (и молнии), метки опасности на земле (<see cref="GroundMarker"/>), что арена пройдена. Монетки, лимонад и портфели у гостя — копии: выпали,
-    /// полетели к игроку (по решению хозяина), подобраны — добыча приходит всем (<see cref="RunState.AddLoot"/>),
-    /// а портфель — в рюкзак подобравшего. Предметы арены: снесённые прилавки и горы коробок разлетаются и у гостей,
-    /// а тележки у гостя — копии, которые едут по вестям хозяина.
-    /// </summary>
     public sealed class NetWorld : NetworkBehaviour
     {
-        /// <summary>Часы волн гостям — раз в столько секунд.</summary>
         const float ArenaSyncInterval = 1f;
-        /// <summary>Тележки гостям — каждый такой такт; стоящие — не реже <see cref="CartRefresh"/>.</summary>
         const int CartEveryTicks = 3;
         const float CartRefresh = 2f;
         const int MaxSoundsPerTick = 24;
@@ -38,15 +27,10 @@ namespace Bouncer.Net
         const byte EffectCircle = 4;
         const byte EffectLine = 5;
         const byte EffectMarkerHide = 6;
-        /// <summary>Просто появиться там же (огонь, облако): у гостя — только для вида.</summary>
         const byte EffectSpawn = 7;
-        /// <summary>Облако ваты зайца: радиус в Value, время и замедление — в Direction.</summary>
         const byte EffectCloud = 8;
-        /// <summary>Огромный мяч Физрука: куда покатился — в Direction.</summary>
         const byte EffectGiantBall = 9;
-        /// <summary>Мина Трансформера: откуда — Position, куда — Direction, полёт — Value, фитиль и радиус — Inherited.</summary>
         const byte EffectMine = 10;
-        /// <summary>Морковка зайца: откуда — Position, докуда — Direction, полёт — Value, радиус — Inherited.x.</summary>
         const byte EffectCarrot = 11;
 
         [Tooltip("Эффекты, которые хозяин показывает гостям: кольца, взрывы, обломки, жвачка")]
@@ -208,17 +192,11 @@ namespace Bouncer.Net
             _cartsFound = false;
         }
 
-        /// <summary>
-        /// Звуки, которые компьютер играет сам: свой игрок (бросок, ловля, рывок, удар по нему), интерфейс и отскоки
-        /// копий мячей. Остальное — звуки мира: их играет хозяин и присылает гостям.
-        /// </summary>
         static bool IsLocalCue(SoundCue cue) => cue is SoundCue.Throw or SoundCue.ThrowCharged or SoundCue.ThrowCandle
             or SoundCue.Catch or SoundCue.CatchCandle or SoundCue.CatchMiss or SoundCue.Pickup or SoundCue.Dash
             or SoundCue.PlayerHurt or SoundCue.PlayerKnockedOut or SoundCue.BallWall or SoundCue.LevelUp or SoundCue.CardPick
             or SoundCue.UiMove or SoundCue.Victory or SoundCue.GameOver or SoundCue.Portfolio or SoundCue.KioskOpen
             or SoundCue.Purchase or SoundCue.NotEnoughCoins or SoundCue.SecondWind or SoundCue.ShieldBlock or SoundCue.Whistle;
-
-        // ================= Хозяин =================
 
         void OnTick()
         {
@@ -282,7 +260,6 @@ namespace Bouncer.Net
         void OnGiantBall(GiantBall ball, Vector3 direction) =>
             QueueEffect(EffectGiantBall, ball.gameObject, ball.transform.position, ball.transform.rotation, 0f, direction, default);
 
-        /// <summary>«Замри!» Физрука и т.п.: гостям сразу, не дожидаясь часов арены.</summary>
         void OnEnemiesFroze(float seconds)
         {
             if (IsSpawned)
@@ -308,7 +285,6 @@ namespace Bouncer.Net
                 _effects.Add(new NetEffect { Kind = EffectGum, Prefab = (ushort)index, Position = above, Rotation = Quaternion.identity });
         }
 
-        /// <summary>Метка опасности: номер, чтобы гость мог убрать её раньше времени; радиус — в Value, конец полосы — в Direction.</summary>
         void OnMarkerShown(GroundMarker marker, bool circle, Vector3 a, Vector3 b, float seconds)
         {
             if (!IsSpawned || !marker.TryGetComponent(out PooledObject tag))
@@ -386,9 +362,6 @@ namespace Bouncer.Net
                 CompletedRpc(boss, last);
         }
 
-        // ---------- Предметы арены ----------
-
-        /// <summary>Тележки арены по месту, где они стояли при загрузке: так их порядок у всех один.</summary>
         void FindCarts()
         {
             if (_cartsFound)
@@ -453,7 +426,6 @@ namespace Bouncer.Net
         {
             if (!IsSpawned || IsServer)
                 return;
-            // Гость: тележки сразу становятся копиями и плавно едут туда, где они у хозяина.
             FindCarts();
             float k = 1f - Mathf.Exp(-15f * Time.deltaTime);
             for (int i = 0; i < _carts.Count; i++)
@@ -582,8 +554,6 @@ namespace Bouncer.Net
             return -1;
         }
 
-        // ================= Гость =================
-
         [Rpc(SendTo.NotServer, Delivery = RpcDelivery.Unreliable)]
         void SoundsRpc(NetSoundBatch batch)
         {
@@ -593,7 +563,6 @@ namespace Bouncer.Net
             {
                 var cue = (SoundCue)batch.Cues[i];
                 GameEvents.PlaySoundFromNetwork(cue, batch.Positions[i]);
-                // Взрыв рядом трясёт камеру и у гостя.
                 if (cue == SoundCue.Explosion && Players.Local != null
                     && (Players.Local.transform.position - batch.Positions[i]).sqrMagnitude < 100f)
                     GameFeel.Shake(0.4f);
@@ -662,7 +631,6 @@ namespace Bouncer.Net
                 case EffectCarrot:
                     if (prefab.TryGetComponent(out CarrotBoomerang _))
                     {
-                        // Возвращается к копии зайца (он на арене один).
                         var hare = FindFirstObjectByType<HareBoss>();
                         if (hare == null)
                             break;
@@ -746,7 +714,6 @@ namespace Bouncer.Net
             }
         }
 
-        /// <summary>У хозяина снесли прилавок или гору коробок в этой точке — снести такую же.</summary>
         [Rpc(SendTo.NotServer)]
         void BreakRpc(Vector3 position, Vector3 direction, float force)
         {
@@ -766,11 +733,9 @@ namespace Bouncer.Net
             best?.Break(direction, force);
         }
 
-        /// <summary>«Гасит свет» финального босса: двор тонет в темноте и у гостя.</summary>
         [Rpc(SendTo.NotServer)]
         void LightsOutRpc(float seconds) => LightsOut.Trigger(seconds);
 
-        /// <summary>Мама позвала у хозяина — зовёт и здесь: дорога к подъезду открыта.</summary>
         [Rpc(SendTo.NotServer)]
         void MomCallRpc(bool bossDefeated)
         {
@@ -778,7 +743,6 @@ namespace Bouncer.Net
                 HomeCall.Instance.BeginCall(bossDefeated);
         }
 
-        /// <summary>Фонарь в этой точке погас у хозяина (тень, «Гасит свет»).</summary>
         [Rpc(SendTo.NotServer)]
         void LampOutRpc(Vector3 center, float seconds)
         {
@@ -889,7 +853,6 @@ namespace Bouncer.Net
         }
     }
 
-    /// <summary>Эффект, который хозяин показывает гостям: какой, где, радиус/масштаб/сила, направление обломков.</summary>
     public struct NetEffect : INetworkSerializable
     {
         public byte Kind;

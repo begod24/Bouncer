@@ -8,12 +8,6 @@ using UnityEngine.Localization.Settings;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// Обучение на экране: карточка задания слева (номер шага, что сделать, как это сделать, прогресс или «Готово!»)
-    /// и в конце экран «Готов гулять!» с кнопками «Гулять!» (заставка сразу открывает выбор ребёнка) и «В меню».
-    /// Читает <see cref="TutorialDirector"/>, сама сообщает ему, что карманы открыли и закрыли. Карточка прячется
-    /// под паузой, выбором карточки и витриной. Вне обучения панели не видно.
-    /// </summary>
     public sealed class TutorialPanel : MonoBehaviour
     {
         [Header("Задание")]
@@ -123,7 +117,6 @@ namespace Bouncer.UI
                 UnityEngine.UI.LayoutRebuilder.MarkLayoutForRebuild(card);
         }
 
-        /// <summary>Шаг «Карманы»: карманы открыли (Tab, Select, пауза) и закрыли — засчитать.</summary>
         void TrackPockets()
         {
             var pockets = PocketsPanel.Instance;
@@ -142,7 +135,6 @@ namespace Bouncer.UI
             if (finished && !_doneShown)
             {
                 _doneShown = true;
-                // Esc больше не открывает паузу поверх: отсюда только «Гулять!» или «В меню».
                 if (session != null)
                     session.OverlayOpen = true;
             }

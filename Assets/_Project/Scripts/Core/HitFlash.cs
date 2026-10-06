@@ -2,10 +2,6 @@ using UnityEngine;
 
 namespace Bouncer.Core
 {
-    /// <summary>
-    /// Вспышка и подкраска мешей через MaterialPropertyBlock (материалы не дублируются).
-    /// Шейдер палитры (Bouncer/PaletteLit) — через _TintColor/_FlashColor, остальные (URP Lit/Unlit) — через _BaseColor.
-    /// </summary>
     public sealed class HitFlash : MonoBehaviour
     {
         static readonly int BaseColorId = PaletteShader.BaseColor;
@@ -31,7 +27,6 @@ namespace Bouncer.Core
             CacheRenderers();
         }
 
-        /// <summary>Другие меши (модель игрока сменилась на ходу).</summary>
         public void SetRenderers(Renderer[] list)
         {
             renderers = list ?? System.Array.Empty<Renderer>();
@@ -65,7 +60,6 @@ namespace Bouncer.Core
             _dirty = true;
         }
 
-        /// <summary>Постоянная подкраска (например, «покраснение» от серии попаданий).</summary>
         public void SetTint(Color color, float amount)
         {
             amount = Mathf.Clamp01(amount);

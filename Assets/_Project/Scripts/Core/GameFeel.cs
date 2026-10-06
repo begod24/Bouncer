@@ -3,18 +3,9 @@ using UnityEngine;
 
 namespace Bouncer.Core
 {
-    /// <summary>
-    /// «Сок»: стоп-кадр, тряска камеры, замедление. Единственное место,
-    /// которое пишет Time.timeScale — пауза и эффекты не спорят друг с другом.
-    /// Стоп-кадр останавливает всю игру, поэтому он только для редких важных моментов (игрока ударили,
-    /// босс раскололся, ловля). На обычные попадания вздрагивает сам враг (<see cref="HitPunch"/>).
-    /// По сети (<see cref="Online"/>) время общее: Time.timeScale всегда 1, стоп-кадр и замедления не работают,
-    /// а «Замри!» замораживает врагов. Тряска камеры у каждого своя и работает всегда.
-    /// </summary>
     [DefaultExecutionOrder(-100)]
     public sealed class GameFeel : MonoBehaviour
     {
-        /// <summary>За сколько секунд «Замри!» входит в полную силу и за сколько отпускает.</summary>
         const float BulletTimeEnter = 0.06f;
         const float BulletTimeExit = 0.3f;
 
@@ -43,10 +34,8 @@ namespace Bouncer.Core
         static float s_bulletTimeScale = 1f;
 
         public static bool Paused { get; set; }
-        /// <summary>Время стоит, но это не пауза: открыт выбор карточки и т.п.</summary>
         public static bool Frozen { get; set; }
 
-        /// <summary>Сила замедления «Замри!»: 0 — нет, 1 — в разгаре. Плавно входит и выходит.</summary>
         public static float BulletTime01
         {
             get
@@ -63,7 +52,6 @@ namespace Bouncer.Core
         void Awake()
         {
             s_instance = this;
-            // Замедления прошлого забега (конец игры, «Замри!») в новый не переходят.
             s_hitStopUntil = 0f;
             s_slowMoUntil = 0f;
             s_bulletTimeUntil = 0f;
@@ -101,7 +89,6 @@ namespace Bouncer.Core
             float now = Time.unscaledTime;
             if (now < s_hitStopUntil)
             {
-                // Стоп-кадры не складываются: идущий длится столько, сколько самый долгий из запрошенных.
                 s_hitStopLength = Mathf.Max(s_hitStopLength, seconds);
                 s_hitStopUntil = s_hitStopStart + s_hitStopLength;
                 return;
@@ -122,11 +109,6 @@ namespace Bouncer.Core
             s_slowMoUntil = Time.unscaledTime + seconds;
         }
 
-        /// <summary>
-        /// «Замри!»: всё вокруг замедляется до scale на seconds секунд реального времени.
-        /// Новый вызов, пока замедление идёт, продлевает его, а не начинает заново.
-        /// По сети время не замедлить — вместо этого враги замирают на то же время.
-        /// </summary>
         public static void BulletTime(float scale, float seconds)
         {
             if (seconds <= 0f)
@@ -147,11 +129,9 @@ namespace Bouncer.Core
         {
             if (s_instance == null || s_instance.impulseSource == null)
                 return;
-            // Множитель из настроек игрока — поверх общего из инспектора.
             force *= s_instance.shakeMultiplier * GameSettings.ScreenShake;
             if (force <= 0f)
                 return;
-            // Внутри окна добавляется только то, на что новая тряска сильнее уже идущей.
             float now = Time.unscaledTime;
             if (now < s_shakeWindowUntil)
             {

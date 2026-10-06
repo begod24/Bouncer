@@ -8,12 +8,6 @@ using Object = UnityEngine.Object;
 
 namespace Bouncer.EditorTools
 {
-    /// <summary>
-    /// Собирает в GameUI экраны сетевой игры по образцу «Пройти обучение?» (меловые кнопки, заголовок
-    /// с подчёркиванием, подсказка внизу): «Гуляем вместе» (OnlineScreen: имя, создать комнату, код, локальная сеть)
-    /// и «Комната» (LobbyScreen: код, игроки, дети, опасность, «Готов!» / «Гулять!», «Выйти»), и подключает их
-    /// вместе с «Как гуляем?» к RunScreens. Готовые экраны пересобираются заново.
-    /// </summary>
     static class OnlineScreensBuilder
     {
         const string GameUiPath = "Assets/_Project/Prefabs/UI/GameUI.prefab";
@@ -56,8 +50,6 @@ namespace Bouncer.EditorTools
                 PrefabUtility.UnloadPrefabContents(root);
             }
         }
-
-        // ---------- «Гуляем вместе» ----------
 
         static Transform BuildOnline(Transform screens, int index)
         {
@@ -104,8 +96,6 @@ namespace Bouncer.EditorTools
             so.ApplyModifiedPropertiesWithoutUndo();
             return screen;
         }
-
-        // ---------- «Комната» ----------
 
         static Transform BuildLobby(Transform screens, int index)
         {
@@ -187,8 +177,6 @@ namespace Bouncer.EditorTools
             return screen;
         }
 
-        // ---------- RunScreens ----------
-
         static void Wire(Transform screens, Transform mode, Transform online, Transform lobby)
         {
             var runScreens = screens.GetComponent("RunScreens");
@@ -200,7 +188,6 @@ namespace Bouncer.EditorTools
             so.FindProperty("lobbyScreen").objectReferenceValue = lobby.GetComponent("LobbyScreen");
             SetArray(so.FindProperty("soloButtons"), new[] { mode.Find("Button_Одному").GetComponent<Button>() });
             SetArray(so.FindProperty("coopButtons"), new[] { mode.Find("Button_Вместе").GetComponent<Button>() });
-            // «Назад» на «Как гуляем?» и «Гуляем вместе» закрывает экран, как и на остальных экранах поверх.
             var backs = so.FindProperty("backButtons");
             foreach (var back in new[] { mode.Find("Button_Назад"), online.Find("Button_Назад") })
             {
@@ -213,7 +200,6 @@ namespace Bouncer.EditorTools
                 backs.arraySize++;
                 backs.GetArrayElementAtIndex(backs.arraySize - 1).objectReferenceValue = button;
             }
-            // Ссылки на кнопки удалённых экранов (прошлая сборка) — убрать.
             for (int i = backs.arraySize - 1; i >= 0; i--)
                 if (backs.GetArrayElementAtIndex(i).objectReferenceValue == null)
                     backs.DeleteArrayElementAtIndex(i);
@@ -226,9 +212,6 @@ namespace Bouncer.EditorTools
             so.FindProperty(name + ".first").objectReferenceValue = first != null ? first.GetComponent<Selectable>() : null;
         }
 
-        // ---------- Детали ----------
-
-        /// <summary>Поле ввода мелом: светлая полоска, подчёркивание, подсказка с переводом, текст шрифтом Caveat (все буквы).</summary>
         static TMP_InputField MakeField(Transform screen, Transform textTemplate, string name, float x, float y, float width,
             string placeholderKey, string placeholderPreview)
         {
@@ -284,7 +267,6 @@ namespace Bouncer.EditorTools
             field.caretWidth = 3;
             field.selectionColor = new Color(Gold.r, Gold.g, Gold.b, 0.35f);
             field.targetGraphic = back;
-            // Полоска поля светлеет под мышью и пока в нём печатают.
             var colors = field.colors;
             colors.normalColor = new Color(Chalk.r, Chalk.g, Chalk.b, 0.07f);
             colors.highlightedColor = new Color(Chalk.r, Chalk.g, Chalk.b, 0.13f);
@@ -306,7 +288,6 @@ namespace Bouncer.EditorTools
             text.raycastTarget = false;
         }
 
-        /// <summary>Текст без перевода (его пишет код) — копия образца с другим местом и размером.</summary>
         static TMP_Text PlainText(Transform template, Transform parent, string name, float x, float y, float width, float height, float fontSize)
         {
             var copy = Clone(template, parent, name);
@@ -365,7 +346,6 @@ namespace Bouncer.EditorTools
             rect.offsetMax = Vector2.zero;
         }
 
-        /// <summary>Надпись берёт перевод по ключу из таблицы UI (а в редакторе видна по-русски).</summary>
         static void Key(Transform target, string key, string preview)
         {
             var localize = target.GetComponent<LocalizeStringEvent>();

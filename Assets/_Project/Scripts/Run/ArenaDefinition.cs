@@ -6,21 +6,13 @@ using UnityEngine.Localization;
 
 namespace Bouncer.Run
 {
-    /// <summary>Когда арена пройдена.</summary>
     public enum ArenaGoal
     {
-        /// <summary>Босс арены выбит целиком.</summary>
         DefeatBoss,
-        /// <summary>Волны кончились (последней выходит пачка элитных) и все враги выбиты.</summary>
         SurviveAndClear,
-        /// <summary>Финал: продержаться до зова мамы — или выбить босса раньше.</summary>
         SurviveUntilCall,
     }
 
-    /// <summary>
-    /// Одна арена прогулки: сцена, волны, время суток, условие победы, ларёк и стрелка дальше.
-    /// Одна сцена может играть несколько арен (двор утром и двор ночью) — разница только в этих данных.
-    /// </summary>
     [CreateAssetMenu(menuName = "Bouncer/Run/Arena", fileName = "Arena_")]
     public sealed class ArenaDefinition : ScriptableObject
     {

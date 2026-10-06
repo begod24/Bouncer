@@ -4,15 +4,9 @@ using UnityEngine;
 
 namespace Bouncer.Run
 {
-    /// <summary>
-    /// Прогулка: арены по порядку, от утра до ночи. Последняя арена — финал, её победа заканчивает прогулку.
-    /// На некоторых этапах есть развилка: вместо основной арены можно пойти на другую (Коробка или Барахолка) —
-    /// на пройденной прошлой арене тогда две стрелки. Вариант 0 — основная арена этапа, 1 и дальше — развилки.
-    /// </summary>
     [CreateAssetMenu(menuName = "Bouncer/Run/Run", fileName = "Run_")]
     public sealed class RunDefinition : ScriptableObject
     {
-        /// <summary>Другая арена этапа.</summary>
         [Serializable]
         public sealed class Fork
         {
@@ -31,7 +25,6 @@ namespace Bouncer.Run
         public ArenaDefinition Get(int index) =>
             index >= 0 && index < arenas.Count ? arenas[index] : null;
 
-        /// <summary>Арена этапа: variant 0 — основная, 1 и дальше — развилки этого этапа по порядку.</summary>
         public ArenaDefinition Get(int index, int variant)
         {
             if (variant <= 0)
@@ -45,7 +38,6 @@ namespace Bouncer.Run
             return null;
         }
 
-        /// <summary>Сколько арен на выбор у этапа (основная и развилки).</summary>
         public int VariantCount(int index)
         {
             if (index < 0 || index >= arenas.Count)
@@ -59,10 +51,8 @@ namespace Bouncer.Run
 
         public bool IsLast(int index) => index >= arenas.Count - 1;
 
-        /// <summary>Первая арена, которая играется в этой сцене. -1 — ни одной.</summary>
         public int IndexOfScene(string sceneName) => FindScene(sceneName, out int index, out _) ? index : -1;
 
-        /// <summary>Этап и вариант первой арены (основные — раньше развилок), которая играется в этой сцене.</summary>
         public bool FindScene(string sceneName, out int index, out int variant)
         {
             variant = 0;

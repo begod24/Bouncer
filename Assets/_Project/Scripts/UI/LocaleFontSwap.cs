@@ -6,10 +6,6 @@ using UnityEngine.Localization.Settings;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// Шрифт под язык: в Neucha нет казахских букв (Ә Ғ Қ Ң Ө Ұ Ү Һ), поэтому на казахском все тексты интерфейса,
-    /// написанные Neucha, переходят на Caveat, а при смене языка обратно — возвращаются.
-    /// </summary>
     public sealed class LocaleFontSwap : MonoBehaviour
     {
         [Tooltip("Основной шрифт интерфейса")]
@@ -35,7 +31,6 @@ namespace Bouncer.UI
 
         void OnDisable() => LocalizationSettings.SelectedLocaleChanged -= Apply;
 
-        // Надписи, созданные позже (карманы, свойства элиток), подхватываются раз в полсекунды.
         float _nextScan;
 
         void Update()

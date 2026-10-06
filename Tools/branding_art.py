@@ -27,7 +27,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "Assets", "_Project", "Art", "UI", "Branding")
 FONTS = os.path.join(ROOT, "Assets", "_Project", "Art", "Fonts")
 W, H = 1920, 1080
-CHALK = (244, 242, 236)                 # «white» из палитры, цвет заголовка в игре
+CHALK = (244, 242, 236)
 
 TITLES = {
     "EN": "IT'S OUR FIELD",
@@ -35,10 +35,10 @@ TITLES = {
 }
 
 ICON = 1024
-ICON_BOX = (100, 100, 924, 924)         # сетка macOS (Big Sur и новее): плашка 824 px в холсте 1024
-ICON_CORNER = 5.0                       # степень суперэллипса: углы плавные, как у системных иконок
+ICON_BOX = (100, 100, 924, 924)
+ICON_CORNER = 5.0
 ICON_SKY = [(0.0, "3E4FA6"), (0.45, "7E7DCB"), (0.8, "D6A6C8"), (1.0, "F6BFAE")]
-ICON_GLOW = ((0.49, 0.36), 0.5, "FFC7A0", 0.55)   # тёплое свечение за головой: центр, радиус, цвет, сила
+ICON_GLOW = ((0.49, 0.36), 0.5, "FFC7A0", 0.55)
 
 
 def smoothstep(a, b, x):
@@ -50,8 +50,6 @@ def hex_rgb(h):
     return np.array([int(h[i:i + 2], 16) for i in (0, 2, 4)], np.float32)
 
 
-# ================================================================ splash
-
 def grade(img):
     """Виньетка и лёгкое затемнение неба под заголовком."""
     a = np.asarray(img, np.float32) / 255.0
@@ -59,7 +57,7 @@ def grade(img):
     nx, ny = (xx - W / 2) / (W / 2), (yy - H / 2) / (H / 2)
     r = np.sqrt(nx * nx * 0.85 + ny * ny) / np.sqrt(1.85)
     k = 1.0 - 0.28 * smoothstep(0.35, 1.0, r)
-    k *= 1.0 - 0.10 * smoothstep(0.34, 0.0, yy / H)      # верх чуть темнее: белому тексту нужен контраст
+    k *= 1.0 - 0.10 * smoothstep(0.34, 0.0, yy / H)
     a = a * k[..., None]
     return Image.fromarray(np.clip(a * 255.0 + 0.5, 0, 255).astype(np.uint8))
 
@@ -72,7 +70,6 @@ def title_layer(text, size=210, center=(W // 2, 150), ss=2):
     pos = (cx - (x0 + x1) / 2, cy - (y0 + y1) / 2)
     mask = Image.new("L", (W * ss, H * ss), 0)
     ImageDraw.Draw(mask).text(pos, text, font=font, fill=255)
-    # тень как у TMP-материала «Neucha SDF - Shadow»: чуть толще, размыта, сдвинута вправо-вниз, 55 %
     sh = mask.filter(ImageFilter.MaxFilter(5)).filter(ImageFilter.GaussianBlur(7 * ss))
     sh = ImageChops.offset(sh, 9 * ss, 9 * ss)
     sh = sh.point(lambda v: int(v * 0.55))
@@ -101,8 +98,6 @@ def splash(render_path):
         Image.alpha_composite(bg.convert("RGBA"), layer).convert("RGB").save(os.path.join(OUT, f"Splash_{lang}.png"))
         print(f"wrote Splash_Logo_{lang}.png, Splash_{lang}.png")
 
-
-# ================================================================ icon
 
 def superellipse_mask(size, box, n=ICON_CORNER, ss=4):
     x0, y0, x1, y1 = [c * ss for c in box]
@@ -133,7 +128,7 @@ def icon(render_path):
     body = Image.alpha_composite(icon_background(w), art)
     mask = superellipse_mask(ICON, ICON_BOX)
     canvas = Image.new("RGBA", (ICON, ICON), (0, 0, 0, 0))
-    shadow = Image.new("RGBA", (ICON, ICON), (0, 0, 0, 0))     # мягкая тень под плашкой, как в шаблоне macOS
+    shadow = Image.new("RGBA", (ICON, ICON), (0, 0, 0, 0))
     shadow.putalpha(mask.point(lambda v: int(v * 0.32)))
     canvas.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(14)), (0, 10))
     tile = Image.new("RGBA", (ICON, ICON), (0, 0, 0, 0))

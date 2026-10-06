@@ -14,40 +14,24 @@ using UnityEngine;
 
 namespace Bouncer.Net
 {
-    /// <summary>Во что играет комната.</summary>
     public enum NetMode : byte
     {
-        /// <summary>Прогулка вместе, до 4 игроков.</summary>
         Coop,
-        /// <summary>Друг против друга.</summary>
         Versus,
     }
 
     public enum NetStatus
     {
-        /// <summary>Комнаты нет — соло.</summary>
         Offline,
-        /// <summary>Комната создаётся или идёт вход.</summary>
         Busy,
-        /// <summary>В комнате (лобби или игра).</summary>
         InRoom,
     }
 
-    /// <summary>
-    /// Сетевая комната этого компьютера: создать, войти по коду, уйти. Комната по интернету — сессия Unity
-    /// Multiplayer Services (Relay: код из 6 знаков, порты открывать не надо). Комната по локальной сети — прямое
-    /// подключение по IP хозяина (порт 7777): работает без сервисов, им удобно проверять игру на одном компьютере.
-    /// Хозяин (хост) ведёт игру, гости — смотрят и шлют своё. Гостя не пустят, если версия игры другая, комната
-    /// полна или в ней уже гуляют. Пропала связь или ушёл хозяин — гость возвращается на заставку с сообщением
-    /// (<see cref="PendingNotice"/>). Объект живёт между сценами, создаётся по первому требованию (<see cref="Ensure"/>).
-    /// </summary>
     [RequireComponent(typeof(NetworkManager), typeof(UnityTransport))]
     public sealed class NetSession : MonoBehaviour, IOnlineSession
     {
         const ushort LanPort = 7777;
-        /// <summary>Меняется, когда меняются сетевые сообщения: старая версия с новой в одной комнате не сыграет.</summary>
         const int ProtocolVersion = 1;
-        /// <summary>Свой профиль на каждый запуск: две копии игры на одном компьютере — разные игроки для сервисов.</summary>
         static readonly string s_profile = "p" + Guid.NewGuid().ToString("N").Substring(0, 12);
 
         [SerializeField] NetRoom roomPrefab;
@@ -56,33 +40,25 @@ namespace Bouncer.Net
 
         NetworkManager _network;
         UnityTransport _transport;
-        /// <summary>Работала ли игра в фоне до комнаты: в комнате работает всегда — свернул окно, а остальные играют.</summary>
         bool _runInBackground;
         ISession _session;
-        /// <summary>Почему хозяин не пустил (ключ строки), пока гость ждёт подключения.</summary>
         string _rejectKey;
 
         public static NetSession Instance { get; private set; }
         public NetStatus Status { get; private set; }
-        /// <summary>Код комнаты: 6 знаков для комнаты по интернету, IP хозяина для локальной сети.</summary>
         public string Code { get; private set; } = "";
         public bool IsLan { get; private set; }
         public bool IsHost => _network != null && _network.IsHost;
-        /// <summary>Ключ строки UI: почему не вышло создать или войти. Пусто — всё хорошо.</summary>
         public string ErrorKey { get; private set; } = "";
 
-        /// <summary>Выкинуло из комнаты (хозяин ушёл, связь пропала): показать на заставке один раз. Ключ строки UI.</summary>
         public static string PendingNotice { get; set; }
 
-        /// <summary>Статус, код или ошибка поменялись.</summary>
         public event Action Changed;
 
-        /// <summary>Больше игроков в комнате не бывает: кооп — до 4, PvP пока 2×2.</summary>
         public static int MaxPlayers(NetMode mode) => mode == NetMode.Versus ? 4 : RunState.MaxPlayers;
 
         static string Handshake => Application.version + "/" + ProtocolVersion;
 
-        /// <summary>Сессия этого запуска: есть — она, нет — создать из префаба.</summary>
         public static NetSession Ensure(NetSession prefab)
         {
             if (Instance != null || prefab == null)
@@ -125,7 +101,6 @@ namespace Bouncer.Net
             }
         }
 
-        /// <summary>Создать комнату: по интернету (lan = false) или по локальной сети. false — не вышло, см. <see cref="ErrorKey"/>.</summary>
         public async Task<bool> CreateRoom(NetMode mode, bool lan)
         {
             if (Status != NetStatus.Offline)
@@ -165,9 +140,6 @@ namespace Bouncer.Net
             return true;
         }
 
-        /// <summary>
-        /// Войти в комнату по коду (6 знаков) или по IP хозяина (локальная сеть). false — не вышло, см. <see cref="ErrorKey"/>.
-        /// </summary>
         public async Task<bool> JoinRoom(string code)
         {
             code = (code ?? "").Trim();
@@ -204,7 +176,6 @@ namespace Bouncer.Net
             return true;
         }
 
-        /// <summary>Уйти из комнаты: хозяин уходит — комната закрывается у всех. Без комнаты — ничего.</summary>
         public void Leave()
         {
             if (Status == NetStatus.Offline && !_network.IsListening && _session == null)
@@ -261,7 +232,6 @@ namespace Bouncer.Net
             return true;
         }
 
-        /// <summary>Хозяин решает, пускать ли гостя: та же версия игры, в комнате есть место, ещё не гуляют.</summary>
         void Approve(NetworkManager.ConnectionApprovalRequest request, NetworkManager.ConnectionApprovalResponse response)
         {
             response.CreatePlayerObject = false;
@@ -283,7 +253,6 @@ namespace Bouncer.Net
             response.Reason = reason ?? "";
         }
 
-        /// <summary>Гостя отключили: не пустили, ушёл хозяин или пропала связь. О гостях хозяину сообщает <see cref="NetRoom"/>.</summary>
         void OnClientDisconnect(ulong clientId)
         {
             if (_network.IsServer)
@@ -332,7 +301,6 @@ namespace Bouncer.Net
             }
         }
 
-        /// <summary>IP этого компьютера в локальной сети — его гости вводят вместо кода.</summary>
         static string LocalAddress()
         {
             try
@@ -353,7 +321,6 @@ namespace Bouncer.Net
             return "127.0.0.1";
         }
 
-        /// <summary>Похоже на IP (с точками) или localhost — значит, комната по локальной сети.</summary>
         static bool LooksLikeAddress(string code) =>
             code.Equals("localhost", StringComparison.OrdinalIgnoreCase)
             || (code.Contains(".") && IPAddress.TryParse(code, out var address) && address.AddressFamily == AddressFamily.InterNetwork);

@@ -8,73 +8,36 @@ namespace Bouncer.Balls
 {
     public enum BallState
     {
-        /// <summary>Только что выдан из пула.</summary>
         Idle,
-        /// <summary>Брошен и опасен: летит почти плоско, рикошетит от стен.</summary>
         Live,
-        /// <summary>Отскочил вверх от тела: безопасен, можно поймать «свечкой».</summary>
         Popped,
-        /// <summary>Лежит или катится по полу: можно подобрать.</summary>
         Loose,
-        /// <summary>Мяч на резинке летит обратно в руки бросившему: безопасен, подобрать нельзя.</summary>
         Returning,
-        /// <summary>Застрял во враге (плюшевый мишка): висит на нём, пока его не выбьют.</summary>
         Stuck,
     }
 
-    /// <summary>
-    /// Мяч. В полёте (Live/Popped) движется сам через SphereCast — так рикошеты точные
-    /// и предсказуемые, мяч не пролетает сквозь тонкие стены. Лежащий мяч — обычная физика.
-    /// По персонажам «живой» мяч бьёт столбом — от земли до своей высоты: камера смотрит сверху, и мяч, пролетевший
-    /// над головой низкого пупса, на экране прошёл сквозь него.
-    /// У мяча есть хозяин (<see cref="Owner"/>): мячи из запаса игрока остаются на арене всегда, чужих (врагов,
-    /// пойманных и брошенных обратно) лежит не больше <see cref="BallDefinition.maxForeignLoose"/> — упал лишний,
-    /// самый старый чужой тает. Так на земле всегда есть чем отбиваться. Свой мяч, до которого не добраться
-    /// (застрял на скосе, за препятствием), сам выкатывается к месту, куда можно подойти, чужой — тает;
-    /// потерянный свой — сообщает хозяину.
-    /// Эффекты типа мяча и карточек (<see cref="BallPerks"/>) срабатывают здесь же: цепочка, урон по площади,
-    /// раскол на двойников, бумеранг и возврат на резинке, отскоки от асфальта, взрыв, след жвачки,
-    /// полёт змейкой и задевание врагов по пути. Борта с <see cref="RicochetSurface"/> отражают мяч «идеально».
-    /// По сети мячи считает хозяин комнаты; у гостей мяч — копия (<see cref="IsPuppet"/>): сам не летит, его ставит
-    /// сеть (<see cref="Network"/>), а взять, уронить или притянуть копию — значит попросить об этом хозяина.
-    /// </summary>
     [RequireComponent(typeof(Rigidbody), typeof(SphereCollider))]
     public sealed class Ball : MonoBehaviour, IPoolable
     {
         const float Skin = 0.01f;
         const int MaxSweepIterations = 4;
         const float KillY = -5f;
-        /// <summary>С какого расстояния вернувшийся мяч попадает в руки.</summary>
         const float ReceiveDistance = 1.2f;
-        /// <summary>За сколько секунд тает лишний или недоступный чужой мяч (сжимается до нуля).</summary>
         const float VanishShrinkTime = 0.35f;
-        /// <summary>«Свечка» дольше этого — застряла где-то наверху.</summary>
         const float PoppedMaxTime = 2.5f;
-        /// <summary>Свой мяч, до которого не дойти столько секунд, выкатывается к проходимому месту.</summary>
         const float UnreachableTime = 1.5f;
         const float ReachCheckInterval = 0.5f;
-        /// <summary>До лежащего мяча можно дотянуться, если рядом (по горизонтали) есть куда встать…</summary>
         const float ReachHorizontal = 1.2f;
-        /// <summary>…и он лежит не выше этого над землёй.</summary>
         const float ReachHeight = 1.1f;
-        /// <summary>Сколько летит выкатывающийся мяч.</summary>
         const float RollOutTime = 0.45f;
-        /// <summary>Нижний край «столба», которым мяч бьёт персонажей, над землёй.</summary>
         const float ColumnBottom = 0.25f;
-        /// <summary>Хват ПКМ: лежащий мяч летит в руки во столько раз быстрее резинки.</summary>
         const float SummonSpeedMultiplier = 2.2f;
-        /// <summary>На какой высоте над ногами бросившего летит возвращающийся мяч.</summary>
         const float ReturnHeight = 1.1f;
         const float MaxReturnTime = 4f;
-        /// <summary>Йо-йо: длина нити — пролетев столько метров, мяч летит обратно.</summary>
         const float YoyoRange = 9f;
-        /// <summary>Йо-йо: насколько шире мяча полоса, в которой он задевает врагов на обратном пути.</summary>
         const float YoyoGrazeExtra = 0.35f;
-        /// <summary>Глаз-алмаз: дальше этого мяч врагов не замечает.</summary>
         const float HomingRange = 14f;
-        /// <summary>Глаз-алмаз: половина угла, в котором мяч видит врагов впереди, градусы.</summary>
         const float HomingCone = 75f;
-        /// <summary>Доводка после рикошета от борта (<see cref="RicochetSurface"/>): дальше этого врагов не ищет.</summary>
         const float RicochetAssistRange = 30f;
 
         static readonly List<Ball> s_active = new();
@@ -86,13 +49,10 @@ namespace Bouncer.Balls
         public static IReadOnlyList<Ball> Active => s_active;
         public static int LooseCount => s_loose.Count;
 
-        /// <summary>Сеть для мячей, пока идёт игра по сети. null — соло.</summary>
         public static IBallNetwork Network { get; set; }
 
-        /// <summary>Мячи здесь — копии с хозяина комнаты: этот компьютер гость.</summary>
         static bool IsGuest => Network != null && !Network.IsAuthority;
 
-        /// <summary>Сколько чужих мячей лежит на арене (тающие не считаются).</summary>
         public static int ForeignLooseCount
         {
             get
@@ -105,10 +65,6 @@ namespace Bouncer.Balls
             }
         }
 
-        /// <summary>
-        /// Мяч игрока пропал не у него в руках (выпал за арену, его «съели»): хозяин получит его обратно.
-        /// Аргументы — мяч (ещё не вернувшийся в пул) и хозяин.
-        /// </summary>
         public static event Action<Ball, GameObject> OwnBallLost;
 
         [SerializeField] BallDefinition definition;
@@ -141,14 +97,12 @@ namespace Bouncer.Balls
         Vector3 _snakeHeading;
         float _snakeDistance;
         float _snakeSide = 1f;
-        /// <summary>Сколько метров пролетел по горизонтали с броска (длина нити йо-йо).</summary>
         float _travel;
         bool _yoyoBack;
         GameObject _owner;
         bool _takenByOwner;
         bool _summoned;
         float _returnSpeedMultiplier = 1f;
-        /// <summary>Когда исчезнет чужой мяч на земле. 0 — не исчезает.</summary>
         float _vanishAt;
         float _nextReachCheck;
         float _unreachableSince = -1f;
@@ -156,50 +110,35 @@ namespace Bouncer.Balls
         float _rollTime;
         Vector3 _rollFrom;
         Vector3 _rollTo;
-        /// <summary>Полёт прогоняется вперёд разом (<see cref="FastForward"/>): двигать сразу, а не к следующему шагу физики.</summary>
         bool _fastForward;
         bool _puppetHot;
         Vector3 _visualOffset;
         float _visualBlend = 0.1f;
 
         public BallDefinition Definition => definition;
-        /// <summary>Копия мяча хозяина у гостя: сама не летит и ни во что не попадает, её ставит сеть.</summary>
         public bool IsPuppet { get; private set; }
-        /// <summary>Сколько раз мяч выдан из пула: по сети по нему отличают новый мяч от прежнего в том же объекте.</summary>
         public int Life { get; private set; }
-        /// <summary>Гравитация полёта сейчас (у летящего и «свечки»).</summary>
         public float Gravity => _gravity;
-        /// <summary>
-        /// Насколько модель мяча сдвинута от его настоящего места (тает до нуля) — только для глаз, см. <see cref="ShowFrom"/>.
-        /// </summary>
         public Vector3 VisualOffset => _visualOffset;
         public BallState State { get; private set; }
-        /// <summary>Команда бросившего. У лежащего мяча — Neutral.</summary>
         public Team Team { get; private set; }
         public GameObject Thrower { get; private set; }
         public ThrowStats Stats { get; private set; }
         public BallPerks Perks { get; private set; }
-        /// <summary>Мяч-двойник: исчезает, коснувшись пола, подобрать и поймать нельзя.</summary>
         public bool IsPhantom { get; private set; }
-        /// <summary>Чей это мяч из запаса (игрок). Пусто — чужой: исчезает, упав на землю.</summary>
         public GameObject Owner => _owner;
         public bool IsOwn => _owner != null;
-        /// <summary>Йо-йо: этот мяч на нитке.</summary>
         public bool IsYoyoString { get; private set; }
-        /// <summary>Бумеранг развернулся и летит обратно к бросившему.</summary>
         public bool IsComingBack { get; private set; }
         public int Ricochets { get; private set; }
         public float Radius => definition.radius;
         public Vector3 Position => _rb.position;
         public Vector3 Velocity => State == BallState.Loose && !IsPuppet ? _rb.linearVelocity : _velocity;
         public bool IsDangerous => State == BallState.Live;
-        /// <summary>Горячая картошка летит и ещё не взорвалась.</summary>
         public bool BlastPending => State == BallState.Live && (IsPuppet ? _puppetHot : Perks.blastRadius > 0f && !_blastDone);
-        /// <summary>Сдутый мяч: пролетает сквозь врагов, задевая всех по пути.</summary>
         bool Grazes => Perks.grazeRadius > 0f;
 
         public event Action<Ball> StateChanged;
-        /// <summary>Рикошет от стены: мяч, точка, нормаль.</summary>
         public event Action<Ball, Vector3, Vector3> Ricocheted;
 
         void Awake()
@@ -274,12 +213,6 @@ namespace Bouncer.Balls
             State = BallState.Idle;
         }
 
-        // ---------- API ----------
-
-        /// <summary>
-        /// Бросить новый мяч: в соло и у хозяина — мяч из пула, у гостя — просьба хозяину и предсказанная копия
-        /// (<see cref="IBallNetwork.Throw"/>).
-        /// </summary>
         public static Ball Throw(Ball prefab, in BallThrow t)
         {
             if (IsGuest)
@@ -291,7 +224,6 @@ namespace Bouncer.Balls
 
         public void Launch(in BallThrow t)
         {
-            // У гостя настоящих мячей нет — все мячи бросает хозяин комнаты. Брошенный здесь чужим кодом — убрать.
             if (IsGuest && !IsPuppet)
             {
                 PoolService.Despawn(gameObject);
@@ -301,7 +233,6 @@ namespace Bouncer.Balls
             Thrower = t.Thrower;
             _receiver = t.Thrower ? t.Thrower.GetComponent<IBallReceiver>() : null;
             Stats = t.Stats;
-            // В дождь часть мячей врагов летит мокрыми: выскальзывают из рук (ёжик — и так колючий).
             if (t.Team == Team.Enemy && Weather.Rainy && !t.Stats.Has(HitFlags.Spiky) && UnityEngine.Random.value < Weather.WetBallChance)
             {
                 var wet = t.Stats;
@@ -310,7 +241,6 @@ namespace Bouncer.Balls
             }
             Perks = t.Perks;
             IsPhantom = t.Phantom;
-            // Хозяина задаёт только его бросок; враг, бросающий чужой мяч (чучело, мишка, Бабай), его не меняет.
             if (t.Owner)
             {
                 _owner = t.Owner;
@@ -333,7 +263,6 @@ namespace Bouncer.Balls
             _blastDone = false;
             _travel = 0f;
             _yoyoBack = false;
-            // Первое пятно жвачки — вскоре после броска, а не через целый шаг.
             _gumDistance = definition.gumSpacing * 0.5f;
 
             Vector3 direction = Flat(t.Direction);
@@ -351,10 +280,6 @@ namespace Bouncer.Balls
             SetState(BallState.Live);
         }
 
-        /// <summary>
-        /// Отбить летящий мяч (качели): новая скорость и параметры удара, время полёта считается заново.
-        /// Команда не меняется — мяч игрока остаётся мячом игрока.
-        /// </summary>
         public void Redirect(Vector3 velocity, in ThrowStats stats)
         {
             if (State != BallState.Live)
@@ -362,7 +287,6 @@ namespace Bouncer.Balls
             Stats = stats;
             _velocity = velocity;
             _gravity = stats.Gravity;
-            // Отбитый мяч — новый удар: змейка вьётся вокруг нового направления, задеть можно снова всех.
             Vector3 heading = Flat(velocity);
             if (heading.sqrMagnitude > 1e-4f)
                 _snakeHeading = heading.normalized;
@@ -371,14 +295,12 @@ namespace Bouncer.Balls
             SetState(BallState.Live);
         }
 
-        /// <summary>Не сталкиваться с коллайдером столько секунд (двойник вылетает из тела врага).</summary>
         public void IgnoreFor(Collider other, float seconds)
         {
             if (other)
                 _ignoredFor.Add((other, Time.time + seconds));
         }
 
-        /// <summary>Положить мяч на арену (например, если игроку некуда его взять).</summary>
         public void Drop(Vector3 position, Vector3 velocity)
         {
             if (IsPuppet)
@@ -395,13 +317,8 @@ namespace Bouncer.Balls
             BecomeLoose(position, velocity);
         }
 
-        /// <summary>
-        /// Мяч исчез — вернуть в пул. Если это мяч игрока и забрал его не сам игрок, хозяин получит мяч обратно
-        /// (<see cref="OwnBallLost"/>).
-        /// </summary>
         public void Consume()
         {
-            // Пропажу чужой копии решает хозяин комнаты — он и вернёт мяч его хозяину.
             if (_owner != null && !_takenByOwner && !IsPuppet)
             {
                 var owner = _owner;
@@ -412,7 +329,6 @@ namespace Bouncer.Balls
             PoolService.Despawn(gameObject);
         }
 
-        /// <summary>Мяч взяли в руки (подобрал, поймал, вернулся сам): в пул, без «потери».</summary>
         public void TakeInHands()
         {
             if (IsPuppet && Network != null)
@@ -424,10 +340,6 @@ namespace Bouncer.Balls
             Consume();
         }
 
-        /// <summary>
-        /// Хват ПКМ: лежащий мяч быстро летит в руки taker. false — мяч не лежит или его уже тянут.
-        /// Прилетит — сам попросится в руки (<see cref="IBallReceiver.TryReceive"/>).
-        /// </summary>
         public bool Summon(GameObject taker)
         {
             if (State != BallState.Loose || _rolling || taker == null)
@@ -448,7 +360,6 @@ namespace Bouncer.Balls
             return true;
         }
 
-        /// <summary>Мяч застрял во враге: безопасен, не ловится и не подбирается, пока враг его не отпустит.</summary>
         public void Stick(Vector3 position)
         {
             Team = Team.Neutral;
@@ -460,7 +371,6 @@ namespace Bouncer.Balls
             SetState(BallState.Stuck);
         }
 
-        /// <summary>Застрявший мяч едет вместе с врагом.</summary>
         public void HoldAt(Vector3 position)
         {
             if (State == BallState.Stuck)
@@ -470,10 +380,6 @@ namespace Bouncer.Balls
         public bool IsCatchableBy(Team catcher) =>
             !IsPhantom && (State == BallState.Popped || (State == BallState.Live && this.Team.IsHostileTo(catcher)));
 
-        /// <summary>
-        /// Может ли catcher поймать мяч. Кроме мячей противника и «свечек», это пас: летящий мяч игрока, брошенный
-        /// другим игроком (в коопе мяч союзника пролетает сквозь своих, а ловля его забирает).
-        /// </summary>
         public bool IsCatchableBy(Team catcher, GameObject who) =>
             IsCatchableBy(catcher) || IsPassFor(catcher, who);
 
@@ -481,7 +387,6 @@ namespace Bouncer.Balls
             !IsPhantom && State == BallState.Live && catcher == Team.Player && Team == Team.Player
             && Thrower != null && who != null && Thrower != who;
 
-        /// <summary>Куда упадёт летящий мяч (пол арены на y = 0).</summary>
         public bool TryPredictLanding(out Vector3 point)
         {
             point = default;
@@ -502,12 +407,6 @@ namespace Bouncer.Balls
                 s_loose[i].Consume();
         }
 
-        // ---------- Сеть ----------
-
-        /// <summary>
-        /// У хозяина: прогнать полёт вперёд на seconds разом. Бросок гостя доходит с опозданием, а гость свой мяч уже
-        /// видит летящим — настоящий догоняет то место, где его видит гость.
-        /// </summary>
         public void FastForward(float seconds)
         {
             if (IsPuppet || seconds <= 0f)
@@ -533,10 +432,6 @@ namespace Bouncer.Balls
             }
         }
 
-        /// <summary>
-        /// У хозяина: гость сказал, что этот мяч попал в его игрока, — мяч отскакивает «свечкой» оттуда, где гость его
-        /// видел (здесь мяч мог успеть пролететь дальше).
-        /// </summary>
         public void ForcePop(Vector3 position, Vector3 normal)
         {
             if (IsPuppet || State is BallState.Idle or BallState.Stuck)
@@ -546,7 +441,6 @@ namespace Bouncer.Balls
             Pop(position, normal);
         }
 
-        /// <summary>У хозяина: гость отбил мяч (крышка от кастрюли) — мяч отражается оттуда, где его видел гость.</summary>
         public void ForceBounce(Vector3 position, Vector3 normal)
         {
             if (IsPuppet || State != BallState.Live)
@@ -561,10 +455,6 @@ namespace Bouncer.Balls
             MakeKinematicAt(position);
         }
 
-        /// <summary>
-        /// Показать мяч вылетающим из start и догоняющим своё настоящее место за time секунд — только модель, полёт
-        /// не меняется. У хозяина по сети: бросивший гость виден чуть в прошлом, а его мяч уже впереди.
-        /// </summary>
         public void ShowFrom(Vector3 start, float time)
         {
             _visualOffset = start - Position;
@@ -580,7 +470,6 @@ namespace Bouncer.Balls
                 _visualOffset = Vector3.zero;
         }
 
-        /// <summary>У гостя: этот мяч — копия мяча хозяина. Зовёт сеть сразу после выдачи из пула.</summary>
         public void BeginPuppet()
         {
             IsPuppet = true;
@@ -589,7 +478,6 @@ namespace Bouncer.Balls
             MakeKinematicAt(transform.position);
         }
 
-        /// <summary>У гостя: чей мяч копия и чем бьёт — как у мяча хозяина.</summary>
         public void SetPuppetInfo(Team team, in ThrowStats stats, GameObject thrower, GameObject owner, bool phantom,
             bool yoyoString, bool hot)
         {
@@ -607,7 +495,6 @@ namespace Bouncer.Balls
                 StateChanged?.Invoke(this);
         }
 
-        /// <summary>У гостя: состояние копии (летит, «свечка», лежит…) — как у мяча хозяина.</summary>
         public void SetPuppetState(BallState state)
         {
             if (!IsPuppet || state == State)
@@ -624,7 +511,6 @@ namespace Bouncer.Balls
             SetState(state);
         }
 
-        /// <summary>У гостя: где копия сейчас и куда летит.</summary>
         public void SetPuppetPose(Vector3 position, Vector3 velocity, float gravity)
         {
             if (!IsPuppet)
@@ -634,8 +520,6 @@ namespace Bouncer.Balls
             _rb.position = position;
             transform.position = position;
         }
-
-        // ---------- Симуляция ----------
 
         void FixedUpdate()
         {
@@ -647,7 +531,6 @@ namespace Bouncer.Balls
                     TickFlight(Time.fixedDeltaTime, live: true);
                     break;
                 case BallState.Popped:
-                    // «Свечка» застряла наверху (на скосе крыши, в щели): свой мяч выкатывается, чужой исчезает.
                     if (_stateTime > PoppedMaxTime)
                     {
                         RollOut();
@@ -680,7 +563,6 @@ namespace Bouncer.Balls
                         if (_rolling || _vanishAt > 0f)
                             break;
                     }
-                    // В песке мяч быстро останавливается.
                     _rb.linearDamping = definition.looseDamping + GroundZone.BallDampingAt(_rb.position);
                     break;
             }
@@ -711,7 +593,6 @@ namespace Bouncer.Balls
 
             Vector3 position = _rb.position;
             float remaining = _velocity.magnitude * dt;
-            // Сдутый мяч врагов не сбивает телом, а задевает по пути (Graze) — сталкивается только с окружением.
             int mask = live && !Grazes ? Layers.LiveBallMask(Team) : Layers.BallSolidMask;
             _ignored.Clear();
 
@@ -731,7 +612,6 @@ namespace Bouncer.Balls
                 if (live)
                 {
                     var target = hit.collider.GetComponentInParent<IBallTarget>();
-                    // «Ловкач» перехватывает мяч игрока до попадания.
                     if (target != null && Team == Team.Player && !IsPhantom
                         && hit.collider.GetComponentInParent<IBallInterceptor>() is { } interceptor && interceptor.TryIntercept(this))
                         return;
@@ -757,13 +637,11 @@ namespace Bouncer.Balls
                             }
                             continue;
                         }
-                        // Цель забрала мяч или сама сменила ему состояние.
                         if (result == BallContactResult.Caught || State != BallState.Live)
                             return;
                         if (result == BallContactResult.Hit)
                         {
                             OnTargetHit(hit.point, hit.normal, hit.collider, position);
-                            // Рогатка: заряженный мяч пробивает врага и летит дальше, не теряя скорости.
                             if (Perks.chargedPierce && Stats.Has(HitFlags.Charged))
                             {
                                 _ignored.Add(hit.collider);
@@ -776,12 +654,9 @@ namespace Bouncer.Balls
                             Pop(position, hit.normal);
                             return;
                         }
-                        // Bounce — отражаемся, как от стены.
                     }
                 }
 
-                // Пол или верх препятствия: мяч «умер» и дальше катится по физике.
-                // Горячая картошка тут взрывается, попрыгунчик отскакивает и летит дальше опасным.
                 if (hit.normal.y > 0.6f)
                 {
                     if (BlastPending)
@@ -799,7 +674,6 @@ namespace Bouncer.Balls
                     normal = -Flat(direction);
                 normal.Normalize();
 
-                // Борта коробки: рикошет без потери скорости и высоты, лимит рикошетов не тратится.
                 var surface = live ? hit.collider.GetComponentInParent<RicochetSurface>() : null;
                 float keep = !live ? definition.poppedWallKeep : surface ? surface.SpeedKeep : definition.wallSpeedKeep;
                 Vector3 reflected = Vector3.Reflect(_velocity, normal);
@@ -818,7 +692,6 @@ namespace Bouncer.Balls
 
                 if (live)
                 {
-                    // Стеночка: каждый рикошет делает этот бросок сильнее.
                     if (Perks.wallDamage > 0)
                         AddDamage(Perks.wallDamage);
                     if (Perks.yoyo && TryStartYoyo(null, position))
@@ -851,10 +724,6 @@ namespace Bouncer.Balls
             MoveTo(position);
         }
 
-        /// <summary>
-        /// Ближайшее, во что мяч упрётся на этом отрезке. column — персонажей бить «столбом» от земли до мяча:
-        /// сверху мяч над головой низкого врага выглядит попаданием, и засчитывается так же.
-        /// </summary>
         bool Sweep(Vector3 origin, Vector3 direction, float distance, int mask, out RaycastHit best, bool column = false)
         {
             best = default;
@@ -871,8 +740,6 @@ namespace Bouncer.Balls
 
                 if (hit.distance <= 0f)
                 {
-                    // Мяч появился внутри коллайдера. Персонажа считаем попаданием в упор,
-                    // окружение пропускаем, чтобы мяч не застрял.
                     if (!Layers.IsBallSolid(hit.collider.gameObject.layer))
                     {
                         hit.point = origin;
@@ -907,7 +774,6 @@ namespace Bouncer.Balls
                     continue;
                 if (hit.distance <= 0f)
                 {
-                    // Столб уже задевает персонажа — попадание в упор.
                     hit.point = hit.collider.ClosestPoint(origin);
                     hit.normal = -direction;
                     hit.distance = 0f;
@@ -940,7 +806,6 @@ namespace Bouncer.Balls
 
         void Pop(Vector3 position, Vector3 hitNormal)
         {
-            // Двойник свечки не даёт — ударил и исчез.
             if (IsPhantom)
             {
                 Consume();
@@ -964,7 +829,6 @@ namespace Bouncer.Balls
 
         void BecomeLoose(Vector3 position, Vector3 velocity)
         {
-            // Горячая картошка, так ни во что и не попав, взрывается, когда перестаёт быть опасной.
             if (BlastPending)
                 Blast(position, null);
             if (IsPhantom)
@@ -993,7 +857,6 @@ namespace Bouncer.Balls
 
             s_loose.Remove(this);
             s_loose.Add(this);
-            // Чужих лежит не больше maxForeignLoose: лишний — самый старый — тает. Мячи игрока не трогаем.
             if (!IsOwn)
                 TrimForeign(definition.maxForeignLoose);
             while (s_loose.Count > definition.maxLooseBalls)
@@ -1005,9 +868,6 @@ namespace Bouncer.Balls
             }
         }
 
-        // ---------- Лежащий мяч: исчезновение и застревание ----------
-
-        /// <summary>Чужих лежащих мячей больше limit — самые старые начинают таять.</summary>
         static void TrimForeign(int limit)
         {
             int extra = ForeignLooseCount - limit;
@@ -1021,14 +881,12 @@ namespace Bouncer.Balls
             }
         }
 
-        /// <summary>Лежащий чужой мяч начинает таять (сжимается и исчезает).</summary>
         void Vanish()
         {
             if (_vanishAt <= 0f)
                 _vanishAt = Time.time + VanishShrinkTime;
         }
 
-        /// <summary>Чужой мяч на земле сжимается и исчезает. true — уже исчез.</summary>
         bool TickVanish()
         {
             float left = _vanishAt - Time.time;
@@ -1048,10 +906,6 @@ namespace Bouncer.Balls
                 mesh.localScale = Vector3.one * (definition.radius * 2f);
         }
 
-        /// <summary>
-        /// Лежащий мяч, до которого не дойти дольше UnreachableTime: свой выкатывается к проходимому месту,
-        /// чужой тает (на арене лежат другие).
-        /// </summary>
         void WatchReachable()
         {
             if (Time.time < _nextReachCheck)
@@ -1068,13 +922,11 @@ namespace Bouncer.Balls
                 RollOut();
         }
 
-        /// <summary>Можно ли встать рядом и подобрать: невысоко над землёй и рядом есть проходимое место.</summary>
         bool IsReachable(Vector3 position)
         {
             if (position.y - definition.radius > ReachHeight)
                 return false;
             Vector3 probe = new(position.x, 0.1f, position.z);
-            // Навмеша нет вовсе (тестовая сцена) — не мешаем мячу лежать где лежит.
             if (!NavMesh.SamplePosition(probe, out NavMeshHit hit, 3f, NavMesh.AllAreas))
                 return true;
             Vector3 delta = hit.position - probe;
@@ -1082,16 +934,11 @@ namespace Bouncer.Balls
             return delta.sqrMagnitude <= ReachHorizontal * ReachHorizontal && hit.position.y < 0.6f;
         }
 
-        /// <summary>
-        /// Мяч застрял: «свечка» зависла наверху или лежащий мяч не достать. Чужой тает,
-        /// свой выпрыгивает к ближайшему проходимому месту (нет навмеша — к игроку).
-        /// </summary>
         void RollOut()
         {
             Vector3 from = _rb.position;
             if (State != BallState.Loose)
             {
-                // Сначала обычное падение: мяч на резинке полетит в руки.
                 BecomeLoose(from, Vector3.zero);
                 if (State != BallState.Loose)
                     return;
@@ -1106,7 +953,6 @@ namespace Bouncer.Balls
             if (NavMesh.SamplePosition(probe, out NavMeshHit hit, 8f, NavMesh.AllAreas) && hit.position.y < 0.6f)
             {
                 to = hit.position;
-                // Чуть глубже на проходимое место, чтобы не лечь у самого края препятствия.
                 Vector3 inward = hit.position - probe;
                 inward.y = 0f;
                 if (inward.sqrMagnitude > 1e-4f)
@@ -1145,9 +991,6 @@ namespace Bouncer.Balls
             GameEvents.PlaySound(SoundCue.BallWall, _rollTo);
         }
 
-        // ---------- Эффекты мяча ----------
-
-        /// <summary>Мяч задел врага: урон по площади, взрыв горячей картошки, раскол на двойников.</summary>
         void OnTargetHit(Vector3 point, Vector3 normal, Collider struck, Vector3 position)
         {
             var direct = struck ? struck.GetComponentInParent<IDamageable>() : null;
@@ -1155,7 +998,6 @@ namespace Bouncer.Balls
                 DamageArea(point, direct);
             if (BlastPending)
                 Blast(point, direct);
-            // Двойник раскалывается, только если ему это передали («Град»): см. BallPerks.ForTwin.
             if (Perks.splitOnHit && !_splitDone)
                 Split(normal, struck, position);
         }
@@ -1163,7 +1005,6 @@ namespace Bouncer.Balls
         void DamageArea(Vector3 point, IDamageable direct)
         {
             HitAround(point, Perks.areaRadius, Perks.areaDamage, direct, Stats.Knockback * 0.7f, HitFlags.Area, Perks.areaStun);
-            // Гиря: оглушает и того, в кого попал сам мяч.
             if (Perks.areaStun > 0f && direct is Component struck && struck && struck.TryGetComponent(out Targetable target))
                 target.Freeze(Perks.areaStun);
             if (definition.areaEffect)
@@ -1175,7 +1016,6 @@ namespace Bouncer.Balls
             GameEvents.PlaySound(SoundCue.AreaThud, point);
         }
 
-        /// <summary>Горячая картошка: взрыв бьёт всех вокруг, кроме того, в кого мяч попал сам.</summary>
         void Blast(Vector3 point, IDamageable direct)
         {
             _blastDone = true;
@@ -1187,7 +1027,6 @@ namespace Bouncer.Balls
             GameFeel.Shake(0.5f);
         }
 
-        /// <summary>Урон всем противникам в радиусе, кроме exclude: их отбрасывает от центра, stun — оглушает (Гиря).</summary>
         void HitAround(Vector3 center, float radius, int damage, IDamageable exclude, float force, HitFlags flags, float stun = 0f)
         {
             int mask = Layers.LiveBallMask(Team) & ~Layers.BallSolidMask;
@@ -1216,7 +1055,6 @@ namespace Bouncer.Balls
             }
         }
 
-        /// <summary>Раскол: два двойника разлетаются в стороны от направления мяча.</summary>
         void Split(Vector3 normal, Collider struck, Vector3 position)
         {
             _splitDone = true;
@@ -1229,7 +1067,6 @@ namespace Bouncer.Balls
                 return;
             forward.Normalize();
 
-            // Двойники бьют без прибавки карточек («Хулиганство»), иначе раскол умножает и её.
             var stats = Stats.WithoutBonus();
             stats.Speed = Mathf.Max(Flat(_velocity).magnitude * definition.splitSpeedKeep, definition.minLiveSpeed + 2f);
             stats.UpVelocity = 1f;
@@ -1250,7 +1087,6 @@ namespace Bouncer.Balls
             }
         }
 
-        /// <summary>Отрезок пути в полёте: сдутый мяч задевает всех рядом, жвачка капает на асфальт.</summary>
         void Advance(ref Vector3 position, Vector3 step, bool live)
         {
             Vector3 from = position;
@@ -1264,14 +1100,9 @@ namespace Bouncer.Balls
                 TrailGum(from, position);
         }
 
-        /// <summary>
-        /// Задеть всех противников рядом с отрезком пути (каждого — раз за бросок) и лететь дальше:
-        /// сдутый мяч всегда, йо-йо — на обратном пути.
-        /// </summary>
         void Graze(Vector3 from, Vector3 to, float radius)
         {
             GrazeAt(from, to, radius);
-            // Низких врагов (пупсы, цыплята) задеваем и понизу — как прямое попадание «столбом».
             float bottom = ColumnBottom + radius;
             if (from.y > bottom + 0.3f || to.y > bottom + 0.3f)
                 GrazeAt(new Vector3(from.x, bottom, from.z), new Vector3(to.x, bottom, to.z), radius);
@@ -1307,15 +1138,12 @@ namespace Bouncer.Balls
             }
         }
 
-        /// <summary>Сдутый мяч: виляет вокруг направления броска — путь похож на синусоиду.</summary>
         void Snake(float dt)
         {
             Vector3 horizontal = Flat(_velocity);
             float speed = horizontal.magnitude;
             if (speed < 1e-3f)
                 return;
-            // Путь: смещение A·r(x)·sin(k·x) вбок от направления броска, x — пройденное вдоль него.
-            // r(x) за первые полволны растёт от 0 до 1, чтобы мяч вылетал из рук по прицелу. Угол — наклон этой кривой.
             float k = 2f * Mathf.PI / definition.snakeWavelength;
             float rampLength = definition.snakeWavelength * 0.5f;
             float ramp = Mathf.Clamp01(_snakeDistance / rampLength);
@@ -1327,7 +1155,6 @@ namespace Bouncer.Balls
             _velocity = direction * speed + Vector3.up * _velocity.y;
         }
 
-        /// <summary>Жвачка: каждые gumSpacing метров полёта на асфальте под мячом остаётся липкое пятно.</summary>
         void TrailGum(Vector3 from, Vector3 to)
         {
             if (gumSpot == null)
@@ -1337,13 +1164,11 @@ namespace Bouncer.Balls
             while (_gumDistance >= definition.gumSpacing)
             {
                 _gumDistance -= definition.gumSpacing;
-                // Пятно там, где мяч был в момент, когда набежал шаг, а не в конце отрезка.
                 float back = length > 1e-4f ? Mathf.Clamp01(_gumDistance / length) : 0f;
                 GumSpot.Drop(gumSpot, Vector3.Lerp(to, from, back));
             }
         }
 
-        /// <summary>Попрыгунчик: мяч отскакивает от асфальта на одну и ту же высоту и летит дальше опасным.</summary>
         bool TryFloorBounce(Vector3 point, ref float remaining)
         {
             Vector3 horizontal = Flat(_velocity) * definition.floorBounceSpeedKeep;
@@ -1353,17 +1178,14 @@ namespace Bouncer.Balls
             float up = Mathf.Sqrt(2f * Mathf.Max(0.01f, _gravity) * definition.floorBounceHeight);
             _velocity = horizontal + Vector3.up * up;
             remaining *= definition.floorBounceSpeedKeep;
-            // Отскок — новый полёт: время жизни мяча отсчитывается заново.
             if (!IsComingBack)
                 _stateTime = 0f;
             GameEvents.PlaySound(SoundCue.BallWall, point);
-            // Прыгающая бомба: каждый отскок — взрыв.
             if (Perks.bounceBlastRadius > 0f && Perks.bounceBlastDamage > 0 && !IsPhantom)
                 BounceBlast(point);
             return true;
         }
 
-        /// <summary>Прыгающая бомба: взрыв на отскоке от асфальта, послабее горячей картошки.</summary>
         void BounceBlast(Vector3 point)
         {
             HitAround(point, Perks.bounceBlastRadius, Perks.bounceBlastDamage, null, definition.blastKnockback * 0.7f,
@@ -1374,10 +1196,6 @@ namespace Bouncer.Balls
             GameFeel.Shake(0.3f);
         }
 
-        /// <summary>
-        /// Доводка после рикошета от борта: если враг почти на линии отражения, мяч летит точно в него.
-        /// Змейка вьётся вокруг нового направления.
-        /// </summary>
         void AssistAim(Vector3 position, float maxAngle)
         {
             Vector3 horizontal = Flat(_velocity);
@@ -1409,7 +1227,6 @@ namespace Bouncer.Balls
             _snakeHeading = want;
         }
 
-        /// <summary>Цепочка (волейбольный): после попадания мяч перелетает к ближайшему другому врагу.</summary>
         bool TryChain(in RaycastHit hit, Vector3 position)
         {
             var struck = hit.collider.GetComponentInParent<Targetable>();
@@ -1434,7 +1251,6 @@ namespace Bouncer.Balls
             Vector3 flat = Flat(to);
             float speed = Mathf.Max(Flat(_velocity).magnitude * definition.chainSpeedKeep, definition.minLiveSpeed + 2f);
             float time = Mathf.Max(0.05f, flat.magnitude / speed);
-            // Вертикальная скорость — чтобы долететь до груди следующего врага.
             float up = (to.y + 0.5f * _gravity * time * time) / time;
             _velocity = flat.normalized * speed + Vector3.up * up;
             _stateTime = 0f;
@@ -1442,7 +1258,6 @@ namespace Bouncer.Balls
             return true;
         }
 
-        /// <summary>Стеночка: бросок бьёт сильнее на столько.</summary>
         void AddDamage(int amount)
         {
             var stats = Stats;
@@ -1450,7 +1265,6 @@ namespace Bouncer.Balls
             Stats = stats;
         }
 
-        /// <summary>Кручёный мяч: направление полёта всё время поворачивает — мяч летит дугой.</summary>
         void Curve(float dt)
         {
             Vector3 horizontal = Flat(_velocity);
@@ -1463,7 +1277,6 @@ namespace Bouncer.Balls
                 _velocity = turn * horizontal + Vector3.up * _velocity.y;
         }
 
-        /// <summary>Глаз-алмаз: мяч плавно доворачивает к ближайшему врагу впереди.</summary>
         void Home(float dt)
         {
             Vector3 horizontal = Flat(_velocity);
@@ -1489,14 +1302,12 @@ namespace Bouncer.Balls
                 return;
             Vector3 want = Flat(best.AimPoint - position).normalized;
             Vector3 turned = Vector3.RotateTowards(heading, want, Perks.homing * Mathf.Deg2Rad * dt, 0f);
-            // Змейка вьётся вокруг своего направления — доворачиваем его, а не саму скорость.
             if (Perks.snakeAmplitude > 0f)
                 _snakeHeading = turned;
             else
                 _velocity = turned * speed + Vector3.up * _velocity.y;
         }
 
-        /// <summary>Йо-йо: мяч разворачивается и летит в руки бросившему, задевая всех по пути.</summary>
         bool TryStartYoyo(Collider struck, Vector3 position)
         {
             if (_yoyoBack || !CanReturn())
@@ -1505,7 +1316,6 @@ namespace Bouncer.Balls
             IsComingBack = true;
             _stateTime = 0f;
             _grazed.Clear();
-            // Того, в кого мяч только что попал, на развороте второй раз не бьём.
             var direct = struck ? struck.GetComponentInParent<IDamageable>() : null;
             if (direct != null)
                 _grazed.Add(direct);
@@ -1513,7 +1323,6 @@ namespace Bouncer.Balls
             return true;
         }
 
-        /// <summary>Обратный путь йо-йо: прямо к рукам, сквозь препятствия (мяч на нитке), задевая врагов.</summary>
         void TickYoyoBack(float dt)
         {
             _stateTime += dt;
@@ -1542,14 +1351,9 @@ namespace Bouncer.Balls
             MoveTo(position);
         }
 
-        /// <summary>
-        /// Может ли мяч сам вернуться к бросившему. Пойманный чужой мяч одноразовый: бумеранг, резинка и йо-йо
-        /// его не возвращают. Мяч, который тянут хватом ПКМ, долетает всегда.
-        /// </summary>
         bool CanReturn() => !IsPhantom && (IsOwn || _summoned) && _receiver != null && Thrower != null
                             && Thrower.activeInHierarchy;
 
-        /// <summary>Бумеранг: плавно разворачивает мяч к бросившему и держит на высоте груди.</summary>
         void SteerBack(float dt)
         {
             IsComingBack = true;
@@ -1564,7 +1368,6 @@ namespace Bouncer.Balls
             _velocity = heading * speed + Vector3.up * Mathf.Clamp((target.y - position.y) * 4f, -4f, 4f);
         }
 
-        /// <summary>Вернувшийся мяч долетел до бросившего: в руки, а если руки заняты — под ноги.</summary>
         bool TryHandBack(Vector3 position)
         {
             if (!CanReturn())
@@ -1579,7 +1382,6 @@ namespace Bouncer.Balls
             return true;
         }
 
-        /// <summary>На резинке: упавший мяч сам летит обратно в руки.</summary>
         void StartReturn(Vector3 position)
         {
             _elasticDone = true;
@@ -1606,13 +1408,11 @@ namespace Bouncer.Balls
                     BecomeLoose(position, Vector3.zero);
                 return;
             }
-            // Резинка тянет всё сильнее: мяч разгоняется к рукам. Хват ПКМ — быстрее резинки.
             float speed = definition.elasticReturnSpeed * _returnSpeedMultiplier * Mathf.Clamp01(0.3f + _stateTime * 3f);
             _velocity = delta / distance * speed;
             MoveTo(position + delta / distance * Mathf.Min(distance, speed * dt));
         }
 
-        /// <summary>Сдвинуть летящий мяч: к следующему шагу физики, а при прогоне вперёд — сразу.</summary>
         void MoveTo(Vector3 position)
         {
             if (_fastForward)

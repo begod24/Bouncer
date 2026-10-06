@@ -3,10 +3,6 @@ using UnityEngine;
 
 namespace Bouncer.Player
 {
-    /// <summary>
-    /// Линия прицела по полу «мелом»: до первой преграды и короткий отрезок рикошета.
-    /// Длина — примерная дальность текущего броска (растёт с зарядом).
-    /// </summary>
     [RequireComponent(typeof(LineRenderer))]
     public sealed class AimIndicator : MonoBehaviour
     {
@@ -45,7 +41,6 @@ namespace Bouncer.Player
 
             int count = 2;
             _points[0] = origin;
-            // Сдутый мяч пролетает сквозь врагов, задевая их, — линию обрывает только окружение.
             int mask = definition.perks.grazeRadius > 0f ? Layers.BallSolidMask : Layers.BallSolidMask | Layers.EnemyMask;
             if (Physics.SphereCast(origin, definition.radius, direction, out RaycastHit hit, range, mask,
                     QueryTriggerInteraction.Ignore))

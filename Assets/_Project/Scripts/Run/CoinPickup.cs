@@ -6,13 +6,6 @@ using UnityEngine;
 
 namespace Bouncer.Run
 {
-    /// <summary>
-    /// Монетка на асфальте (1 тиын, 5 тиын, 1 тенге). Выпрыгивает из выбитого врага, крутится над землёй и летит
-    /// к игроку, когда он рядом: радиус магнита растёт от «Длинных рук». Когда арена пройдена, оставшиеся
-    /// слетаются сами (<see cref="CollectAll"/>). Физики нет — движется сама, поэтому монеток может быть много.
-    /// По сети монетки роняет и раздаёт хозяин комнаты: у гостя монетка — копия (<see cref="IsPuppet"/>), она так же
-    /// выпрыгивает, а к игроку летит, когда так решил хозяин. Подобранная хозяином добыча приходит всем.
-    /// </summary>
     [DisallowMultipleComponent]
     public sealed class CoinPickup : MonoBehaviour, IPoolable
     {
@@ -56,19 +49,13 @@ namespace Bouncer.Run
 
         public int Value => value;
         public static int ActiveCount => s_active.Count;
-        /// <summary>Копия монетки хозяина у гостя: сама к игрокам не летит и добычу не даёт.</summary>
         public bool IsPuppet { get; private set; }
-        /// <summary>С какой скоростью выпрыгнула (по сети — чтобы у гостей выпрыгнула так же).</summary>
         public Vector3 PopVelocity { get; private set; }
 
-        /// <summary>Монетка выпала (у хозяина комнаты — чтобы показать её гостям).</summary>
         public static event Action<CoinPickup> Spawned;
-        /// <summary>Монетка полетела к игроку.</summary>
         public static event Action<CoinPickup, PlayerController> FlyStarted;
-        /// <summary>Монетку подобрали: сколько тиынов добычи.</summary>
         public static event Action<CoinPickup> Collected;
 
-        /// <summary>Арена пройдена: все монетки летят к ближайшему игроку.</summary>
         public static void CollectAll()
         {
             for (int i = s_active.Count - 1; i >= 0; i--)
@@ -93,7 +80,6 @@ namespace Bouncer.Run
             Spawned?.Invoke(this);
         }
 
-        /// <summary>По сети у гостя: эта монетка — копия, выпрыгнула с такой скоростью.</summary>
         public void BeginPuppet(Vector3 popVelocity)
         {
             IsPuppet = true;
@@ -101,7 +87,6 @@ namespace Bouncer.Run
             PopVelocity = popVelocity;
         }
 
-        /// <summary>По сети у гостя: хозяин отправил монетку к этому игроку.</summary>
         public void FlyTo(PlayerController player)
         {
             _flying = false;
@@ -185,7 +170,6 @@ namespace Bouncer.Run
 
         void Collect()
         {
-            // Копия долетела до игрока — добычу всем пришлёт хозяин.
             if (!IsPuppet)
             {
                 RunState.AddLoot(value);
@@ -195,7 +179,6 @@ namespace Bouncer.Run
             PoolService.Despawn(gameObject);
         }
 
-        /// <summary>Ближайший живой игрок в радиусе (с учётом «Длинных рук», если scaleByPickup).</summary>
         static PlayerController NearestPlayer(Vector3 from, float radius, bool scaleByPickup = false)
         {
             if (s_playersFrame != Time.frameCount)

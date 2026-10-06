@@ -4,19 +4,12 @@ using UnityEngine;
 
 namespace Bouncer.Waves
 {
-    /// <summary>Как стоят враги группы в момент появления.</summary>
     public enum GroupLayout
     {
-        /// <summary>Кучкой (рой пупсов, пара неваляшек).</summary>
         Cluster,
-        /// <summary>Шеренгой лицом к игроку (строй солдатиков).</summary>
         Line,
     }
 
-    /// <summary>
-    /// Волны арены: дорожки (кто появляется, когда, как часто и какими группами) и разовые выходы
-    /// (элитные враги, босс). Время — секунды боя на арене.
-    /// </summary>
     [CreateAssetMenu(menuName = "Bouncer/Wave Definition", fileName = "Wave_")]
     public sealed class WaveDefinition : ScriptableObject
     {
@@ -42,7 +35,6 @@ namespace Bouncer.Waves
         public int MaxAliveAt(float time) =>
             Mathf.RoundToInt(Mathf.Lerp(maxAliveStart, maxAliveEnd, Mathf.Clamp01(time / duration)));
 
-        /// <summary>Идёт передышка: конец круга breatherEvery (при 60 и 10 — с 50-й по 60-ю секунду каждой минуты).</summary>
         public bool IsBreather(float time)
         {
             if (breatherEvery <= 0f || breatherLength <= 0f)
@@ -52,7 +44,6 @@ namespace Bouncer.Waves
         }
     }
 
-    /// <summary>Дорожка: один вид врагов, появляющийся группами с растущим темпом.</summary>
     [Serializable]
     public sealed class SpawnTrack
     {
@@ -82,7 +73,6 @@ namespace Bouncer.Waves
         public int GroupSizeAt(float time) => Mathf.Max(1, Mathf.RoundToInt(Mathf.Lerp(groupStart, groupEnd, Progress(time))));
     }
 
-    /// <summary>Разовый выход группы в заданную секунду забега (не смотрит на лимиты).</summary>
     [Serializable]
     public sealed class SpawnBurst
     {

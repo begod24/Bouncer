@@ -4,18 +4,11 @@ using UnityEngine;
 
 namespace Bouncer.EditorTools
 {
-    /// <summary>
-    /// Платок неваляшек. Красная голова в белый горошек читалась как мяч (отзывы к 1.0), поэтому голова
-    /// «повязана» фиолетовым платком в горошек: красные клетки палитры на меше головы перекрашены, под
-    /// подбородком узел с двумя концами, на затылке уголок. Меши собираются из FBX и лежат в
-    /// Art/Models/Enemies/Kerchief. После переэкспорта неваляшек из Blender меню нужно запустить снова.
-    /// </summary>
     public static class RolyPolyKerchief
     {
         const string Folder = "Assets/_Project/Art/Models/Enemies/Kerchief";
         const string ChildName = "Kerchief";
         const float Cell = 1f / 8f;
-        /// <summary>Голова большой неваляшки — обычная ×3 (те же пропорции, плюс трещины и брови).</summary>
         const float BossScale = 3f;
 
         static readonly Vector2Int Red = new(1, 7);
@@ -52,7 +45,6 @@ namespace Bouncer.EditorTools
             throw new System.InvalidOperationException($"Нет меша {name} в {path}");
         }
 
-        /// <summary>Копия головы: красное → фиолетовое, у босса тёмно-красные трещины → индиго.</summary>
         static Mesh Recolor(Mesh source, bool boss)
         {
             var mesh = Object.Instantiate(source);
@@ -69,7 +61,6 @@ namespace Bouncer.EditorTools
             return mesh;
         }
 
-        /// <summary>Узел под подбородком, два конца на груди и уголок на затылке — в координатах обычной головы.</summary>
         static Mesh BuildKnot()
         {
             var vertices = new List<Vector3>();
@@ -93,7 +84,6 @@ namespace Bouncer.EditorTools
             return mesh;
         }
 
-        /// <summary>Гранёный эллипсоид, как вся остальная low-poly графика.</summary>
         static void AddEllipsoid(List<Vector3> vertices, List<int> triangles, Vector3 center, Vector3 radii, Quaternion rotation)
         {
             const int segments = 12, rings = 8;
@@ -109,10 +99,6 @@ namespace Bouncer.EditorTools
                     AddQuad(vertices, triangles, Point(r, s), Point(r, s + 1), Point(r + 1, s + 1), Point(r + 1, s));
         }
 
-        /// <summary>
-        /// Уголок платка на затылке: треугольник облегает голову, ниже свисает над шеей и ложится на туловище.
-        /// Двусторонний, чтобы снизу не просвечивал.
-        /// </summary>
         static void AddCorner(List<Vector3> vertices, List<int> triangles)
         {
             const int rows = 6, columns = 6;
@@ -133,7 +119,6 @@ namespace Bouncer.EditorTools
                 }
         }
 
-        /// <summary>Как далеко от оси спина неваляшки на высоте y (голова, провисание над шеей, туловище).</summary>
         static float BackDepth(float y)
         {
             float[] ys = { -0.02f, -0.08f, -0.12f, -0.18f, -0.26f, -0.35f };
@@ -146,7 +131,6 @@ namespace Bouncer.EditorTools
             return depths[depths.Length - 1];
         }
 
-        /// <summary>Четырёхугольник по часовой (a — левый верх), вершины не общие — грани плоские.</summary>
         static void AddQuad(List<Vector3> vertices, List<int> triangles, Vector3 a, Vector3 b, Vector3 c, Vector3 d)
         {
             AddTriangle(vertices, triangles, a, b, c);
@@ -166,7 +150,6 @@ namespace Bouncer.EditorTools
             triangles.Add(i + 2);
         }
 
-        /// <summary>Меш в ассет; если он уже есть — переписать на месте, чтобы ссылки в префабах не порвались.</summary>
         static Mesh SaveMesh(Mesh mesh, string name)
         {
             mesh.name = name;
@@ -184,7 +167,6 @@ namespace Bouncer.EditorTools
             return existing;
         }
 
-        /// <summary>Голове — перекрашенный меш, в неё — узел с уголком (у босса ×3).</summary>
         static void Dress(string prefabPath, string headPath, Mesh head, Mesh knot, float scale)
         {
             var root = PrefabUtility.LoadPrefabContents(prefabPath);

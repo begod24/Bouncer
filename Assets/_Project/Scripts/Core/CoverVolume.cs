@@ -3,11 +3,6 @@ using UnityEngine;
 
 namespace Bouncer.Core
 {
-    /// <summary>
-    /// Укрытие для «Считалочки»: за ним «Тот, кто в сумерках» игрока не видит (качели, песочница с грибком).
-    /// Только коробка для проверки взгляда, без физики — мячи и бег она не трогает. Настоящие препятствия
-    /// с коллайдерами (ракета, ларёк) закрывают взгляд и так.
-    /// </summary>
     public sealed class CoverVolume : MonoBehaviour
     {
         static readonly List<CoverVolume> s_all = new();
@@ -20,7 +15,6 @@ namespace Bouncer.Core
 
         void OnDisable() => s_all.Remove(this);
 
-        /// <summary>Отрезок от from до to проходит сквозь хоть одно укрытие.</summary>
         public static bool Blocks(Vector3 from, Vector3 to)
         {
             foreach (var cover in s_all)
@@ -29,7 +23,6 @@ namespace Bouncer.Core
             return false;
         }
 
-        /// <summary>Отрезок против коробки в её осях (метод «плит»).</summary>
         bool Intersects(Vector3 from, Vector3 to)
         {
             Vector3 a = transform.InverseTransformPoint(from) - center;

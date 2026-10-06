@@ -5,7 +5,6 @@ using UnityEngine.Serialization;
 
 namespace Bouncer.Audio
 {
-    /// <summary>Музыкальный трек и то, как он повторяется.</summary>
     [Serializable]
     public sealed class MusicTrack
     {
@@ -19,14 +18,6 @@ namespace Bouncer.Audio
         public double LoopLength => loopLength > 0f ? loopLength : (double)clip.samples / clip.frequency;
     }
 
-    /// <summary>
-    /// Музыка: на заставке — тема меню, на арене — случайный игровой трек (не тот, что играл на прошлой арене),
-    /// в финале с Бабаем — своя тема (<see cref="ArenaMusic"/>). Смена трека — через затухание; на паузе музыка
-    /// тише и глуше, после «Выбит!» и победы затихает. Переживает перезагрузку сцены, поэтому «Ещё раз»
-    /// и «В меню» не обрывают звук, а новый забег начинает игровой трек сначала.
-    /// Повтор бесшовный: следующий круг запускается по часам звука (PlayScheduled) ровно через длину петли
-    /// на втором источнике, а первый в это время доигрывает хвост.
-    /// </summary>
     public sealed class MusicPlayer : MonoBehaviour
     {
         [SerializeField] MusicTrack menuTheme = new();
@@ -48,7 +39,6 @@ namespace Bouncer.Audio
         [SerializeField, Range(200f, 5000f)] float muffledCutoff = 1100f;
 
         const float OpenCutoff = 22000f;
-        /// <summary>Запас до старта по часам звука: запланированный звук не должен опоздать.</summary>
         const double StartDelay = 0.1;
 
         static MusicPlayer s_instance;
@@ -72,7 +62,6 @@ namespace Bouncer.Audio
 
         void Awake()
         {
-            // Копия из перезагруженной сцены: музыка уже играет.
             if (s_instance != null)
             {
                 Destroy(gameObject);
@@ -110,8 +99,6 @@ namespace Bouncer.Audio
             var session = GameSession.Instance;
             if (session != _session)
             {
-                // Новая сцена сразу с забегом («Ещё раз», «Заново») — игровой трек начинается сначала,
-                // даже если выпал тот же. Следующая арена прогулки берёт свой трек (ArenaTrack).
                 _session = session;
                 _restart = session != null && session.State != SessionState.Title && RunState.ArenaIndex == 0;
             }
@@ -145,7 +132,6 @@ namespace Bouncer.Audio
             KeepLooping();
         }
 
-        /// <summary>Трек арены выбирается один раз, когда на ней начинается игра (каждая арена — своя сцена).</summary>
         MusicTrack ArenaTrack(GameSession session)
         {
             if (session != _arenaSession || _arenaTrack == null)
@@ -160,7 +146,6 @@ namespace Bouncer.Audio
         {
             if (ArenaMusic.FinalTheme || gameThemes.Length == 0)
                 return finalTheme;
-            // Случайный, но не тот, что играл на прошлой арене.
             int skip = gameThemes.Length > 1 ? Array.IndexOf(gameThemes, _lastRandom) : -1;
             int index = UnityEngine.Random.Range(0, skip >= 0 ? gameThemes.Length - 1 : gameThemes.Length);
             if (skip >= 0 && index >= skip)
@@ -173,7 +158,6 @@ namespace Bouncer.Audio
         {
             if (session == null)
                 return;
-            // В настройках музыку слышно как в игре — иначе ползунок громкости не подобрать.
             bool paused = session.State == SessionState.Playing && GameFeel.Paused && !session.OverlayOpen;
             float duck = session.IsFinished ? finishedVolume : paused ? pausedVolume : 1f;
             bool muffled = paused || session.State == SessionState.GameOver;
@@ -192,7 +176,6 @@ namespace Bouncer.Audio
                 track.clip.LoadAudioData();
         }
 
-        /// <summary>Держит следующий круг петли запланированным на свободном источнике.</summary>
         void KeepLooping()
         {
             if (_playing == null || _playing.clip == null)
@@ -211,12 +194,10 @@ namespace Bouncer.Audio
             int next = 1 - _current;
             if (_armed[next] && now >= _startAt[next])
             {
-                // Начался новый круг. Прошлый источник доигрывает хвост и потом возьмёт следующий круг.
                 _armed[next] = false;
                 _current = next;
                 next = 1 - next;
             }
-            // Если отстали (игра стояла), новый круг начнётся сразу, а не в прошлом.
             if (!_armed[next] && !_voices[next].isPlaying)
                 Schedule(next, Math.Max(_startAt[_current] + _playing.LoopLength, now + StartDelay));
         }

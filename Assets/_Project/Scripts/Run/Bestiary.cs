@@ -7,7 +7,6 @@ using UnityEngine.Localization;
 
 namespace Bouncer.Run
 {
-    /// <summary>Раздел бестиария — вкладка на экране.</summary>
     public enum BestiarySection
     {
         Enemy,
@@ -15,11 +14,6 @@ namespace Bouncer.Run
         Boss,
     }
 
-    /// <summary>
-    /// Бестиарий: страницы о врагах по разделам (враги, элитки, боссы). Модель берётся из префаба врага,
-    /// где он встречается — из волн арен прогулки, так что список арен не расходится с игрой.
-    /// Враги и элитки открыты всегда, босс — после победы над ним (<see cref="BestiaryProgress"/>).
-    /// </summary>
     [CreateAssetMenu(menuName = "Bouncer/Bestiary", fileName = "Bestiary")]
     public sealed class Bestiary : ScriptableObject
     {
@@ -42,7 +36,6 @@ namespace Bouncer.Run
 
             public string Id => prefab ? prefab.name : string.Empty;
             public bool IsOpen => section != BestiarySection.Boss || BestiaryProgress.IsOpen(Id);
-            /// <summary>Страница босса только что открылась, игрок её ещё не видел.</summary>
             public bool IsNew => section == BestiarySection.Boss && BestiaryProgress.IsNew(Id);
         }
 
@@ -50,7 +43,6 @@ namespace Bouncer.Run
         public RunDefinition run;
         public List<Entry> entries = new();
 
-        /// <summary>Страницы раздела по порядку.</summary>
         public void Collect(BestiarySection section, List<Entry> result)
         {
             result.Clear();
@@ -59,7 +51,6 @@ namespace Bouncer.Run
                     result.Add(entry);
         }
 
-        /// <summary>Есть непросмотренная страница («новое!» в тетрадке).</summary>
         public bool AnyNew()
         {
             foreach (var entry in entries)
@@ -83,7 +74,6 @@ namespace Bouncer.Run
             return open;
         }
 
-        /// <summary>Арены прогулки, где враг выходит в волнах (по порядку этапов, развилки — после основной).</summary>
         public void ArenasOf(Entry entry, List<ArenaDefinition> result)
         {
             result.Clear();

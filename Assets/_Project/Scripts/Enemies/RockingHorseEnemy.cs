@@ -5,12 +5,6 @@ using UnityEngine.AI;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Лошадка-качалка. Подкачивается к игроку, потом раскачивается на месте всё сильнее (видно, что сейчас рванёт)
-    /// и таранит по прямой. После тарана качается на месте — окно для бросков. Попадание во время раскачки сбивает
-    /// разбег. Конь-огонь (элитный) оставляет на таране огненный след.
-    /// По сети таранит только у хозяина комнаты; у гостя копия качается и скачет по его вестям.
-    /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
     public sealed class RockingHorseEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
@@ -134,7 +128,6 @@ namespace Bouncer.Enemies
                     break;
 
                 case State.Windup:
-                    // Доворачивает на игрока почти до самого рывка, потом направление зафиксировано.
                     if (hasTarget && _stateTime < definition.windupTime - definition.aimLockTime)
                         _chargeDirection = toTarget / Mathf.Max(0.01f, distance);
                     Face(_chargeDirection, dt * 2f);
@@ -167,7 +160,6 @@ namespace Bouncer.Enemies
             }
         }
 
-        /// <summary>Таран по прямой: по NavMesh, поэтому стена его останавливает.</summary>
         void Charge(float dt)
         {
             Vector3 before = transform.position;
@@ -194,7 +186,6 @@ namespace Bouncer.Enemies
                     });
                 }
             }
-            // Упёрлась в стену или время вышло — качается на месте.
             bool blocked = _stateTime > 0.1f && moved < step * 0.3f;
             if (blocked || _stateTime >= definition.chargeTime)
             {
@@ -240,8 +231,6 @@ namespace Bouncer.Enemies
             transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(direction), definition.turnSpeed * dt);
         }
 
-        // ---------- Попадания ----------
-
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)
         {
             if (_health.IsDead)
@@ -276,7 +265,6 @@ namespace Bouncer.Enemies
             {
                 if (_state != State.Charge)
                     _knockback += Flat(hit.Direction) * (hit.Force * definition.knockbackScale);
-                // Попадание во время раскачки сбивает разбег.
                 if (_state == State.Windup)
                 {
                     _nextCharge = Time.time + definition.chargeCooldown * 0.5f;
@@ -300,8 +288,6 @@ namespace Bouncer.Enemies
             PoolService.Despawn(gameObject);
         }
 
-        // ---------- Вид ----------
-
         void LateUpdate()
         {
             if (!rocker || _self.IsFrozen)
@@ -316,7 +302,6 @@ namespace Bouncer.Enemies
                     angle = Mathf.Sin(_rockPhase) * Mathf.Lerp(definition.rockAngle, definition.windupRockAngle, k);
                     break;
                 case State.Charge:
-                    // Скачет вперёд, наклонившись.
                     _rockPhase += dt * definition.windupRockFrequency * Mathf.PI * 2f;
                     angle = 12f + Mathf.Sin(_rockPhase) * 8f;
                     break;
@@ -333,8 +318,6 @@ namespace Bouncer.Enemies
             }
             rocker.localRotation = _rockerRest * Quaternion.Euler(angle, 0f, 0f);
         }
-
-        // ---------- Сеть ----------
 
         public void WriteNet(NetWriter writer)
         {

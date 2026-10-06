@@ -3,7 +3,6 @@ using UnityEngine.InputSystem;
 
 namespace Bouncer.Player
 {
-    /// <summary>Локальный ввод (клавиатура с мышью или геймпад) → PlayerIntent.</summary>
     [RequireComponent(typeof(PlayerInput))]
     public sealed class PlayerInputReader : MonoBehaviour, IPlayerIntentSource
     {
@@ -88,7 +87,6 @@ namespace Bouncer.Player
             return intent;
         }
 
-        /// <summary>Вектор ввода относительно камеры → мировая плоскость XZ.</summary>
         Vector3 ToWorld(Vector2 input)
         {
             if (_camera == null)

@@ -3,10 +3,6 @@ using UnityEngine;
 
 namespace Bouncer.Player
 {
-    /// <summary>
-    /// Камера арены следит за своим игроком (<see cref="Players.Local"/>): игрока нет в сцене заранее,
-    /// он появляется при старте — и камера сразу встаёт над ним, без подлёта.
-    /// </summary>
     [RequireComponent(typeof(CinemachineCamera))]
     public sealed class LocalPlayerCamera : MonoBehaviour
     {

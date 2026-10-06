@@ -4,12 +4,6 @@ using UnityEngine;
 
 namespace Bouncer.Player
 {
-    /// <summary>
-    /// Передаёт состояние игрока аниматору ребёнка (AC_Kid, его собирает Bouncer → Build Kid Animator):
-    /// бег по направлению относительно взгляда, рывок и подкат, замах и бросок, ловля, удар, выбывание,
-    /// радость в конце арены и после победы. Ребёнок всегда смотрит туда, куда целится игрок (ловят только спереди),
-    /// поэтому бег вбок и назад — свои клипы, а не поворот модели. Только в рывке модель разворачивается по нему.
-    /// </summary>
     [DefaultExecutionOrder(100)]
     [RequireComponent(typeof(PlayerKid))]
     public sealed class KidAnimator : MonoBehaviour
@@ -78,8 +72,6 @@ namespace Bouncer.Player
             if (animator == null || !animator.isActiveAndEnabled || dt <= 0f)
                 return;
 
-            // В сценке (дорога домой) контроллер выключен и игрока двигают снаружи — скорость по смещению. Чужого
-            // игрока двигает сеть: скорость — из его точек движения (по смещению за кадр она дрожит).
             Vector3 velocity = player.IsScripted ? delta / dt : !player.IsLocal ? player.RemoteVelocity : player.Motor.Velocity;
             velocity.y = 0f;
             float maxSpeed = Mathf.Max(0.1f, player.Stats.moveSpeed * player.Modifiers.MoveSpeed);
@@ -110,19 +102,16 @@ namespace Bouncer.Player
             bool cheer = !down && (state == SessionState.Victory || Time.time < _cheerUntil);
             animator.SetBool(Cheer, cheer);
 
-            // Руки и корпус слушают замах и ловлю, только когда всё тело не занято своим клипом.
             float upperTarget = down || dashing || sliding || cheer ? 0f : 1f;
             _upperWeight = Mathf.MoveTowards(_upperWeight, upperTarget, dt * 8f);
             animator.SetLayerWeight(UpperBodyLayer, _upperWeight);
 
-            // Рывок: модель ныряет туда, куда рвётся игрок, потом возвращается к взгляду.
             Quaternion target = action.Dashing && action.DashDirection.sqrMagnitude > 1e-4f
                 ? Quaternion.LookRotation(action.DashDirection)
                 : transform.rotation;
             _kid.Slot.rotation = Quaternion.RotateTowards(_kid.Slot.rotation, target, dashTurnSpeed * dt);
         }
 
-        /// <summary>Разовое движение чужого игрока: бросок, ловля, удар — по сигналу его компьютера.</summary>
         public void Play(PlayerCue cue) => SetTrigger(cue switch
         {
             PlayerCue.Throw => Throw,

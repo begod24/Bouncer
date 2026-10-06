@@ -17,8 +17,6 @@ OUT = os.path.join(ROOT, "Assets", "_Project", "Audio", "SFX")
 RNG = np.random.default_rng(7)
 
 
-# ---------------------------------------------------------------- генераторы
-
 def osc(freq, n, shape="sine"):
     f = np.full(n, freq, dtype=np.float64) if np.isscalar(freq) else freq[:n]
     ph = 2 * np.pi * np.cumsum(f) / SR
@@ -124,8 +122,6 @@ def write(name, x):
     print("wrote", name, f"{len(data) / SR:.2f}s")
 
 
-# ---------------------------------------------------------------- игрок и мяч
-
 def whoosh(duration, f0, f1, width=900.0, swell=0.4):
     n = int(SR * duration)
     t = np.linspace(0, 1, n)
@@ -191,14 +187,11 @@ def sfx_player():
     write("SwingBat", whack + 0.25 * spectral(creak, lo=400, hi=2500))
 
 
-# ---------------------------------------------------------------- враги
-
 def sfx_enemies():
     write("EnemyHit", thump(0.14, 250, 160, 0.045) + 0.4 * place(pad(0.14), click(0.01, 1800), 0))
     n = int(SR * 0.22)
     write("EnemyHitStrong", thump(0.22, 180, 85, 0.07) + 0.5 * spectral(noise(n), hi=1500) * attack_decay(n, 0.001, 0.03))
 
-    # Неваляшка: мягкий звон «динь-дон», как у настоящей игрушки, когда она качается.
     chime = pad(1.0)
     place(chime, bell(note("A5"), 0.8, 0.8), 0.0)
     place(chime, 0.8 * bell(note("E5"), 0.8, 0.8), 0.14)
@@ -211,7 +204,6 @@ def sfx_enemies():
     place(pop, 0.5 * bell(note("D#5"), 0.5, 1.2) + 0.4 * bell(note("A5"), 0.5, 1.2), 0.03)
     write("RolyPolyPop", pop)
 
-    # Пупс: писк резиновой игрушки — носовой тон с изгибом высоты.
     n = int(SR * 0.2)
     t = np.linspace(0, 1, n)
     freq = 1300 + 700 * np.sin(np.pi * t) + 40 * np.sin(np.arange(n) / SR * 2 * np.pi * 35)
@@ -222,7 +214,6 @@ def sfx_enemies():
     squeal = spectral(osc(1800 * (1 - 0.6 * t), n, "square"), lo=500, hi=4000) * attack_decay(n, 0.005, 0.12)
     write("PupsikPop", squeal + 0.8 * place(pad(0.3), thump(0.12, 380, 120, 0.04), 0))
 
-    # Оловянный солдатик: жестяной «дзынь» и взмах.
     def tin(freq, duration):
         m = int(SR * duration)
         mod = osc(freq * 1.41, m) * 3.0 * decay(m, duration * 0.4)
@@ -248,8 +239,6 @@ def sfx_enemies():
     warn = osc(sweep(300, 620, n), n, "triangle") * (0.6 + 0.4 * np.sin(np.arange(n) / SR * 2 * np.pi * 18)) * attack_decay(n, 0.08, 0.15)
     write("SpawnWarning", warn)
 
-
-# ---------------------------------------------------------------- забег и интерфейс
 
 def square_note(freq, duration, duty_soft=0.35):
     n = int(SR * duration)
@@ -292,8 +281,6 @@ def sfx_run():
     write("GameOver", sad)
 
 
-# ---------------------------------------------------------------- коробка, стройка, погода
-
 def write_loop(name, x, crossfade=0.25):
     """Бесшовная петля: хвост плавно накладывается на начало, без затухания в конце."""
     f = int(SR * crossfade)
@@ -315,7 +302,6 @@ def write_loop(name, x, crossfade=0.25):
 
 
 def sfx_dusk():
-    # Свисток физрука: высокий тон с трелью горошины, в начале — выдох.
     n = int(SR * 0.75)
     t = np.arange(n) / SR
     trill = 1.0 + 0.045 * np.sign(np.sin(2 * np.pi * 34 * t)) * (0.6 + 0.4 * np.sin(2 * np.pi * 3 * t))
@@ -324,7 +310,6 @@ def sfx_dusk():
     env = attack_decay(n, 0.02, 0.9) * np.clip((0.75 - t) / 0.08, 0.0, 1.0)
     write("Whistle", (tone * 0.8 + breath) * env)
 
-    # Гром: треск и долгий низкий раскат, который перекатывается.
     n = int(SR * 3.2)
     t = np.arange(n) / SR
     crack = spectral(noise(n), lo=400, hi=5000) * attack_decay(n, 0.002, 0.08)
@@ -332,7 +317,6 @@ def sfx_dusk():
     roll = 0.6 + 0.4 * np.sin(2 * np.pi * (1.3 + 0.6 * t) * t)
     write("Thunder", 0.5 * crack + 2.2 * rumble * roll)
 
-    # Манекен встал в позу: сухой пластиковый щелчок суставов, два подряд.
     clack = pad(0.2)
     for at, freq, amp in ((0.0, 1150, 1.0), (0.055, 820, 0.7)):
         m = int(SR * 0.06)
@@ -341,18 +325,15 @@ def sfx_dusk():
         place(clack, amp * knock, at)
     write("MannequinPose", clack)
 
-    # Тень: шипящий выдох, уходящий вниз, под ним глухой гул.
     n = int(SR * 0.7)
     hiss = band_noise(n, sweep(5200, 2200, n), 1800.0) * attack_decay(n, 0.12, 0.25)
     hum = osc(sweep(95, 60, n), n) * attack_decay(n, 0.1, 0.3) * 0.5
     write("ShadowHiss", hiss + hum)
 
-    # Чучело поймало мяч: шорох соломы и мягкий хлопок.
     n = int(SR * 0.3)
     rustle = spectral(noise(n), lo=1200, hi=6000) * attack_decay(n, 0.004, 0.07)
     write("ScarecrowCatch", rustle + 0.9 * place(pad(0.3), thump(0.12, 220, 120, 0.04), 0.0))
 
-    # Фонарь погас: электрический треск и затихающий гул.
     n = int(SR * 0.6)
     crackle = np.zeros(n)
     rng = np.random.default_rng(11)
@@ -361,7 +342,6 @@ def sfx_dusk():
     buzz = osc(100.0, n, "saw") * attack_decay(n, 0.005, 0.18) * 0.35
     write("LampOut", crackle + spectral(buzz, hi=1500))
 
-    # «Второе дыхание»: удар сердца и восходящий перезвон.
     breath = pad(1.0)
     place(breath, thump(0.18, 90, 50, 0.06), 0.0)
     place(breath, 0.7 * thump(0.16, 80, 45, 0.05), 0.22)
@@ -369,7 +349,6 @@ def sfx_dusk():
         place(breath, 0.5 * bell(note(name), 0.6, 0.7), 0.3 + i * 0.09)
     write("SecondWind", breath)
 
-    # Дождь: ровный шум капель с редкими звонкими каплями — петля для погоды.
     n = int(SR * 4.5)
     rain = spectral(noise(n), lo=500, hi=7000) * 0.6 + spectral(noise(n), hi=400) * 0.35
     rng = np.random.default_rng(12)
@@ -400,7 +379,6 @@ def vowel(source, formants):
 
 
 def sfx_final():
-    # Смешок Бабая: глухое «хе-хе-хе» с хрипом, каждое ниже предыдущего.
     laugh = pad(1.0)
     for i, (at, f0) in enumerate(((0.0, 118.0), (0.17, 108.0), (0.34, 98.0), (0.53, 90.0))):
         m = int(SR * 0.16)
@@ -411,7 +389,6 @@ def sfx_final():
         place(laugh, (voice + breath) * env * (1.0 - 0.12 * i), at)
     write("BabaiLaugh", reverb(laugh, 0.7, 0.3))
 
-    # «Считалочка»: деревянный стук и низкий колокол на каждый счёт.
     n = int(SR * 0.7)
     knock = thump(0.12, 190, 120, 0.035) + 0.5 * place(pad(0.12), click(0.01, 1400), 0)
     tick = pad(0.7)
@@ -419,7 +396,6 @@ def sfx_final():
     place(tick, 0.35 * bell(note("A3"), 0.65, 0.5), 0.0)
     write("CountTick", reverb(tick, 0.5, 0.25))
 
-    # «Я иду искать!»: тритон колоколами и свист, уходящий вверх.
     sting = pad(1.3)
     place(sting, 0.6 * bell(note("C4"), 1.2, 0.8), 0.0)
     place(sting, 0.5 * bell(note("F#4"), 1.2, 0.8), 0.02)
@@ -427,21 +403,18 @@ def sfx_final():
     place(sting, 0.6 * thump(0.2, 80, 45, 0.07), 0.0)
     write("FoundYou", reverb(sting, 0.8, 0.3))
 
-    # Приземление после прыжка на шесте: тяжёлый удар, пыль и стук клюки.
     n = int(SR * 0.7)
     dust = spectral(noise(n), lo=150, hi=1800) * attack_decay(n, 0.004, 0.18)
     land = 1.4 * place(pad(0.7), thump(0.3, 95, 38, 0.1), 0) + 0.5 * dust
     place(land, 0.4 * (osc(620, int(SR * 0.08), "triangle") * attack_decay(int(SR * 0.08), 0.001, 0.02)), 0.01)
     write("PoleLand", land)
 
-    # «Карусель»: воющий вихрь, который то накатывает, то отпускает — фигура кружится.
     n = int(SR * 1.8)
     t = np.arange(n) / SR
     whirl = band_noise(n, sweep(380, 1300, n), 700.0) * (0.55 + 0.45 * np.sin(2 * np.pi * 6.0 * t))
     env = np.clip(t / 0.25, 0.0, 1.0) * np.clip((1.8 - t) / 0.4, 0.0, 1.0)
     write("CarouselSpin", whirl * env + 0.3 * osc(sweep(90, 140, n), n) * env)
 
-    # Ворона: хриплое «кра-а», тон сползает вниз.
     n = int(SR * 0.42)
     t = np.arange(n) / SR
     source = osc(sweep(640, 470, n), n, "saw") * (1.0 + 0.3 * np.sign(np.sin(2 * np.pi * 55 * t)))
@@ -449,26 +422,22 @@ def sfx_final():
     caw += 0.35 * band_noise(n, 1800.0, 1400.0)
     write("CrowCaw", caw * attack_decay(n, 0.015, 0.16))
 
-    # Хлопанье крыльев: несколько глухих взмахов.
     flap = pad(0.5)
     for i, at in enumerate((0.0, 0.09, 0.18, 0.28)):
         m = int(SR * 0.07)
         place(flap, (0.9 - 0.15 * i) * spectral(noise(m), lo=250, hi=2200) * attack_decay(m, 0.006, 0.02), at)
     write("CrowFlap", flap)
 
-    # Ложное чучело рассыпалось: шорох соломы и мягкий хлопок.
     n = int(SR * 0.7)
     straw = spectral(noise(n), lo=1500, hi=8000) * attack_decay(n, 0.003, 0.12)
     straw += 0.5 * spectral(noise(n), lo=400, hi=2000) * attack_decay(n, 0.01, 0.2)
     write("DecoyBurst", straw + 0.8 * place(pad(0.7), thump(0.15, 160, 70, 0.05), 0))
 
-    # Мячи улетели в мешок: глухое «фух» и шорох мешковины.
     n = int(SR * 0.45)
     stuff = 0.9 * place(pad(0.45), thump(0.18, 140, 70, 0.06), 0.03)
     stuff += 0.45 * spectral(noise(n), lo=600, hi=3500) * attack_decay(n, 0.02, 0.1)
     write("SackStuff", stuff)
 
-    # Мешок высыпался: мячи скачут по асфальту в разные стороны.
     spill = pad(1.0)
     rng = np.random.default_rng(31)
     for at in np.sort(rng.uniform(0.0, 0.6, 7)):
@@ -480,7 +449,6 @@ def sfx_final():
     spill += 0.3 * spectral(noise(n), lo=600, hi=3500) * attack_decay(n, 0.01, 0.15)
     write("SackSpill", spill)
 
-    # Свет погас во всём дворе: глухой провал, шипение вниз и треск умирающих ламп.
     n = int(SR * 1.6)
     t = np.arange(n) / SR
     whump = osc(sweep(62, 32, n), n) * attack_decay(n, 0.02, 0.5)
@@ -491,7 +459,6 @@ def sfx_final():
         place(dark, rng.uniform(0.2, 0.5) * click(0.006, 2200), at)
     write("DarkWave", dark)
 
-    # Мама зовёт из окна: скрип форточки и далёкое напевное «До-мо-ой!».
     call = pad(2.4)
     n = int(SR * 0.3)
     creak = osc(sweep(900, 600, n) * (1.0 + 0.06 * noise(n)), n, "saw")
@@ -506,7 +473,6 @@ def sfx_final():
         place(call, voice * env, at)
     write("MomCall", reverb(call, 1.2, 0.45))
 
-    # Дверь подъезда: скрип петель, пружина и тяжёлый хлопок железной двери.
     door = pad(1.4)
     n = int(SR * 0.5)
     t = np.arange(n) / SR
@@ -522,23 +488,18 @@ def sfx_final():
     write("DoorOpen", reverb(door, 0.6, 0.25))
 
 
-# ---------------------------------------------------------------- барахолка и детский сад
-
 def sfx_content():
-    # Свой генератор шума: звуки не зависят от того, что синтезировано до них.
     rng = np.random.default_rng(61)
 
     def hiss(n, lo=None, hi=None):
         return spectral(rng.uniform(-1.0, 1.0, n), lo=lo, hi=hi)
 
-    # Сирена милицейских «Жигулей»: игрушечное «уи-уи» — тон качается вверх-вниз.
     n = int(SR * 1.5)
     t = np.arange(n) / SR
     f = 950 + 380 * np.sin(2 * np.pi * 1.6 * t - np.pi / 2)
     tone = spectral(0.5 * osc(f, n, "square") + 0.5 * osc(f, n, "triangle"), lo=400, hi=4000)
     write("Siren", tone * np.clip(t / 0.05, 0, 1) * np.clip((1.5 - t) / 0.25, 0, 1))
 
-    # Превращение Трансформера: воет привод, трещат шестерёнки, дважды лязгает железо.
     n = int(SR * 1.2)
     t = np.arange(n) / SR
     whine = spectral(osc(sweep(260, 820, n), n, "saw"), lo=200, hi=3000)
@@ -552,12 +513,10 @@ def sfx_content():
         place(clank, 0.8 * bell(freq, 0.35, 1.6) + place(pad(0.35), thump(0.2, 120, 60, 0.05), 0), at)
     write("TransformClank", clank)
 
-    # Плюшевый заяц приземлился: мягкое тяжёлое «пуф» без щелчка.
     n = int(SR * 0.6)
     puff = hiss(n, lo=80, hi=700) * attack_decay(n, 0.015, 0.15)
     write("PlushThump", 1.2 * place(pad(0.6), thump(0.45, 80, 38, 0.12), 0) + 0.7 * puff)
 
-    # Шов рвётся: трескучий шорох ткани и выдох ваты.
     n = int(SR * 0.7)
     t = np.arange(n) / SR
     grains = np.convolve((rng.uniform(0, 1, n) < 0.02).astype(float), np.hanning(64), mode="same")
@@ -565,7 +524,6 @@ def sfx_content():
     tear *= np.clip(t / 0.02, 0, 1) * np.exp(-np.maximum(0.0, t - 0.35) / 0.1)
     write("SeamRip", tear + 0.5 * hiss(n, lo=100, hi=900) * attack_decay(n, 0.3, 0.2))
 
-    # Кукла-плакса: электронное «уа-уа», тон поднимается и опускается.
     cry = pad(1.1)
     for at in (0.0, 0.5):
         m = int(SR * 0.42)
@@ -575,11 +533,9 @@ def sfx_content():
         place(cry, voice * np.clip(tt / 0.05, 0, 1) * np.clip((0.42 - tt) / 0.1, 0, 1), at)
     write("DollCry", cry)
 
-    # Пионерский барабан: удар по пластику с шорохом пружин.
     n = int(SR * 0.4)
     write("DrumBeat", 0.9 * osc(sweep(220, 160, n), n) * decay(n, 0.07) + 0.7 * hiss(n, lo=1500, hi=9000) * decay(n, 0.1))
 
-    # Лягушку заводят ключиком: треск храповика, всё чаще.
     wind = pad(0.9)
     at, gap = 0.0, 0.07
     while at < 0.8:
@@ -590,11 +546,9 @@ def sfx_content():
         gap *= 0.93
     write("WindUp", wind)
 
-    # Пистолет от «Денди»: восьмибитное «пиу» вниз.
     n = int(SR * 0.25)
     write("ZapperShot", 0.6 * spectral(osc(sweep(1800, 180, n), n, "square") * attack_decay(n, 0.002, 0.08), hi=6000))
 
-    # Моторчик машинки: жужжание набирает обороты.
     n = int(SR * 0.8)
     t = np.arange(n) / SR
     f = sweep(90, 260, n) * (1 + 0.03 * np.sin(2 * np.pi * 18 * t))

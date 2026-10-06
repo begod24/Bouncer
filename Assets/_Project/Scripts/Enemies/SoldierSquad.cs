@@ -5,11 +5,6 @@ using UnityEngine.AI;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Строй оловянных солдатиков: общая позиция шеренги на дистанции от игрока и расписание залпов.
-    /// Залп: весь строй замахивается разом, потом бросает по очереди слева направо.
-    /// Обычный объект без MonoBehaviour — его обновляет первый солдатик, дошедший до Update в этом кадре.
-    /// </summary>
     public sealed class SoldierSquad
     {
         readonly List<TinSoldierEnemy> _members = new();
@@ -20,7 +15,6 @@ namespace Bouncer.Enemies
         float _nextRegroup;
         float _nextVolley;
 
-        /// <summary>Офицер: пока он в строю, залпы идут по его расписанию.</summary>
         public TinSoldierEnemy Leader { get; set; }
         public Targetable Target { get; private set; }
         public int VolleyId { get; private set; }
@@ -42,14 +36,12 @@ namespace Bouncer.Enemies
                 _hasAnchor = false;
         }
 
-        /// <summary>Сейчас идёт залп: от начала замаха до броска последнего в шеренге.</summary>
         public bool IsVolleyActive(TinSoldierDefinition d) =>
             Time.time >= VolleyStart && Time.time <= VolleyStart + d.aimTime + _members.Count * d.volleyStagger;
 
         public float ThrowTimeFor(TinSoldierEnemy soldier, TinSoldierDefinition d) =>
             VolleyStart + d.aimTime + Mathf.Max(0, _members.IndexOf(soldier)) * d.volleyStagger;
 
-        /// <summary>Место солдатика в шеренге, повёрнутой лицом к игроку.</summary>
         public Vector3 SlotFor(TinSoldierEnemy soldier, TinSoldierDefinition d)
         {
             int index = Mathf.Max(0, _members.IndexOf(soldier));

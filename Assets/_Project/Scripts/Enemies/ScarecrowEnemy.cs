@@ -6,13 +6,6 @@ using UnityEngine.AI;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Чучело. Прыгает на своём шесте, держится на расстоянии и всегда поворачивается к игроку.
-    /// Руки ловят мячи, пролетающие рядом спереди, — и через секунду бросают обратно (их можно поймать,
-    /// идеальная ловля лечит). Заряженный мяч пробивает руки, сбоку и сзади попадание обычное: чучело
-    /// поворачивается медленно, его можно обойти. Элитное ловит и заряженные, а бросает сильным мячом.
-    /// По сети прыгает, ловит и бросает только у хозяина комнаты; у гостя копия прыгает и машет руками по его вестям.
-    /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
     public sealed class ScarecrowEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
@@ -49,7 +42,6 @@ namespace Bouncer.Enemies
         float _catchPose;
         float _throwPose;
         int _strafeSide = 1;
-        /// <summary>У гостя: сколько мячей держит (по вестям хозяина).</summary>
         int _netHeld;
 
         public ScarecrowDefinition Definition => definition;
@@ -79,7 +71,6 @@ namespace Bouncer.Enemies
 
         public void ApplyDefinition()
         {
-            // Двигается только прыжками (agent.Move), агент нужен для NavMesh и обхода соседей.
             _agent.speed = 0.01f;
             _agent.acceleration = 8f;
             _health.Configure(EnemyScaling.Hits(definition.hitsToKill, gameObject), 0f);
@@ -103,8 +94,6 @@ namespace Bouncer.Enemies
         }
 
         public void OnDespawned() => ReleaseAll(Vector3.back);
-
-        // ---------- Мозги ----------
 
         void Update()
         {
@@ -137,7 +126,6 @@ namespace Bouncer.Enemies
             ThrowBack();
         }
 
-        /// <summary>Прыжок на шесте: ближе, дальше или вбок — чтобы держать свою дистанцию.</summary>
         void Hop(Vector3 toTarget, float distance, float dt)
         {
             if (Hopping)
@@ -175,9 +163,6 @@ namespace Bouncer.Enemies
             transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(direction), definition.turnSpeed * dt);
         }
 
-        // ---------- Ловля и бросок ----------
-
-        /// <summary>Мяч пролетает рядом спереди — руки его хватают, даже если он летел мимо.</summary>
         void TryCatchNearby()
         {
             if (_held.Count >= definition.maxHeld)
@@ -193,7 +178,6 @@ namespace Bouncer.Enemies
                 Vector3 toBall = ball.Position - chest;
                 if (toBall.sqrMagnitude > radiusSqr)
                     continue;
-                // Только мяч, который летит к чучелу, а не уже пролетевший мимо.
                 if (Vector3.Dot(Flat(ball.Velocity), -Flat(toBall)) <= 0f)
                     continue;
                 Catch(ball);
@@ -279,7 +263,6 @@ namespace Bouncer.Enemies
                     Gravity = definition.throwGravity,
                     Damage = definition.throwDamage,
                     Knockback = definition.throwKnockback,
-                    // Чучело в ушанке возвращает мяч в репьях — колючим, ловить нельзя.
                     Flags = definition.throwStrong ? HitFlags.Charged | HitFlags.Spiky : HitFlags.None,
                 },
             });
@@ -301,13 +284,10 @@ namespace Bouncer.Enemies
             _throwAt.Clear();
         }
 
-        // ---------- Попадания ----------
-
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)
         {
             if (_health.IsDead)
                 return BallContactResult.PassThrough;
-            // Спереди руки ловят — если есть свободная и мяч не пробивает их.
             if (_held.Count < definition.maxHeld && CanCatch(ball) && !_self.IsFrozen)
             {
                 Catch(ball);
@@ -359,8 +339,6 @@ namespace Bouncer.Enemies
             PoolService.Despawn(gameObject);
         }
 
-        // ---------- Вид ----------
-
         void LateUpdate()
         {
             HoldBalls();
@@ -371,7 +349,6 @@ namespace Bouncer.Enemies
                 visual.localPosition = _visualRest + Vector3.up * (hopping ? Mathf.Sin(hop * Mathf.PI) * definition.hopHeight : 0f);
             if (body)
             {
-                // На прыжке наклоняется вперёд, в полёте выпрямляется; с мячом в руках чуть откидывается.
                 float lean = hopping ? Mathf.Sin(hop * Mathf.PI) * 10f : 0f;
                 float sway = Mathf.Sin(Time.time * 1.7f + _strafeSide) * 3f;
                 body.localRotation = _bodyRest * Quaternion.Euler(lean - _catchPose * 8f, 0f, sway);
@@ -379,15 +356,12 @@ namespace Bouncer.Enemies
             int held = NetHooks.IsGuest ? _netHeld : _held.Count;
             _catchPose = Mathf.MoveTowards(_catchPose, held > 0 ? 0.6f : 0f, dt * 3f);
             _throwPose = Mathf.MoveTowards(_throwPose, 0f, dt * 4f);
-            // Руки смыкаются спереди, когда держат мяч, и выстреливают вперёд на броске.
             float grab = _catchPose * 55f + _throwPose * 35f;
             if (armL)
                 armL.localRotation = _armLRest * Quaternion.Euler(0f, grab, _throwPose * -20f);
             if (armR)
                 armR.localRotation = _armRRest * Quaternion.Euler(0f, -grab, _throwPose * 20f);
         }
-
-        // ---------- Сеть ----------
 
         public void WriteNet(NetWriter writer)
         {
@@ -400,7 +374,6 @@ namespace Bouncer.Enemies
         {
             _hopStart = Time.time - reader.Seconds() - age;
             int held = reader.Byte();
-            // Мяч из рук ушёл — это бросок.
             if (held < _netHeld)
                 _throwPose = 1f;
             _netHeld = held;

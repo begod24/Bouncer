@@ -5,15 +5,6 @@ using UnityEngine.AI;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Тень. Выходит из темноты (спавнер ставит её только в неосвещённые точки) и плывёт к игроку.
-    /// В темноте мячи и взрывы проходят сквозь неё, на свету фонаря она твёрдая — чтобы напасть на игрока
-    /// под фонарём, ей приходится выйти на свет. На замахе тень плотнеет где угодно: это окно, чтобы попасть.
-    /// Маленький круг света вокруг игрока светом не считается, «Фонарик» — считается (<see cref="LightZone.IsLit"/>).
-    /// Элитная тень гасит фонари, мимо которых пролетает. Вокруг тела всё время клубится дым.
-    /// По сети плывёт, бьёт и гасит фонари только у хозяина комнаты (погасший фонарь он показывает гостям);
-    /// у гостя копия проявляется и замахивается по его вестям.
-    /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
     public sealed class ShadowEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, IBurnable, INetEnemy
     {
@@ -66,11 +57,6 @@ namespace Bouncer.Enemies
 
         public ShadowDefinition Definition => definition;
 
-        /// <summary>
-        /// Твёрдая: мячи и удары по ней проходят. На свету — всегда, в темноте — только пока замахивается и бьёт.
-        /// Пока проявляется из темноты — бесплотна в любом случае.
-        /// </summary>
-        /// <summary>Луч наводящего фонарика жжёт тень (<see cref="LightBeams"/>).</summary>
         public bool BurnsInLight => !_health.IsDead;
 
         public bool IsSolid => _state != State.Emerge
@@ -130,8 +116,6 @@ namespace Bouncer.Enemies
             if (smoke)
                 smoke.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
-
-        // ---------- Мозги ----------
 
         void Update()
         {
@@ -248,7 +232,6 @@ namespace Bouncer.Enemies
             }
         }
 
-        /// <summary>Элитная тень: подлетела к фонарю — он мигает и гаснет на несколько секунд.</summary>
         void PutOutLamps()
         {
             if (Time.time < _nextPutOut)
@@ -278,11 +261,8 @@ namespace Bouncer.Enemies
             transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(direction), definition.turnSpeed * dt);
         }
 
-        // ---------- Попадания ----------
-
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)
         {
-            // В темноте мяч проходит насквозь, как сквозь дым.
             if (_health.IsDead || !IsSolid)
                 return BallContactResult.PassThrough;
             Vector3 direction = Flat(ball.Velocity);
@@ -303,7 +283,6 @@ namespace Bouncer.Enemies
 
         public bool ApplyHit(in HitInfo hit)
         {
-            // Бесплотную тень не берут ни взрывы, ни подкат — только арена пройдена (исчезают все).
             if (_health.IsDead || (!IsSolid && !hit.Has(HitFlags.Despawn)))
                 return false;
             bool strong = hit.Has(HitFlags.Charged);
@@ -315,7 +294,6 @@ namespace Bouncer.Enemies
             if (!_health.IsDead)
             {
                 _knockback += Flat(hit.Direction) * (hit.Force * definition.knockbackScale);
-                // Попадание сбивает замах.
                 if (_state == State.Windup)
                 {
                     _nextAttack = Time.time + definition.attackCooldown * 0.5f;
@@ -328,7 +306,6 @@ namespace Bouncer.Enemies
 
         void OnDied(HitInfo hit)
         {
-            // Тень не разваливается на части — рассеивается дымом.
             if (poof)
                 PoolService.Spawn(poof, transform.position + Vector3.up * 1f, Quaternion.identity);
             GameEvents.RaiseEnemyKilled(gameObject, hit);
@@ -336,8 +313,6 @@ namespace Bouncer.Enemies
             GameFeel.Shake(0.2f);
             PoolService.Despawn(gameObject);
         }
-
-        // ---------- Вид ----------
 
         void LateUpdate()
         {
@@ -354,7 +329,6 @@ namespace Bouncer.Enemies
             {
                 _bobPhase += dt * 2.2f;
                 float emerge = _state == State.Emerge ? Mathf.Clamp01(_stateTime / Mathf.Max(0.05f, definition.emergeTime)) : 1f;
-                // Проявляется из темноты: вырастает из клуба дыма у земли.
                 visual.localScale = _visualScale * Mathf.Lerp(0.3f, 1f, emerge * emerge);
                 visual.localPosition = _visualRest + Vector3.up * (0.15f + Mathf.Sin(_bobPhase) * 0.08f - (1f - emerge) * 0.6f);
             }
@@ -370,8 +344,6 @@ namespace Bouncer.Enemies
             if (armR)
                 armR.localRotation = _armRRest * Quaternion.Euler(reach, 0f, 0f);
         }
-
-        // ---------- Сеть ----------
 
         public void WriteNet(NetWriter writer)
         {

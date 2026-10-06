@@ -7,21 +7,6 @@ using Random = UnityEngine.Random;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// «Тот, кто в сумерках» — финальный босс, Бабай с мешком и клюкой, ночью в нашем дворе.
-    /// Всегда: скользит к игроку и медленно поворачивается; вблизи бьёт клюкой, издалека бросает сильный мяч;
-    /// «Ловец» — хватает все мячи спереди, даже заряженные, и отвечает веером сильных (бить сбоку и сзади).
-    /// Умения по очереди из мешка, без повторов подряд, новые — с каждой фазой (по жизням или по времени боя):
-    /// 1 — «Прыжок на шесте», «Мешок», «Вороньё», «Из мешка» (веер тёмных мячей: попадание замедляет);
-    /// 2 — «Карусель» (через раз летят ёжики), «Считалочка», «Гасит свет»; 3 — «Прятки».
-    /// Держит удар (<see cref="BossArmor"/>): открыт после прыжка (шест воткнут), когда кружится после карусели,
-    /// шатается, растерян или найден в «Прятках». Обычный бросок иногда с финтом и кручёный.
-    /// Мама позвала (<see cref="GameEvents.MomCalled"/>) — мелочь разбегается, а он прыгает на игрока,
-    /// пока тот бежит к подъезду; в свет из двери не заходит. Жизнь — на полосе босса (<see cref="BossSplit"/>).
-    /// По сети думает, ловит, бросает и зовёт подручных только у хозяина комнаты (надписи, метки, свет и подручных
-    /// он показывает гостям); у гостя копия встаёт в те же позы, крутится, прячется и выдаёт себя глазами по его вестям.
-    /// Чем больше игроков, тем чаще приёмы (<see cref="EnemyScaling.BossCooldown"/>).
-    /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
     public sealed class DuskBoss : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
@@ -34,7 +19,6 @@ namespace Bouncer.Enemies
             Count,
             Lights,
             Hide,
-            /// <summary>«Из мешка»: веер тёмных мячей — попадание замедляет.</summary>
             DarkBalls,
         }
 
@@ -63,9 +47,7 @@ namespace Bouncer.Enemies
             HideVanish,
             Hidden,
             Stagger,
-            /// <summary>Замах броска оказался финтом: сейчас бросит по-настоящему.</summary>
             Feint,
-            /// <summary>«Из мешка»: лезет в мешок за тёмными мячами.</summary>
             DarkWindup,
         }
 
@@ -73,7 +55,6 @@ namespace Bouncer.Enemies
         const float FeintTime = 0.35f;
         const float CurveChance = 0.35f;
         const float CurveOffset = 24f;
-        /// <summary>«Карусель»: каждый какой мяч — ёжик.</summary>
         const int CarouselSpikyEvery = 3;
         const float DarkWindupTime = 0.7f;
         const int DarkBallCount = 5;
@@ -161,14 +142,12 @@ namespace Bouncer.Enemies
         float _nextRageVault;
         bool _lightsWereOut;
 
-        // Прыжок
         int _vaultsLeft;
         Vector3 _vaultFrom;
         Vector3 _vaultTo;
         GroundMarker _landingMarker;
         bool _rageVault;
 
-        // Мешок, карусель, считалочка
         int _sweepStopsLeft;
         Vector3 _sweepPoint;
         float _nextCarouselShot;
@@ -180,7 +159,6 @@ namespace Bouncer.Enemies
         int _volleyLeft;
         float _nextVolley;
 
-        // Вид
         Quaternion _bodyRest, _headRest, _armLRest, _armRRest;
         Vector3 _bodyEuler, _headEuler, _armLEuler, _armREuler;
         Vector3 _modelRestPosition;
@@ -193,15 +171,12 @@ namespace Bouncer.Enemies
         float _catchPose;
         float _throwPose;
         bool _crowsAway;
-        /// <summary>Сколько раз бросал (по сети гость по нему видит, что был бросок).</summary>
         byte _throws;
-        // У гостя — по вестям хозяина.
         int _netHeld;
         int _netSack;
 
         public static DuskBoss Instance { get; private set; }
         public DuskBossDefinition Definition => definition;
-        /// <summary>Фаза: 0, 1 или 2.</summary>
         public int Phase => _phase;
         public int SackCount => _sack.Count;
         public Vector3 SackPosition => sackInside ? sackInside.position : transform.position + Vector3.up * 1.4f - transform.forward * 0.8f;
@@ -290,7 +265,6 @@ namespace Bouncer.Enemies
                 _agent.Warp(hit.position);
             _agent.updatePosition = true;
             Enter(State.Appear, definition.appearTime);
-            // Дым появления у гостя показывает хозяин.
             if (!NetHooks.IsGuest)
                 Burst(smokePrefab, transform.position + Vector3.up * 0.5f, 1.6f);
             GameEvents.PlaySound(SoundCue.BabaiLaugh, transform.position);
@@ -302,8 +276,6 @@ namespace Bouncer.Enemies
             ClearMarker();
             DispelMinions();
         }
-
-        // ---------- Мозги ----------
 
         void Update()
         {
@@ -326,7 +298,6 @@ namespace Bouncer.Enemies
 
             if (_state != State.Vault && !_agent.isOnNavMesh)
                 return;
-            // «Свисток», «Гиря» и прочие заморозки держат и его — но не в полёте.
             if (_self.IsFrozen && _state != State.Vault)
             {
                 Halt();
@@ -378,7 +349,6 @@ namespace Bouncer.Enemies
                         Face(toTarget, dt, 1.5f);
                     if (_stateTime >= definition.throwWindup)
                     {
-                        // Финт: замахнулся — и не бросил; настоящий бросок с короткого замаха.
                         if (!_feinted && hasTarget && Random.value < Danger.FeintChance)
                         {
                             _feinted = true;
@@ -525,7 +495,6 @@ namespace Bouncer.Enemies
                 Halt();
                 return;
             }
-            // Свет из подъезда: туда он не заходит и оттуда не достаёт.
             bool targetSafe = LightZone.Repels(_target.Position);
             if (_called && Time.time >= _nextRageVault && !targetSafe)
             {
@@ -561,8 +530,6 @@ namespace Bouncer.Enemies
             Face(distance < definition.keepDistance + 2f || velocity.sqrMagnitude < 0.3f ? toTarget : velocity, dt);
         }
 
-        // ---------- Фазы и очередь умений ----------
-
         void UpdatePhase()
         {
             if (_state == State.Appear || _health.IsDead)
@@ -573,7 +540,6 @@ namespace Bouncer.Enemies
                 : 0;
             if (want <= _phase)
                 return;
-            // Новые умения — сразу первыми, чтобы игрок их точно увидел.
             for (int p = _phase + 1; p <= want; p++)
                 _fresh.AddRange(PhaseAbilities[p]);
             _phase = want;
@@ -584,7 +550,6 @@ namespace Bouncer.Enemies
 
         bool TryStartAbility()
         {
-            // Сколько умений ни пропусти (мячей на земле нет, свет уже погашен), до следующего — пауза.
             for (int attempt = 0; attempt < 8; attempt++)
             {
                 var ability = NextAbility();
@@ -681,7 +646,6 @@ namespace Bouncer.Enemies
             return false;
         }
 
-        /// <summary>Умение кончилось: снова ходит, следующее — через паузу своей фазы.</summary>
         void EndAbility()
         {
             _nextAbility = Time.time + DuskBossDefinition.ByPhase(definition.abilityInterval, _phase) * EnemyScaling.BossCooldown;
@@ -690,8 +654,6 @@ namespace Bouncer.Enemies
 
         static void Announce(string key, float seconds) =>
             GameEvents.Announce(new Announcement { Title = key, Hint = key + ".hint", Seconds = seconds });
-
-        // ---------- «Ловец» ----------
 
         bool CanCatchNow => (_state is State.Stalk or State.Aim or State.SwipeWindup or State.SwipeRecover
             or State.SweepMove or State.CrowsCast or State.LightsCast) && !_self.IsFrozen;
@@ -717,7 +679,6 @@ namespace Bouncer.Enemies
                 Vector3 toBall = Flat(position - chest);
                 if (toBall.sqrMagnitude > radiusSqr)
                     continue;
-                // Только мяч, который летит к нему, а не уже пролетевший мимо.
                 if (Vector3.Dot(Flat(ball.Velocity), -toBall) <= 0f)
                     continue;
                 Catch(ball);
@@ -743,7 +704,6 @@ namespace Bouncer.Enemies
 
         Vector3 HeldPosition(int index) => HandPosition + transform.right * (index * 0.35f);
 
-        /// <summary>Ответ на пойманный мяч: веер сильных мячей, пойманный — в середине.</summary>
         void Answer()
         {
             var caught = _held[0];
@@ -758,7 +718,6 @@ namespace Bouncer.Enemies
                 var reuse = middle && caught != null && caught.State == BallState.Stuck ? caught : null;
                 ThrowAt(_target, angle, definition.answerSpeed, HitFlags.Charged, i == 0 ? SoundCue.ThrowCharged : (SoundCue?)null, reuse);
             }
-            // Пойманный так и не полетел (игрок вплотную — бросать некуда): падает под ноги, а не висит в воздухе.
             if (caught != null && caught.State == BallState.Stuck)
                 caught.Drop(caught.Position, transform.forward * 2f);
             _throwPose = 1f;
@@ -788,8 +747,6 @@ namespace Bouncer.Enemies
             _answerAt.Clear();
         }
 
-        // ---------- Клюка и броски ----------
-
         void Swipe()
         {
             GameEvents.PlaySound(SoundCue.SwingBat, transform.position);
@@ -817,8 +774,6 @@ namespace Bouncer.Enemies
             });
         }
 
-        /// <summary>Мяч в игрока с упреждением; reuse — бросить пойманный мяч, а не новый из пула.</summary>
-        /// <summary>«Из мешка»: веер тёмных мячей — попадание замедляет (ловить можно, как обычные).</summary>
         void ThrowDarkFan(Targetable target)
         {
             for (int i = 0; i < DarkBallCount; i++)
@@ -845,7 +800,6 @@ namespace Bouncer.Enemies
             float gravity = definition.ballGravity;
             float time = distance / speed;
             float up = (aim.y - origin.y + 0.5f * gravity * time * time) / time;
-            // Кручёный: вылетает в сторону и дугой заворачивает к цели.
             var perks = default(BallPerks);
             if (curve)
             {
@@ -880,12 +834,8 @@ namespace Bouncer.Enemies
             !Physics.Linecast(Eye, target.AimPoint, Layers.EnvironmentMask, QueryTriggerInteraction.Ignore)
             && !CoverVolume.Blocks(Eye, target.AimPoint);
 
-        // ---------- «Мешок» ----------
-
-        /// <summary>Мешок берёт только чужие лежащие мячи: мячи игрока ему не достаются.</summary>
         static bool CanSack(Ball ball) => ball.State == BallState.Loose && !ball.IsOwn;
 
-        /// <summary>Куча чужих лежащих мячей: точка, вокруг которой их больше всего (из равных — ближе к нему).</summary>
         bool FindLooseCluster(out Vector3 point)
         {
             point = default;
@@ -931,7 +881,6 @@ namespace Bouncer.Enemies
             Face(velocity.sqrMagnitude > 0.3f ? velocity : to, dt, 1.5f);
         }
 
-        /// <summary>Нагнулся — и все чужие мячи вокруг улетели в мешок (мячи игрока остаются лежать).</summary>
         void SweepUp()
         {
             var balls = Ball.Active;
@@ -954,7 +903,6 @@ namespace Bouncer.Enemies
                 EndAbility();
         }
 
-        /// <summary>Чужой мяч в мешок (сам сгрёб или принесла ворона). false — мешок полон или мяч игрока.</summary>
         public bool StuffBall(Ball ball, bool sound = true)
         {
             if (ball == null || ball.IsOwn || _health.IsDead || _sack.Count >= definition.sackCapacity)
@@ -976,7 +924,6 @@ namespace Bouncer.Enemies
                 ball.HoldAt(inside);
         }
 
-        /// <summary>Попали в мешок: мяч бьёт и самого босса, а собранные мячи высыпаются.</summary>
         public BallContactResult OnSackContact(Ball ball, in RaycastHit hit)
         {
             if (_health.IsDead || _state == State.HideVanish)
@@ -1012,8 +959,6 @@ namespace Bouncer.Enemies
             GameEvents.PlaySound(SoundCue.SackSpill, origin);
             GameFeel.Shake(0.3f);
         }
-
-        // ---------- «Прыжок на шесте» ----------
 
         void StartVault(int count, bool rage)
         {
@@ -1106,8 +1051,6 @@ namespace Bouncer.Enemies
             _landingMarker = null;
         }
 
-        // ---------- «Карусель» ----------
-
         void Carousel()
         {
             if (Time.time < _nextCarouselShot || ballPrefab == null)
@@ -1121,7 +1064,6 @@ namespace Bouncer.Enemies
                 var direction = new Vector3(Mathf.Sin(angle), 0f, Mathf.Cos(angle));
                 Vector3 origin = center + direction * 1.3f;
                 var ball = PoolService.Spawn(ballPrefab, origin, Quaternion.identity);
-                // Через раз с обычными (их ловят — главный источник сердец в дуэли) летят ёжики.
                 _carouselShots++;
                 ball.Launch(new BallThrow
                 {
@@ -1144,12 +1086,9 @@ namespace Bouncer.Enemies
             _carouselAngle += definition.carouselTurn;
         }
 
-        // ---------- «Считалочка» ----------
-
         void Count(bool hasTarget, Vector3 toTarget, float dt)
         {
             Halt();
-            // Отвернулся к стенке и закрыл глаза руками.
             if (hasTarget)
                 Face(-toTarget, dt, 2.5f);
             int ticks = Mathf.Min(5, Mathf.FloorToInt(_stateTime / Mathf.Max(0.1f, definition.countTime / 5f)) + 1);
@@ -1166,7 +1105,6 @@ namespace Bouncer.Enemies
             }
         }
 
-        /// <summary>Обернулся: кого видно — в того залп сильных мячей, кто спрятался — того не нашёл.</summary>
         void LookAround(bool hasTarget)
         {
             if (hasTarget && CanSee(_target) && !LightZone.Repels(_target.Position))
@@ -1178,8 +1116,6 @@ namespace Bouncer.Enemies
             }
             Enter(State.Confused, definition.confusedTime);
         }
-
-        // ---------- «Гасит свет» ----------
 
         void PutOutLights()
         {
@@ -1212,7 +1148,6 @@ namespace Bouncer.Enemies
             }
         }
 
-        /// <summary>Свет вернулся — тени, которых он вызвал, рассеиваются.</summary>
         void TrackLights()
         {
             bool dark = LightsOut.Active;
@@ -1224,8 +1159,6 @@ namespace Bouncer.Enemies
             _lightsWereOut = dark;
         }
 
-        // ---------- «Вороньё» ----------
-
         void ReleaseCrows()
         {
             if (crowPrefab != null)
@@ -1233,7 +1166,6 @@ namespace Bouncer.Enemies
                 int count = DuskBossDefinition.ByPhase(definition.crowCount, _phase);
                 for (int i = 0; i < count; i++)
                 {
-                    // Две — с его плеч, остальные слетаются из-за краёв двора.
                     Vector3 from = i < 2
                         ? transform.position + Vector3.up * 4.3f + transform.right * (i == 0 ? -0.6f : 0.6f)
                         : EdgePoint() + Vector3.up * 7f;
@@ -1260,8 +1192,6 @@ namespace Bouncer.Enemies
                 (x, z) = (Random.value < 0.5f ? -23f : 23f, Random.Range(-13f, 13f));
             return new Vector3(x, 0f, z);
         }
-
-        // ---------- «Прятки» ----------
 
         void SpreadDecoys()
         {
@@ -1301,7 +1231,6 @@ namespace Bouncer.Enemies
             Enter(State.Hidden, definition.hideRise + definition.hideTime);
         }
 
-        /// <summary>Нашли настоящего (или сам вышел): ложные чучела осыпаются без ворон.</summary>
         void StopHiding(bool found)
         {
             foreach (var decoy in _decoys)
@@ -1315,12 +1244,10 @@ namespace Bouncer.Enemies
                 Enter(State.Stagger, definition.revealStagger);
                 return;
             }
-            // Никто не нашёл — сам нашёл игрока: прыжок из укрытия.
             GameEvents.PlaySound(SoundCue.BabaiLaugh, transform.position);
             StartVault(1, rage: false);
         }
 
-        /// <summary>Ложное чучело разбили: из соломы вылетают вороны.</summary>
         public void OnDecoyBroken(ScarecrowDecoy decoy, bool byPlayer)
         {
             _decoys.Remove(decoy);
@@ -1332,9 +1259,6 @@ namespace Bouncer.Enemies
 
         public void OnCrowGone(CrowEnemy crow) => _crows.Remove(crow);
 
-        // ---------- Подручные ----------
-
-        /// <summary>Место на навмеше в кольце вокруг точки, в пределах двора.</summary>
         static bool TryFindSpot(Vector3 around, float minDistance, float maxDistance, out Vector3 point)
         {
             for (int attempt = 0; attempt < 12; attempt++)
@@ -1370,7 +1294,6 @@ namespace Bouncer.Enemies
                 SetCrowsAway(false);
         }
 
-        /// <summary>Вся мелочь исчезает: вороны улетают, тени рассеиваются, ложные чучела осыпаются.</summary>
         void DispelMinions()
         {
             foreach (var crow in _crows)
@@ -1413,11 +1336,8 @@ namespace Bouncer.Enemies
                     crow.SetActive(!away);
         }
 
-        // ---------- Мама позвала ----------
-
         void OnMomCalled()
         {
-            // У гостя всё это делает настоящий босс у хозяина.
             if (_health.IsDead || _called || NetHooks.IsGuest)
                 return;
             _called = true;
@@ -1434,15 +1354,12 @@ namespace Bouncer.Enemies
             Enter(State.Stagger, definition.rageStagger);
         }
 
-        // ---------- Попадания ----------
-
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit) => OnBallContact(ball, hit, allowCatch: true);
 
         BallContactResult OnBallContact(Ball ball, in RaycastHit hit, bool allowCatch)
         {
             if (_health.IsDead || _state == State.HideVanish)
                 return BallContactResult.PassThrough;
-            // Спереди руки ловят — если есть свободная.
             if (allowCatch && CanCatchNow && _held.Count < definition.maxHeld && CanCatch(ball))
             {
                 Catch(ball);
@@ -1464,10 +1381,6 @@ namespace Bouncer.Enemies
             return BallContactResult.Hit;
         }
 
-        /// <summary>
-        /// Открыт — попадания засчитываются в полтора раза: шест воткнут после прыжка, кружится после карусели,
-        /// шатается (мешок порвали, прыжок в ярости), растерян после «Считалочки», найден в «Прятках».
-        /// </summary>
         public bool IsOpen => _state is State.VaultStuck or State.Dizzy or State.Stagger or State.Confused or State.Hidden;
 
         public bool ApplyHit(in HitInfo hit)
@@ -1477,7 +1390,6 @@ namespace Bouncer.Enemies
             var damage = hit;
             bool found = _state == State.Hidden && !hit.Has(HitFlags.Despawn);
             bool open = IsOpen || hit.Has(HitFlags.Despawn);
-            // Нашли настоящего среди ложных — попадание больнее.
             if (found)
                 damage.Damage *= definition.revealDamageMultiplier;
             if (!hit.Has(HitFlags.Despawn))
@@ -1527,8 +1439,6 @@ namespace Bouncer.Enemies
                 PoolService.Spawn(prefab, position, Quaternion.identity).Play(scale);
         }
 
-        // ---------- Движение ----------
-
         void Halt()
         {
             if (_agent.isOnNavMesh && _agent.updatePosition && !_agent.isStopped)
@@ -1555,8 +1465,6 @@ namespace Bouncer.Enemies
             if (state == State.Stalk && _agent.isOnNavMesh && _agent.updatePosition)
                 _agent.isStopped = false;
         }
-
-        // ---------- Вид ----------
 
         void LateUpdate()
         {
@@ -1604,14 +1512,12 @@ namespace Bouncer.Enemies
                     break;
                 }
                 case State.Feint:
-                    // Рука «бросила» вперёд, а мяча нет.
                     bodyE = new Vector3(8f, 14f, 0f);
                     armLE = new Vector3(-45f, 0f, -10f);
                     follow = 45f;
                     break;
                 case State.DarkWindup:
                 {
-                    // Тянется рукой за спину, в мешок.
                     float w = Mathf.Clamp01(_stateTime / DarkWindupTime);
                     bodyE = new Vector3(-10f * w, 25f * w, 0f);
                     armRE = new Vector3(40f * w, 0f, 35f * w);
@@ -1664,7 +1570,6 @@ namespace Bouncer.Enemies
                     break;
                 case State.Count:
                 {
-                    // Закрыл лицо руками, на каждый счёт вздрагивает.
                     float tick = Mathf.Repeat(_stateTime, definition.countTime / 5f) / (definition.countTime / 5f);
                     float nod = Mathf.Exp(-tick * 6f) * 10f;
                     bodyE = new Vector3(10f + nod * 0.5f, 0f, 0f);
@@ -1703,7 +1608,6 @@ namespace Bouncer.Enemies
                     break;
                 case State.Hidden:
                 {
-                    // Вылезает из земли и стоит пугалом, руки чуть в стороны.
                     float rise = Mathf.Clamp01(_stateTime / Mathf.Max(0.05f, definition.hideRise));
                     sink = 1f - rise;
                     armLE = new Vector3(0f, 0f, -20f);
@@ -1718,7 +1622,6 @@ namespace Bouncer.Enemies
                     armRE = new Vector3(-35f, 0f, 40f);
                     break;
                 default:
-                    // Скользит к игроку: чуть наклонён вперёд, покачивается, клюка постукивает по асфальту.
                     bodyE = new Vector3(6f + 4f * speed01, 0f, sway * 3f);
                     headE = new Vector3(-6f, 0f, 10f + Mathf.Sin(Time.time * 0.7f) * 6f);
                     armLE = new Vector3(-_catchPose * 70f - _throwPose * 90f + sway * 8f * speed01, 0f, -6f);
@@ -1741,7 +1644,6 @@ namespace Bouncer.Enemies
 
             if (model)
             {
-                // Карусель: вся фигура крутится вокруг клюки.
                 _spin = _state == State.Carousel ? _spin + dt * 600f
                     : Mathf.MoveTowards(_spin, Mathf.Round(_spin / 360f) * 360f, dt * 400f);
                 model.localPosition = _modelRestPosition + Vector3.up * (height - sink * 5.5f);
@@ -1757,9 +1659,6 @@ namespace Bouncer.Enemies
             UpdateEyes();
         }
 
-        /// <summary>
-        /// Глаза: в «Прятках» вспыхивают и гаснут — так выдаёт себя настоящий; на «Я иду искать!» горят ярче.
-        /// </summary>
         void UpdateEyes()
         {
             bool on = true;
@@ -1787,8 +1686,6 @@ namespace Bouncer.Enemies
             if (part)
                 part.localRotation = rest * Quaternion.Euler(euler);
         }
-
-        // ---------- Сеть ----------
 
         const byte NetTangible = 1 << 0;
         const byte NetCrowsAway = 1 << 1;
@@ -1824,7 +1721,6 @@ namespace Bouncer.Enemies
             if (away != _crowsAway)
                 SetCrowsAway(away);
             byte throws = reader.Byte();
-            // Бросил — рука уходит вперёд, как у хозяина.
             if (throws != _throws)
             {
                 _throws = throws;

@@ -3,11 +3,6 @@ using UnityEngine;
 
 namespace Bouncer.Core
 {
-    /// <summary>
-    /// Участок земли с особыми свойствами — песок в песочнице: замедляет всех, кто по нему идёт,
-    /// и быстро гасит катящиеся мячи. Прямоугольник в плоскости XZ без физических триггеров:
-    /// проверка по реестру дешёвая и одинаковая для игрока, врагов и мячей (позже — и для хоста в сети).
-    /// </summary>
     public sealed class GroundZone : MonoBehaviour
     {
         static readonly List<GroundZone> s_all = new();
@@ -41,7 +36,6 @@ namespace Bouncer.Core
             return round ? x * x + z * z <= 1f : Mathf.Abs(x) <= 1f && Mathf.Abs(z) <= 1f;
         }
 
-        /// <summary>Множитель скорости в точке: 1 — обычная земля.</summary>
         public static float MoveMultiplierAt(Vector3 position)
         {
             float multiplier = 1f;
@@ -51,7 +45,6 @@ namespace Bouncer.Core
             return multiplier;
         }
 
-        /// <summary>Дополнительное торможение лежащего мяча в точке: 0 — обычная земля.</summary>
         public static float BallDampingAt(Vector3 position)
         {
             float damping = 0f;

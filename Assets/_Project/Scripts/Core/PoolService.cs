@@ -3,26 +3,17 @@ using UnityEngine;
 
 namespace Bouncer.Core
 {
-    /// <summary>Получает колбэки при выдаче из пула и возврате в него.</summary>
     public interface IPoolable
     {
         void OnSpawned();
         void OnDespawned();
     }
 
-    /// <summary>
-    /// Пулы по префабам. Сам объект пула живёт в сцене и уничтожается вместе с ней,
-    /// поэтому перезапуск сцены начинает с чистого листа.
-    /// </summary>
     public sealed class PoolService : MonoBehaviour
     {
         static PoolService s_instance;
 
         readonly Dictionary<GameObject, Stack<GameObject>> _free = new();
-        /// <summary>
-        /// Свободные списки под колбэки. Колбэк может сам выдать или вернуть объект пула (босс ставит метку,
-        /// пускает дым), поэтому у вложенного вызова свой список — общий менялся бы прямо под перебором.
-        /// </summary>
         readonly Stack<List<IPoolable>> _poolableLists = new();
 
         static PoolService Instance

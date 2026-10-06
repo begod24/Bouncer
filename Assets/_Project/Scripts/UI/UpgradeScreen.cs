@@ -7,13 +7,6 @@ using UnityEngine.InputSystem;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// Экран выбора вкладыша «1 из 3» (старт прогулки, портфель, босс; со «Счастливым фантиком» — из 4):
-    /// показывает предложение <see cref="PlayerCards"/> и передаёт выбор. Выбор — мышью, стрелками/WASD + Enter,
-    /// геймпадом или клавишами 1–4. На каждой карточке — плашка, займёт ли она карман; внизу — свои карманы
-    /// (<see cref="PocketStrip"/>), Tab / Select открывает их подробно. Первые доли секунды ввод не принимается,
-    /// чтобы случайный клик или бросок не выбрал карточку вслепую.
-    /// </summary>
     public sealed class UpgradeScreen : MonoBehaviour
     {
         [SerializeField] CanvasGroup group;
@@ -52,7 +45,6 @@ namespace Bouncer.UI
                 _cards.OfferChanged -= OnOfferChanged;
         }
 
-        /// <summary>Экран выбора показывает карточки своего игрока: он мог появиться позже экрана.</summary>
         void Bind(PlayerController player)
         {
             if (_cards != null)
@@ -102,7 +94,6 @@ namespace Bouncer.UI
             Select(0);
         }
 
-        /// <summary>Поверх открыты карманы (Tab): ввод у них.</summary>
         static bool PocketsOpen => PocketsPanel.Instance != null && PocketsPanel.Instance.IsOpen;
 
         void Close()
@@ -125,7 +116,6 @@ namespace Bouncer.UI
             if (!_open || PocketsOpen)
                 return;
 
-            // Мышь кликнула мимо карточек — стрелки и геймпад снова должны что-то выбирать.
             var events = EventSystem.current;
             if (events != null && events.currentSelectedGameObject == null && NavigationPressed())
                 Select(0);

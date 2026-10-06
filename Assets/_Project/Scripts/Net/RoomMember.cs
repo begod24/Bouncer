@@ -4,13 +4,10 @@ using Unity.Netcode;
 
 namespace Bouncer.Net
 {
-    /// <summary>Игрок в комнате: кто он, под каким номером, кем гуляет и готов ли.</summary>
     public struct RoomMember : INetworkSerializable, IEquatable<RoomMember>
     {
         public ulong ClientId;
-        /// <summary>Номер игрока в прогулке (0–3): точка старта, цвет, монетки и сердца в RunState.</summary>
         public byte Slot;
-        /// <summary>Номер ребёнка в KidRoster; -1 — ещё не выбран.</summary>
         public sbyte Kid;
         public FixedString64Bytes Name;
         public bool Ready;

@@ -1,7 +1,3 @@
-// PS1-обработка кадра для Full Screen Pass Renderer Feature (After Rendering Post Processing):
-// квантование цвета до _ColorLevels уровней на канал с упорядоченным дизерингом Байера 4×4.
-// Пикселизацию даёт Render Scale URP-ассета с Upscaling Filter = Point, поэтому дизер ложится
-// на «крупные» пиксели. Квантуем в sRGB, иначе в тенях будут грубые ступени.
 Shader "Hidden/Bouncer/PS1Post"
 {
     Properties

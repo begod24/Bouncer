@@ -3,11 +3,6 @@ using UnityEngine;
 
 namespace Bouncer.Player
 {
-    /// <summary>
-    /// Круг света вокруг игрока на тёмной арене (<see cref="DarkArena"/>): видно, куда бежишь, но тень в нём
-    /// не твердеет. С «Фонариком» круг шире и ярче — и тогда это уже свет для тени (радиус задаёт
-    /// PlayerController через <see cref="Targetable.LightRadius"/>).
-    /// </summary>
     public sealed class PlayerLantern : MonoBehaviour
     {
         [SerializeField] PlayerController player;

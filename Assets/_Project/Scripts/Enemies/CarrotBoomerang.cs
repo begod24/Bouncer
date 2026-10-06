@@ -4,12 +4,6 @@ using UnityEngine;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Плюшевая морковка зайца: летит петлёй-бумерангом — от лапы вперёд к цели и назад к хозяину, крутясь.
-    /// Бьёт игрока, которого задевает (туда и обратно — по разу). Поймать нельзя, только увернуться. Из пула.
-    /// По сети морковку бросает хозяин комнаты и показывает гостям такую же (<see cref="Thrown"/>): у гостя она
-    /// летит к копии зайца и обратно, но не бьёт (<see cref="IsPuppet"/>) — удар засчитывает хозяин.
-    /// </summary>
     public sealed class CarrotBoomerang : MonoBehaviour, IPoolable
     {
         [Tooltip("Модель морковки: крутится")]
@@ -30,17 +24,14 @@ namespace Bouncer.Enemies
         bool _hitBack;
         Action _onReturned;
 
-        /// <summary>По сети у гостя: копия морковки хозяина — только летит.</summary>
         public bool IsPuppet { get; set; }
 
-        /// <summary>Морковка брошена: откуда, докуда, сколько летит, радиус удара (по сети хозяин показывает гостям).</summary>
         public static event Action<CarrotBoomerang, Vector3, Vector3, float, float> Thrown;
 
         public void OnSpawned() => IsPuppet = false;
 
         public void OnDespawned() => _onReturned = null;
 
-        /// <summary>Бросить: из start к far и обратно в returnPoint(); onReturned — поймали лапой.</summary>
         public void Throw(Transform owner, Vector3 start, Vector3 far, Func<Vector3> returnPoint, float flightTime, float radius,
             int damage, float knockback, Action onReturned)
         {
@@ -74,7 +65,6 @@ namespace Bouncer.Enemies
                 PoolService.Despawn(gameObject);
                 return;
             }
-            // Петля: туда по одной стороне, обратно по другой.
             Vector3 back = _returnPoint != null ? _returnPoint() : _start;
             Vector3 position;
             if (t < 0.5f)

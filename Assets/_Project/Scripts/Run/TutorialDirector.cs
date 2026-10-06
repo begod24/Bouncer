@@ -9,7 +9,6 @@ using UnityEngine.AI;
 
 namespace Bouncer.Run
 {
-    /// <summary>Шаг тренировки во дворе. Ключи заданий в таблице «UI» — tutorial.{шаг в нижнем регистре}.*</summary>
     public enum TutorialStep
     {
         Move,
@@ -26,16 +25,6 @@ namespace Bouncer.Run
         Done,
     }
 
-    /// <summary>
-    /// Тренировка во дворе (<see cref="Tutorial"/>): задания по шагам на первой арене без волн.
-    /// Побегать → выбить неваляшек → подобрать мячи → заряженный бросок → поймать мячи солдатика → рывок →
-    /// бой с кучкой врагов → элитка с золотой меткой → портфель и карточка → карманы → ларёк → готово.
-    /// Врагов выпускает через <see cref="WaveSpawner"/> (с метками на полу) недалеко от игрока, в сторону середины
-    /// арены. Игрока не выбить: жизни не падают ниже одной и восстанавливаются с каждым шагом; ёжиков и свойств
-    /// у элиток в обучении нет (<see cref="Danger"/>). Задание и прогресс показывает TutorialPanel (UI), она же
-    /// сообщает, что карманы открывали (<see cref="ReportPocketsViewed"/>). Шаг засчитан — пара секунд «Готово!»,
-    /// потом следующий. Вне обучения выключен.
-    /// </summary>
     public sealed class TutorialDirector : MonoBehaviour
     {
         [SerializeField] WaveSpawner spawner;
@@ -82,21 +71,15 @@ namespace Bouncer.Run
         bool _shopOpened;
         bool _shopClosed;
 
-        /// <summary>Идёт обучение: директор сцены. Вне обучения — null.</summary>
         public static TutorialDirector Instance { get; private set; }
         public TutorialStep Step { get; private set; }
-        /// <summary>Номер шага с 1.</summary>
         public int StepNumber => (int)Step + 1;
-        /// <summary>Сколько всего заданий (без «Готово»).</summary>
         public static int StepCount => (int)TutorialStep.Done;
         public int Progress { get; private set; }
         public int Target { get; private set; } = 1;
-        /// <summary>Шаг засчитан: висит «Готово!», скоро следующий.</summary>
         public bool StepComplete => _nextAt > 0f;
-        /// <summary>Все задания пройдены.</summary>
         public bool IsFinished => Step == TutorialStep.Done;
 
-        /// <summary>Сменился шаг или его прогресс — панель переписывает текст.</summary>
         public event Action Changed;
 
         void Awake()
@@ -157,7 +140,6 @@ namespace Bouncer.Run
             }
         }
 
-        /// <summary>Игрок открыл и закрыл карманы (Tab / Select) — шаг «Карманы» засчитан.</summary>
         public void ReportPocketsViewed() => _pocketsSeen = true;
 
         void Update()
@@ -165,7 +147,6 @@ namespace Bouncer.Run
             var session = GameSession.Instance;
             if (_player == null || session == null || IsFinished)
                 return;
-            // Пауза, выбор карточки, витрина: задания ждут, бег не считается.
             if (!session.PlayerCanAct)
             {
                 _lastPosition = Flat(_player.transform.position);
@@ -256,7 +237,6 @@ namespace Bouncer.Run
             _moved = 0f;
             Progress = 0;
             Target = 1;
-            // Каждое задание — с полными сердцами.
             _player.Health.Heal(_player.Health.Max);
 
             switch (step)
@@ -292,7 +272,6 @@ namespace Bouncer.Run
                     Spawn(elite, 1, GroupLayout.Cluster, 0f, true);
                     break;
                 case TutorialStep.Portfolio:
-                    // Портфель выпал из элитки. Если его нет (исчез, не выпал) — положить рядом с игроком.
                     if (!_cardPicked && loot && FindAnyObjectByType<PortfolioPickup>() == null)
                         loot.PlacePortfolio(PointAround(3f, 0f));
                     break;
@@ -303,7 +282,6 @@ namespace Bouncer.Run
                     OpenKiosk();
                     break;
                 case TutorialStep.Done:
-                    // Дальше только экран «Готов гулять!»: игрок стоит, клики по кнопкам не бросают мяч.
                     Tutorial.MarkCompleted();
                     _player.BeginScripted();
                     GameEvents.PlaySound(SoundCue.Victory, Vector3.zero);
@@ -312,7 +290,6 @@ namespace Bouncer.Run
             Changed?.Invoke();
         }
 
-        /// <summary>Шаг «Ларёк»: остатки врагов уходят, арена «пройдена», монетки на первый раз, окошко загорается.</summary>
         void OpenKiosk()
         {
             _shopOpened = false;
@@ -327,7 +304,6 @@ namespace Bouncer.Run
             CoinPickup.CollectAll();
             if (kiosk && _cards)
                 kiosk.Open(_cards, 0);
-            // Без ларька шаг не пройти — засчитать сразу.
             if (!kiosk || !_cards)
                 _shopClosed = true;
         }
@@ -384,7 +360,6 @@ namespace Bouncer.Run
         {
             Vector3 position = Flat(_player.transform.position);
             float step = Vector3.Distance(position, _lastPosition);
-            // Большой скачок — не бег (телепорт, отброс).
             if (step < 2f)
                 _moved += step;
             _lastPosition = position;
@@ -404,7 +379,6 @@ namespace Bouncer.Run
 
         bool NoEnemies() => !HasEnemies();
 
-        /// <summary>Цель шага выбита раньше, чем задание сделано, — через respawnDelay выпустить новую.</summary>
         void Respawn(GameObject prefab, bool isElite)
         {
             if (HasEnemies())
@@ -429,10 +403,6 @@ namespace Bouncer.Run
                 spawner.QueueGroupAt(prefab, count, layout, PointAround(spawnDistance, angle), elite: isElite);
         }
 
-        /// <summary>
-        /// Точка на проходимой части арены примерно в distance от игрока: в сторону середины арены (чтобы не у стены),
-        /// повёрнутая на angle; если там не пройти — соседние направления через 30°.
-        /// </summary>
         Vector3 PointAround(float distance, float angle)
         {
             Vector3 origin = Flat(_player.transform.position);
@@ -451,7 +421,6 @@ namespace Bouncer.Run
             return origin + direction * distance;
         }
 
-        /// <summary>Середина арены — среднее точек спавна (они по краям).</summary>
         Vector3 ArenaCenter()
         {
             var points = spawner ? spawner.SpawnPoints : null;

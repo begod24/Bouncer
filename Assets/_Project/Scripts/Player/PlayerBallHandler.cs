@@ -8,33 +8,15 @@ namespace Bouncer.Player
 {
     public struct CatchInfo
     {
-        /// <summary>Пойман мяч после высокого отскока — следующий бросок усиленный.</summary>
         public bool Candle;
-        /// <summary>Пойман летящий мяч врага.</summary>
         public bool EnemyBall;
-        /// <summary>Мяч пойман сразу после нажатия — в последний момент. Только такая ловля лечит.</summary>
         public bool Perfect;
-        /// <summary>Пойман сильный мяч (заряженный, отбитый качелями) — отталкивает назад.</summary>
         public bool Strong;
-        /// <summary>Пойман медбол Физрука — сбивает с ног.</summary>
         public bool Heavy;
         public Vector3 Position;
-        /// <summary>Куда летел мяч в момент ловли (в плоскости XZ).</summary>
         public Vector3 Direction;
     }
 
-    /// <summary>
-    /// Мячи игрока: запас, заряд и бросок, окно ловли, подбор с пола.
-    /// Мячи в руках — просто счётчик, объект мяча появляется только в момент броска.
-    /// Свои мячи (их <see cref="MaxBalls"/>) остаются на арене, пока их не подберут; подобранный или пойманный чужой
-    /// мяч — «взаймы»: бросок им не возвращается (бумеранг, резинка), а упав, он снова лежит на арене как чужой.
-    /// Мяч другого игрока (пас в коопе) тоже взаймы, но остаётся его мячом: брошенный, он снова лежит как его.
-    /// Бросается сперва мяч на нитке («Йо-йо»), потом чужие, потом свои.
-    /// Каким мячом бросать (резиновый, волейбольный…), решают карточки — <see cref="SetBallPrefab"/>.
-    /// Ловля — на тайминг: идеальная в начале окна, мячи только спереди, промахи подряд удлиняют перезарядку,
-    /// сильный мяч без идеальной ловли выбивает из рук. Ёжика поймать нельзя (колется), мокрый мяч выскальзывает.
-    /// ПКМ, когда ловить нечего, — хват: ближайший лежащий мяч летит в руки.
-    /// </summary>
     public sealed class PlayerBallHandler : MonoBehaviour
     {
         [SerializeField] Ball ballPrefab;
@@ -49,45 +31,31 @@ namespace Bouncer.Player
         float _catchReadyAt;
         float _catchCooldownStart;
         bool _catchWindowOpen;
-        /// <summary>Сколько попыток ловли подряд ушло в пустоту — за каждую перезарядка длиннее.</summary>
         int _missStreak;
-        /// <summary>
-        /// Мячи взаймы в руках — чьи они: null — чужой (врагов, одноразовый), игрок — его мяч (пас союзника).
-        /// Бросаются с конца.
-        /// </summary>
         readonly List<GameObject> _borrowed = new();
         PlayerController _player;
-        /// <summary>Мяч на нитке («Йо-йо») сейчас не в руках.</summary>
         bool _yoyoOut;
-        /// <summary>Сколько своих мячей пропало не в руках и ждёт возвращения.</summary>
         int _lostBalls;
         bool _lostYoyo;
         float _lostReturnAt;
 
         public Ball BallPrefab => ballPrefab;
         public BallDefinition BallDefinition => ballPrefab ? ballPrefab.Definition : null;
-        /// <summary>Сколько мячей в руках (свои и чужие вместе).</summary>
         public int Balls { get; private set; }
-        /// <summary>Сколько из них чужих — одноразовых.</summary>
         public int BorrowedBalls => _borrowed.Count;
         public int MaxBalls => _stats.maxBalls + _mods.ExtraBalls;
         public float CatchRadius => _stats.catchRadius * _mods.CatchRadius;
         float CatchWindow => _stats.catchWindow * _mods.CatchWindow;
-        // «Цепкие руки» растягивают окно ловли, но не идеальную его часть: тайминг остаётся навыком.
         float PerfectCatchWindow => _stats.perfectCatchWindow;
-        /// <summary>Половина угла сектора спереди, из которого ловятся летящие мячи.</summary>
         public float CatchHalfAngle => _stats.catchHalfAngle;
         float PickupRadius => _stats.pickupRadius * _mods.PickupRadius;
         public bool CandleReady { get; private set; }
-        /// <summary>Горячая картошка: следующий бросок получит <see cref="PlayerModifiers.CatchPerks"/>.</summary>
         public bool CatchPerksReady { get; private set; }
         public bool IsCharging { get; private set; }
         public float Charge01 { get; private set; }
         public bool IsCatching => _catchWindowOpen && Time.time < _catchUntil;
-        /// <summary>Окно открыто, и мяч, пойманный прямо сейчас, будет пойман идеально.</summary>
         public bool IsCatchPerfect => IsCatching && Time.time - _catchStart <= PerfectCatchWindow;
         public bool CatchOnCooldown => !IsCatching && Time.time < _catchReadyAt;
-        /// <summary>1 — перезарядка только началась, 0 — ловля готова.</summary>
         public float CatchCooldown01
         {
             get
@@ -96,23 +64,17 @@ namespace Bouncer.Player
                 return total <= 0f ? 0f : Mathf.Clamp01((_catchReadyAt - Time.time) / total);
             }
         }
-        /// <summary>Есть «Йо-йо», и мяч на нитке в руках — следующий бросок будет им.</summary>
         public bool YoyoInHand => _mods.Perks.yoyo && !_yoyoOut;
 
         public event Action<ThrowStats> Thrown;
         public event Action<CatchInfo> Caught;
         public event Action CatchStarted;
         public event Action CatchMissed;
-        /// <summary>Сильный мяч пойман не идеально и выбит из рук.</summary>
         public event Action Fumbled;
-        /// <summary>Мокрый мяч выскользнул из рук.</summary>
         public event Action Slipped;
-        /// <summary>Пытался поймать ёжика — укололся.</summary>
         public event Action Pricked;
         public event Action PickedUp;
-        /// <summary>Мяч сам вернулся в руки (бумеранг, резинка, хват ПКМ, пропавший свой).</summary>
         public event Action Returned;
-        /// <summary>Хват ПКМ: лежащий мяч полетел в руки.</summary>
         public event Action Grabbed;
         public event Action BallTypeChanged;
 
@@ -122,7 +84,6 @@ namespace Bouncer.Player
             _mods = mods;
             _player = GetComponent<PlayerController>();
             _defaultBallPrefab = ballPrefab;
-            // На арене игрок сразу со всеми своими мячами.
             Balls = MaxBalls;
         }
 
@@ -130,7 +91,6 @@ namespace Bouncer.Player
 
         void OnDisable() => Ball.OwnBallLost -= OnOwnBallLost;
 
-        /// <summary>Сменить тип мяча: следующие броски будут этим мячом. Запас в руках не меняется.</summary>
         public void SetBallPrefab(Ball prefab)
         {
             if (prefab == null || prefab == ballPrefab)
@@ -139,14 +99,12 @@ namespace Bouncer.Player
             BallTypeChanged?.Invoke();
         }
 
-        /// <summary>Мяч по умолчанию (без карточек мячей) — перед тем как заново применить карточки.</summary>
         public void ResetBallPrefab()
         {
             if (_defaultBallPrefab)
                 SetBallPrefab(_defaultBallPrefab);
         }
 
-        /// <summary>Мяч вернулся сам (бумеранг, резинка, хват). false — руки заняты.</summary>
         public bool TryReceive(Ball ball)
         {
             if (Balls >= MaxBalls)
@@ -157,7 +115,6 @@ namespace Bouncer.Player
             return true;
         }
 
-        /// <summary>Мяч в руки: свой или чужой (одноразовый), мяч на нитке снова готов.</summary>
         void AddToHands(Ball ball)
         {
             AddToHands(ball.Owner, ball.IsYoyoString);
@@ -173,10 +130,6 @@ namespace Bouncer.Player
                 _yoyoOut = false;
         }
 
-        /// <summary>
-        /// По сети: хозяин комнаты отдал в руки мяч, вернувшийся сам (бумеранг, резинка, хват). owner — чей мяч.
-        /// Руки успели заполниться — свой мяч вернётся позже, как потерянный.
-        /// </summary>
         public void ReceiveFromNetwork(GameObject owner, bool yoyoString)
         {
             if (Balls >= MaxBalls)
@@ -190,10 +143,6 @@ namespace Bouncer.Player
             Returned?.Invoke();
         }
 
-        /// <summary>
-        /// Игрок другого компьютера: сколько у него мячей в руках, присылает сеть (здесь его руки не считаются) —
-        /// чтобы мяч в руке был виден, только когда он есть.
-        /// </summary>
         public void SetRemoteBalls(int count)
         {
             if (_player == null || _player.IsLocal)
@@ -202,7 +151,6 @@ namespace Bouncer.Player
             TrimBorrowed();
         }
 
-        /// <summary>По сети: хозяин комнаты не отдал мяч, который здесь уже взяли в руки (его успел взять другой).</summary>
         public void RevokeFromNetwork(GameObject owner, bool yoyoString)
         {
             if (Balls <= 0)
@@ -232,7 +180,6 @@ namespace Bouncer.Player
                 return;
             }
 
-            // --- Ловля (или хват, если ловить нечего) ---
             if (intent.CatchPressed && canCatch && !IsCatching && !IsCharging && Time.time >= _catchReadyAt)
             {
                 if (!TryGrab())
@@ -243,7 +190,6 @@ namespace Bouncer.Player
             else if (_catchWindowOpen)
                 MissCatch();
 
-            // --- Бросок: нажал — начался заряд, отпустил — бросок ---
             if (!IsCharging && intent.ThrowPressed && Balls > 0 && !IsCatching && Time.time >= _nextThrowAt)
             {
                 IsCharging = true;
@@ -259,7 +205,6 @@ namespace Bouncer.Player
                     Throw(aim.Direction);
             }
 
-            // --- Подбор с пола ---
             if (Balls < MaxBalls)
                 TryPickup();
         }
@@ -276,20 +221,16 @@ namespace Bouncer.Player
             _catchUntil = 0f;
         }
 
-        /// <summary>Выдать свои мячи в руки (карточка «Ещё мяч», новая арена).</summary>
         public void GiveBall(int amount = 1) => Balls = Mathf.Max(0, Balls + amount);
 
-        /// <summary>«Кувырок»: уворот в последний момент — следующий бросок с силой «свечки».</summary>
         public void ArmCandle() => CandleReady = true;
 
-        /// <summary>Лишние мячи сверх вместимости пропадают (карточки заново применяются на новой арене).</summary>
         public void ClampToMax()
         {
             Balls = Mathf.Clamp(Balls, 0, MaxBalls);
             TrimBorrowed();
         }
 
-        /// <summary>В руках больше мячей, чем теперь помещается (хулиганство): сперва уходят чужие, потом свои.</summary>
         public void DropExcess()
         {
             while (Balls > MaxBalls)
@@ -306,10 +247,6 @@ namespace Bouncer.Player
                 _borrowed.RemoveAt(_borrowed.Count - 1);
         }
 
-        /// <summary>
-        /// Поймать мяч, который врезался в игрока. false — поймать нельзя: окно закрыто, мяч прилетел не спереди
-        /// или это ёжик (колется — считается попаданием).
-        /// </summary>
         public bool TryCatch(Ball ball)
         {
             if (!IsCatching || !InFront(ball))
@@ -346,14 +283,12 @@ namespace Bouncer.Player
             _catchUntil = 0f;
             _missStreak = 0;
 
-            // Мокрый мяч выскальзывает: не лечит и не остаётся в руках.
             if (live && ball.Stats.Has(HitFlags.Wet))
             {
                 Fumble(ball);
                 Slipped?.Invoke();
                 return;
             }
-            // Сильный мяч (заряженный, отбитый качелями) удерживает только идеальная ловля.
             if (info.Strong && !info.Perfect && !info.Heavy)
             {
                 Fumble(ball);
@@ -367,7 +302,6 @@ namespace Bouncer.Player
             }
             else
             {
-                // Руки заняты — мяч падает под ноги.
                 ball.Drop(transform.position + transform.forward * 0.6f + Vector3.up * 0.5f, Vector3.zero);
             }
 
@@ -381,7 +315,6 @@ namespace Bouncer.Player
             Caught?.Invoke(info);
         }
 
-        /// <summary>Мяч выбило из рук: отскакивает вперёд и падает на пол, урона нет.</summary>
         void Fumble(Ball ball)
         {
             Vector3 position = ball.Position;
@@ -393,7 +326,6 @@ namespace Bouncer.Player
             GameEvents.PlaySound(SoundCue.BallWall, position);
         }
 
-        /// <summary>Летящий мяч ловится только спереди. «Свечка» падает сверху — её видно всегда.</summary>
         bool InFront(Ball ball)
         {
             if (ball.State == BallState.Popped || _stats.catchHalfAngle >= 180f)
@@ -405,7 +337,6 @@ namespace Bouncer.Player
 
         void StartCatch()
         {
-            // Выждал после прошлой попытки — промахи подряд забыты: штраф только за нажатия наугад.
             if (Time.time - _catchReadyAt > _stats.catchMissStreakReset)
                 _missStreak = 0;
             _catchWindowOpen = true;
@@ -441,14 +372,12 @@ namespace Bouncer.Player
                 var ball = balls[i];
                 if (!ball.IsCatchableBy(Team.Player, gameObject) || !InFront(ball))
                     continue;
-                // Ёжика навстречу не ловим: пусть долетит и уколет (TryCatch) — ловить его нельзя.
                 if (ball.State == BallState.Live && ball.Stats.Has(HitFlags.Spiky))
                     continue;
 
                 Vector3 position = ball.Position;
                 if (ball.State == BallState.Popped)
                 {
-                    // «Свечка»: мяч над игроком, достаточно низко, чтобы дотянуться.
                     if (position.y - feet.y > _stats.candleCatchHeight)
                         continue;
                     Vector3 flat = position - feet;
@@ -466,10 +395,6 @@ namespace Bouncer.Player
             }
         }
 
-        /// <summary>
-        /// Хват ПКМ: если рядом не летит мяч, который можно поймать, ближайший лежащий мяч (в том числе из-под
-        /// ног врага) летит в руки. true — схватил, окно ловли не открывается и промахом это не считается.
-        /// </summary>
         bool TryGrab()
         {
             if (Balls >= MaxBalls)
@@ -486,7 +411,6 @@ namespace Bouncer.Player
                 Vector3 delta = ball.Position - feet;
                 if (ball.IsCatchableBy(Team.Player, gameObject) && !(ball.State == BallState.Live && ball.Stats.Has(HitFlags.Spiky)))
                 {
-                    // Есть что ловить — ПКМ остаётся ловлей.
                     if (delta.sqrMagnitude <= blockSqr)
                         return false;
                     continue;
@@ -531,16 +455,13 @@ namespace Bouncer.Player
             }
         }
 
-        /// <summary>Свой мяч пропал не в руках: через пару секунд он «вернулся» (запас мячей не тает).</summary>
         void OnOwnBallLost(Ball ball, GameObject owner)
         {
-            // Игрок другого компьютера узнаёт о своих мячах по сети — их теряет мяч хозяина комнаты.
             if (owner != gameObject || (_player != null && !_player.IsLocal))
                 return;
             LoseOwnBall(ball.IsYoyoString);
         }
 
-        /// <summary>Свой мяч пропал не в руках (или об этом сказала сеть): через пару секунд он вернётся.</summary>
         public void LoseOwnBall(bool yoyoString)
         {
             _lostBalls++;
@@ -582,8 +503,6 @@ namespace Bouncer.Player
                 CatchPerksReady = false;
             }
 
-            // Какой мяч из рук: сперва мяч на нитке, потом взятые взаймы (чужие — одноразовые, пас — мяч союзника),
-            // потом свои.
             bool yoyo = YoyoInHand;
             GameObject owner = gameObject;
             if (yoyo)
@@ -601,7 +520,6 @@ namespace Bouncer.Player
             }
 
             Launch(direction, definition.radius, stats, perks, phantom: false, owner, yoyo);
-            // Веер (теннисный): двойники по очереди справа и слева от основного мяча. Прибавки карточек им не достаётся.
             var twinStats = stats.WithoutBonus();
             for (int i = 1; i <= perks.extraShots; i++)
             {
@@ -637,7 +555,6 @@ namespace Bouncer.Player
             });
         }
 
-        /// <summary>Точка вылета перед грудью, но не внутри стены.</summary>
         Vector3 SafeOrigin(Vector3 direction, float radius)
         {
             Vector3 chest = transform.position + Vector3.up * _stats.throwHeight;

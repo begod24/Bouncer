@@ -3,11 +3,6 @@ using UnityEngine;
 
 namespace Bouncer.Balls
 {
-    /// <summary>
-    /// Внешний вид мяча по состоянию: цвет (чей мяч, опасен ли), след в полёте,
-    /// метка приземления у «свечки». Особые мячи врагов видны издалека: ёжик — красный, с шипами и сиянием
-    /// (ловить нельзя), мокрый — синеватый, тёмный мяч Бабая — чёрный. Логики тут нет.
-    /// </summary>
     [RequireComponent(typeof(Ball))]
     public sealed class BallVisuals : MonoBehaviour
     {
@@ -108,7 +103,6 @@ namespace Bouncer.Balls
             {
                 if (ball.State == BallState.Idle)
                     trail.Clear();
-                // Пока модель догоняет мяч (ShowFrom), следа нет — он начнётся там, где модель встанет на место.
                 trail.emitting = ball.State is BallState.Live or BallState.Popped or BallState.Returning && !_offset;
                 trail.startColor = new Color(color.r, color.g, color.b, 0.8f);
                 trail.endColor = new Color(color.r, color.g, color.b, 0f);
@@ -134,10 +128,8 @@ namespace Bouncer.Balls
                     Refresh(_ball);
                 }
             }
-            // Горячая картошка взорвалась, не сменив состояния (отскок от асфальта) — гасим цвет.
             if (_hot != _ball.BlastPending)
                 Refresh(_ball);
-            // Ёжик светится: красная вспышка поверх освещения пульсирует.
             if (_spiky && body && _palette)
             {
                 float pulse = 0.35f + 0.25f * Mathf.Sin(Time.time * spikyPulse * Mathf.PI * 2f);

@@ -8,47 +8,21 @@ using UnityEngine.SceneManagement;
 
 namespace Bouncer.Net
 {
-    /// <summary>
-    /// Мячи по сети. Настоящие мячи — только у хозяина комнаты: он их считает и раз в такт рассылает, какие мячи
-    /// появились, пропали, сменили состояние или ушли с пути, по которому их ведут гости (<see cref="NetBallState"/>).
-    /// У гостя каждый мяч — копия (<see cref="Ball.IsPuppet"/>): она летит по <see cref="BallMotion"/> туда, где мяч
-    /// у хозяина сейчас (с поправкой на задержку), сама отскакивает от стен, а поправки хозяина вливаются плавно.
-    /// Гость бросает сам: копия летит сразу, а хозяин, получив бросок, прогоняет свой мяч вперёд на задержку —
-    /// и копия становится копией этого мяча. Подобрать, поймать, уронить, потянуть хватом — гость делает у себя и
-    /// просит хозяина; если мяч успел взять другой, хозяин откажет, и мяч вернётся из рук. Попадания и ловлю по
-    /// своему игроку гость решает сам, по тому, что видит (хозяин лишь проверяет, что мяч был рядом), — тогда мяч у
-    /// хозяина отскакивает «свечкой» оттуда, где его видел гость. Мяч, вернувшийся в руки гостю (бумеранг,
-    /// резинка, хват), и потерянный свой мяч хозяин отдаёт ему отдельным сообщением.
-    /// </summary>
     [DefaultExecutionOrder(-40)]
     public sealed class NetBalls : NetworkBehaviour, IBallNetwork
     {
-        /// <summary>Мяч ушёл с пути, по которому его ведут гости, дальше этого — слать поправку, м.</summary>
         const float SendError = 0.15f;
         const float LooseSendError = 0.3f;
         const float SendVelocityError = 1.5f;
-        /// <summary>Движущийся мяч хозяин напоминает не реже этого, с.</summary>
         const float Keepalive = 0.5f;
-        /// <summary>Бросок гостя прогоняется вперёд не больше чем на столько, с.</summary>
         const float MaxFastForward = 0.3f;
-        /// <summary>За сколько вливается поправка хозяина, с.</summary>
         const float CorrectionTime = 0.08f;
-        /// <summary>
-        /// Чужой бросок: бросивший виден чуть в прошлом, а мяч — там, где он у хозяина сейчас, то есть уже впереди.
-        /// Мяч вылетает из руки бросившего и догоняет свой путь за это время, с.
-        /// </summary>
         const float HandBlendTime = 0.2f;
-        /// <summary>Разошлись больше этого — копия просто переносится, м.</summary>
         const float SnapDistance = 3f;
-        /// <summary>Бросок гостя, на который хозяин так и не ответил, убирается через столько, с.</summary>
         const float PendingTimeout = 3f;
-        /// <summary>Сколько гость помнит взятый мяч, ожидая ответа хозяина, с.</summary>
         const float TakeMemory = 3f;
-        /// <summary>Гость берёт или ловит мяч не дальше этого от своего игрока, каким его видит хозяин, м.</summary>
         const float ReachSlack = 4f;
-        /// <summary>Попадание засчитывается, если мяч был не дальше этого от игрока у хозяина, м.</summary>
         const float ContactSlack = 6f;
-        /// <summary>Нижний край «столба», которым мяч бьёт персонажей, над землёй (как у <see cref="Ball"/>).</summary>
         const float ColumnBottom = 0.25f;
         const float Skin = 0.01f;
 
@@ -62,7 +36,6 @@ namespace Bouncer.Net
         [Tooltip("Все мячи, которые бывают в игре: по сети мяч — номер в этом списке")]
         [SerializeField] Ball[] prefabs;
 
-        /// <summary>Мяч хозяина и что о нём знают гости.</summary>
         sealed class Tracked
         {
             public ushort Id;
@@ -74,10 +47,8 @@ namespace Bouncer.Net
             public bool Dirty;
         }
 
-        /// <summary>Копия мяча у гостя.</summary>
         sealed class Puppet
         {
-            /// <summary>0 — свой бросок, ещё не подтверждённый хозяином.</summary>
             public ushort Id;
             public ushort Seq;
             public Ball Ball;
@@ -89,17 +60,14 @@ namespace Bouncer.Net
             public double T0;
             public Vector3 LastTarget;
             public Vector3 Shown;
-            /// <summary>Разница между показанным и тем, где копия должна быть, — тает за <see cref="Blend"/>.</summary>
             public Vector3 Error;
             public float Blend = CorrectionTime;
             public float PendingUntil;
-            /// <summary>Уже попал в своего игрока — второй раз этот полёт не бьёт.</summary>
             public bool Contacted;
 
             public bool Alive => Ball != null && Ball.isActiveAndEnabled && Ball.IsPuppet && Ball.Life == Life;
         }
 
-        /// <summary>Мяч, который гость взял в руки, а хозяин ещё не ответил.</summary>
         struct Taken
         {
             public GameObject Owner;
@@ -107,7 +75,6 @@ namespace Bouncer.Net
             public float Until;
         }
 
-        // Хозяин.
         readonly Dictionary<Ball, Tracked> _tracked = new();
         readonly Dictionary<ushort, Ball> _byId = new();
         readonly List<NetBallState> _outbox = new();
@@ -115,7 +82,6 @@ namespace Bouncer.Net
         ushort _nextId;
         bool _warnedPrefab;
 
-        // Гость.
         readonly List<Puppet> _all = new();
         readonly List<Puppet> _step = new();
         readonly Dictionary<ushort, Puppet> _puppets = new();
@@ -127,7 +93,6 @@ namespace Bouncer.Net
 
         public bool IsAuthority => IsServer;
 
-        /// <summary>Сколько мячей идёт по сети: у хозяина — настоящих, у гостя — копий (для отладки, F3).</summary>
         public int Count => IsServer ? _tracked.Count : _all.Count;
 
         double HostNow => NetClock.HostNow(NetworkManager);
@@ -165,7 +130,6 @@ namespace Bouncer.Net
                 NetworkManager.NetworkTickSystem.Tick -= OnTick;
         }
 
-        /// <summary>Новая арена: прежние мячи ушли вместе со сценой.</summary>
         void OnSceneChanged(Scene previous, Scene next) => Clear();
 
         void Clear()
@@ -180,13 +144,10 @@ namespace Bouncer.Net
             _taken.Clear();
         }
 
-        // ================= Хозяин =================
-
         void OnTick()
         {
             if (!IsServer || !IsSpawned)
                 return;
-            // Мячи стоят там, где их оставил последний шаг физики, — это чуть раньше «сейчас».
             double physicsTime = HostNow - (Time.timeAsDouble - Time.fixedTimeAsDouble);
             var balls = Ball.Active;
             for (int i = 0; i < balls.Count; i++)
@@ -209,14 +170,12 @@ namespace Bouncer.Net
             Flush();
         }
 
-        /// <summary>Мяча хозяина больше нет — сказать гостям.</summary>
         void Forget(Tracked tracked)
         {
             _byId.Remove(tracked.Id);
             _outbox.Add(new NetBallState { Id = tracked.Id, Kind = NetBallState.KindDespawn, PredictSlot = -1 });
         }
 
-        /// <summary>Сравнить мяч с тем, что о нём знают гости, и, если разошлось, записать поправку.</summary>
         void Watch(Ball ball, double time, sbyte predictSlot, ushort predictSeq)
         {
             bool fresh = false;
@@ -308,7 +267,6 @@ namespace Bouncer.Net
             _ => 0f,
         };
 
-        /// <summary>Номер префаба, из которого выдан этот мяч.</summary>
         byte PrefabOf(Ball ball)
         {
             var source = ball.TryGetComponent(out PooledObject tag) ? tag.Prefab : null;
@@ -351,7 +309,6 @@ namespace Bouncer.Net
                 ? client.PlayerObject.GetComponent<PlayerController>()
                 : null;
 
-        /// <summary>Мяч с этим номером и игрок, приславший просьбу, рядом (с запасом на задержку).</summary>
         bool TryGetNear(ushort id, PlayerController player, float slack, out Ball ball)
         {
             if (!_byId.TryGetValue(id, out ball) || ball == null || !ball.isActiveAndEnabled || player == null)
@@ -379,7 +336,6 @@ namespace Bouncer.Net
             return true;
         }
 
-        /// <summary>Свой мяч гостя пропал у хозяина (выпал, его «съели») — гость получит его обратно.</summary>
         void OnOwnBallLost(Ball ball, GameObject owner)
         {
             if (!IsServer || owner == null || !owner.TryGetComponent(out NetPlayer net) || !net.IsSpawned || net.IsOwner)
@@ -410,8 +366,6 @@ namespace Bouncer.Net
                 Owner = SlotObject(request.OwnerSlot),
                 YoyoString = request.YoyoString,
             });
-            // Гость видит свой мяч летящим с момента броска — догнать. Здесь же гость виден чуть в прошлом:
-            // пусть мяч вылетит из его руки и догонит свой путь.
             double now = HostNow;
             ball.FastForward(Mathf.Clamp((float)(now - request.HostTime), 0f, MaxFastForward));
             if (!ball.isActiveAndEnabled)
@@ -477,8 +431,6 @@ namespace Bouncer.Net
                 ball.ForceBounce(point, normal);
         }
 
-        // ================= Гость =================
-
         [Rpc(SendTo.NotServer)]
         void BallsRpc(NetBallBatch batch)
         {
@@ -498,12 +450,10 @@ namespace Bouncer.Net
                         Remove(predicted, despawn: true);
                     return;
                 }
-                // Взятый гостем мяч помним и после этого: отказ хозяина (мяч успел взять другой) может прийти позже.
                 if (_puppets.TryGetValue(state.Id, out var gone))
                     Remove(gone, despawn: true);
                 return;
             }
-            // Этот мяч гость уже взял в руки — ждём, отдаст ли его хозяин.
             if (_taken.ContainsKey(state.Id))
                 return;
             if (!_puppets.TryGetValue(state.Id, out var puppet) || !puppet.Alive)
@@ -540,7 +490,6 @@ namespace Bouncer.Net
             return puppet;
         }
 
-        /// <summary>Новые сведения хозяина: копия поведёт мяч по ним, а разницу с показанным вольёт плавно.</summary>
         void Retarget(Puppet puppet, in NetBallState state)
         {
             var ball = puppet.Ball;
@@ -622,10 +571,6 @@ namespace Bouncer.Net
                 CheckContact(puppet, from, puppet.Shown);
         }
 
-        /// <summary>
-        /// Копия сама отскакивает от стен и падает на землю, не дожидаясь поправки хозяина, — иначе она на время
-        /// задержки влетала бы в стену. Отскок — как у мяча (<see cref="Ball"/>): борта, потеря скорости.
-        /// </summary>
         void BounceOffWalls(Puppet puppet, double now, ref Vector3 target, ref Vector3 velocity)
         {
             var ball = puppet.Ball;
@@ -654,7 +599,6 @@ namespace Bouncer.Net
             Vector3 point = from + direction * Mathf.Max(0f, bestDistance - Skin);
             if (best.normal.y > 0.6f)
             {
-                // Земля или верх препятствия: у хозяина мяч тут ляжет — пусть катится, пока не скажут.
                 puppet.State = BallState.Loose;
                 puppet.V0 = Vector3.Reflect(velocity, best.normal) * definition.floorBounceKeep;
                 puppet.G = definition.looseDamping;
@@ -680,10 +624,6 @@ namespace Bouncer.Net
             velocity = puppet.V0;
         }
 
-        /// <summary>
-        /// Мяч противника долетел до своего игрока: гость решает сам, по тому, что видит (поймал, отбил крышкой,
-        /// увернулся рывком или попало), и говорит хозяину. Мяч бьёт «столбом» от земли — как у <see cref="Ball"/>.
-        /// </summary>
         void CheckContact(Puppet puppet, Vector3 from, Vector3 to)
         {
             var ball = puppet.Ball;
@@ -749,7 +689,6 @@ namespace Bouncer.Net
             }
         }
 
-        /// <summary>Попало в своего игрока: мяч у хозяина отскочит «свечкой» — показать это сразу.</summary>
         void PredictPop(Puppet puppet, Vector3 hitNormal)
         {
             var definition = puppet.Ball.Definition;
@@ -789,7 +728,6 @@ namespace Bouncer.Net
 
         int LocalSlot => Players.Local != null ? Players.Local.Slot : -1;
 
-        /// <summary>Откуда игрок бросает: перед грудью, как у <see cref="PlayerBallHandler"/>.</summary>
         static Vector3 HandOf(PlayerController player)
         {
             var transform = player.transform;
@@ -893,7 +831,6 @@ namespace Bouncer.Net
             if (!_byBall.TryGetValue(puppetBall, out var puppet) || puppet.Id == 0)
                 return;
             DropRpc(puppet.Id, position, velocity);
-            // Сразу показать упавшим: хозяин скажет то же самое чуть позже.
             puppet.Error = puppetBall.Position - position;
             puppet.State = BallState.Loose;
             puppet.P0 = position;

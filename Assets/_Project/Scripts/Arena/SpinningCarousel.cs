@@ -5,11 +5,6 @@ using UnityEngine.AI;
 
 namespace Bouncer.Arena
 {
-    /// <summary>
-    /// Карусель в детском саду: платформа всё время крутится и катает по кругу всех, кто на ней стоит, —
-    /// игрока, врагов и лежащие мячи. Встал на неё — едешь; бросок с неё уходит вбок от того, куда смотришь.
-    /// Сама платформа — только вид; ходят по неподвижному коллайдеру-диску под ней.
-    /// </summary>
     public sealed class SpinningCarousel : MonoBehaviour
     {
         [Tooltip("Платформа, которая крутится (Carousel_Deck)")]
@@ -43,7 +38,6 @@ namespace Bouncer.Arena
 
             foreach (var t in Targetable.All)
             {
-                // Чужого игрока по сети катает его компьютер, копии врагов у гостя — хозяин.
                 if (!t.IsAlive || t.IsFrozen || t.IsRemote || (NetHooks.IsGuest && t.Team == Team.Enemy))
                     continue;
                 Vector3 position = t.transform.position;
@@ -64,7 +58,6 @@ namespace Bouncer.Arena
             for (int i = 0; i < balls.Count; i++)
             {
                 var ball = balls[i];
-                // Копию мяча у гостя катает хозяин комнаты — она едет по его вестям.
                 if (ball.IsPuppet || ball.State != BallState.Loose || !OnDeck(ball.Position, center, top))
                     continue;
                 Vector3 offset = ball.Position - center;

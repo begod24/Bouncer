@@ -3,14 +3,12 @@ using UnityEngine;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>Разлетающиеся части врага после выбивания. Через пару секунд сжимаются и возвращаются в пул.</summary>
     public sealed class Debris : MonoBehaviour, IPoolable
     {
         [SerializeField] Rigidbody[] pieces;
         [SerializeField] float lifetime = 2.2f;
         [SerializeField] float shrinkTime = 0.4f;
 
-        /// <summary>Обломки разлетелись (по сети хозяин показывает их гостям): обломки, направление, сила, скорость врага.</summary>
         public static event System.Action<Debris, Vector3, float, Vector3> Scattered;
 
         Vector3[] _localPositions;

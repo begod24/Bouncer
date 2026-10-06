@@ -2,10 +2,6 @@ using UnityEngine;
 
 namespace Bouncer.Core
 {
-    /// <summary>
-    /// Что остаётся от выбитого врага: монетки и, у элитных, портфель с карточками.
-    /// Сами монетки и портфель разбрасывает сборка Run по событию <see cref="GameEvents.EnemyKilled"/>.
-    /// </summary>
     [DisallowMultipleComponent]
     public sealed class EnemyReward : MonoBehaviour
     {

@@ -3,11 +3,6 @@ using UnityEngine;
 
 namespace Bouncer.Visuals
 {
-    /// <summary>
-    /// Свет фонаря, прожектора или огня в бочке. Загорается к вечеру — вслед за свечением окон из времени суток
-    /// (при включении помигивает, как лампа), а у огня просто дрожит. Если у фонаря есть <see cref="LightZone"/>
-    /// и тень его погасила — мигает и гаснет, потом загорается снова.
-    /// </summary>
     public sealed class LampLight : MonoBehaviour
     {
         [Tooltip("Источники света фонаря (конус прожектора, ореол вокруг головы)")]
@@ -50,7 +45,6 @@ namespace Bouncer.Visuals
             float on = alwaysOn ? 1f : Mathf.InverseLerp(onFromEmission, fullAtEmission,
                 Shader.GetGlobalFloat(PaletteShader.GlobalEmissionStrength));
             float time = Time.time + _seed;
-            // Загорается, как газоразрядная лампа: первые секунды помигивает, дальше просто разгорается.
             if (!_lit && on > 0.02f)
                 _litAt = Time.time;
             _lit = on > 0.02f;
@@ -60,7 +54,6 @@ namespace Bouncer.Visuals
             float level = on * warm * noise;
             if (zone)
             {
-                // Тень гасит фонарь: он часто мигает и тухнет, а потом так же загорается.
                 float out01 = zone.Out01;
                 if (out01 > 0f)
                 {

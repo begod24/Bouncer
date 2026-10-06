@@ -2,10 +2,6 @@ using UnityEngine;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Процедурная анимация солдатика с крышкой: марш на прямых ногах, крышка перед грудью (вздрагивает от мяча,
-    /// выбитая — уходит в сторону), замах половником и удар крышкой, покачивание от попадания. Только визуал.
-    /// </summary>
     [RequireComponent(typeof(ShieldSoldierEnemy))]
     public sealed class ShieldSoldierAnimator : MonoBehaviour
     {
@@ -80,7 +76,6 @@ namespace Bouncer.Enemies
             legL.localRotation = Quaternion.Euler(sin * legSwing * _march, 0f, 0f);
             legR.localRotation = Quaternion.Euler(-sin * legSwing * _march, 0f, 0f);
 
-            // Половник: замах над головой и удар.
             float targetR = state switch
             {
                 ShieldSoldierEnemy.State.Windup => windupAngle,
@@ -90,12 +85,10 @@ namespace Bouncer.Enemies
             _armR = Mathf.MoveTowards(_armR, targetR, (state == ShieldSoldierEnemy.State.Bash ? 1500f : 420f) * dt);
             armR.localRotation = Quaternion.Euler(_armR, 0f, 0f);
 
-            // Крышка: вперёд при ударе, в сторону — если её выбили.
             float targetForward = state == ShieldSoldierEnemy.State.Bash ? bashArmAngle : 0f;
             float targetSide = _soldier.GuardUp ? 0f : brokenArmAngle;
             _armLForward = Mathf.MoveTowards(_armLForward, targetForward, 900f * dt);
             _armLSide = Mathf.MoveTowards(_armLSide, targetSide, (_soldier.GuardUp ? 240f : 900f) * dt);
-            // Левая рука солдатика — на -X в Unity: отвести наружу = поворот вокруг Z в минус.
             armL.localRotation = Quaternion.Euler(_armLForward, 0f, -_armLSide);
             if (lid)
                 lid.localRotation = _lidRest * Quaternion.Euler(-_soldier.BlockKick * blockKickAngle, 0f, 0f);

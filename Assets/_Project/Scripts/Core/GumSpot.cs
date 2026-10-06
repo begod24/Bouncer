@@ -3,12 +3,6 @@ using UnityEngine;
 
 namespace Bouncer.Core
 {
-    /// <summary>
-    /// Липкое пятно жвачки на асфальте (карточка «Жвачка»): враги в нём вязнут и идут медленнее,
-    /// через несколько секунд пятно съёживается и исчезает. Игрока не замедляет.
-    /// Как и <see cref="GroundZone"/>, проверяется по реестру, без физических триггеров.
-    /// Неровная лепёшка строится в коде, цвет — подкраской шейдера палитры.
-    /// </summary>
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
     public sealed class GumSpot : MonoBehaviour, IPoolable
     {
@@ -37,7 +31,6 @@ namespace Bouncer.Core
         float _age;
         float _size = 1f;
 
-        /// <summary>Радиус сейчас, с учётом размера и съёживания.</summary>
         public float CurrentRadius => transform.localScale.x;
 
         void Awake()
@@ -63,7 +56,6 @@ namespace Bouncer.Core
             _size = Random.Range(1f - sizeJitter, 1f + sizeJitter);
             _filter.sharedMesh = Meshes()[Random.Range(0, MeshVariants)];
             UpdateScale();
-            // Список идёт по порядку появления: первым уходит самое старое пятно.
             while (s_all.Count > maxSpots)
                 PoolService.Despawn(s_all[0].gameObject);
         }
@@ -87,7 +79,6 @@ namespace Bouncer.Core
             transform.localScale = Vector3.one * (radius * _size * shrink);
         }
 
-        /// <summary>Положить пятно на асфальт под точкой (мяч в полёте). Над пропастью или на стене — не кладётся.</summary>
         public static void Drop(GumSpot prefab, Vector3 above)
         {
             if (prefab == null
@@ -100,10 +91,8 @@ namespace Bouncer.Core
             Dropped?.Invoke(prefab, above);
         }
 
-        /// <summary>Пятно положено (по сети хозяин кладёт такое же у гостей): префаб и точка над асфальтом.</summary>
         public static event System.Action<GumSpot, Vector3> Dropped;
 
-        /// <summary>Множитель скорости врага в точке: 1 — жвачки тут нет.</summary>
         public static float EnemyMoveMultiplierAt(Vector3 position)
         {
             float multiplier = 1f;
@@ -117,13 +106,10 @@ namespace Bouncer.Core
             return multiplier;
         }
 
-        // ---------- Лепёшка ----------
-
         static Mesh[] Meshes()
         {
             if (s_meshes != null && s_meshes[0] != null)
                 return s_meshes;
-            // Сид постоянный: пятна одни и те же от забега к забегу.
             var random = new System.Random(2409);
             s_meshes = new Mesh[MeshVariants];
             for (int i = 0; i < MeshVariants; i++)
@@ -131,7 +117,6 @@ namespace Bouncer.Core
             return s_meshes;
         }
 
-        /// <summary>Плоская неровная лепёшка радиусом около 1 в плоскости XZ, лицом вверх.</summary>
         static Mesh BuildBlob(System.Random random, int index)
         {
             const int points = 11;
@@ -152,7 +137,6 @@ namespace Bouncer.Core
             }
             for (int i = 0; i < points; i++)
             {
-                // По часовой стрелке при взгляде сверху — у Unity это лицевая сторона.
                 triangles[i * 3] = 0;
                 triangles[i * 3 + 1] = (i + 1) % points + 1;
                 triangles[i * 3 + 2] = i + 1;

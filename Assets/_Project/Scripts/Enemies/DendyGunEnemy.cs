@@ -5,14 +5,6 @@ using UnityEngine.AI;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Пистолет от «Денди». Скачет на рукоятке, держится на дистанции, потом наводит лазер: тонкий красный луч
-    /// и полоса на земле ведут игрока, за мгновение до выстрела замирают — и выстрел бьёт вдоль полосы.
-    /// Кто успел уйти с линии — цел. Поймать нечего: это свет, а не мяч. Попадание сбивает прицел.
-    /// Кинематический, без NavMesh-агента: точки прыжков берутся с NavMesh.
-    /// По сети целится и стреляет только у хозяина комнаты (полосу на земле он показывает гостям); у гостя копия
-    /// ведёт лазер и вспыхивает выстрелом по его вестям.
-    /// </summary>
     [RequireComponent(typeof(Rigidbody), typeof(Health), typeof(Targetable))]
     public sealed class DendyGunEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
@@ -94,8 +86,6 @@ namespace Bouncer.Enemies
             SetLaser(false);
         }
 
-        // ---------- Мозги ----------
-
         void FixedUpdate()
         {
             if (NetHooks.IsGuest)
@@ -164,7 +154,6 @@ namespace Bouncer.Enemies
             _rb.MovePosition(position);
         }
 
-        /// <summary>Прыжок за прыжком: к нужной дистанции от игрока (recoil — просто долететь начатый).</summary>
         Vector3 StepHop(Vector3 position, float dt, Targetable target, float heightScale)
         {
             if (!_hopping)
@@ -265,8 +254,6 @@ namespace Bouncer.Enemies
                 laser.enabled = on;
         }
 
-        // ---------- Попадания ----------
-
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)
         {
             if (_health.IsDead)
@@ -300,7 +287,6 @@ namespace Bouncer.Enemies
             if (!_health.IsDead)
             {
                 _knockback += Flat(hit.Direction) * (hit.Force * definition.knockbackScale);
-                // Сбили прицел.
                 if (_state == State.Aim)
                 {
                     HideMarker();
@@ -331,8 +317,6 @@ namespace Bouncer.Enemies
             PoolService.Despawn(gameObject);
         }
 
-        // ---------- Вид ----------
-
         void LateUpdate()
         {
             float dt = Time.deltaTime;
@@ -357,7 +341,6 @@ namespace Bouncer.Enemies
             }
             if (aiming && _stateTime >= definition.trackTime && _marker == null && lineMarkerPrefab && !NetHooks.IsGuest)
             {
-                // Прицел замер: полоса на земле показывает, куда ударит.
                 Vector3 from = MuzzlePosition;
                 _marker = PoolService.Spawn(lineMarkerPrefab, from, Quaternion.identity);
                 _marker.ShowLine(from, from + _aimDirection * ShotLength(from), definition.aimTime - definition.trackTime + 0.1f);
@@ -375,8 +358,6 @@ namespace Bouncer.Enemies
                 trigger.localRotation = Quaternion.Euler(flashing ? -25f : 0f, 0f, 0f);
         }
 
-        // ---------- Сеть ----------
-
         public void WriteNet(NetWriter writer)
         {
             writer.Byte((byte)_state);
@@ -391,7 +372,6 @@ namespace Bouncer.Enemies
             _stateTime = reader.Seconds() + age;
             _aimDirection = reader.Direction();
             bool hopping = reader.Bool();
-            // Прицел кончился отдачей — это выстрел: луч вспыхивает.
             if (_state == State.Aim && state == State.Recoil)
             {
                 Vector3 from = MuzzlePosition;

@@ -4,10 +4,6 @@ using UnityEngine;
 
 namespace Bouncer.Upgrades
 {
-    /// <summary>
-    /// Модификатор мяча (бумеранг, раскол, резинка): складывается со свойствами любого типа мяча.
-    /// Может действовать не на все броски, а только на следующий после удачной ловли (горячая картошка).
-    /// </summary>
     [CreateAssetMenu(menuName = "Bouncer/Upgrades/Ball Perk Card", fileName = "Card_Perk_")]
     public sealed class BallPerkCard : UpgradeCard
     {

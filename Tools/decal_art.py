@@ -22,24 +22,22 @@ OUT_PNG = os.path.join(ROOT, "Assets", "_Project", "Art", "Decals", "T_Decals.pn
 OUT_JSON = os.path.join(ROOT, "Tools", "decal_atlas.json")
 
 W = 2048
-PAD = 16                       # поля между надписями: мип-уровни не должны смешивать соседей
+PAD = 16
 PT_SANS = "/System/Library/Fonts/Supplemental/PTSans.ttc"
 CAVEAT = os.path.join(ROOT, "Assets", "_Project", "Art", "Fonts", "Caveat.ttf")
 
 
 def sign_font(size):
-    return ImageFont.truetype(PT_SANS, size, index=2)          # PT Sans Narrow Bold
+    return ImageFont.truetype(PT_SANS, size, index=2)
 
 
 def bold_font(size):
-    return ImageFont.truetype(PT_SANS, size, index=7)          # PT Sans Bold
+    return ImageFont.truetype(PT_SANS, size, index=7)
 
 
 def hand_font(size):
     return ImageFont.truetype(CAVEAT, size)
 
-
-# ================================================================ рисовалки (маска 'L': 255 — надпись)
 
 def text_img(text, font, spacing=0.0, line_gap=0.12):
     lines = text.split("\n")
@@ -246,8 +244,6 @@ def _hopscotch(d, s):
 
 
 
-# ================================================================ содержимое атласа (новое — только в конец!)
-
 def entries():
     return [
         ("sign_soyuzpechat", text_img("СОЮЗПЕЧАТЬ", sign_font(170), spacing=6)),
@@ -275,8 +271,6 @@ def entries():
         ("shape_bolt", shape((140, 240), _bolt)),
         ("label_fizika", text_img("ФИЗИКА", sign_font(130), spacing=4)),
         ("label_chipsy", text_img("ЧИПСЫ", sign_font(140), spacing=4)),
-        # этап 3: трансформер, луноход, барахолка, детсад. Мелко и в этом порядке: атлас должен остаться 2048x2048,
-        # иначе сдвинутся UV всех старых надписей.
         ("sign_militsiya", text_img("МИЛИЦИЯ", sign_font(84), spacing=3)),
         ("label_sssr", text_img("СССР", sign_font(84), spacing=5)),
         ("sign_igrushki", text_img("ИГРУШКИ", sign_font(76), spacing=3)),
@@ -315,7 +309,6 @@ def main():
     layout = {}
     for name, img, x, y in places:
         atlas.paste(img, (x, y))
-        # UV: начало координат внизу слева, как в Blender и Unity.
         layout[name] = {"uv": [x / W, 1 - (y + img.height) / H, (x + img.width) / W, 1 - y / H],
                         "aspect": round(img.width / img.height, 4)}
     os.makedirs(os.path.dirname(OUT_PNG), exist_ok=True)

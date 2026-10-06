@@ -3,13 +3,6 @@ using UnityEngine;
 
 namespace Bouncer.Core
 {
-    /// <summary>
-    /// Освещённое место на арене: фонарь, прожектор, бочка с огнём. На свету тень твёрдая, а появляется она
-    /// только в темноте. Круг в плоскости XZ, проверка по реестру (как у <see cref="GroundZone"/>).
-    /// Фонарь можно погасить на время (элитная тень), вспышка молнии на миг освещает всё.
-    /// Сам свет (компонент Light, мерцание) ведёт Visuals, здесь только игровая часть.
-    /// По сети фонари гасит хозяин комнаты и сообщает гостям (<see cref="WentOut"/>, <see cref="FindAt"/>).
-    /// </summary>
     public sealed class LightZone : MonoBehaviour
     {
         static readonly List<LightZone> s_all = new();
@@ -27,12 +20,9 @@ namespace Bouncer.Core
 
         public static IReadOnlyList<LightZone> All => s_all;
 
-        /// <summary>Фонарь погас на столько секунд (по сети хозяин показывает это гостям).</summary>
         public static event System.Action<LightZone, float> WentOut;
         public float Radius => radius;
-        /// <summary>Горит (не погашен тенью).</summary>
         public bool IsOn => Time.time >= _outUntil;
-        /// <summary>0 — горит, 1 — погашен; между ними — мигает, пока гаснет и пока загорается.</summary>
         public float Out01
         {
             get
@@ -45,7 +35,6 @@ namespace Bouncer.Core
                 return Mathf.Min(fadeIn, fadeOut);
             }
         }
-        /// <summary>Молния: всё освещено до этого момента.</summary>
         public static bool Flashing => Time.time < s_flashUntil;
 
         public Vector3 Center
@@ -62,7 +51,6 @@ namespace Bouncer.Core
 
         void OnDisable() => s_all.Remove(this);
 
-        /// <summary>Погасить на столько секунд: фонарь мигнёт и потухнет, потом загорится снова.</summary>
         public void PutOut(float seconds)
         {
             if (seconds <= 0f)
@@ -74,7 +62,6 @@ namespace Bouncer.Core
             WentOut?.Invoke(this, seconds);
         }
 
-        /// <summary>Фонарь в этой точке (его центр), не дальше tolerance. null — нет.</summary>
         public static LightZone FindAt(Vector3 center, float tolerance = 0.5f)
         {
             LightZone best = null;
@@ -92,7 +79,6 @@ namespace Bouncer.Core
             return best;
         }
 
-        /// <summary>Зажечь погашенный фонарь сейчас же.</summary>
         public void Relight() => _outUntil = Mathf.Min(_outUntil, Time.time);
 
         public bool Contains(Vector3 position)
@@ -102,10 +88,6 @@ namespace Bouncer.Core
             return delta.sqrMagnitude <= radius * radius;
         }
 
-        /// <summary>
-        /// Светло ли в точке: горящий фонарь, «Фонарик» игрока или вспышка молнии.
-        /// Маленький круг света вокруг игрока без карточки светом не считается — он только чтобы видеть.
-        /// </summary>
         public static bool IsLit(Vector3 position)
         {
             if (Flashing || LightBeams.Contains(position))
@@ -126,7 +108,6 @@ namespace Bouncer.Core
             return false;
         }
 
-        /// <summary>Ближайший горящий фонарь в радиусе от точки (до края его круга). null — нет.</summary>
         public static LightZone FindNearestOn(Vector3 position, float maxDistance)
         {
             LightZone best = null;
@@ -147,10 +128,8 @@ namespace Bouncer.Core
             return best;
         }
 
-        /// <summary>Вспышка молнии: всё освещено столько секунд.</summary>
         public static void Flash(float seconds) => s_flashUntil = Mathf.Max(s_flashUntil, Time.time + seconds);
 
-        /// <summary>Точка в свете, который отгоняет сумеречных (дверь подъезда в финале).</summary>
         public static bool Repels(Vector3 position)
         {
             foreach (var zone in s_all)
@@ -159,7 +138,6 @@ namespace Bouncer.Core
             return false;
         }
 
-        /// <summary>Если точка в отгоняющем свете — сдвинуть её за край круга (с запасом margin). true — сдвинули.</summary>
         public static bool PushOutOfRepelling(ref Vector3 point, float margin)
         {
             bool moved = false;

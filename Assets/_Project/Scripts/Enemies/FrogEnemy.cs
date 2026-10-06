@@ -5,14 +5,6 @@ using UnityEngine.AI;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Заводная лягушка — прыгун. Садится (на земле уже виден круг, куда она упадёт), прыгает дугой к игроку,
-    /// приземление бьёт по кругу. После нескольких прыжков завод кончается — сидит и заводится (ключ крутится
-    /// назад): окно для бросков. Мяч в прыжке сбивает её — падает на спину без удара. Кинематическая, без NavMesh-агента:
-    /// точки приземления берутся с NavMesh, поэтому за арену не выпрыгнет.
-    /// По сети прыгает и бьёт только у хозяина комнаты; круг приземления он показывает гостям, а копия у гостя
-    /// летит и сплющивается по его вестям.
-    /// </summary>
     [RequireComponent(typeof(Rigidbody), typeof(Health), typeof(Targetable))]
     public sealed class FrogEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
@@ -90,8 +82,6 @@ namespace Bouncer.Enemies
 
         void OnDisable() => HideMarker();
 
-        // ---------- Мозги ----------
-
         void FixedUpdate()
         {
             if (NetHooks.IsGuest)
@@ -121,7 +111,7 @@ namespace Bouncer.Enemies
                     {
                         if (_jumpsLeft <= 0)
                         {
-                            GameEvents.PlaySound(SoundCue.WindUp, position);   // тр-р-р: заводится
+                            GameEvents.PlaySound(SoundCue.WindUp, position);
                             Enter(State.Rewind);
                         }
                         else if (PickLanding(target, position))
@@ -162,7 +152,6 @@ namespace Bouncer.Enemies
                     break;
 
                 case State.Fallen:
-                    // Сбили в прыжке: падает вниз, где была, и лежит на спине.
                     float f = Mathf.Clamp01(_stateTime / FallTime);
                     Vector3 ground = new(_fallFrom.x, _jumpTo.y, _fallFrom.z);
                     position = Vector3.Lerp(_fallFrom, ground, f * f);
@@ -182,7 +171,6 @@ namespace Bouncer.Enemies
             _rb.MovePosition(position);
         }
 
-        /// <summary>Куда прыгнуть: к игроку (с упреждением), не короче и не длиннее прыжка, на NavMesh.</summary>
         bool PickLanding(Targetable target, Vector3 position)
         {
             Vector3 aim = target.Position + Flat(target.Velocity) * ((definition.crouchTime + definition.jumpTime) * definition.lead);
@@ -248,8 +236,6 @@ namespace Bouncer.Enemies
             _marker = null;
         }
 
-        // ---------- Попадания ----------
-
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)
         {
             if (_health.IsDead)
@@ -286,7 +272,6 @@ namespace Bouncer.Enemies
 
             if (_state == State.Air)
             {
-                // Сбили в прыжке: удара не будет.
                 HideMarker();
                 _fallFrom = _rb.position;
                 Enter(State.Fallen);
@@ -316,8 +301,6 @@ namespace Bouncer.Enemies
             PoolService.Despawn(gameObject);
         }
 
-        // ---------- Вид ----------
-
         void LateUpdate()
         {
             if (!visual)
@@ -330,13 +313,11 @@ namespace Bouncer.Enemies
             float squashXZ = 1f + 0.12f * crouch + 0.15f * _squash - 0.06f * stretch;
             visual.localScale = new Vector3(squashXZ, squashY, squashXZ);
 
-            // Лежит на спине — перевёрнута.
             Quaternion lie = _state == State.Fallen
                 ? Quaternion.AngleAxis(170f * Mathf.Clamp01(_stateTime / 0.2f), Vector3.forward)
                 : Quaternion.identity;
             visual.localRotation = lie;
 
-            // Задние лапы: в прыжке вытянуты назад, присев — поджаты. Передние — вперёд в полёте.
             float legs = 55f * stretch - 15f * crouch;
             if (legL)
                 legL.localRotation = Quaternion.Euler(legs, 0f, 0f);
@@ -348,7 +329,6 @@ namespace Bouncer.Enemies
             if (armR)
                 armR.localRotation = Quaternion.Euler(arms, 0f, 0f);
 
-            // Ключ: крутится, пока есть завод; заводясь — быстро в обратную сторону.
             float keySpeed = _state == State.Rewind ? -900f : _jumpsLeft > 0 ? 160f * _jumpsLeft : 0f;
             if (_self.IsFrozen)
                 keySpeed = 0f;
@@ -356,8 +336,6 @@ namespace Bouncer.Enemies
             if (key)
                 key.localRotation = Quaternion.Euler(0f, 0f, _keyAngle);
         }
-
-        // ---------- Сеть ----------
 
         public void WriteNet(NetWriter writer)
         {
@@ -370,7 +348,6 @@ namespace Bouncer.Enemies
         public void ReadNet(NetReader reader, float age)
         {
             var state = (State)reader.Byte();
-            // Приземлилась — сплющиться, как у хозяина.
             if (_state == State.Air && state == State.Sit)
                 _squash = 1f;
             _state = state;

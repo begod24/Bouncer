@@ -4,12 +4,6 @@ using UnityEngine;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Ложное чучело из «Пряток»: вылезает из земли вместе с настоящим «Тем, кто в сумерках» и выглядит так же,
-    /// только глаза не горят. Попали — рассыпается соломой, и из неё вылетают вороны. Когда настоящего нашли
-    /// (или он вышел сам), ложные осыпаются без ворон.
-    /// По сети встаёт, поворачивается и рассыпается у хозяина комнаты; у гостя копия вылезает из земли так же.
-    /// </summary>
     [RequireComponent(typeof(Health), typeof(Targetable))]
     public sealed class ScarecrowDecoy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
@@ -57,7 +51,6 @@ namespace Bouncer.Enemies
 
         public void OnDespawned() => _boss = null;
 
-        /// <summary>Встало на «Прятках»: вылезает из земли за riseTime секунд.</summary>
         public void Init(DuskBoss boss, float riseTime)
         {
             _boss = boss;
@@ -67,10 +60,6 @@ namespace Bouncer.Enemies
                 PoolService.Spawn(smokePrefab, transform.position + Vector3.up * 0.5f, Quaternion.identity).Play(1.4f);
         }
 
-        /// <summary>
-        /// Настоящего нашли — ложное осыпается само, без ворон. Зовёт его сам босс, поэтому обратно ему
-        /// не сообщает: он как раз перебирает свой список чучел.
-        /// </summary>
         public void Collapse()
         {
             _boss = null;
@@ -103,8 +92,6 @@ namespace Bouncer.Enemies
             if (armR)
                 armR.localRotation = _armRRest * Quaternion.Euler(0f, 0f, 20f);
         }
-
-        // ---------- Сеть ----------
 
         public void WriteNet(NetWriter writer)
         {

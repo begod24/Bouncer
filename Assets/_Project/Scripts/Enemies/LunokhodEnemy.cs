@@ -5,13 +5,6 @@ using UnityEngine.AI;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Луноход — танк-стрелок. Медленно ездит на восьми колёсах, держится на дистанции и разворачивается неспешно.
-    /// Раз в несколько секунд останавливается, поднимает крышку-солнечную батарею и выпускает веер колючих
-    /// мячей-ёжиков по дуге (их не поймать — только увернуться). Бронированный: при закрытой крышке попадание
-    /// считается за половину, при открытой — за полтора (<see cref="BossArmor"/>), так что бить его стоит в залп.
-    /// По сети ездит и стреляет только у хозяина комнаты; у гостя копия открывает крышку по его вестям.
-    /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
     public sealed class LunokhodEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
@@ -67,7 +60,6 @@ namespace Bouncer.Enemies
             _self.Team = Team.Enemy;
             _agent.updateRotation = false;
             _health.Died += OnDied;
-            // У гостя попадания приходят от хозяина: корпус качается и от них.
             _health.Damaged += _ =>
             {
                 if (NetHooks.IsGuest)
@@ -103,8 +95,6 @@ namespace Bouncer.Enemies
         }
 
         public void OnDespawned() { }
-
-        // ---------- Мозги ----------
 
         void Update()
         {
@@ -177,7 +167,6 @@ namespace Bouncer.Enemies
             }
         }
 
-        /// <summary>Держать дистанцию: подъехать или отъехать по линии от игрока.</summary>
         void Reposition()
         {
             if (_target == null || !_target.IsAlive || !GameSession.IsGameplayActive)
@@ -246,8 +235,6 @@ namespace Bouncer.Enemies
                 definition.turnSpeed * dt);
         }
 
-        // ---------- Попадания ----------
-
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)
         {
             if (_health.IsDead)
@@ -301,8 +288,6 @@ namespace Bouncer.Enemies
             PoolService.Despawn(gameObject);
         }
 
-        // ---------- Вид ----------
-
         void LateUpdate()
         {
             float dt = Time.deltaTime;
@@ -332,8 +317,6 @@ namespace Bouncer.Enemies
                 body.localRotation = _bodyRest * Quaternion.Euler(rock, 0f, 0f);
             }
         }
-
-        // ---------- Сеть ----------
 
         public void WriteNet(NetWriter writer)
         {

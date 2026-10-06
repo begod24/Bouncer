@@ -5,11 +5,6 @@ using UnityEngine;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// Плашка посреди экрана: название арены, когда начинается бой («Двор · утро»), с погодой, если она выпала
-    /// («Дождь: в лужах мяч гаснет»), и «Пройдено!» с подсказкой про ларёк и стрелку, когда арена пройдена.
-    /// В обучении вместо названия арены — «Тренировка».
-    /// </summary>
     public sealed class ArenaBanner : MonoBehaviour
     {
         [SerializeField] CanvasGroup group;
@@ -36,7 +31,6 @@ namespace Bouncer.UI
                     _introShown = true;
                     Show(Loc.Get("tutorial.banner"), Loc.Get("tutorial.banner.hint"), introTime + 1.2f);
                 }
-                // По сети — когда закрыта стартовая карточка и гость узнал от хозяина погоду.
                 if (!_introShown && session.State == SessionState.Playing && session.Menu == LocalMenu.None
                     && director.WeatherKnown && !director.Arena.title.IsEmpty)
                 {
@@ -48,11 +42,9 @@ namespace Bouncer.UI
                     Show(director.Arena.title.GetLocalizedString(), hintText,
                         hintText.Length > 0 ? introTime + 1.2f : introTime);
                 }
-                // Сначала выбор карточки за босса, потом плашка — иначе её не видно под экраном выбора.
                 if (!_clearedShown && director.IsComplete && session.State == SessionState.Cleared && session.Menu == LocalMenu.None)
                 {
                     _clearedShown = true;
-                    // По сети дальше идут все вместе: подсказка про общую стрелку.
                     Show(Loc.Get("arena.cleared"), Loc.Get(Online.Active ? "arena.cleared.hint.coop" : "arena.cleared.hint"), clearedTime);
                 }
                 if (session.IsShopOpen || session.State is SessionState.GameOver or SessionState.Victory)

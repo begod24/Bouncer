@@ -2,37 +2,25 @@ using UnityEngine;
 
 namespace Bouncer.Core
 {
-    /// <summary>
-    /// Настройки игрока (экран «Настройки»). Хранятся в PlayerPrefs.
-    /// Разрешение и режим окна движок запоминает сам, здесь их нет. Все звуки игры идут через
-    /// SoundPlayer и MusicPlayer, поэтому общая громкость — множитель в их громкости, а не AudioListener.volume.
-    /// </summary>
     public static class GameSettings
     {
         public static bool AutoAimMouse;
         public static bool AutoAimGamepad = true;
         public static bool ShowAimPreview = true;
-        /// <summary>Подсказки управления: блок в углу экрана посреди игры (H) и строки внизу меню.</summary>
         public static bool ShowHints = true;
 
-        /// <summary>Громкости — положение ползунка 0–1. В AudioSource идёт <see cref="VolumeGain"/>.</summary>
         public static float MasterVolume = 1f;
         public static float MusicVolume = 1f;
         public static float SfxVolume = 1f;
-        /// <summary>Тряска камеры, 0–1: множитель поверх тряски из GameFeel.</summary>
         public static float ScreenShake = 1f;
         public static bool VSync = true;
-        /// <summary>Ребёнок, с которым игрок выходит гулять (номер в KidRoster). Запоминается между запусками.</summary>
         public static int Kid;
-        /// <summary>Имя игрока в сетевой комнате: его видят другие над ребёнком и в списке комнаты.</summary>
         public static string PlayerName = "";
 
-        /// <summary>Самое длинное имя в комнате, букв.</summary>
         public const int PlayerNameLength = 16;
 
         public static bool AutoAimFor(bool gamepad) => gamepad ? AutoAimGamepad : AutoAimMouse;
 
-        /// <summary>Ползунок громкости → множитель: квадрат, чтобы на слух ползунок шёл равномерно.</summary>
         public static float VolumeGain(float slider) => slider * slider;
 
         public static float MusicGain => VolumeGain(MasterVolume) * VolumeGain(MusicVolume);
@@ -57,10 +45,8 @@ namespace Bouncer.Core
             Apply();
         }
 
-        /// <summary>Передать движку вертикальную синхронизацию.</summary>
         public static void Apply()
         {
-            // В редакторе синхронизацию задаёт окно Game, а смена из кода осталась бы в настройках качества проекта.
             if (!Application.isEditor)
                 QualitySettings.vSyncCount = VSync ? 1 : 0;
         }

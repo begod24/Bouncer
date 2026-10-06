@@ -7,13 +7,6 @@ using UnityEngine.UI;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// «Кто выходит гулять?» — после «Играть» на заставке. Четверо детей в своих позах (<see cref="KidStage"/>
-    /// в RenderTexture), под каждым кнопка с именем: какая кнопка выбрана (мышью, стрелками, геймпадом), тот ребёнок
-    /// и в позе, нажал — прогулка начинается с ним. Статы у всех одинаковые, поэтому на экране только имя и характер.
-    /// Справа вверху — уровень опасности прогулки (открытые победами, <see cref="Danger"/>) и что он добавляет.
-    /// Открывает и закрывает его <see cref="RunScreens"/>.
-    /// </summary>
     public sealed class KidSelectScreen : MonoBehaviour
     {
         [SerializeField] KidRoster roster;
@@ -33,12 +26,10 @@ namespace Bouncer.UI
         bool _closing;
         int _highlighted = -1;
 
-        /// <summary>Игрок выбрал ребёнка (номер в KidRoster) — пора начинать прогулку.</summary>
         public event Action<int> Chosen;
 
         public KidRoster Roster => roster;
 
-        /// <summary>Кнопка ребёнка, с которым гуляли в прошлый раз, — её выбрать при открытии.</summary>
         public Selectable FirstButton => kidButtons.Length > 0 ? kidButtons[Mathf.Clamp(GameSettings.Kid, 0, kidButtons.Length - 1)] : null;
 
         void Awake()
@@ -99,10 +90,6 @@ namespace Bouncer.UI
             RefreshDanger();
         }
 
-        /// <summary>
-        /// Убрать сцену с детьми. Экран гаснет плавно, а RawImage без текстуры мелькнул бы белым
-        /// прямоугольником: пока экран видно, дети гаснут вместе с ним, а сцена уходит, когда он погас.
-        /// </summary>
         public void Close()
         {
             _closing = _stage != null;
@@ -131,7 +118,6 @@ namespace Bouncer.UI
             view.texture = null;
         }
 
-        /// <summary>На этом ребёнке выделение: он в позе, под ним круг, внизу его характер.</summary>
         public void Highlight(int index)
         {
             index = roster.Clamp(index);
@@ -156,7 +142,6 @@ namespace Bouncer.UI
             Chosen?.Invoke(index);
         }
 
-        /// <summary>Кнопки с именами — ровно под детьми на картинке (кнопки лежат внутри RawImage).</summary>
         void PlaceButtons(Rect rect)
         {
             for (int i = 0; i < kidButtons.Length; i++)

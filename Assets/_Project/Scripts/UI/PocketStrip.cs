@@ -10,13 +10,6 @@ using UnityEngine.Localization.Settings;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// Ряд карманов игрока: вкладыши по порядку взятия, пустые карманы пунктиром и подпись «карманы 4/6».
-    /// Только показывает; новая карточка в кармане подпрыгивает. Таких рядов три: на HUD (в бою, прячется
-    /// под экранами карточек и паузой), на экране выбора и в ларьке.
-    /// Ряд на HUD в коопе показывает слева от карманов ещё и рюкзак: неоткрытые портфели и кнопку, которая их
-    /// открывает («R — открыть»).
-    /// </summary>
     public sealed class PocketStrip : MonoBehaviour
     {
         [SerializeField] PocketCardMini miniPrefab;
@@ -88,7 +81,6 @@ namespace Bouncer.UI
                 UpdateBackpack();
         }
 
-        /// <summary>Рюкзак слева от карманов: портфель, сколько их и какой кнопкой открыть. Пусто — не виден.</summary>
         void UpdateBackpack()
         {
             int count = _cards.Backpack;
@@ -111,7 +103,6 @@ namespace Bouncer.UI
             float scale = size / Mathf.Max(1f, ((RectTransform)miniPrefab.transform).rect.width);
             var rect = (RectTransform)_backpack.transform;
             rect.localScale = Vector3.one * scale;
-            // Через промежуток слева от первого кармана.
             float first = alignRight ? -(slots - 1) * spacing - size * 0.5f : -(slots - 1) * 0.5f * spacing;
             rect.anchoredPosition = new Vector2(first - spacing * 1.35f, 0f);
             _backpack.gameObject.SetActive(true);
@@ -148,7 +139,6 @@ namespace Bouncer.UI
             return false;
         }
 
-        /// <summary>Показать карманы: вкладыши по порядку, остальное до max — пустые. Новые подпрыгивают.</summary>
         public void Show(IReadOnlyList<UpgradeCard> pockets, Func<UpgradeCard, int> stacksOf, int max)
         {
             _dirty = false;
@@ -176,7 +166,6 @@ namespace Bouncer.UI
                     continue;
                 var rect = (RectTransform)mini.transform;
                 rect.localScale = Vector3.one * scale;
-                // Справа: последний вкладыш правым краем к точке ряда; иначе ряд по центру.
                 float x = alignRight ? -(count - 1 - i) * spacing - size * 0.5f : (i - (count - 1) * 0.5f) * spacing;
                 rect.anchoredPosition = new Vector2(x, 0f);
                 if (i < _shown.Count)
@@ -188,7 +177,6 @@ namespace Bouncer.UI
                         mini.SetLabelStyle(nameSize / scale, nameWidth / scale, wrap: false);
                         mini.SetLabel(card.title.GetLocalizedString());
                     }
-                    // Новая карточка в кармане (не при первом показе и не после выброса соседней) подпрыгивает.
                     if (_filled && !_previous.Contains(card))
                         mini.Pop();
                 }
@@ -215,7 +203,6 @@ namespace Bouncer.UI
             rect.anchorMin = rect.anchorMax = new Vector2(alignRight ? 1f : 0.5f, 0.5f);
             rect.pivot = new Vector2(0.5f, 0.5f);
             mini.SetInteractable(false);
-            // Ряд только показывает: вкладыши не перехватывают мышь.
             foreach (var graphic in mini.GetComponentsInChildren<UnityEngine.UI.Graphic>(true))
                 graphic.raycastTarget = false;
             return mini;

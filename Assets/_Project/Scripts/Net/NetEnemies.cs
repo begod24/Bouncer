@@ -9,31 +9,18 @@ using UnityEngine.SceneManagement;
 
 namespace Bouncer.Net
 {
-    /// <summary>
-    /// Враги по сети. Настоящие враги — только у хозяина комнаты: их выпускают волны, они думают, бьют и умирают
-    /// там. Гостям хозяин сообщает, какой враг появился, а потом раз в несколько тактов — где он, как повёрнут и что
-    /// показывает его анимация (<see cref="INetEnemy"/>); отдельно — попадания (здоровье, вспышка), сброс серии и
-    /// исчезновение (кто выбил). У гостя враг — копия: «мозги» не работают (<see cref="NetHooks.IsGuest"/>), тело не
-    /// подчиняется физике, положение плавно ведёт <see cref="MotionBuffer"/>. Звуки, обломки и взрывы врагов
-    /// показывает <see cref="NetWorld"/>. То, что гость делает с копией (подкат, «Свисток», «Домино»), уходит
-    /// хозяину, и тот применяет это к настоящему врагу.
-    /// </summary>
     [DefaultExecutionOrder(-35)]
     public sealed class NetEnemies : NetworkBehaviour
     {
-        /// <summary>Точки движения — каждый такой такт (60 / 3 = 20 раз в секунду).</summary>
         const int SendEveryTicks = 3;
         const float PositionError = 0.02f;
         const float AngleError = 1f;
-        /// <summary>Стоящий враг напоминает о себе не реже этого, с.</summary>
         const float Keepalive = 0.5f;
-        /// <summary>Сколько врагов в одном ненадёжном сообщении (оно должно влезть в один пакет).</summary>
         const int MaxPerMessage = 20;
 
         [Tooltip("Все враги, которые бывают в игре: по сети враг — номер в этом списке")]
         [SerializeField] GameObject[] prefabs;
 
-        /// <summary>Враг хозяина и что о нём знают гости.</summary>
         sealed class Tracked
         {
             public ushort Id;
@@ -54,7 +41,6 @@ namespace Bouncer.Net
             public System.Action Restored;
         }
 
-        /// <summary>Копия врага у гостя.</summary>
         sealed class Puppet
         {
             public ushort Id;
@@ -66,7 +52,6 @@ namespace Bouncer.Net
             public readonly MotionBuffer Motion = new();
         }
 
-        // Хозяин.
         readonly Dictionary<GameObject, Tracked> _tracked = new();
         readonly Dictionary<ushort, Tracked> _trackedById = new();
         readonly HashSet<GameObject> _unknown = new();
@@ -76,7 +61,6 @@ namespace Bouncer.Net
         ushort _nextId;
         int _tick;
 
-        // Гость.
         readonly Dictionary<ushort, Puppet> _puppets = new();
         readonly Dictionary<GameObject, Puppet> _puppetsByObject = new();
         readonly List<Puppet> _step = new();
@@ -136,10 +120,7 @@ namespace Bouncer.Net
             _puppetsByObject.Clear();
         }
 
-        /// <summary>Сколько врагов идёт по сети (для отладки, F3).</summary>
         public int Count => IsServer ? _tracked.Count : _puppets.Count;
-
-        // ================= Хозяин =================
 
         void OnTick()
         {
@@ -283,7 +264,6 @@ namespace Bouncer.Net
 
         void SendMotion()
         {
-            // Свои часы хозяина (ровные), сдвинутые на шаг физики: положения тел — с последнего шага.
             double time = Time.unscaledTimeAsDouble - (Time.timeAsDouble - Time.fixedTimeAsDouble);
             _outbox.Clear();
             foreach (var tracked in _tracked.Values)
@@ -299,7 +279,6 @@ namespace Bouncer.Net
                 bool frozen = tracked.Self.FrozenLeft > 0f;
                 bool moved = (position - tracked.SentPosition).sqrMagnitude > PositionError * PositionError
                              || Quaternion.Angle(rotation, tracked.SentRotation) > AngleError;
-                // Встал — сказать сразу, иначе у гостя он ещё проедет по старой скорости и откатится.
                 bool stopped = tracked.SentVelocity.sqrMagnitude > 0.01f && velocity.sqrMagnitude < 0.01f;
                 if (!moved && !stopped && frozen == tracked.SentFrozen && SamePayload(tracked) && time - tracked.SentTime < Keepalive)
                     continue;
@@ -372,8 +351,6 @@ namespace Bouncer.Net
         [Rpc(SendTo.Server)]
         void FreezeAllRpc(float seconds) => Targetable.FreezeEnemies(Mathf.Clamp(seconds, 0f, 10f));
 
-        // ================= Гость =================
-
         [Rpc(SendTo.NotServer)]
         void SpawnRpc(NetEnemySpawn spawn)
         {
@@ -397,7 +374,6 @@ namespace Bouncer.Net
             _puppetsByObject[go] = puppet;
         }
 
-        /// <summary>Копия врага: тело не подчиняется физике, путь не ищет, здоровье само не восстанавливается.</summary>
         static void BecomePuppet(GameObject go)
         {
             foreach (var body in go.GetComponentsInChildren<Rigidbody>())
@@ -462,7 +438,6 @@ namespace Bouncer.Net
             _puppetsByObject.Remove(puppet.Go);
             if (puppet.Go == null)
                 return;
-            // Выбит: «Домино», бестиарий и счёт у гостя узнают, кто выбил. Монетки и половинки роняет хозяин.
             if (gone.Killed)
             {
                 var killer = gone.KillerSlot >= 0 ? Players.InSlot(gone.KillerSlot) : null;
@@ -514,7 +489,6 @@ namespace Bouncer.Net
             if (!IsSpawned)
                 return false;
             FreezeAllRpc(seconds);
-            // Сразу видно у себя; хозяин пришлёт ту же заморозку.
             Targetable.FreezeEnemiesLocal(seconds);
             return true;
         }
@@ -528,7 +502,6 @@ namespace Bouncer.Net
         }
     }
 
-    /// <summary>Враг хозяина исчез: выбит ли, кем (номер игрока, -1 — не игроком) и каким ударом.</summary>
     public struct NetEnemyGone : INetworkSerializable
     {
         public ushort Id;

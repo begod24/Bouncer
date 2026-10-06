@@ -4,33 +4,23 @@ using UnityEngine;
 
 namespace Bouncer.Core
 {
-    /// <summary>Одна пройденная прогулка: время, опасность, кем играл и с какими карточками.</summary>
     [Serializable]
     public sealed class RunRecord
     {
         public float time;
         public int danger = 1;
-        /// <summary>Имя ассета ребёнка (KidDefinition).</summary>
         public string kid;
-        /// <summary>Имена ассетов карточек, которые были в карманах в конце.</summary>
         public string[] cards = Array.Empty<string>();
         public string date;
-        /// <summary>Сколько гуляло: 1 (и 0 у старых записей) — одному, больше — вместе, по сети.</summary>
         public int players = 1;
 
         public bool IsCoop => players > 1;
     }
 
-    /// <summary>
-    /// Локальные рекорды: лучшие победы (по времени) на каждом уровне опасности, отдельно одному и вместе.
-    /// Лежат в PlayerPrefs одним JSON.
-    /// Новый рекорд помечается «новое!» в тетрадке, пока игрок не откроет страницу рекордов (<see cref="MarkSeen"/>).
-    /// </summary>
     public static class RunRecords
     {
         const string Key = "bouncer.records";
         const string UnseenKey = "bouncer.records.unseen";
-        /// <summary>Сколько побед хранить на одном уровне опасности.</summary>
         const int KeepPerDanger = 5;
 
         [Serializable]
@@ -67,10 +57,8 @@ namespace Bouncer.Core
 
         public static IReadOnlyList<RunRecord> All => Data.runs;
 
-        /// <summary>Есть рекорд, которого игрок ещё не видел в тетрадке.</summary>
         public static bool HasUnseen => PlayerPrefs.GetInt(UnseenKey, 0) == 1;
 
-        /// <summary>Страницу рекордов открыли — «новое!» больше не показывать.</summary>
         public static void MarkSeen()
         {
             if (!HasUnseen)
@@ -79,7 +67,6 @@ namespace Bouncer.Core
             PlayerPrefs.Save();
         }
 
-        /// <summary>Лучшая победа на этом уровне опасности (одному или вместе). null — побед ещё нет.</summary>
         public static RunRecord Best(int danger, bool coop = false)
         {
             RunRecord best = null;
@@ -89,7 +76,6 @@ namespace Bouncer.Core
             return best;
         }
 
-        /// <summary>Запомнить победу. true — это новый рекорд своего уровня опасности.</summary>
         public static bool Add(RunRecord record)
         {
             if (record == null || record.time <= 0f)
@@ -99,7 +85,6 @@ namespace Bouncer.Core
             record.date = DateTime.Now.ToString("yyyy-MM-dd");
             Data.runs.Add(record);
             Data.runs.Sort((a, b) => a.danger != b.danger ? b.danger.CompareTo(a.danger) : a.time.CompareTo(b.time));
-            // На каждом уровне держим только несколько лучших — одному и вместе отдельно.
             var kept = new Dictionary<int, int>();
             for (int i = 0; i < Data.runs.Count; i++)
             {
@@ -119,7 +104,6 @@ namespace Bouncer.Core
             return isBest;
         }
 
-        /// <summary>Время прогулки как «мм:сс».</summary>
         public static string FormatTime(float seconds)
         {
             int total = Mathf.Max(0, Mathf.FloorToInt(seconds));

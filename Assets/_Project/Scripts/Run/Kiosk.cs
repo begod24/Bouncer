@@ -6,13 +6,6 @@ using UnityEngine;
 
 namespace Bouncer.Run
 {
-    /// <summary>
-    /// Ларёк «Союзпечать» на краю арены. В бою закрыт; когда арена пройдена, окошко загорается, над ларьком
-    /// прыгает стрелка, и игрок, подойдя, открывает витрину кнопкой взаимодействия. Сама витрина — экран в UI,
-    /// он слушает <see cref="ShopOpened"/> и работает с <see cref="Stock"/>.
-    /// По сети у каждого компьютера свой покупатель — свой игрок со своей витриной; витрины открыты у всех разом,
-    /// и время у ларька не стоит.
-    /// </summary>
     [DefaultExecutionOrder(100)]
     public sealed class Kiosk : MonoBehaviour
     {
@@ -31,11 +24,9 @@ namespace Bouncer.Run
 
         public static Kiosk Instance { get; private set; }
         public bool IsOpen { get; private set; }
-        /// <summary>Игрок у окошка и может открыть витрину.</summary>
         public bool PlayerNear { get; private set; }
         public ShopStock Stock { get; private set; }
         public PlayerCards Customer { get; private set; }
-        /// <summary>Сколько монеток принесла «Копилка» при открытии.</summary>
         public int Interest { get; private set; }
         public Vector3 WindowPosition => window ? window.position : transform.position;
 
@@ -56,7 +47,6 @@ namespace Bouncer.Run
                 Instance = null;
         }
 
-        /// <summary>Арена пройдена: ларёк открывается, «Копилка» приносит монетки, выставляется витрина.</summary>
         public void Open(PlayerCards customer, int arenaIndex)
         {
             if (IsOpen || customer == null || customer.Deck == null)

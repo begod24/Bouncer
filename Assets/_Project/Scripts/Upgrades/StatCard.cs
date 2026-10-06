@@ -3,7 +3,6 @@ using UnityEngine;
 
 namespace Bouncer.Upgrades
 {
-    /// <summary>Пассивка: прибавки к характеристикам игрока. Можно брать несколько раз — прибавки складываются.</summary>
     [CreateAssetMenu(menuName = "Bouncer/Upgrades/Stat Card", fileName = "Card_Stat_")]
     public sealed class StatCard : UpgradeCard
     {
@@ -56,7 +55,6 @@ namespace Bouncer.Upgrades
         [Tooltip("«Счастливый фантик»: на столько карточек больше на выбор в портфеле и за босса")]
         [Min(0)] public int extraChoices;
 
-        // Карточка с минусом к мячам не должна оставить игрока совсем без мячей.
         public override bool CanOffer(PlayerController player, int stacks) =>
             base.CanOffer(player, stacks) && player.Balls.MaxBalls + extraBalls >= 1;
 
@@ -90,7 +88,6 @@ namespace Bouncer.Upgrades
                 player.Balls.GiveBall(extraBalls);
             else if (extraBalls < 0)
             {
-                // На новой арене мячей на полу ещё нет: лишние просто не выдаются.
                 if (Replaying)
                     player.Balls.ClampToMax();
                 else

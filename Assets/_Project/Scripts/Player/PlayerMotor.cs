@@ -3,7 +3,6 @@ using UnityEngine;
 
 namespace Bouncer.Player
 {
-    /// <summary>Бег с разгоном, рывок-уклонение, отброс от ударов. CharacterController — предсказуемо и удобно для сети.</summary>
     [RequireComponent(typeof(CharacterController))]
     public sealed class PlayerMotor : MonoBehaviour
     {
@@ -24,20 +23,15 @@ namespace Bouncer.Player
         float _downUntil;
 
         public bool IsDashing => Time.time < _dashEnd;
-        /// <summary>Сбит с ног (медбол): не бегает и не делает рывок.</summary>
         public bool IsDown => Time.time < _downUntil;
-        /// <summary>Замедлен (тёмный мяч Бабая).</summary>
         public bool IsSlowed => Time.time < _slowUntil;
         public bool IsDashInvulnerable => Time.time < _dashStart + _stats.dashInvulnerability;
         public bool DashReady => Time.time >= _dashReadyAt;
-        /// <summary>Когда начался последний рывок (Time.time) — по нему видно, что рывок новый.</summary>
         public float DashStartTime => _dashStart;
 
-        /// <summary>Неуязвимость рывка шла или кончилась не больше чем within секунд назад (по сети: удар пришёл с опозданием).</summary>
         public bool WasDashInvulnerable(float within) =>
             _dashStart > 0f && Time.time < _dashStart + _stats.dashInvulnerability + within;
         public Vector3 DashDirection => _dashDirection;
-        /// <summary>0 — только что использован, 1 — готов.</summary>
         public float DashReady01
         {
             get
@@ -47,10 +41,6 @@ namespace Bouncer.Player
             }
         }
         public Vector3 Velocity => (IsDashing ? DashVelocity : _velocity) + _knockback;
-        /// <summary>
-        /// Как игрок сдвинулся на самом деле за последний шаг (упёрся в стену — ноль), по земле. По сети это
-        /// скорость для остальных: они ведут его по ней между точками.
-        /// </summary>
         public Vector3 ActualVelocity
         {
             get
@@ -85,7 +75,6 @@ namespace Bouncer.Player
             _dashStart = Time.time;
             _dashEnd = Time.time + _stats.dashDuration;
             _dashReadyAt = _dashEnd + DashCooldown;
-            // После рывка продолжаем бежать в ту же сторону, а не тормозим с нуля.
             _velocity = _dashDirection * (_stats.moveSpeed * _mods.MoveSpeed);
             GameEvents.PlaySound(SoundCue.Dash, transform.position);
             return true;
@@ -96,7 +85,6 @@ namespace Bouncer.Player
             if (dt <= 0f)
                 return;
 
-            // Песок и лужи замедляют бег, но не рывок — им из песочницы и выбираются. В резиновых сапогах — не замедляют.
             float ground = _mods.IgnoreGround ? 1f : GroundZone.MoveMultiplierAt(transform.position);
             float slow = IsSlowed ? _slowMultiplier : 1f;
             if (IsDown)
@@ -130,7 +118,6 @@ namespace Bouncer.Player
             _knockback += velocity;
         }
 
-        /// <summary>Замедлить бег на время (берётся самое сильное из действующих).</summary>
         public void Slow(float multiplier, float seconds)
         {
             if (!IsSlowed)
@@ -139,7 +126,6 @@ namespace Bouncer.Player
             _slowUntil = Mathf.Max(_slowUntil, Time.time + seconds);
         }
 
-        /// <summary>Сбить с ног на время: стоит, рывка нет.</summary>
         public void KnockDown(float seconds)
         {
             _downUntil = Mathf.Max(_downUntil, Time.time + seconds);
@@ -154,7 +140,6 @@ namespace Bouncer.Player
             _dashEnd = float.NegativeInfinity;
         }
 
-        /// <summary>Игрока ведёт сценка (дорога домой в финале): контроллер выключен, стены и пол не мешают.</summary>
         public void SetScripted(bool scripted)
         {
             Stop();

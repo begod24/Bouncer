@@ -3,21 +3,13 @@ using UnityEngine;
 
 namespace Bouncer.Core
 {
-    /// <summary>Что за место отмечено на арене.</summary>
     public enum ArenaSpotKind
     {
-        /// <summary>Скамейка запасных: отсюда выбегает подмога по свистку Физрука («Замена!»).</summary>
         Bench,
-        /// <summary>Калитка в бортах: отсюда выкатывается огромный мяч («Мяч в игре!»).</summary>
         BallGate,
-        /// <summary>Откуда выходит босс арены: ларёк «Игрушки» Трансформера, забор детсада для зайца.</summary>
         BossEntrance,
     }
 
-    /// <summary>
-    /// Отметка места на арене для врагов из пула: у них нет ссылок на объекты сцены, поэтому они находят
-    /// нужное место по реестру. Направление отметки (синяя ось) — «внутрь арены».
-    /// </summary>
     public sealed class ArenaSpot : MonoBehaviour
     {
         static readonly List<ArenaSpot> s_all = new();
@@ -40,7 +32,6 @@ namespace Bouncer.Core
 
         void OnDisable() => s_all.Remove(this);
 
-        /// <summary>Отметка этого вида подальше от точки (не выпускать подмогу прямо на игрока). null — нет таких.</summary>
         public static ArenaSpot FindFarthest(ArenaSpotKind kind, Vector3 from)
         {
             ArenaSpot best = null;
@@ -60,7 +51,6 @@ namespace Bouncer.Core
             return best;
         }
 
-        /// <summary>Первая отметка этого вида. null — нет таких.</summary>
         public static ArenaSpot Find(ArenaSpotKind kind)
         {
             foreach (var spot in s_all)

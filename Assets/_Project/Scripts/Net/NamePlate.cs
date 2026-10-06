@@ -3,7 +3,6 @@ using UnityEngine;
 
 namespace Bouncer.Net
 {
-    /// <summary>Имя над чужим игроком — мелом цвета его номера, всегда лицом к камере.</summary>
     public sealed class NamePlate : MonoBehaviour
     {
         [SerializeField] TMP_Text label;
@@ -18,7 +17,6 @@ namespace Bouncer.Net
 
         Camera _camera;
 
-        /// <summary>Показать имя (пусто — спрятать) цветом этого номера.</summary>
         public void Show(string playerName, int slot)
         {
             bool visible = !string.IsNullOrEmpty(playerName);
@@ -30,7 +28,6 @@ namespace Bouncer.Net
                 label.color = slotColors[Mathf.Abs(slot) % slotColors.Length];
         }
 
-        /// <summary>Сменить надпись (имя и что с игроком), не трогая цвет.</summary>
         public void SetText(string text)
         {
             if (label != null && label.text != text)

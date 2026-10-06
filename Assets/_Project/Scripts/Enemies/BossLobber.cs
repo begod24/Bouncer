@@ -3,12 +3,6 @@ using UnityEngine;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Большая неваляшка кидается маленькими: откидывается назад, на земле у игрока появляется круг, маленькая
-    /// неваляшка летит дугой и, упав, бьёт всех в круге — дальше она обычный враг. Замах иногда оказывается финтом.
-    /// После броска босс открыт (<see cref="RolyPolyEnemy.MarkOpen"/>).
-    /// По сети кидается только у хозяина комнаты.
-    /// </summary>
     [RequireComponent(typeof(RolyPolyEnemy))]
     public sealed class BossLobber : MonoBehaviour
     {
@@ -61,7 +55,6 @@ namespace Bouncer.Enemies
 
         void Update()
         {
-            // По сети кидается и бьёт только настоящий босс — у хозяина комнаты; метку на земле гости видят от него.
             if (NetHooks.IsGuest)
                 return;
             if (_landAt > 0f && Time.time >= _landAt)
@@ -75,7 +68,6 @@ namespace Bouncer.Enemies
                 if (Time.time < _windupEnd)
                     return;
                 _winding = false;
-                // Финт: откинулся — и не бросил; через миг бросит по-настоящему.
                 if (!_feinted && Random.value < Danger.FeintChance)
                 {
                     _feinted = true;
@@ -95,7 +87,6 @@ namespace Bouncer.Enemies
             if (distance < minRange || distance > maxRange)
                 return;
 
-            // Целится туда, где игрок будет к приземлению.
             Vector3 lead = target.Velocity;
             lead.y = 0f;
             _landing = target.Position + lead * (windup + flightTime) * 0.5f;

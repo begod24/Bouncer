@@ -10,23 +10,14 @@ namespace Bouncer.Core
         Charged = 1 << 0,
         Candle = 1 << 1,
         Melee = 1 << 2,
-        /// <summary>Урон по площади (набивной мяч): задевает соседей основной цели.</summary>
         Area = 1 << 3,
-        /// <summary>Подкат: рывок игрока сбил с ног.</summary>
         Tackle = 1 << 4,
-        /// <summary>Арена пройдена, оставшиеся враги исчезают: ни монеток, ни счёта, ни домино.</summary>
         Despawn = 1 << 5,
-        /// <summary>«Домино»: выбитый враг сбил соседа.</summary>
         Domino = 1 << 6,
-        /// <summary>Колючий мяч-«ёжик»: поймать нельзя — ловля колет, как попадание. Только уворачиваться.</summary>
         Spiky = 1 << 7,
-        /// <summary>Мокрый мяч (дождь): выскальзывает из рук — ловля не держит и не лечит.</summary>
         Wet = 1 << 8,
-        /// <summary>Медбол Физрука: пойманный сбивает с ног.</summary>
         Heavy = 1 << 9,
-        /// <summary>Тёмный мяч из мешка Бабая: попадание замедляет.</summary>
         Dark = 1 << 10,
-        /// <summary>Луч фонарика жжёт тень.</summary>
         Burn = 1 << 11,
     }
 
@@ -34,9 +25,7 @@ namespace Bouncer.Core
     {
         public int Damage;
         public Vector3 Point;
-        /// <summary>Горизонтальное направление удара (нормализовано).</summary>
         public Vector3 Direction;
-        /// <summary>Сила отброса (импульс).</summary>
         public float Force;
         public Team SourceTeam;
         public GameObject Source;
@@ -47,11 +36,9 @@ namespace Bouncer.Core
 
     public interface IDamageable
     {
-        /// <summary>true — удар прошёл (не заблокирован неуязвимостью и т.п.).</summary>
         bool ApplyHit(in HitInfo hit);
     }
 
-    /// <summary>Враг, которого жжёт луч наводящего фонарика (тень).</summary>
     public interface IBurnable
     {
         bool BurnsInLight { get; }

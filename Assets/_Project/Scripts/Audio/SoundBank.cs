@@ -5,7 +5,6 @@ using UnityEngine;
 
 namespace Bouncer.Audio
 {
-    /// <summary>Какие клипы звучат на каждое событие игры (<see cref="SoundCue"/>) и как громко.</summary>
     [CreateAssetMenu(menuName = "Bouncer/Sound Bank", fileName = "SoundBank")]
     public sealed class SoundBank : ScriptableObject
     {

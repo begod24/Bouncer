@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace Bouncer.Core
 {
-    /// <summary>Кольцо на земле, которое расходится и гаснет (волна от набивного мяча), потом возвращается в пул.</summary>
     [RequireComponent(typeof(CircleLine))]
     public sealed class ExpandingRing : MonoBehaviour, IPoolable
     {
@@ -11,7 +10,6 @@ namespace Bouncer.Core
         [SerializeField] float startWidth = 0.3f;
         [SerializeField] float endWidth = 0.05f;
 
-        /// <summary>Кольцо разошлось (по сети хозяин показывает его гостям): кольцо и радиус.</summary>
         public static event System.Action<ExpandingRing, float> Played;
 
         CircleLine _circle;

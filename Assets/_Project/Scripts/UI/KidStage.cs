@@ -5,12 +5,6 @@ using UnityEngine;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// Сцена экрана выбора: дети стоят в ряд далеко под двором, своя камера рисует их в RenderTexture
-    /// (фон прозрачный — поверх затемнённого двора). Выбранный стоит в своей позе с листа «Дети двора»,
-    /// под ним меловой круг; остальные просто ждут и чуть темнее. Реквизит (книга, чипсы, скакалка, мяч)
-    /// следует за рукой или лежит на земле под ногой.
-    /// </summary>
     public sealed class KidStage : MonoBehaviour
     {
         [SerializeField] KidRoster roster;
@@ -43,7 +37,6 @@ namespace Bouncer.UI
 
         public RenderTexture Texture { get; private set; }
 
-        /// <summary>Поставить детей и завести картинку нужного размера (пиксели).</summary>
         public void Build(int width, int height)
         {
             _block = new MaterialPropertyBlock();
@@ -59,7 +52,6 @@ namespace Bouncer.UI
             for (int i = 0; i < count; i++)
             {
                 var kid = roster[i];
-                // Камера смотрит на детей спереди (с +Z), так что первый в списке — слева в кадре, на +X.
                 float x = ((count - 1) * 0.5f - i) * spacing;
                 var root = new GameObject(kid.name).transform;
                 root.SetParent(transform, false);
@@ -87,7 +79,6 @@ namespace Bouncer.UI
             }
         }
 
-        /// <summary>Где в кадре стоит ребёнок: 0 — левый край картинки, 1 — правый.</summary>
         public float ViewportX(int index) =>
             index >= 0 && index < _slots.Count ? stageCamera.WorldToViewportPoint(_slots[index].Root.position).x : 0.5f;
 

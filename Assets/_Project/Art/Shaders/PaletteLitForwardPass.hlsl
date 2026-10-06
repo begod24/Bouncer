@@ -1,9 +1,6 @@
 #ifndef BOUNCER_PALETTE_LIT_FORWARD_PASS_INCLUDED
 #define BOUNCER_PALETTE_LIT_FORWARD_PASS_INCLUDED
 
-// Основной проход Bouncer/PaletteLit: освещение URP Simple Lit без бликов (Ламберт + тени + SH + доп. источники),
-// цвет из палитры, подкраска, вспышка и туман. Нормали плоские — приходят из меша.
-
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 #if defined(LOD_FADE_CROSSFADE)
     #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/LODCrossFade.hlsl"
@@ -182,7 +179,6 @@ void PaletteLitFragment(
     surfaceData.normalTS = half3(0.0h, 0.0h, 1.0h);
     surfaceData.occlusion = 1.0h;
     surfaceData.emission = SamplePaletteEmission(input.uv);
-    // specular = 0 и нет _SPECULAR_COLOR: бликов нет, только рассеянный свет — плоский PS1-вид.
 
     InputData inputData;
     InitializeInputData(input, inputData);

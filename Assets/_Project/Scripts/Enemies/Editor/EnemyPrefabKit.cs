@@ -6,11 +6,6 @@ using UnityEngine.AI;
 
 namespace Bouncer.Enemies.EditorTools
 {
-    /// <summary>
-    /// Сборка префабов врагов по одной схеме (как у существующих): корень на слое Enemy с физикой, здоровьем, целью,
-    /// вспышкой, наградой и «вздрагиванием»; внутри Visual с моделью из Art/Models/Enemies и точка прицела AimPoint.
-    /// Обломки — по одному куску на каждую деталь модели (Debris). Только редактор; вызывается из скриптов сборки.
-    /// </summary>
     public static class EnemyPrefabKit
     {
         public const string Prefabs = "Assets/_Project/Prefabs/Enemies/";
@@ -21,7 +16,6 @@ namespace Bouncer.Enemies.EditorTools
         {
             public GameObject Root;
             public Transform Visual;
-            /// <summary>Экземпляр модели внутри Visual: его крутят и сплющивают аниматоры (Visual трогает HitPunch).</summary>
             public Transform Model;
             public Transform AimPoint;
 
@@ -35,7 +29,6 @@ namespace Bouncer.Enemies.EditorTools
             }
         }
 
-        /// <summary>Определение из Data/Enemies: загрузить или создать с настройками по умолчанию.</summary>
         public static T Definition<T>(string assetName) where T : ScriptableObject
         {
             string path = Data + assetName + ".asset";
@@ -107,7 +100,6 @@ namespace Bouncer.Enemies.EditorTools
             return c;
         }
 
-        /// <summary>Здоровье, цель, вспышка — до поведения врага (ему они нужны в Awake).</summary>
         public static HitFlash AddBasics(Shell shell)
         {
             var root = shell.Root;
@@ -120,7 +112,6 @@ namespace Bouncer.Enemies.EditorTools
             return root.AddComponent<HitFlash>();
         }
 
-        /// <summary>Награда и «вздрагивание» от попаданий (корень модели Visual) — после поведения.</summary>
         public static void AddReward(Shell shell, int coins, float chance = 0.35f, bool portfolio = false,
             float squash = 0.12f, float recoil = 0.1f)
         {
@@ -139,7 +130,6 @@ namespace Bouncer.Enemies.EditorTools
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        /// <summary>Задать сериализованные поля компонента: имя поля → значение (Object, float, int, bool, Object[]).</summary>
         public static void Set(Object target, params (string field, object value)[] values)
         {
             var so = new SerializedObject(target);
@@ -190,10 +180,6 @@ namespace Bouncer.Enemies.EditorTools
 
         public static T Load<T>(string path) where T : Object => AssetDatabase.LoadAssetAtPath<T>(path);
 
-        /// <summary>
-        /// Обломки: каждая деталь модели (всё, что с мешем) — отдельный кусок с физикой и коробкой по размеру меша,
-        /// в той же позе, что в модели. Слой Ragdoll, компонент <see cref="Debris"/>.
-        /// </summary>
         public static GameObject BuildDebris(string name, string modelName, float totalMass = 2f)
         {
             var model = AssetDatabase.LoadAssetAtPath<GameObject>(Models + modelName + ".fbx");
@@ -232,7 +218,6 @@ namespace Bouncer.Enemies.EditorTools
 
         static float Volume(Vector3 size) => Mathf.Max(0.001f, size.x) * Mathf.Max(0.001f, size.y) * Mathf.Max(0.001f, size.z);
 
-        /// <summary>Кольцо по земле другого цвета: копия BlastRing со своими цветом и временем.</summary>
         public static ExpandingRing RingVariant(string name, Color color, float duration, float startWidth, float endWidth)
         {
             string path = "Assets/_Project/Prefabs/VFX/" + name + ".prefab";

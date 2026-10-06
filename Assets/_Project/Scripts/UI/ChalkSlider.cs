@@ -4,10 +4,6 @@ using UnityEngine;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// Ползунок меню: рядом подпись «80%», и щелчок на каждые 10% — со стрелок, геймпада и мыши.
-    /// Влево/вправо меняют значение сам Slider (шаг — 10% диапазона).
-    /// </summary>
     [RequireComponent(typeof(UnityEngine.UI.Slider))]
     public sealed class ChalkSlider : MonoBehaviour
     {
@@ -25,7 +21,6 @@ namespace Bouncer.UI
 
         void Update()
         {
-            // Значение могли выставить из кода без события — щелчок считается от того, что на экране.
             _step = Step;
             int percent = Mathf.RoundToInt(_slider.normalizedValue * 100f);
             if (percent == _shownPercent)

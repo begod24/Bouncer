@@ -5,13 +5,6 @@ using UnityEngine.SceneManagement;
 
 namespace Bouncer.Player
 {
-    /// <summary>
-    /// Выпускает игроков на арену. Игрока нет в сцене заранее: в соло спавнер сам ставит своего на первую точку
-    /// старта, по сети игроков создаёт сеть, а спавнер подсказывает, где им встать (<see cref="StartPose"/>).
-    /// Точки старта — по номерам игроков (1-й, 2-й…), синяя ось — куда игрок смотрит.
-    /// Спавнер просыпается после GameSession и ArenaDirector, но раньше остальной сцены: всё, что ищет игрока
-    /// в Start, его уже находит.
-    /// </summary>
     [DefaultExecutionOrder(-60)]
     public sealed class PlayerSpawner : MonoBehaviour
     {
@@ -34,20 +27,17 @@ namespace Bouncer.Player
                 Instance = null;
         }
 
-        /// <summary>Создать игрока с этим номером на его точке старта.</summary>
         public PlayerController Spawn(int slot, bool isLocal)
         {
             var pose = StartPose(slot);
             var player = Instantiate(playerPrefab, pose.position, pose.rotation);
             player.name = playerPrefab.name;
-            // Игрок живёт в сцене арены: уходит вместе с ней.
             if (player.gameObject.scene != gameObject.scene)
                 SceneManager.MoveGameObjectToScene(player.gameObject, gameObject.scene);
             player.Setup(slot, isLocal);
             return player;
         }
 
-        /// <summary>Где встать игроку с этим номером. Точек меньше — берётся последняя, нет совсем — сам спавнер.</summary>
         public Pose StartPose(int slot)
         {
             Transform start = null;

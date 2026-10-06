@@ -6,12 +6,6 @@ using UnityEngine.AI;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Кукла-плакса. Подходит к игроку и раз в несколько секунд заходится плачем: по земле расходятся волны крика,
-    /// игрок в их радиусе бежит медленнее. Через раз зовёт пупсов (если их рядом ещё мало). Попадание перебивает плач.
-    /// По сети ходит, плачет и зовёт только у хозяина комнаты; у гостя копия плачет по его вестям, а замедляет
-    /// своего игрока гостя сама — бегом каждый управляет у себя.
-    /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
     public sealed class CryDollEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
@@ -89,8 +83,6 @@ namespace Bouncer.Enemies
         }
 
         public void OnDespawned() { }
-
-        // ---------- Мозги ----------
 
         void Update()
         {
@@ -195,10 +187,6 @@ namespace Bouncer.Enemies
             return count;
         }
 
-        /// <summary>
-        /// Крик: кто в радиусе — бежит медленнее, пока она плачет. По сети замедляется только свой игрок: чужим
-        /// бегом управляет его компьютер (там то же делает копия куклы).
-        /// </summary>
         void SlowListeners()
         {
             float radiusSqr = definition.cryRadius * definition.cryRadius;
@@ -227,8 +215,6 @@ namespace Bouncer.Enemies
             transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(direction),
                 definition.turnSpeed * dt);
         }
-
-        // ---------- Попадания ----------
 
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)
         {
@@ -263,7 +249,6 @@ namespace Bouncer.Enemies
             if (!_health.IsDead)
             {
                 _knockback += Flat(hit.Direction) * (hit.Force * definition.knockbackScale);
-                // Попадание перебивает плач.
                 if (_state == State.Cry)
                     _nextCry = Time.time + definition.cryInterval * 0.6f;
                 Halt();
@@ -286,8 +271,6 @@ namespace Bouncer.Enemies
             PoolService.Despawn(gameObject);
         }
 
-        // ---------- Вид ----------
-
         void LateUpdate()
         {
             float dt = Time.deltaTime;
@@ -296,14 +279,12 @@ namespace Bouncer.Enemies
             _phase += dt * 3.2f * Mathf.PI * Mathf.Max(speed01, 0.001f);
             float sin = Mathf.Sin(_phase);
             bool crying = _state == State.Cry && !_self.IsFrozen;
-            // Переваливается, как кукла на негнущихся ногах.
             if (visual)
                 visual.localRotation = Quaternion.Euler(0f, 0f, sin * 7f * speed01 + (_state == State.Stagger ? Mathf.Sin(_stateTime * 30f) * 8f : 0f));
             if (legL)
                 legL.localRotation = Quaternion.Euler(sin * 20f * speed01, 0f, 0f);
             if (legR)
                 legR.localRotation = Quaternion.Euler(-sin * 20f * speed01, 0f, 0f);
-            // Плачет: трясёт головой и трёт глаза кулачками.
             if (head)
                 head.localRotation = _headRest * Quaternion.Euler(crying ? -8f : 0f, crying ? Mathf.Sin(Time.time * 22f) * 14f : 0f, 0f);
             float rub = crying ? Mathf.Sin(Time.time * 16f) * 10f : sin * 6f * speed01;
@@ -312,8 +293,6 @@ namespace Bouncer.Enemies
             if (armR)
                 armR.localRotation = Quaternion.Euler(-rub, 0f, 0f);
         }
-
-        // ---------- Сеть ----------
 
         public void WriteNet(NetWriter writer)
         {

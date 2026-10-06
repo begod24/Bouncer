@@ -4,10 +4,6 @@ using UnityEngine;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Тестовая пушка: бросает в игрока мячи, которые можно поймать. Нужна, чтобы тренировать
-    /// ловлю до появления бросающих врагов. Прообраз оловянного солдатика.
-    /// </summary>
     public sealed class BallLauncher : MonoBehaviour
     {
         [SerializeField] Ball ballPrefab;
@@ -103,7 +99,6 @@ namespace Bouncer.Enemies
             if (distance < 1f)
                 return;
 
-            // Подбираем вертикальную скорость так, чтобы мяч прилетел на уровень груди.
             float time = distance / speed;
             float upVelocity = (aim.y - origin.y + 0.5f * gravity * time * time) / time;
 

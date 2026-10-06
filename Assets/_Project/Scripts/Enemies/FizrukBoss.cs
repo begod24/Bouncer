@@ -8,18 +8,6 @@ using Random = UnityEngine.Random;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Физрук-манекен — босс хоккейной коробки. Ходит всегда (на взгляд не замирает, он же босс), вблизи бьёт
-    /// планшетом, издалека бросает сильные мячи (удержит только идеальная ловля). Каждые несколько секунд свистит
-    /// и объявляет правило раунда — по очереди из мешка, без повторов подряд:
-    /// «Замри!» — все враги стоят, а в того, кто побежит, летит сильный мяч; бросать можно;
-    /// «Штрафной!» — веер из пяти мячей, все можно поймать;
-    /// «Мяч в игре!» — из калитки выкатывается огромный мяч и сбивает всех, врагов тоже;
-    /// «Замена!» — со скамейки выбегает подмога.
-    /// Жизнь — на общей полосе босса (<see cref="BossSplit"/> без половинок).
-    /// По сети свистит, бросает и бьёт только у хозяина комнаты: правило и огромный мяч он показывает гостям,
-    /// а того, кто побежал на «Замри!», видит по копии игрока. У гостя копия Физрука машет руками по его вестям.
-    /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
     public sealed class FizrukBoss : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
@@ -32,15 +20,11 @@ namespace Bouncer.Enemies
             Aim,
             Whistle,
             Penalty,
-            /// <summary>Финт: замахнулся, но не бросил — сейчас бросит по-настоящему.</summary>
             Feint,
         }
 
-        /// <summary>Сколько длится финт, с.</summary>
         const float FeintTime = 0.35f;
-        /// <summary>После «Штрафного» и «Мяча в игре» Физрук открыт столько секунд.</summary>
         const float OpenAfterRule = 1.4f;
-        /// <summary>Каждый какой сильный бросок — медбол.</summary>
         const int HeavyEvery = 3;
         const float CurveChance = 0.35f;
         const float CurveOffset = 22f;
@@ -53,7 +37,6 @@ namespace Bouncer.Enemies
             Substitution,
         }
 
-        /// <summary>Кто выбегает со скамейки по «Замене!».</summary>
         [Serializable]
         public sealed class Substitute
         {
@@ -116,10 +99,6 @@ namespace Bouncer.Enemies
         int _strongThrows;
 
         public FizrukDefinition Definition => definition;
-        /// <summary>
-        /// Физрук открыт (попадания засчитываются в полтора раза): отдыхает после удара, свистит, стоит на «Замри!»
-        /// и сразу после «Штрафного» и «Мяча в игре». В остальное время держит удар (вполовину).
-        /// </summary>
         public bool IsOpen => _state is State.Recover or State.Whistle || _self.IsFrozen || Time.time < _openUntil;
         bool Angry => _health.Current <= _health.Max * definition.angryAt;
         Vector3 HandPosition => hand ? hand.position : transform.position + Vector3.up * 2.6f + transform.forward * 0.6f;
@@ -174,8 +153,6 @@ namespace Bouncer.Enemies
 
         public void OnDespawned() { }
 
-        // ---------- Мозги ----------
-
         void Update()
         {
             if (NetHooks.IsGuest)
@@ -194,7 +171,6 @@ namespace Bouncer.Enemies
             Vector3 toTarget = hasTarget ? Flat(_target.Position - transform.position) : Vector3.zero;
             float distance = toTarget.magnitude;
 
-            // «Замри!»: все стоят, и Физрук тоже, но следит — кто побежит, получит мяч.
             if (_self.IsFrozen)
             {
                 Halt();
@@ -268,7 +244,6 @@ namespace Bouncer.Enemies
                         Face(toTarget, dt);
                     if (_stateTime >= definition.throwWindup)
                     {
-                        // Финт: замах есть, мяча нет — и сразу настоящий бросок с короткого замаха.
                         if (!_feinted && hasTarget && Random.value < Danger.FeintChance)
                         {
                             _feinted = true;
@@ -314,8 +289,6 @@ namespace Bouncer.Enemies
             }
         }
 
-        // ---------- Свисток ----------
-
         void Blow()
         {
             GameEvents.PlaySound(SoundCue.Whistle, HandPosition);
@@ -350,7 +323,6 @@ namespace Bouncer.Enemies
         static void Announce(string key, float seconds) =>
             GameEvents.Announce(new Announcement { Title = key, Hint = key + ".hint", Seconds = seconds });
 
-        /// <summary>Следующее правило из мешка: все по разу в случайном порядке, одно и то же два раза подряд не выходит.</summary>
         Rule NextRule()
         {
             if (_bag.Count == 0)
@@ -381,7 +353,6 @@ namespace Bouncer.Enemies
             _ => true,
         };
 
-        /// <summary>«Замри!»: кто бежит — тому сильный мяч, без замаха.</summary>
         void PunishRunner()
         {
             if (Time.time >= _freezeUntil || Time.time < _nextPunish)
@@ -400,7 +371,6 @@ namespace Bouncer.Enemies
             Vector3 position = gate ? gate.Position + gate.Inward * 2f : transform.position + transform.forward * 2.5f;
             Vector3 direction = Flat(_target.Position - position);
             direction = direction.sqrMagnitude > 1e-4f ? direction.normalized : transform.forward;
-            // Мяч катится не точно в игрока, а чуть мимо — от него можно отойти.
             direction = Quaternion.Euler(0f, Random.Range(-12f, 12f), 0f) * direction;
             if (gate && Vector3.Dot(direction, gate.Inward) < 0.2f)
                 direction = gate.Inward;
@@ -427,8 +397,6 @@ namespace Bouncer.Enemies
             });
         }
 
-        // ---------- Удары и броски ----------
-
         void Smash()
         {
             GameEvents.PlaySound(SoundCue.AreaThud, transform.position);
@@ -453,10 +421,6 @@ namespace Bouncer.Enemies
             }
         }
 
-        /// <summary>
-        /// Сильный мяч: удержит только идеальная ловля. Каждый третий — медбол (пойманный сбивает с ног),
-        /// иногда — кручёный (летит дугой).
-        /// </summary>
         void ThrowStrong(Targetable target)
         {
             _strongThrows++;
@@ -472,7 +436,6 @@ namespace Bouncer.Enemies
                 null, curve);
         }
 
-        /// <summary>«Штрафной!»: веер мячей — обычные можно поймать, через один летят ёжики.</summary>
         void ThrowFan(Targetable target)
         {
             int count = Mathf.Max(1, definition.penaltyBalls);
@@ -501,7 +464,6 @@ namespace Bouncer.Enemies
                 return;
             float time = distance / speed;
             float up = (aim.y - origin.y + 0.5f * gravity * time * time) / time;
-            // Кручёный: вылетает в сторону и дугой заворачивает к цели.
             var perks = default(BallPerks);
             if (curve)
             {
@@ -551,8 +513,6 @@ namespace Bouncer.Enemies
                 return;
             transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(direction), definition.turnSpeed * dt);
         }
-
-        // ---------- Попадания ----------
 
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)
         {
@@ -605,8 +565,6 @@ namespace Bouncer.Enemies
             PoolService.Despawn(gameObject);
         }
 
-        // ---------- Вид ----------
-
         void LateUpdate()
         {
             float dt = Time.deltaTime;
@@ -614,7 +572,6 @@ namespace Bouncer.Enemies
             float follow = 14f;
             if (_self.IsFrozen)
             {
-                // «Замри!»: судья указывает на игрока свистком.
                 armRE = new Vector3(-95f, 0f, 0f);
                 headE = new Vector3(-5f, 0f, 0f);
             }
@@ -647,13 +604,11 @@ namespace Bouncer.Enemies
                         break;
                     }
                     case State.Feint:
-                        // Рука «бросила» вперёд, а мяча нет.
                         bodyE = new Vector3(10f, 12f, 0f);
                         armRE = new Vector3(-40f, 0f, 10f);
                         follow = 45f;
                         break;
                     case State.Whistle:
-                        // Свисток у рта, голова запрокинута — сейчас засвистит.
                         armRE = new Vector3(-135f, 0f, -35f);
                         headE = new Vector3(-18f, 0f, 0f);
                         bodyE = new Vector3(-6f, 0f, 0f);
@@ -674,7 +629,6 @@ namespace Bouncer.Enemies
                         break;
                     default:
                     {
-                        // Негнущаяся ходьба большого манекена.
                         Vector3 velocity = NetHooks.IsGuest ? _self.Velocity : _agent.isOnNavMesh ? _agent.velocity : Vector3.zero;
                         float speed01 = Mathf.Clamp01(Flat(velocity).magnitude / Mathf.Max(0.1f, definition.moveSpeed));
                         _walkPhase += dt * 4.5f * speed01;
@@ -708,8 +662,6 @@ namespace Bouncer.Enemies
             if (part)
                 part.localRotation = rest * Quaternion.Euler(euler);
         }
-
-        // ---------- Сеть ----------
 
         public void WriteNet(NetWriter writer)
         {

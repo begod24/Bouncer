@@ -5,10 +5,6 @@ using UnityEngine;
 
 namespace Bouncer.Net
 {
-    /// <summary>
-    /// <see cref="PlayerActionState"/> в сжатом виде для сети: флаги в одном байте, заряд и направление рывка —
-    /// по байту. Едет в каждой точке движения игрока — так поза показывается в тот же миг, что и положение.
-    /// </summary>
     public struct NetPose : INetworkSerializable, IEquatable<NetPose>
     {
         const byte ChargingFlag = 1 << 0;
@@ -18,7 +14,6 @@ namespace Bouncer.Net
         const byte DownFlag = 1 << 4;
         const byte FlashlightFlag = 1 << 5;
 
-        /// <summary>Сколько байт поза занимает в точке движения (<see cref="Write"/>).</summary>
         public const int Size = 3;
 
         byte _flags;

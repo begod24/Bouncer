@@ -12,12 +12,6 @@ using UnityEngine.Serialization;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// HUD «мелом на асфальте»: жизни, мячи и «свечка», готовность ловли, рывка и крышки, монетки,
-    /// время арены и счёт, полоса босса, полоса заряда над игроком, подсказка управления (H).
-    /// Только показывает состояние игрока и прогулки, ничего в них не меняет. Экраны (пауза и т.п.) — в RunScreens.
-    /// Надписи со счётом переписываются, только когда меняется число или язык.
-    /// </summary>
     public sealed class GameHud : MonoBehaviour
     {
         [Tooltip("Пусто — найдёт игрока в сцене сам")]
@@ -127,22 +121,18 @@ namespace Bouncer.UI
 
         void Update()
         {
-            // H прячет и показывает подсказку управления — это та же настройка «Подсказки», она запоминается.
             var keyboard = Keyboard.current;
             if (keyboard != null && keyboard.hKey.wasPressedThisFrame)
             {
                 GameSettings.ShowHints = !GameSettings.ShowHints;
                 GameSettings.Save();
             }
-            // Подсказка только посреди игры: под паузой, карточками и «Выбит!» она мешает. В обучении управление
-            // объясняют задания.
             var session = GameSession.Instance;
             if (help)
                 help.SetActive(GameSettings.ShowHints && GameSession.IsGameplayActive && !Tutorial.Active
                                && (session == null || session.Menu == LocalMenu.None));
             if (hudGroup)
             {
-                // На заставке и у витрины ларька HUD прячется: у витрины свои монетки.
                 bool hidden = session != null && (session.State == SessionState.Title || session.IsShopOpen);
                 hudGroup.alpha = Mathf.MoveTowards(hudGroup.alpha, hidden ? 0f : 1f, Time.unscaledDeltaTime * 4f);
             }
@@ -168,15 +158,12 @@ namespace Bouncer.UI
                 UpdateChargeBar();
         }
 
-        // ---------- Игрок ----------
-
         void UpdateLives()
         {
             var health = player.Health;
             Resize(_hearts, livesRow, health.Max);
             for (int i = 0; i < _hearts.Count; i++)
                 SetIcon(_hearts[i], i < health.Current, heartFull, heartEmpty, heartColor);
-            // Последнее сердце мигает и пульсирует — видно краем глаза.
             bool last = health.Current == 1 && !player.IsDead;
             for (int i = 0; i < _hearts.Count; i++)
             {
@@ -199,7 +186,6 @@ namespace Bouncer.UI
             Color full = balls.CandleReady ? Color.Lerp(candleColor, Color.white, pulse)
                 : balls.CatchPerksReady ? Color.Lerp(hotColor, ballColor, pulse)
                 : ballColor;
-            // Чужие (одноразовые) мячи — последние в ряду и своего цвета.
             int own = balls.Balls - balls.BorrowedBalls;
             for (int i = 0; i < _balls.Count; i++)
                 SetIcon(_balls[i], i < balls.Balls, ballFull, ballEmpty, i < own ? full : borrowedColor);
@@ -235,10 +221,8 @@ namespace Bouncer.UI
             }
         }
 
-        /// <summary>Номер своего игрока: HUD показывает его монетки.</summary>
         static int LocalSlot => Players.Local ? Players.Local.Slot : 0;
 
-        /// <summary>Монетки: число догоняет настоящее, значок подпрыгивает на каждую прибавку.</summary>
         void UpdateCoins()
         {
             if (coinsLabel == null)
@@ -265,7 +249,6 @@ namespace Bouncer.UI
             var session = GameSession.Instance;
             if (session == null)
                 return;
-            // Финал: часы идут назад — сколько осталось до зова мамы; позвала — «Домой!».
             var home = HomeCall.Instance;
             if (home != null && home.IsFinale)
             {
@@ -282,12 +265,10 @@ namespace Bouncer.UI
             }
             else if (Tutorial.Active)
             {
-                // Тренировка без часов: спешить некуда.
                 timerLabel.text = string.Empty;
             }
             else
             {
-                // Часы всей прогулки (для спидранов): с первой арены, без пауз.
                 timerLabel.text = RunRecords.FormatTime(RunState.Active ? RunState.RunClock : session.SurvivalTime);
             }
             if (session.RunKills != _killsShown)
@@ -337,8 +318,6 @@ namespace Bouncer.UI
             if (chargeBar.gameObject.activeSelf != show)
                 chargeBar.gameObject.SetActive(show);
         }
-
-        // ---------- Значки ----------
 
         void Resize(List<UnityEngine.UI.Image> icons, RectTransform row, int count)
         {

@@ -1,9 +1,6 @@
 #ifndef BOUNCER_PALETTE_LIT_INPUT_INCLUDED
 #define BOUNCER_PALETTE_LIT_INPUT_INCLUDED
 
-// Входные данные Bouncer/PaletteLit. Один и тот же UnityPerMaterial во всех проходах — для SRP Batcher.
-// Имена _BaseMap/_BaseColor/_Cutoff совпадают с URP, поэтому тени и глубина берутся из стандартных проходов URP.
-
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/SurfaceInput.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/DebugMipmapStreamingMacros.hlsl"
@@ -12,23 +9,20 @@ CBUFFER_START(UnityPerMaterial)
     float4 _BaseMap_ST;
     float4 _BaseMap_TexelSize;
     half4 _BaseColor;
-    half4 _TintColor;     // rgb — цвет, a — сила подкраски (серия попаданий, состояние мяча)
-    half4 _FlashColor;    // rgb — цвет, a — сила вспышки поверх освещения
+    half4 _TintColor;
+    half4 _FlashColor;
     half _EmissionStrength;
     half _Cutoff;
     half _Surface;
     UNITY_TEXTURE_STREAMING_DEBUG_VARS;
 CBUFFER_END
 
-// Глобальная палитра от TimeOfDayController. Пока контроллер выключен (_Bouncer_PaletteActive = 0),
-// используется палитра материала — модели корректно выглядят и в сценах без смены времени суток.
 TEXTURE2D(_Bouncer_PaletteA);
 TEXTURE2D(_Bouncer_PaletteB);
 float _Bouncer_PaletteActive;
 float _Bouncer_PaletteBlend;
 float _Bouncer_EmissionStrength;
 
-// Каждая грань лежит UV внутри одной ячейки палитры, поэтому только точечная выборка.
 half3 SamplePalette(float2 uv)
 {
     half3 color = SAMPLE_TEXTURE2D(_BaseMap, sampler_PointClamp, uv).rgb;
@@ -46,9 +40,6 @@ half3 SamplePaletteEmission(float2 uv)
     return SAMPLE_TEXTURE2D(_EmissionMap, sampler_PointClamp, uv).rgb * (half)(_EmissionStrength + _Bouncer_EmissionStrength);
 }
 
-// Туман вокруг игрока (погода «Туман»): густеет с расстоянием от игрока по земле, а не от камеры —
-// камера висит в двадцати метрах, и обычный туман закрывал бы не то. Задаёт WeatherController;
-// при силе 0 ничего не делает. xyz центра — позиция игрока; параметры: x — начало, y — конец, z — сила.
 float4 _Bouncer_FogCenter;
 float4 _Bouncer_FogParams;
 half4 _Bouncer_FogColor;

@@ -3,14 +3,6 @@ using UnityEngine;
 
 namespace Bouncer.Player
 {
-    /// <summary>
-    /// Наводящий фонарик на тёмных аренах (стройка, «Гасит свет» в финале): пока кнопка зажата, светит лучом
-    /// по прицелу. В луче тень твёрдая и горит (теряет попадание раз в flashlightBurnInterval), манекенов луч
-    /// тоже видит — это свет (<see cref="LightBeams"/>). Заряд кончается за flashlightBattery секунд и
-    /// восстанавливается, пока фонарик выключен. Карточка «Фонарик» делает луч длиннее и заряд дольше.
-    /// По сети у копии чужого игрока луч горит, когда горит у него (по его позе), и светит туда, куда он смотрит;
-    /// жжёт тени только свой фонарик (удар уходит хозяину).
-    /// </summary>
     [RequireComponent(typeof(PlayerController))]
     public sealed class PlayerFlashlight : MonoBehaviour, ILightBeam
     {
@@ -27,9 +19,7 @@ namespace Bouncer.Player
         float _nextBurn;
         bool _on;
 
-        /// <summary>Фонарик можно включить здесь и сейчас: арена тёмная.</summary>
         public bool Available => DarkArena.Active;
-        /// <summary>Заряд: 1 — полный, 0 — пустой.</summary>
         public float Charge01 => _charge;
         public bool IsOn => _on;
 
@@ -83,7 +73,6 @@ namespace Bouncer.Player
             float dt = Time.deltaTime;
             if (!_player.IsLocal)
             {
-                // Чужой игрок: луч как у него, без заряда и без ожогов — их считает его компьютер.
                 _on = Available && !_player.IsDead && _player.RemoteAction.Flashlight;
                 UpdateBeam();
                 return;
@@ -128,14 +117,12 @@ namespace Bouncer.Player
                     beam.range = BeamRange + 2f;
                     beam.spotAngle = BeamHalfAngle * 2f;
                     beam.innerSpotAngle = BeamHalfAngle * 1.2f;
-                    // Мерцание на исходе заряда.
                     float flicker = _charge < 0.2f ? 0.6f + 0.4f * Mathf.PerlinNoise(Time.time * 25f, 0f) : 1f;
                     beam.intensity = intensity * flicker;
                 }
             }
         }
 
-        /// <summary>Тени в луче теряют попадание.</summary>
         void Burn()
         {
             var all = Targetable.All;

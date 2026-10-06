@@ -4,10 +4,6 @@ using UnityEngine;
 
 namespace Bouncer.Waves
 {
-    /// <summary>
-    /// Прототипный спавнер: враги появляются у краёв арены всё чаще, лимит живых растёт со временем.
-    /// Перед появлением на полу мигает метка. Полноценные волны на ScriptableObject — этап 2.
-    /// </summary>
     public sealed class SimpleWaveSpawner : MonoBehaviour
     {
         struct PendingSpawn

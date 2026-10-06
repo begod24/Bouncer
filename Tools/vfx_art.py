@@ -42,14 +42,14 @@ def mom_silhouette(size=128):
     def circle(cx, cy, r):
         d.ellipse([(cx - r) * s, (cy - r) * s, (cx + r) * s, (cy + r) * s], fill=255)
 
-    circle(64, 22, 10)                      # пучок
-    circle(64, 46, 19)                      # голова
-    d.rectangle([54 * s, 56 * s, 74 * s, 80 * s], fill=255)                    # шея
-    d.polygon([(40 * s, 74 * s), (88 * s, 74 * s), (112 * s, 128 * s), (16 * s, 128 * s)], fill=255)   # плечи
+    circle(64, 22, 10)
+    circle(64, 46, 19)
+    d.rectangle([54 * s, 56 * s, 74 * s, 80 * s], fill=255)
+    d.polygon([(40 * s, 74 * s), (88 * s, 74 * s), (112 * s, 128 * s), (16 * s, 128 * s)], fill=255)
     circle(40, 80, 12)
     circle(88, 80, 12)
-    d.line([(90 * s, 84 * s), (96 * s, 66 * s), (82 * s, 52 * s)], fill=255, width=12 * s, joint="curve")  # рука
-    circle(80, 52, 8)                       # ладонь у рта
+    d.line([(90 * s, 84 * s), (96 * s, 66 * s), (82 * s, 52 * s)], fill=255, width=12 * s, joint="curve")
+    circle(80, 52, 8)
     img = img.filter(ImageFilter.GaussianBlur(3)).resize((size, size), Image.LANCZOS)
     return np.asarray(img, np.float32) / 255.0
 

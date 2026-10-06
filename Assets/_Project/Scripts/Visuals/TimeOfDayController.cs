@@ -4,14 +4,6 @@ using UnityEngine.Rendering;
 
 namespace Bouncer.Visuals
 {
-    /// <summary>
-    /// Время суток: ведёт ключи (утро → день → …) по ходу забега и применяет их к сцене —
-    /// глобальная палитра шейдера Bouncer/PaletteLit, солнце, окружающий свет, туман, фон камеры.
-    /// Цветокоррекция — через два Volume: A (текущий ключ, вес 1) и B (следующий, вес t, приоритет выше),
-    /// итог = lerp(A, B, t). Работает и в редакторе: ползунок Progress — превью времени суток.
-    /// Погода (<see cref="WeatherController"/>) поверх этого приглушает свет в дождь и сгущает туман,
-    /// а когда финальный босс гасит свет (<see cref="LightsOut"/>), гаснут луна, окна и фонари.
-    /// </summary>
     [ExecuteAlways]
     [DefaultExecutionOrder(-50)]
     public sealed class TimeOfDayController : MonoBehaviour
@@ -34,7 +26,6 @@ namespace Bouncer.Visuals
         float _fog;
         float _flash;
 
-        /// <summary>Погода: wet — дождь (свет тусклее, туман серее), fog — туман, flash — вспышка молнии. Всё 0..1.</summary>
         public void SetWeather(float wet, float fog, float flash)
         {
             _wet = Mathf.Clamp01(wet);
@@ -58,10 +49,6 @@ namespace Bouncer.Visuals
             Apply();
         }
 
-        /// <summary>
-        /// Арена прогулки задаёт свои ключи (двор утром, двор ночью) и длину боя, за которую их пройти.
-        /// Меняется только в игре, в сцене остаются ключи из инспектора.
-        /// </summary>
         public void Configure(TimeOfDayProfile[] arenaKeys, float duration)
         {
             if (arenaKeys != null && arenaKeys.Length > 0)
@@ -74,7 +61,6 @@ namespace Bouncer.Visuals
 
         void OnDisable()
         {
-            // Без контроллера шейдер берёт палитру из материала.
             Shader.SetGlobalFloat(PaletteShader.GlobalPaletteActive, 0f);
             Shader.SetGlobalFloat(PaletteShader.GlobalEmissionStrength, 0f);
         }
@@ -82,7 +68,6 @@ namespace Bouncer.Visuals
 #if UNITY_EDITOR
         void OnValidate()
         {
-            // В OnValidate нельзя трогать другие компоненты — применяем на следующем тике редактора.
             UnityEditor.EditorApplication.delayCall += () =>
             {
                 if (this && isActiveAndEnabled)
@@ -127,12 +112,10 @@ namespace Bouncer.Visuals
                 Shader.SetGlobalTexture(PaletteShader.GlobalPaletteB, b.palette);
                 Shader.SetGlobalFloat(PaletteShader.GlobalPaletteBlend, t);
             }
-            // Свет погашен: окна и фонари (свечение палитры) тухнут, луна прячется, двор почти чёрный.
             float dark = Application.isPlaying ? LightsOut.Dark01 : 0f;
             Shader.SetGlobalFloat(PaletteShader.GlobalEmissionStrength,
                 Mathf.Lerp(a.emissionStrength, b.emissionStrength, t) * (1f - dark));
 
-            // Дождь: солнце и небо тусклее. Туман: всё вдали тонет в сером.
             float dim = (1f - 0.4f * _wet) * (1f - 0.85f * dark);
             if (sun)
             {
@@ -142,7 +125,6 @@ namespace Bouncer.Visuals
                 sun.transform.rotation = Quaternion.Slerp(SunRotation(a), SunRotation(b), t);
             }
 
-            // Молния на миг заливает всё холодным светом.
             Color flash = new Color(0.75f, 0.8f, 1f) * (_flash * 1.6f);
             float ambientDim = (1f - 0.25f * _wet) * (1f - 0.7f * dark);
             RenderSettings.ambientMode = AmbientMode.Trilight;
@@ -181,7 +163,6 @@ namespace Bouncer.Visuals
             }
         }
 
-        /// <summary>Цвет тумана сейчас — им же красится туман вокруг игрока.</summary>
         public Color FogColor { get; private set; } = Color.grey;
 
         static Quaternion SunRotation(TimeOfDayProfile profile) =>

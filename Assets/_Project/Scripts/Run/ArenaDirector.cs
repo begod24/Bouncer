@@ -9,21 +9,6 @@ using UnityEngine.SceneManagement;
 
 namespace Bouncer.Run
 {
-    /// <summary>
-    /// Арена в прогулке. Узнаёт по <see cref="RunState.ArenaIndex"/>, какую арену играет сцена, и настраивает её:
-    /// волны, время суток, ларёк, стрелку дальше. Следит за условием победы; когда оно выполнено — оставшиеся враги
-    /// исчезают, монетки слетаются к игроку, после босса предлагается карточка, открывается ларёк и появляется
-    /// стрелка на следующую арену (на развилке — две, по одной на каждую арену этапа). На последней арене победа
-    /// заканчивает прогулку.
-    /// Ещё раскладывает на арене найденный портфель и открывает в бестиарии выбитого босса (<see cref="BestiaryProgress"/>).
-    /// В обучении (<see cref="Tutorial"/>) арена только ставит время суток: волн, находок и погоды нет —
-    /// врагов выпускает <see cref="TutorialDirector"/>.
-    /// По сети волны, находки и условие победы ведёт хозяин комнаты; гость узнаёт от него, что арена пройдена
-    /// (<see cref="CompleteFromNetwork"/>), и сверяет с ним часы волн. Дальше у каждого своё: карточка за босса,
-    /// неоткрытые портфели из рюкзака и своя витрина ларька; стрелки — общие: на следующую арену все идут, когда
-    /// все живые встали у одной стрелки (<see cref="ArenaExit"/>, решает хозяин, переход — <see cref="LeaveOnline"/>).
-    /// Финал по сети: мама зовёт у всех, а победу объявляет хозяин, когда дома все живые (<see cref="WinFromHome"/>).
-    /// </summary>
     [DefaultExecutionOrder(-80)]
     public sealed class ArenaDirector : MonoBehaviour
     {
@@ -52,32 +37,20 @@ namespace Bouncer.Run
         public RunDefinition Run => run;
         public ArenaDefinition Arena { get; private set; }
         public int ArenaIndex { get; private set; }
-        /// <summary>Какая арена этапа играется: 0 — основная, 1 и дальше — развилки.</summary>
         public int ArenaVariant { get; private set; }
-        /// <summary>Последняя арена прогулки: её победа заканчивает прогулку.</summary>
         public bool IsLastArena => run == null || run.IsLast(ArenaIndex);
         public ArenaDefinition NextArena => run ? run.Get(ArenaIndex + 1) : null;
-        /// <summary>Арена пройдена (ларёк и стрелка открыты).</summary>
         public bool IsComplete => _complete;
-        /// <summary>Какая погода выпала на эту арену.</summary>
         public WeatherKind Weather { get; private set; }
-        /// <summary>Из чего разложены лужи (по сети гостям — чтобы у всех одинаково).</summary>
         public int WeatherSeed { get; private set; }
-        /// <summary>Погода уже известна: у гостя — когда её прислал хозяин (или ждать надоело).</summary>
         public bool WeatherKnown { get; private set; }
-        /// <summary>Секунды боя на арене — по часам волн.</summary>
         public float ArenaTime => spawner ? spawner.WaveTime : GameSession.Instance ? GameSession.Instance.SurvivalTime : 0f;
-        /// <summary>Сколько длится бой по волнам арены, с (финал: время до зова мамы; на 5-й опасности зовёт позже).</summary>
         public float ArenaDuration => Arena != null && Arena.wave
             ? Arena.wave.duration + (Arena.goal == ArenaGoal.SurviveUntilCall ? Danger.FinalExtraTime : 0f)
             : 0f;
         public Kiosk Kiosk => kiosk;
         public ArenaExit Exit => exit;
 
-        /// <summary>
-        /// Арена пройдена (у хозяина комнаты — чтобы сказать гостям): выбит ли босс (карточка за него) и последняя ли
-        /// это арена (победа).
-        /// </summary>
         public static event System.Action<bool, bool> Completed;
 
         void Awake()
@@ -93,7 +66,6 @@ namespace Bouncer.Run
             var candidate = run.Get(index, variant);
             if (candidate == null || candidate.sceneName != scene)
             {
-                // Сцену запустили саму по себе (в редакторе): прогулка начинается с неё.
                 if (!run.FindScene(scene, out index, out variant))
                 {
                     index = Mathf.Clamp(defaultArena, 0, run.Count - 1);
@@ -145,7 +117,6 @@ namespace Bouncer.Run
             if (forkExit)
                 forkExit.Hide();
             _portfolioTimes.Clear();
-            // Гость: врагов и находки выпускает хозяин комнаты, погоду он же пришлёт (ApplyWeatherFromNetwork).
             if (Tutorial.Active || NetHooks.IsGuest)
             {
                 if (spawner)
@@ -168,7 +139,6 @@ namespace Bouncer.Run
             _portfolioTimes.Sort();
         }
 
-        /// <summary>Непогода выпадает с шансом арены, какая именно — случайно из её списка.</summary>
         WeatherKind RollWeather()
         {
             if (weather == null || Arena.weathers == null || Arena.weathers.Length == 0 || Random.value >= Arena.weatherChance)
@@ -176,7 +146,6 @@ namespace Bouncer.Run
             return Arena.weathers[Random.Range(0, Arena.weathers.Length)];
         }
 
-        /// <summary>По сети у гостя: погода, которую выбрал хозяин, и из чего у него разложены лужи.</summary>
         public void ApplyWeatherFromNetwork(WeatherKind kind, int seed)
         {
             if (WeatherKnown && Weather == kind && WeatherSeed == seed)
@@ -190,7 +159,6 @@ namespace Bouncer.Run
 
         void Update()
         {
-            // Гость не дождался погоды от хозяина — значит, ясно (надпись арены не ждёт вечно).
             if (!WeatherKnown && Time.unscaledTime >= _weatherWaitUntil)
                 WeatherKnown = true;
             var session = GameSession.Instance;
@@ -225,14 +193,12 @@ namespace Bouncer.Run
                 Complete(boss: Arena.goal == ArenaGoal.DefeatBoss, bossDefeated: true);
         }
 
-        /// <summary>Прогулка выиграна: босс финала побеждён, даже если его не выбили, а дождались мамы.</summary>
         void OnRunFinished(bool victory)
         {
             if (victory)
                 OpenBossPages();
         }
 
-        /// <summary>Бестиарий: открыть страницу босса этой арены (по имени префаба из его выхода в волнах).</summary>
         void OpenBossPages()
         {
             if (Arena == null || Arena.wave == null || Tutorial.Active)
@@ -250,7 +216,6 @@ namespace Bouncer.Run
             }
         }
 
-        /// <summary>Условие победы выполнено. boss — предложить карточку за босса.</summary>
         void Complete(bool boss, bool bossDefeated = false)
         {
             var session = GameSession.Instance;
@@ -260,7 +225,6 @@ namespace Bouncer.Run
 
             if (IsLastArena)
             {
-                // Финал: мама позвала — но прогулка кончится, только когда игрок добежит до подъезда.
                 var home = HomeCall.Instance;
                 if (Arena.goal == ArenaGoal.SurviveUntilCall && home != null && home.IsFinale)
                 {
@@ -285,10 +249,6 @@ namespace Bouncer.Run
             OpenAfterClear(boss);
         }
 
-        /// <summary>
-        /// Арена пройдена — у каждого компьютера своё: карточка за босса (каждому игроку своя), портфели из рюкзака,
-        /// витрина ларька для своего игрока; и стрелки дальше (на развилке — две).
-        /// </summary>
         void OpenAfterClear(bool boss)
         {
             PlayerCards customer = null;
@@ -306,7 +266,6 @@ namespace Bouncer.Run
                 kiosk.Open(customer, ArenaIndex);
             if (exit)
                 exit.Show(ArrivalLabel(NextArena), 0);
-            // Развилка: вторая стрелка ведёт на другую арену следующего этапа.
             if (forkExit)
             {
                 var fork = run ? run.Get(ArenaIndex + 1, 1) : null;
@@ -317,9 +276,6 @@ namespace Bouncer.Run
             }
         }
 
-        /// <summary>
-        /// По сети, у хозяина: финал — все живые дома, у подъезда. Прогулка выиграна у всех (boss — босс выбит).
-        /// </summary>
         public void WinFromHome(bool boss)
         {
             var session = GameSession.Instance;
@@ -329,13 +285,11 @@ namespace Bouncer.Run
             Completed?.Invoke(boss, true);
         }
 
-        /// <summary>По сети у гостя: хозяин сказал, что арена пройдена (boss — за босса карточка, last — прогулка выиграна).</summary>
         public void CompleteFromNetwork(bool boss, bool last)
         {
             if (_complete)
                 return;
             _complete = true;
-            // Босс выбит у хозяина — страница бестиария открывается и у гостя.
             if (boss)
                 OpenBossPages();
             var session = GameSession.Instance;
@@ -350,7 +304,6 @@ namespace Bouncer.Run
             OpenAfterClear(boss);
         }
 
-        /// <summary>По сети у гостя: часы волн — как у хозяина (по ним идёт время суток).</summary>
         public void SyncWaveTime(float time)
         {
             if (spawner && Mathf.Abs(spawner.WaveTime - time) > 0.25f)
@@ -360,20 +313,14 @@ namespace Bouncer.Run
         static string ArrivalLabel(ArenaDefinition next) =>
             next != null && !next.arrivalLabel.IsEmpty ? next.arrivalLabel.GetLocalizedString() : "→";
 
-        /// <summary>
-        /// Игрок дошёл до стрелки: следующая арена (variant — по какой стрелке: 0 — основная, 1 — развилка).
-        /// false — уйти сейчас нельзя.
-        /// </summary>
         public bool LeaveArena(int variant = 0)
         {
             var session = GameSession.Instance;
             var next = run ? run.Get(ArenaIndex + 1, variant) : null;
             if (!_complete || session == null || next == null || session.State != SessionState.Cleared)
                 return false;
-            // По сети всех ведёт хозяин комнаты.
             if (Online.Active)
                 return Online.IsHost && NetHooks.LeaveArena != null && NetHooks.LeaveArena(variant);
-            // Выбитый в коопе приходит на следующую арену с одним сердцем.
             foreach (var player in Players.All)
                 RunState.SetLives(player.Slot, Mathf.Max(1, player.Health.Current));
             RunState.NextVariant = variant;
@@ -381,17 +328,12 @@ namespace Bouncer.Run
             return true;
         }
 
-        /// <summary>Сцена следующей арены по стрелке variant. null — дальше арен нет.</summary>
         public string NextSceneName(int variant)
         {
             var next = run ? run.Get(ArenaIndex + 1, variant) : null;
             return next != null ? next.sceneName : null;
         }
 
-        /// <summary>
-        /// По сети, на каждом компьютере: хозяин ведёт всех на следующую арену по стрелке variant. Своему игроку
-        /// записываются сердца (выбитый придёт с одним), экран гаснет; сцену грузит сеть.
-        /// </summary>
         public void LeaveOnline(int variant)
         {
             var session = GameSession.Instance;
@@ -416,7 +358,6 @@ namespace Bouncer.Run
             return best;
         }
 
-        /// <summary>Портфель где-нибудь у края арены, подальше от игроков.</summary>
         void PlaceFoundPortfolio()
         {
             if (loot == null)

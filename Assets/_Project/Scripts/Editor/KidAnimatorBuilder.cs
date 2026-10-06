@@ -7,12 +7,6 @@ using UnityEngine;
 
 namespace Bouncer.EditorTools
 {
-    /// <summary>
-    /// Собирает аниматоры детей из клипов Anim_Kids.fbx (ba_kids_anim.py в Bouncer.blend):
-    /// AC_Kid — в игре: слой тела (бег по направлению — Idle/Run_F/B/L/R, рывок, подкат, выбывание, радость)
-    /// и слой рук и корпуса по маске AM_KidUpperBody (замах, бросок, ловля, удар); AC_KidSelect — позы экрана выбора.
-    /// Пересобирает на месте: GUID не меняются, ссылки префабов не рвутся. Параметры задаёт KidAnimator.
-    /// </summary>
     static class KidAnimatorBuilder
     {
         const string ClipsPath = "Assets/_Project/Art/Models/Kids/Anim_Kids.fbx";
@@ -66,7 +60,6 @@ namespace Bouncer.EditorTools
             parameters.First(p => p.name == "RunSpeed").defaultFloat = 1f;
             c.parameters = parameters;
 
-            // ---- тело
             var body = c.layers[0].stateMachine;
             var move = c.CreateBlendTreeInController("Locomotion", out var tree, 0);
             tree.blendType = BlendTreeType.FreeformDirectional2D;
@@ -93,7 +86,6 @@ namespace Bouncer.EditorTools
             To(move, cheer, 0.2f, ("Cheer", On));
             To(cheer, move, 0.2f, ("Cheer", Off));
 
-            // ---- руки и корпус поверх бега
             c.AddLayer("UpperBody");
             var layers = c.layers;
             layers[1].avatarMask = mask;
@@ -138,7 +130,6 @@ namespace Bouncer.EditorTools
             EditorUtility.SetDirty(c);
         }
 
-        /// <summary>Контроллер по пути: новый или прежний, очищенный от слоёв, состояний и параметров.</summary>
         static AnimatorController Controller(string path)
         {
             var c = AssetDatabase.LoadAssetAtPath<AnimatorController>(path);
@@ -155,7 +146,6 @@ namespace Bouncer.EditorTools
                 sm.RemoveState(s.state);
             foreach (var s in sm.stateMachines)
                 sm.RemoveStateMachine(s.stateMachine);
-            // Деревья смешивания и машины состояний удалённых слоёв остаются в файле — убрать хвосты.
             foreach (var o in AssetDatabase.LoadAllAssetsAtPath(path))
                 if (o is BlendTree || (o is AnimatorStateMachine m && m != sm))
                     Object.DestroyImmediate(o, true);
@@ -183,7 +173,6 @@ namespace Bouncer.EditorTools
             Setup(t, duration, when);
         }
 
-        /// <summary>Разовый клип доигрывает и уходит.</summary>
         static void AfterClip(AnimatorState from, AnimatorState to, float duration)
         {
             var t = from.AddTransition(to);

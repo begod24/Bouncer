@@ -5,12 +5,6 @@ using UnityEngine.AI;
 
 namespace Bouncer.Arena
 {
-    /// <summary>
-    /// Гора коробок на барахолке. Обычный мяч отскакивает от неё, как от стены. Сильный (заряженный) мяч или таран
-    /// Трансформера её рушат: коробки валятся в сторону удара, врагов за горой завал бьёт и оглушает. Потом коробки
-    /// сжимаются и пропадают — место становится проходимым.
-    /// По сети рушит и бьёт завалом хозяин комнаты; у гостей гора валится по его вести (<see cref="BreakEvents"/>).
-    /// </summary>
     public sealed class TopplePile : MonoBehaviour, IBallTarget, IBreakable
     {
         [Tooltip("Коробки (каждая — отдельная часть модели)")]
@@ -75,7 +69,6 @@ namespace Bouncer.Arena
                 var body = box.gameObject.AddComponent<Rigidbody>();
                 body.mass = boxMass;
                 body.interpolation = RigidbodyInterpolation.Interpolate;
-                // Верхние коробки летят дальше.
                 float height = Mathf.Clamp01((box.position.y - transform.position.y) / 1.8f);
                 body.linearVelocity = direction * (force * (0.5f + height)) + Vector3.up * (1f + 2f * height)
                                       + Random.insideUnitSphere * 0.8f;
@@ -83,7 +76,6 @@ namespace Bouncer.Arena
                 _bodies[i] = body;
             }
 
-            // Завал бьёт тех, кто стоит за горой (по сети — у хозяина: враги там настоящие).
             Vector3 center = transform.position + direction * fallDistance;
             foreach (var t in Targetable.All)
             {

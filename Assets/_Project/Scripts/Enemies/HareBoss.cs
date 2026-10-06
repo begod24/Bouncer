@@ -5,16 +5,6 @@ using UnityEngine.AI;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// «Большой плюшевый заяц» — босс детского сада. Перепрыгивает через забор (<see cref="ArenaSpotKind.BossEntrance"/>)
-    /// и скачет за игроком. Прыжок с ударом: приседает (на земле круг), взлетает и бьёт приземлением по кругу, вокруг
-    /// остаются облака ваты — в них игрок вязнет (<see cref="SlowCloud"/>); после приземления сидит открытый.
-    /// Морковка-бумеранг летит петлёй к игроку и обратно; вблизи бьёт ушами-хлыстом. На половине жизни рвётся шов:
-    /// из бока лезет вата, заяц скачет быстрее, прыгает чаще и теряет вату за собой. Держит удар (<see cref="BossArmor"/>):
-    /// открыт, пока сидит после прыжка, после удара ушами и пока рвётся шов. Жизнь — на полосе босса (<see cref="BossSplit"/>).
-    /// По сети прыгает, бьёт, кладёт облака и бросает морковку только у хозяина комнаты (круги, облака и морковку он
-    /// показывает гостям); у гостя копия приседает, летит, хлещет ушами и рвётся по его вестям.
-    /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
     public sealed class HareBoss : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
@@ -93,10 +83,8 @@ namespace Bouncer.Enemies
 
         public HareDefinition Definition => definition;
         public State CurrentState => _state;
-        /// <summary>Открыт: сидит после прыжка, только что хлестнул ушами или у него рвётся шов.</summary>
         public bool IsOpen => _state is State.Stuck or State.Rip || Time.time < _openUntil;
         float SpeedBoost => _ripped ? definition.rippedSpeedMultiplier : 1f;
-        /// <summary>Перезарядка приёмов: короче с разорванным швом и с каждым лишним игроком в коопе.</summary>
         float CooldownScale => (_ripped ? definition.rippedCooldownMultiplier : 1f) * EnemyScaling.BossCooldown;
 
         void Awake()
@@ -145,7 +133,6 @@ namespace Bouncer.Enemies
                 stuffing.SetActive(false);
             if (carrotInHand)
                 carrotInHand.SetActive(true);
-            // Перепрыгивает через забор к отметке входа.
             var entrance = ArenaSpot.Find(ArenaSpotKind.BossEntrance);
             Vector3 landing = entrance ? entrance.Position : transform.position;
             Vector3 inward = entrance ? entrance.Inward : Vector3.back;
@@ -157,7 +144,6 @@ namespace Bouncer.Enemies
             _jumpHeight = definition.jumpHeight * 1.2f;
             _jumpTime = definition.jumpTime * 1.4f;
             transform.SetPositionAndRotation(_jumpFrom, Quaternion.LookRotation(inward));
-            // Приземление бьёт, как обычный прыжок, — и так же видно заранее (у гостя круг пришлёт хозяин).
             if (circleMarkerPrefab && !NetHooks.IsGuest)
             {
                 _marker = PoolService.Spawn(circleMarkerPrefab, landing, Quaternion.identity);
@@ -167,10 +153,7 @@ namespace Bouncer.Enemies
             Enter(State.Enter);
         }
 
-        // Агент остаётся выключенным, если заяц пропал в прыжке: OnSpawned всё равно начинает с прыжка через забор.
         public void OnDespawned() => HideMarker();
-
-        // ---------- Мозги ----------
 
         void Update()
         {
@@ -237,7 +220,6 @@ namespace Bouncer.Enemies
                         Face(toTarget, dt * 2f);
                     if (_stateTime >= definition.crouchTime)
                     {
-                        // Финт: присел — и не прыгнул; через миг прыгнет по-настоящему.
                         if (!_feinted && Random.value < Danger.FeintChance)
                         {
                             _feinted = true;
@@ -466,8 +448,6 @@ namespace Bouncer.Enemies
             _marker = null;
         }
 
-        // ---------- Попадания ----------
-
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)
         {
             if (_health.IsDead)
@@ -504,10 +484,8 @@ namespace Bouncer.Enemies
             return true;
         }
 
-        /// <summary>На половине жизни рвётся шов: вата наружу, заяц злее.</summary>
         void OnDamaged(HitInfo hit)
         {
-            // У гостя шов рвётся по вестям хозяина (ReadNet), вату и надпись он показывает сам.
             if (_ripped || _health.IsDead || _health.Current > _health.Max * definition.ripAt || NetHooks.IsGuest)
                 return;
             _ripped = true;
@@ -547,8 +525,6 @@ namespace Bouncer.Enemies
             PoolService.Despawn(gameObject);
         }
 
-        // ---------- Вид ----------
-
         void LateUpdate()
         {
             if (!visual)
@@ -572,7 +548,6 @@ namespace Bouncer.Enemies
             if (body)
                 body.localRotation = _bodyRest * Quaternion.Euler(crouch * 12f, _state == State.Whip ? 25f : 0f, shake);
 
-            // Уши: назад на замахе, вперёд хлыстом; в прыжке развеваются.
             float ear = _state switch
             {
                 State.WhipWindup => -45f * Mathf.Clamp01(_stateTime / definition.whipWindup),
@@ -586,7 +561,6 @@ namespace Bouncer.Enemies
                 earR.localRotation = _earRRest * Quaternion.Euler(ear * 0.8f, 0f, 0f);
             if (head)
                 head.localRotation = _headRest * Quaternion.Euler(_state == State.WhipWindup ? -10f : 0f, 0f, 0f);
-            // Правая лапа: замах морковкой.
             float arm = _state == State.CarrotWindup ? 120f * Mathf.Clamp01(_stateTime / definition.carrotWindup) : 0f;
             if (armR)
                 armR.localRotation = _armRRest * Quaternion.Euler(arm, 0f, 0f);
@@ -596,8 +570,6 @@ namespace Bouncer.Enemies
             if (legR)
                 legR.localRotation = _legRRest * Quaternion.Euler(legs, 0f, 0f);
         }
-
-        // ---------- Сеть ----------
 
         public void WriteNet(NetWriter writer)
         {
@@ -611,7 +583,6 @@ namespace Bouncer.Enemies
         {
             var state = (State)reader.Byte();
             _stateTime = reader.Seconds() + age;
-            // Приземлился — сплющиться, как у хозяина.
             if ((_state is State.Air or State.Enter) && state is not (State.Air or State.Enter))
                 _squash = 1f;
             _state = state;

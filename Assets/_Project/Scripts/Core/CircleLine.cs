@@ -2,10 +2,6 @@ using UnityEngine;
 
 namespace Bouncer.Core
 {
-    /// <summary>
-    /// Рисует окружность в плоскости XZ через LineRenderer (кольца ловли, метки приземления и спавна).
-    /// Может рисовать и дугу — она смотрит вперёд по локальной оси Z (сектор ловли перед игроком).
-    /// </summary>
     [RequireComponent(typeof(LineRenderer))]
     public sealed class CircleLine : MonoBehaviour
     {
@@ -55,7 +51,6 @@ namespace Bouncer.Core
             bool full = arc >= 360f;
             int count = full ? segments : Mathf.Max(2, Mathf.CeilToInt(segments * arc / 360f) + 1);
             float arcRadians = arc * Mathf.Deg2Rad;
-            // Дуга по центру на +Z: угол π/2 в плоскости XZ.
             float start = full ? 0f : Mathf.PI * 0.5f - arcRadians * 0.5f;
             float step = full ? Mathf.PI * 2f / segments : arcRadians / (count - 1);
 

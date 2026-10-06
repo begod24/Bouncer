@@ -5,7 +5,6 @@ using UnityEngine;
 
 namespace Bouncer.UI
 {
-    /// <summary>Надписи мелом над элитками со свойством: «шустрый», «командир», «ловкач».</summary>
     public sealed class AffixLabels : MonoBehaviour
     {
         [Tooltip("Подпись HUD, по которой делаются надписи (шрифт, тень)")]

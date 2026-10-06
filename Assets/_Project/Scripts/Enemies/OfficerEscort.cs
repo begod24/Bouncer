@@ -4,11 +4,6 @@ using UnityEngine.AI;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Офицер с саблей выходит не один: рядом появляется шеренга обычных солдатиков, и он ею командует —
-    /// строй стреляет залпами по расписанию офицера (<see cref="SoldierSquad.Leader"/>).
-    /// Свиту зовёт кадром позже появления: к этому времени спавнер уже собрал группу из самого офицера.
-    /// </summary>
     [RequireComponent(typeof(TinSoldierEnemy))]
     public sealed class OfficerEscort : MonoBehaviour, IPoolable
     {
@@ -31,7 +26,6 @@ namespace Bouncer.Enemies
             if (!_pending)
                 return;
             _pending = false;
-            // По сети свиту выпускает хозяин комнаты: у гостя офицер — копия, солдатики придут от хозяина.
             if (NetHooks.IsGuest)
                 return;
             var squad = new SoldierSquad { Leader = _officer };

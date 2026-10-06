@@ -114,7 +114,6 @@ namespace Bouncer.Balls
             };
         }
 
-        /// <summary>Примерная дальность до касания пола (для линии прицела).</summary>
         public float EstimateRange(in ThrowStats stats, float launchHeight)
         {
             float drop = Mathf.Max(0f, launchHeight - radius);

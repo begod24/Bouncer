@@ -8,12 +8,6 @@ using UnityEngine.UI;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// Комната: код (или IP хозяина в локальной сети) с кнопкой «Скопировать», список игроков их цветами
-    /// (имя, ребёнок, хозяин / готов), выбор ребёнка (занятых не взять), опасность (выбирает хозяин из открытых
-    /// у себя), «Готов» у гостей и «Гулять!» у хозяина — когда все гости готовы. «Выйти» (и Esc) — уйти из комнаты.
-    /// Данные берёт из <see cref="NetRoom"/>, сам ничего не решает.
-    /// </summary>
     public sealed class LobbyScreen : MonoBehaviour
     {
         [SerializeField] KidRoster roster;
@@ -45,7 +39,6 @@ namespace Bouncer.UI
         float _copiedUntil;
         int _dangerShown = -1;
 
-        /// <summary>Игрок ушёл из комнаты (кнопкой) — экран закрыть.</summary>
         public event Action Left;
 
         void Awake()
@@ -63,7 +56,6 @@ namespace Bouncer.UI
                 dangerStepper.Changed += index => WithRoom(room => room.SetDanger(index + 1));
         }
 
-        /// <summary>Открыть экран. Возвращает, что выбрать клавиатурой и геймпадом.</summary>
         public Selectable Open()
         {
             if (!_open)
@@ -88,7 +80,6 @@ namespace Bouncer.UI
 
         void Update()
         {
-            // «Скопировано!» гаснет само, а без событий комнаты экран обновлять незачем.
             if (_open && _copiedUntil > 0f && Time.unscaledTime >= _copiedUntil)
             {
                 _copiedUntil = 0f;
@@ -176,7 +167,6 @@ namespace Bouncer.UI
             row.color = takenKidColor;
         }
 
-        /// <summary>Опасность: хозяин листает открытые у себя уровни, гости видят выбранный.</summary>
         void ShowDanger(NetRoom room, bool host)
         {
             if (!dangerStepper)

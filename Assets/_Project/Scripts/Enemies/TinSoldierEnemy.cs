@@ -6,12 +6,6 @@ using UnityEngine.AI;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Оловянный солдатик. Ходит строем (<see cref="SoldierSquad"/>): шеренга встаёт на дистанции от игрока,
-    /// разом замахивается и бросает по очереди. Его мячи можно ловить — это главный запас мячей и жизней игрока.
-    /// Негнущийся: от попадания качается как игрушка и пропускает залп. Выбитый роняет мяч из руки.
-    /// По сети думает и бросает только у хозяина комнаты; у гостя — копия, которой двигает сеть.
-    /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
     public sealed class TinSoldierEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, IGroupMember, INetEnemy
     {
@@ -49,7 +43,6 @@ namespace Bouncer.Enemies
         public State CurrentState => _state;
         public float StateTime => _stateTime;
         public bool HasBall { get; private set; }
-        /// <summary>0..1 — насколько поднята рука для броска.</summary>
         public float AimProgress => _state == State.Aim ? Mathf.Clamp01(_stateTime / Mathf.Max(0.05f, definition.aimTime)) : 0f;
         public Vector3 PlanarVelocity => NetHooks.IsGuest ? Flat(_self.Velocity)
             : _agent.isOnNavMesh ? Flat(_agent.velocity) : Vector3.zero;
@@ -105,15 +98,12 @@ namespace Bouncer.Enemies
                     soldier.JoinSquad(squad);
         }
 
-        /// <summary>Встать в строй (офицер собирает свою шеренгу сам).</summary>
         public void JoinSquad(SoldierSquad squad)
         {
             _squad?.Remove(this);
             _squad = squad;
             squad.Add(this, definition);
         }
-
-        // ---------- Мозги ----------
 
         void Update()
         {
@@ -131,7 +121,6 @@ namespace Bouncer.Enemies
 
             if (!HasBall && Time.time >= _ballBackAt)
                 HasBall = true;
-            // В жвачке солдатик вязнет и марширует медленнее.
             _agent.speed = definition.moveSpeed * _self.SpeedMultiplier * GumSpot.EnemyMoveMultiplierAt(transform.position);
             if (_knockback.sqrMagnitude > 0.01f)
             {
@@ -232,7 +221,6 @@ namespace Bouncer.Enemies
             if (distance < 0.5f)
                 return;
 
-            // Вертикальная скорость — чтобы мяч прилетел на уровень груди.
             float time = distance / definition.ballSpeed;
             float upVelocity = (aim.y - origin.y + 0.5f * definition.ballGravity * time * time) / time;
             GameEvents.PlaySound(SoundCue.SoldierThrow, origin);
@@ -250,14 +238,11 @@ namespace Bouncer.Enemies
                     Gravity = definition.ballGravity,
                     Damage = definition.damage,
                     Knockback = definition.knockback,
-                    // Офицер бросает сильного ёжика — только уворачиваться; солдатик иногда тоже бросает ёжика.
                     Flags = definition.strongThrow ? HitFlags.Charged | HitFlags.Spiky
                         : Random.value < Danger.HedgehogChance ? HitFlags.Spiky : HitFlags.None,
                 },
             });
         }
-
-        // ---------- Попадания ----------
 
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)
         {
@@ -285,7 +270,6 @@ namespace Bouncer.Enemies
             if (_health.IsDead)
                 return false;
 
-            // Без стоп-кадра: вздрагивает сам солдатик (HitPunch), камеру трясёт слегка.
             bool strong = hit.Has(HitFlags.Charged);
             GameFeel.Shake(strong ? 0.25f : 0.1f);
             if (hitFlash)
@@ -323,8 +307,6 @@ namespace Bouncer.Enemies
             PoolService.Despawn(gameObject);
         }
 
-        // ---------- Сеть ----------
-
         public void WriteNet(NetWriter writer)
         {
             writer.Byte((byte)_state);
@@ -340,8 +322,6 @@ namespace Bouncer.Enemies
             HasBall = reader.Bool();
             LastHitDirection = reader.Direction();
         }
-
-        // ---------- Служебное ----------
 
         void Enter(State state)
         {

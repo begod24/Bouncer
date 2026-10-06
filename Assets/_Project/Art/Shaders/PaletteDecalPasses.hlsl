@@ -1,11 +1,6 @@
 #ifndef BOUNCER_PALETTE_DECAL_PASSES_INCLUDED
 #define BOUNCER_PALETTE_DECAL_PASSES_INCLUDED
 
-// Проходы Bouncer/PaletteDecal: надписи и рисунки на моделях (вывески, цифры на монетках, граффити).
-// Надпись — прямоугольник из двух треугольников: UV0 указывает на ячейку палитры (цвет, смена времени суток —
-// как у всей модели), UV1 — на место в атласе-маске T_Decals. Всё вне маски отрезается (alpha clip).
-// Освещение то же, что у PaletteLit (без бликов). Лайтмапы не поддерживаются: TEXCOORD1 занят маской.
-
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 #if defined(LOD_FADE_CROSSFADE)
     #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/LODCrossFade.hlsl"
@@ -19,8 +14,6 @@ void DecalClip(float2 decalUV)
     half mask = SAMPLE_TEXTURE2D(_DecalMap, sampler_DecalMap, decalUV).r;
     clip(mask - _Cutoff);
 }
-
-// ---------------------------------------------------------------- ForwardLit
 
 struct DecalAttributes
 {
@@ -174,8 +167,6 @@ void PaletteDecalFragment(
     outRenderingLayers = EncodeMeshRenderingLayer();
 #endif
 }
-
-// ---------------------------------------------------------------- DepthOnly / DepthNormals (с той же маской)
 
 struct DecalDepthAttributes
 {

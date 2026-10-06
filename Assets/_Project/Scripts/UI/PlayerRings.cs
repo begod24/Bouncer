@@ -5,11 +5,6 @@ using UnityEngine.UI;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// Кольца перезарядки у ног игрока — чтобы не смотреть в угол экрана: рывок, ловля, лечение ловлей,
-    /// «Крышка от кастрюли», заряд фонарика. Кольцо видно, пока идёт перезарядка, и чуть после — потом гаснет.
-    /// Картинка кольца рисуется в коде.
-    /// </summary>
     public sealed class PlayerRings : MonoBehaviour
     {
         enum Ring
@@ -114,7 +109,6 @@ namespace Bouncer.UI
                 Hide();
                 return;
             }
-            // Видимые кольца — рядом, по центру под игроком.
             int visible = 0;
             for (int i = 0; i < Count; i++)
                 if (_alpha[i] > 0.01f)
@@ -133,7 +127,6 @@ namespace Bouncer.UI
             }
         }
 
-        /// <summary>Показать кольцо, пока идёт перезарядка (value < 1), и немного после.</summary>
         void Set(Ring ring, float value, bool exists, float now, bool forceShow = false)
         {
             int i = (int)ring;
@@ -162,7 +155,6 @@ namespace Bouncer.UI
             }
         }
 
-        /// <summary>Кольцо с мягкими краями, белое — цвет задаёт картинка.</summary>
         static Sprite RingSprite()
         {
             if (s_ring != null)

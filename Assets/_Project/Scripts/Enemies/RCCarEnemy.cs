@@ -5,11 +5,6 @@ using UnityEngine.AI;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Машинка на пульте. Носится кругами вокруг игрока, потом газует на месте (колёса буксуют) и таранит по прямой,
-    /// в конце уходит в занос. Мяч переворачивает её вверх колёсами — пару секунд она беспомощна.
-    /// По сети носится и таранит только у хозяина комнаты; у гостя копия буксует и переворачивается по его вестям.
-    /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
     public sealed class RCCarEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
@@ -99,8 +94,6 @@ namespace Bouncer.Enemies
 
         public void OnDespawned() { }
 
-        // ---------- Мозги ----------
-
         void Update()
         {
             if (NetHooks.IsGuest)
@@ -170,7 +163,6 @@ namespace Bouncer.Enemies
                     break;
 
                 case State.Skid:
-                    // Занос: тормозит юзом и разворачивается.
                     float k = Mathf.Clamp01(_stateTime / Mathf.Max(0.05f, definition.skidTime));
                     float speed = Mathf.Lerp(_skidSpeed, 0f, k);
                     _agent.Move(_chargeDirection * (speed * dt));
@@ -190,7 +182,6 @@ namespace Bouncer.Enemies
             }
         }
 
-        /// <summary>Кружить вокруг игрока: точка на окружности чуть впереди по ходу.</summary>
         void Orbit()
         {
             if (_target == null || !_target.IsAlive || !GameSession.IsGameplayActive)
@@ -268,8 +259,6 @@ namespace Bouncer.Enemies
                 definition.turnSpeed * dt);
         }
 
-        // ---------- Попадания ----------
-
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)
         {
             if (_health.IsDead)
@@ -323,15 +312,12 @@ namespace Bouncer.Enemies
             PoolService.Despawn(gameObject);
         }
 
-        // ---------- Вид ----------
-
         void LateUpdate()
         {
             float dt = Mathf.Max(Time.deltaTime, 1e-4f);
             Vector3 velocity = (transform.position - _lastPosition) / dt;
             _lastPosition = transform.position;
             float forward = Vector3.Dot(velocity, transform.forward);
-            // Газуя на месте и перевёрнутая, колёса буксуют.
             float spin = _state == State.Rev ? 30f : _state == State.Flipped ? 12f : forward / Mathf.Max(0.05f, wheelRadius);
             _wheelAngle += spin * Mathf.Rad2Deg * dt;
             float targetSteer = _state == State.Skid ? _skidSign * 28f : _state == State.Cruise ? _orbitSide * 14f : 0f;
@@ -346,7 +332,6 @@ namespace Bouncer.Enemies
             if (wheelRR)
                 wheelRR.localRotation = roll;
 
-            // Переворот вверх колёсами и крен в заносе.
             _flip = Mathf.MoveTowards(_flip, _state == State.Flipped && _stateTime < definition.flipTime - 0.25f ? 1f : 0f, dt * 5f);
             float lean = _state == State.Skid ? -_skidSign * 8f : _state == State.Rev ? Mathf.Sin(Time.time * 50f) * 1.5f : 0f;
             if (visual)
@@ -355,7 +340,6 @@ namespace Bouncer.Enemies
                 visual.localPosition = Vector3.up * (0.35f * Mathf.Sin(_flip * Mathf.PI) + 0.5f * _flip);
             }
 
-            // Антенна — пружинка: отстаёт от разгонов и поворотов.
             if (antenna)
             {
                 Vector3 accel = -transform.InverseTransformDirection(velocity) * 0.02f;
@@ -365,8 +349,6 @@ namespace Bouncer.Enemies
                 antenna.localRotation = Quaternion.Euler(_antennaSwing.z * 40f, 0f, -_antennaSwing.x * 40f);
             }
         }
-
-        // ---------- Сеть ----------
 
         public void WriteNet(NetWriter writer)
         {

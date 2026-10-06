@@ -6,17 +6,12 @@ namespace Bouncer.Upgrades
 {
     public enum UpgradeCategory
     {
-        /// <summary>Другой мяч: волейбольный, набивной, теннисный.</summary>
         Ball,
-        /// <summary>Модификатор мяча: бумеранг, раскол, резинка.</summary>
         Modifier,
-        /// <summary>Пассивка игрока: скорость, ловля, подбор, рывок.</summary>
         Passive,
-        /// <summary>Утешительный вкладыш, когда подходящих карточек не осталось.</summary>
         Treat,
     }
 
-    /// <summary>Редкость вкладыша — как сорта жвачки в ларьке. От неё зависят цена и где карточка выпадает.</summary>
     public enum CardRarity
     {
         Common,
@@ -24,10 +19,6 @@ namespace Bouncer.Upgrades
         Gold,
     }
 
-    /// <summary>
-    /// Карточка-вкладыш: выпадает на выбор 1 из 3 (старт, портфель, босс) или продаётся в ларьке.
-    /// Потомки решают, что она делает с игроком.
-    /// </summary>
     public abstract class UpgradeCard : ScriptableObject
     {
         [Header("Вкладыш")]
@@ -51,24 +42,14 @@ namespace Bouncer.Upgrades
         [Tooltip("Карточка-деньги («Копилка», «Шпаргалка», «Счастливый фантик»): не занимает карман")]
         public bool freePocket;
 
-        /// <summary>
-        /// Карточки заново применяются на новой арене (сцена новая — игрок тоже). В это время мгновенные эффекты
-        /// вроде лечения не срабатывают: сердца переносятся отдельно.
-        /// </summary>
         public static bool Replaying { get; internal set; }
 
-        /// <summary>
-        /// Карточки применяются заново посреди арены, потому что одну выкинули из кармана: ничего не выдаётся
-        /// (мячи уже в руках или на арене).
-        /// </summary>
         public static bool Rebuilding { get; internal set; }
 
         public bool IsCombo => requires != null && requires.Length > 0;
 
-        /// <summary>Занимает ли карман: тип мяча, утешительный вкладыш и карточки-деньги — нет.</summary>
         public bool TakesPocket => category != UpgradeCategory.Ball && category != UpgradeCategory.Treat && !freePocket;
 
-        /// <summary>Можно ли предложить карточку сейчас. stacks — сколько раз её уже взяли.</summary>
         public virtual bool CanOffer(PlayerController player, int stacks) => stacks < maxStacks;
 
         public abstract void Apply(PlayerController player);

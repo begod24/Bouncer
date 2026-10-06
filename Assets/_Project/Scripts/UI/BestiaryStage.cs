@@ -4,12 +4,6 @@ using UnityEngine;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// Сцена бестиария: враг медленно крутится над меловым кругом далеко под двором, своя камера рисует его
-    /// в RenderTexture (фон прозрачный). Модель — копия ребёнка Visual из префаба врага без скриптов, коллайдеров,
-    /// света и частиц, так что враг не оживает. Камера подстраивается под размер: пупс и Бабай одинаково
-    /// заполняют кадр. Закрытый босс — чёрный силуэт.
-    /// </summary>
     public sealed class BestiaryStage : MonoBehaviour
     {
         [SerializeField] Camera stageCamera;
@@ -44,7 +38,6 @@ namespace Bouncer.UI
             stageCamera.aspect = (float)Texture.width / Texture.height;
         }
 
-        /// <summary>Поставить врага из префаба (null — пусто). silhouette — только чёрный силуэт.</summary>
         public void Show(GameObject prefab, bool silhouette)
         {
             if (_model != null)
@@ -58,7 +51,6 @@ namespace Bouncer.UI
             var source = prefab.transform.Find("Visual");
             if (source == null)
                 source = prefab.transform;
-            // Копия собирается под выключенным родителем: скрипты врага не просыпаются, их можно снять до включения.
             var holder = new GameObject(prefab.name);
             holder.SetActive(false);
             holder.transform.SetParent(pivot, false);
@@ -72,7 +64,6 @@ namespace Bouncer.UI
             var renderers = holder.GetComponentsInChildren<Renderer>();
             if (!Bounds(renderers, out var bounds))
                 return;
-            // Модель — ногами на круг, серединой на ось вращения.
             Vector3 offset = pivot.position - new Vector3(bounds.center.x, bounds.min.y, bounds.center.z);
             holder.transform.position += offset;
             bounds.center += offset;
@@ -81,10 +72,8 @@ namespace Bouncer.UI
                 Tint(renderers);
         }
 
-        /// <summary>Снять всё, что оживляет врага: скрипты, физику, свет, звук, частицы.</summary>
         static void Strip(GameObject root)
         {
-            // Сначала то, что зависит от других (поведение требует физику, частицы — свой рендерер), потом остальное.
             StripPass(root, c => c is MonoBehaviour or Joint or ParticleSystem);
             StripPass(root, c => c is Collider or Rigidbody or Light or AudioSource or ParticleSystemRenderer);
         }
@@ -119,7 +108,6 @@ namespace Bouncer.UI
             return any;
         }
 
-        /// <summary>Камера отъезжает так, чтобы модель влезла по высоте и по ширине при любом повороте.</summary>
         void Frame(Bounds bounds)
         {
             Vector3 size = bounds.size;
@@ -127,7 +115,6 @@ namespace Bouncer.UI
             float width = Mathf.Sqrt(size.x * size.x + size.z * size.z);
             float halfV = stageCamera.fieldOfView * 0.5f * Mathf.Deg2Rad;
             float halfH = Mathf.Atan(Mathf.Tan(halfV) * stageCamera.aspect);
-            // Плюс запас: при повороте ближний край модели подходит к камере.
             float distance = Mathf.Max(height * 0.5f / Mathf.Tan(halfV), width * 0.5f / Mathf.Tan(halfH)) * margin + width * 0.3f;
             var cam = stageCamera.transform;
             Vector3 look = bounds.center;

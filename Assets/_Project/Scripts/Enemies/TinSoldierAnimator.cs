@@ -2,10 +2,6 @@ using UnityEngine;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Процедурная анимация оловянного солдатика без скелета: марш на прямых ногах, отмашка левой рукой,
-    /// замах правой за голову и бросок, покачивание всей фигуркой от попадания. Только визуал.
-    /// </summary>
     [RequireComponent(typeof(TinSoldierEnemy))]
     public sealed class TinSoldierAnimator : MonoBehaviour
     {
@@ -70,7 +66,6 @@ namespace Bouncer.Enemies
             legR.localRotation = Quaternion.Euler(-sin * legSwing * _march, 0f, 0f);
             armL.localRotation = Quaternion.Euler(-sin * armSwing * _march, 0f, 0f);
 
-            // Правая рука: держит мяч перед собой, на замахе уходит за голову, после броска — вперёд.
             float targetArm = state switch
             {
                 TinSoldierEnemy.State.Aim => windupAngle * Ease(_soldier.AimProgress),
@@ -84,7 +79,6 @@ namespace Bouncer.Enemies
             if (handBall && handBall.activeSelf != _soldier.HasBall)
                 handBall.SetActive(_soldier.HasBall);
 
-            // Попадание: негнущаяся фигурка качается целиком, как игрушка на подставке.
             Quaternion tilt = Quaternion.identity;
             if (state == TinSoldierEnemy.State.Stagger)
             {

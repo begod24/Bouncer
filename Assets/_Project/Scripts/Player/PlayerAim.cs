@@ -3,13 +3,11 @@ using UnityEngine;
 
 namespace Bouncer.Player
 {
-    /// <summary>Итоговое направление броска: ручной прицел или автоприцел с упреждением.</summary>
     public sealed class PlayerAim : MonoBehaviour
     {
         PlayerStats _stats;
 
         public Vector3 Direction { get; private set; } = Vector3.forward;
-        /// <summary>Цель автоприцела (null — целимся вручную).</summary>
         public Targetable Target { get; private set; }
         public bool HasInput { get; private set; }
 
@@ -50,7 +48,6 @@ namespace Bouncer.Player
                 float dot = Vector3.Dot(to / distance, direction);
                 if (dot < minDot)
                     continue;
-                // Угол важнее расстояния: берём того, кто ближе к линии прицела.
                 float score = (1f - dot) * 10f + distance * 0.05f;
                 if (score < bestScore)
                 {

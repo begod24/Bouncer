@@ -3,10 +3,6 @@ using UnityEngine;
 
 namespace Bouncer.Player
 {
-    /// <summary>
-    /// Визуал игрока: мяч в руке и заряд, кольцо ловли, мигание при неуязвимости, след рывка, вспышки.
-    /// Эффекты карточек: горячий мяч в руке, волна «Замри!». Позы (подкат, падение) — клипы ребёнка, см. KidAnimator.
-    /// </summary>
     public sealed class PlayerVisuals : MonoBehaviour
     {
         static readonly int BaseColorId = PaletteShader.BaseColor;
@@ -51,10 +47,8 @@ namespace Bouncer.Player
             }
         }
 
-        /// <summary>Меши, которые мигают при неуязвимости (модель ребёнка сменилась).</summary>
         public void SetBodyRenderers(Renderer[] renderers) => blinkRenderers = renderers ?? System.Array.Empty<Renderer>();
 
-        // Подписка в Start: к этому моменту PlayerController.Awake уже заполнил свои ссылки.
         void Start()
         {
             player.Hurt += OnHurt;
@@ -77,7 +71,6 @@ namespace Bouncer.Player
             player.Health.Died -= OnDied;
         }
 
-        /// <summary>В руке — модель того мяча, которым игрок сейчас бросает.</summary>
         void OnBallTypeChanged()
         {
             var prefab = player.Balls.BallPrefab;
@@ -97,12 +90,10 @@ namespace Bouncer.Player
             if (handBall)
             {
                 handBall.enabled = !dead && balls.Balls > 0;
-                // Заряд чужого игрока присылает сеть (его поза), свой — из рук.
                 float charge01 = player.Action.Charge01;
                 float pulse = charge01 >= 1f ? 1f + 0.12f * Mathf.Sin(Time.time * 30f) : 1f;
                 handBall.transform.localScale = _handBallScale * (heldBallScale * (1f + charge01 * 0.45f) * pulse);
                 float charge = charge01 >= 1f ? 0.7f : charge01 * 0.3f;
-                // Горячий мяч тлеет, как уголёк, — перебегает от красного к жёлтому.
                 Color glow = balls.CatchPerksReady
                     ? Color.Lerp(hotColor, candleColor, 0.5f + 0.5f * Mathf.Sin(Time.time * 9f))
                     : Color.Lerp(candleColor, Color.white, 0.3f + 0.3f * Mathf.Sin(Time.time * 12f));
@@ -110,7 +101,6 @@ namespace Bouncer.Player
                 handBall.GetPropertyBlock(_block);
                 if (_handBallPalette)
                 {
-                    // Модель мяча своего цвета; заряд, «свечка» и горячая картошка перекрашивают её поверх.
                     _block.SetColor(PaletteShader.TintColor, glowing
                         ? PaletteShader.Tint(glow, 0.75f)
                         : PaletteShader.Tint(chargedColor, charge));
@@ -127,7 +117,6 @@ namespace Bouncer.Player
                 var line = catchRing.Line;
                 if (!dead && balls.IsCatching)
                 {
-                    // Дуга — сектор спереди, откуда ловятся мячи; золотая, пока ловля будет идеальной.
                     bool perfect = balls.IsCatchPerfect;
                     line.enabled = true;
                     catchRing.Radius = balls.CatchRadius;
@@ -176,7 +165,6 @@ namespace Bouncer.Player
                 hitFlash.Flash(fumbleColor, 0.12f);
         }
 
-        /// <summary>«Замри!»: от игрока расходится волна.</summary>
         void OnFroze()
         {
             if (freezeWave)

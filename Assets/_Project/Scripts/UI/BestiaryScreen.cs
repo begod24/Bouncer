@@ -9,14 +9,6 @@ using UnityEngine.UI;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// «Бестиарий» — страница тетрадки: вкладки «Враги / Элитки / Боссы», слева список, посередине враг крутится
-    /// над меловым кругом (<see cref="BestiaryStage"/> в RenderTexture), справа его страница: сколько держит
-    /// попаданий, где встречается, что делает и как его выбить. Враги и элитки открыты всегда, босс — после победы
-    /// над ним; до того в списке «???», в кадре силуэт, а на странице — только где он живёт. Только что открытый
-    /// босс помечен «новое!» (в списке и на вкладке «Боссы»), пока его страницу не посмотрят; тогда бестиарий
-    /// и открывается сразу на нём. Открывает и закрывает его <see cref="NotebookScreen"/>.
-    /// </summary>
     public sealed class BestiaryScreen : MonoBehaviour
     {
         [SerializeField] Bestiary book;
@@ -58,13 +50,10 @@ namespace Bouncer.UI
         int _section;
         int _shown = -1;
 
-        /// <summary>Куда ведёт «вверх» с вкладок разделов (ряд страниц тетрадки).</summary>
         public Selectable UpTarget { get; set; }
 
-        /// <summary>Есть босс, чью страницу ещё не смотрели.</summary>
         public bool HasNew => book != null && book.AnyNew();
 
-        /// <summary>Ряд вкладок разделов — на него ведёт «вниз» с вкладок тетрадки.</summary>
         public Selectable SectionTabs => _tabsSelectable;
 
         void Awake()
@@ -77,10 +66,6 @@ namespace Bouncer.UI
             }
         }
 
-        /// <summary>
-        /// Открыть на первом разделе — или на новом боссе, если он есть. Возвращает строку, которую выбрать
-        /// клавиатурой и геймпадом.
-        /// </summary>
         public Selectable Open()
         {
             _closing = false;
@@ -102,10 +87,6 @@ namespace Bouncer.UI
             return _entries.Count > 0 ? _items[start] : _tabsSelectable;
         }
 
-        /// <summary>
-        /// Убрать сцену с врагом. Тетрадка гаснет плавно, а RawImage без текстуры мелькнул бы белым
-        /// прямоугольником: пока страницу видно, враг гаснет вместе с ней, а сцена уходит, когда экран погас.
-        /// </summary>
         public void Close()
         {
             _closing = _stage != null;
@@ -136,7 +117,6 @@ namespace Bouncer.UI
 
         Selectable FirstItem => _entries.Count > 0 ? _items[0] : _tabsSelectable;
 
-        /// <summary>Соседний раздел (стрелки влево/вправо на строке списка): выбрать первую строку нового.</summary>
         public void StepSection(int delta)
         {
             if (tabs == null)
@@ -177,7 +157,6 @@ namespace Bouncer.UI
                     continue;
                 var entry = _entries[i];
                 SetLabel(i);
-                // Вверх с первой строки — на вкладки, вниз с последней — никуда.
                 var navigation = new Navigation
                 {
                     mode = Navigation.Mode.Explicit,
@@ -186,7 +165,6 @@ namespace Bouncer.UI
                 };
                 item.navigation = navigation;
             }
-            // С вкладок вниз — на первую строку; влево-вправо вкладки листают сами.
             if (_tabsSelectable)
                 _tabsSelectable.navigation = new Navigation
                 {
@@ -209,7 +187,6 @@ namespace Bouncer.UI
                 scroll.StopMovement();
         }
 
-        /// <summary>Имя в строке списка: «???» у закрытого босса, «новое!» у только что открытого.</summary>
         void SetLabel(int index)
         {
             var entry = _entries[index];
@@ -224,7 +201,6 @@ namespace Bouncer.UI
             label.color = open ? itemColor : lockedColor;
         }
 
-        /// <summary>Показать страницу строки index; item — её кнопка, чтобы прокрутить список к ней.</summary>
         public void ShowEntry(int index, RectTransform item)
         {
             if (item != null)
@@ -238,7 +214,6 @@ namespace Bouncer.UI
             _shown = index;
             var entry = _entries[index];
             bool open = entry.IsOpen;
-            // Страницу посмотрели. «новое!» в списке остаётся до следующего открытия — чтобы не мигало под курсором.
             if (entry.IsNew)
                 BestiaryProgress.MarkSeen(entry.Id);
 
@@ -291,7 +266,6 @@ namespace Bouncer.UI
                 _stage.Show(null, false);
         }
 
-        /// <summary>Прокрутить список так, чтобы строка целиком была видна.</summary>
         void Reveal(RectTransform item)
         {
             var viewport = scroll != null && scroll.viewport != null ? scroll.viewport : listContent.parent as RectTransform;

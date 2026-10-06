@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace Bouncer.UI
 {
-    /// <summary>Меловое «новое!» у кнопки или вкладки: чуть покачивается, чтобы его заметили.</summary>
     public sealed class NewMark : MonoBehaviour
     {
         [SerializeField] float speed = 4f;

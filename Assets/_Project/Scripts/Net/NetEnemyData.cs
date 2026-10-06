@@ -5,7 +5,6 @@ using UnityEngine;
 
 namespace Bouncer.Net
 {
-    /// <summary>Враг хозяина появился: какой, где, какое у него свойство элитки и здоровье.</summary>
     public struct NetEnemySpawn : INetworkSerializable
     {
         public ushort Id;
@@ -28,23 +27,17 @@ namespace Bouncer.Net
         }
     }
 
-    /// <summary>Где враг хозяина в момент Time, куда повёрнут, как движется и что показывает его анимация.</summary>
     public struct NetEnemyMotion
     {
         public ushort Id;
         public Vector3 Position;
         public Quaternion Rotation;
         public Vector3 Velocity;
-        /// <summary>Сколько ещё заморожен, с.</summary>
         public float Frozen;
         public byte PayloadLength;
         public byte[] Payload;
     }
 
-    /// <summary>
-    /// Точки движения врагов за один раз (ненадёжно: потерялась — придёт следующая). Скорость и поворот — в половинной
-    /// точности, чтобы влезало много врагов.
-    /// </summary>
     public struct NetEnemyMotionBatch : INetworkSerializable
     {
         public double Time;
@@ -109,7 +102,6 @@ namespace Bouncer.Net
         }
     }
 
-    /// <summary>По врагу хозяина попали: сколько у него здоровья теперь и как ударили (для вспышки и отшатывания).</summary>
     public struct NetEnemyHit : INetworkSerializable
     {
         public ushort Id;
@@ -132,7 +124,6 @@ namespace Bouncer.Net
         }
     }
 
-    /// <summary>Удар (карточки игрока или врага по игроку), который один компьютер отправляет другому.</summary>
     public struct NetHit : INetworkSerializable
     {
         public int Damage;

@@ -4,12 +4,6 @@ using UnityEngine;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Пупс — быстрый рой. Бежит к игроку по общему полю направлений (<see cref="EnemyFlowField"/>),
-    /// расталкивает соседей, вблизи приседает и прыгает, кусая в прыжке. Игрока телом не толкает,
-    /// чтобы рой не зажимал его в угол. Выбивается с одного попадания, мяч пробивает его насквозь.
-    /// По сети думает только у хозяина комнаты; у гостя — копия, которой двигает сеть (<see cref="INetEnemy"/>).
-    /// </summary>
     [RequireComponent(typeof(Rigidbody), typeof(Health), typeof(Targetable))]
     public sealed class PupsikEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
@@ -76,15 +70,12 @@ namespace Bouncer.Enemies
             _nextAttack = Time.time + Random.Range(0.4f, 0.9f);
             Enter(State.Chase);
 
-            // Рой не толкает игрока телом — только кусает в прыжке.
             foreach (var target in Targetable.All)
                 if (target.Team == Team.Player && target.TryGetComponent(out CharacterController controller))
                     Physics.IgnoreCollision(_collider, controller, true);
         }
 
         public void OnDespawned() { }
-
-        // ---------- Мозги ----------
 
         void FixedUpdate()
         {
@@ -127,7 +118,6 @@ namespace Bouncer.Enemies
                         Enter(State.Windup);
                         break;
                     }
-                    // Рядом с вожаком (пупс в чепчике) рой бегает быстрее.
                     float speed = definition.moveSpeed * _self.SpeedMultiplier * SwarmLeader.SpeedMultiplierAt(_rb.position);
                     Vector3 desired = ChaseDirection(targetDirection, distance)
                                       * (speed * GroundZone.MoveMultiplierAt(_rb.position) * GumSpot.EnemyMoveMultiplierAt(_rb.position))
@@ -160,7 +150,6 @@ namespace Bouncer.Enemies
             }
         }
 
-        /// <summary>Вблизи и на виду — прямо на игрока, иначе по полю направлений в обход препятствий.</summary>
         Vector3 ChaseDirection(Vector3 targetDirection, float distance)
         {
             Vector3 eye = _rb.position + Vector3.up * 0.4f;
@@ -218,12 +207,9 @@ namespace Bouncer.Enemies
                     Flags = HitFlags.Melee,
                 });
             }
-            // Укусил — отскакивает назад, а не повисает на игроке.
             Vector3 velocity = _rb.linearVelocity;
             _rb.linearVelocity = new Vector3(-_hopDirection.x * 2f, velocity.y, -_hopDirection.z * 2f);
         }
-
-        // ---------- Тело ----------
 
         void Drive(Vector3 desired) => Drive(desired, definition.moveSpeed * _self.SpeedMultiplier);
 
@@ -256,8 +242,6 @@ namespace Bouncer.Enemies
             }
         }
 
-        // ---------- Попадания ----------
-
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)
         {
             if (_health.IsDead)
@@ -276,7 +260,6 @@ namespace Bouncer.Enemies
                 Source = ball.Thrower,
                 Flags = ball.Stats.Flags,
             });
-            // Лёгкий пупс мяч не останавливает: выбитого пробивает насквозь.
             return _health.IsDead ? BallContactResult.Pierce : BallContactResult.Hit;
         }
 
@@ -285,7 +268,6 @@ namespace Bouncer.Enemies
             if (_health.IsDead)
                 return false;
 
-            // Без стоп-кадра: пупсов выбивают пачками, стоп-кадры подряд выглядели бы как подвисания.
             if (hitFlash)
                 hitFlash.Flash(Color.white, 0.1f);
             GameEvents.PlaySound(SoundCue.EnemyHit, hit.Point);
@@ -313,8 +295,6 @@ namespace Bouncer.Enemies
             PoolService.Despawn(gameObject);
         }
 
-        // ---------- Сеть ----------
-
         public void WriteNet(NetWriter writer)
         {
             writer.Byte((byte)_state);
@@ -326,8 +306,6 @@ namespace Bouncer.Enemies
             _state = (State)reader.Byte();
             _stateTime = reader.Seconds() + age;
         }
-
-        // ---------- Служебное ----------
 
         void Enter(State state)
         {

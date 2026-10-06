@@ -4,27 +4,18 @@ using UnityEngine.SceneManagement;
 
 namespace Bouncer.Core
 {
-    /// <summary>
-    /// Затемнение между аренами: экран гаснет, грузится следующая сцена, экран светлеет.
-    /// Рисуется через IMGUI поверх всего интерфейса и переживает смену сцены. Время — реальное:
-    /// игра на время перехода стоит. По сети сцену грузит не затемнение, а сеть: <see cref="Cover"/> только
-    /// гасит экран и ждёт, пока она загрузится.
-    /// </summary>
     public sealed class ScreenFade : MonoBehaviour
     {
         const float FadeOutTime = 0.45f;
         const float FadeInTime = 0.6f;
-        /// <summary>Сцена по сети так и не загрузилась — экран всё равно светлеет.</summary>
         const float CoverTimeout = 20f;
 
         static ScreenFade s_instance;
 
         float _alpha;
 
-        /// <summary>Идёт переход: экран гаснет или светлеет.</summary>
         public static bool IsBusy { get; private set; }
 
-        /// <summary>Погасить экран, загрузить сцену и плавно показать её.</summary>
         public static void LoadScene(string sceneName)
         {
             if (IsBusy || string.IsNullOrEmpty(sceneName))
@@ -32,7 +23,6 @@ namespace Bouncer.Core
             Ensure().StartCoroutine(s_instance.Run(sceneName));
         }
 
-        /// <summary>Погасить экран и показать снова, когда загрузится следующая сцена (её грузит сеть).</summary>
         public static void Cover()
         {
             if (IsBusy)
@@ -64,7 +54,6 @@ namespace Bouncer.Core
                 yield return null;
             }
             SceneManager.sceneLoaded -= OnLoaded;
-            // Кадр на то, чтобы новая сцена проснулась и расставилась.
             yield return null;
             while (_alpha > 0f)
             {
@@ -85,7 +74,6 @@ namespace Bouncer.Core
             var load = SceneManager.LoadSceneAsync(sceneName);
             while (load != null && !load.isDone)
                 yield return null;
-            // Кадр на то, чтобы новая сцена проснулась и расставилась.
             yield return null;
             while (_alpha > 0f)
             {

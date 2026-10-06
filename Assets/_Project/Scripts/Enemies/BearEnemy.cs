@@ -6,13 +6,6 @@ using UnityEngine.AI;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Плюшевый мишка — медленный танк. Идёт к игроку по NavMesh и бьёт лапой вблизи (замах виден заранее).
-    /// Мяч застревает у него в животе: урон проходит, но мяч не отскакивает, и у игрока становится на мяч меньше.
-    /// Попадание другим мячом выбивает застрявший на пол; выбитый мишка роняет всё, что застряло.
-    /// Мишка-моряк (элитный) держит два мяча и выплёвывает их обратно в игрока — их можно поймать.
-    /// По сети думает, бьёт и держит мячи только у хозяина комнаты; у гостя копия идёт и замахивается по его вестям.
-    /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
     public sealed class BearEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
@@ -99,8 +92,6 @@ namespace Bouncer.Enemies
         }
 
         public void OnDespawned() => ReleaseAll(Vector3.back);
-
-        // ---------- Мозги ----------
 
         void Update()
         {
@@ -238,12 +229,9 @@ namespace Bouncer.Enemies
             transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(direction), definition.turnSpeed * dt);
         }
 
-        // ---------- Застрявшие мячи ----------
-
         Vector3 SocketPosition(int index)
         {
             Vector3 socket = ballSocket ? ballSocket.position : transform.position + Vector3.up * 0.75f + transform.forward * 0.45f;
-            // Второй мяч висит чуть в стороне от первого.
             return socket + transform.right * (index * 0.32f - (_stuck.Count - 1) * 0.16f);
         }
 
@@ -265,7 +253,6 @@ namespace Bouncer.Enemies
             GameEvents.PlaySound(SoundCue.BallStuck, ball.Position);
         }
 
-        /// <summary>Застрявший мяч выбит: отлетает на пол.</summary>
         void KnockOut(Vector3 direction)
         {
             if (_stuck.Count == 0)
@@ -289,7 +276,6 @@ namespace Bouncer.Enemies
             }
         }
 
-        /// <summary>Мишка-моряк плюётся застрявшим мячом: летит в игрока, его можно поймать.</summary>
         void Spit(Targetable target)
         {
             var ball = _stuck[0];
@@ -318,8 +304,6 @@ namespace Bouncer.Enemies
             GameEvents.PlaySound(SoundCue.SoldierThrow, origin);
         }
 
-        // ---------- Попадания ----------
-
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)
         {
             if (_health.IsDead)
@@ -341,7 +325,6 @@ namespace Bouncer.Enemies
             });
             if (_health.IsDead || ball.IsPhantom)
                 return BallContactResult.Hit;
-            // Живот полный — новый мяч выбивает застрявший и отскакивает сам. Иначе застревает.
             if (_stuck.Count >= definition.maxStuckBalls)
             {
                 KnockOut(-direction);
@@ -364,7 +347,6 @@ namespace Bouncer.Enemies
             if (!_health.IsDead)
             {
                 _knockback += Flat(hit.Direction) * (hit.Force * definition.knockbackScale);
-                // Сильный удар сбивает замах, обычный мишка терпит.
                 if (strong && _state is (State.Windup or State.Chase))
                 {
                     Halt();
@@ -388,8 +370,6 @@ namespace Bouncer.Enemies
             GameFeel.Shake(0.35f);
             PoolService.Despawn(gameObject);
         }
-
-        // ---------- Вид ----------
 
         void Animate(float dt)
         {
@@ -420,8 +400,6 @@ namespace Bouncer.Enemies
                 pawOther.localRotation = _pawOtherRest * Quaternion.Euler(-Mathf.Sin(_walkPhase) * 18f * speed01, 0f, 0f);
         }
 
-        // ---------- Сеть ----------
-
         public void WriteNet(NetWriter writer)
         {
             writer.Byte((byte)_state);
@@ -433,8 +411,6 @@ namespace Bouncer.Enemies
             _state = (State)reader.Byte();
             _stateTime = reader.Seconds() + age;
         }
-
-        // ---------- Служебное ----------
 
         void Enter(State state)
         {

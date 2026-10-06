@@ -6,17 +6,6 @@ using UnityEngine.Localization;
 
 namespace Bouncer.Run
 {
-    /// <summary>
-    /// Финал прогулки «Мама зовёт домой» — наш двор ночью. Пока идёт бой, в панельках одно за другим загораются
-    /// окна (часы до зова, <see cref="WindowClock"/>). Время вышло или «Тот, кто в сумерках» выбит раньше —
-    /// мама зовёт из нашего окна: свет больше не гаснет, мелочь босса разбегается, в проходе между гаражами
-    /// светится дорога к подъезду (в этот свет сумеречные не заходят). Добежал до прохода — дальше персонаж
-    /// бежит к двери сам, и прогулка пройдена; выбили по дороге — нет. На других аренах сцены двора всё
-    /// ночное спрятано, а гараж стоит на месте прохода.
-    /// По сети маму слышат все (зов приходит от хозяина комнаты, <see cref="CallStarted"/>), каждый бежит к подъезду
-    /// сам и, добежав, ждёт у двери вне игры (<see cref="PlayerController.IsHome"/>); когда дома все живые (выбитые
-    /// тоже идут в счёт), хозяин объявляет победу. Двор при этом не замирает — остальным ещё добегать.
-    /// </summary>
     [DefaultExecutionOrder(-70)]
     public sealed class HomeCall : MonoBehaviour
     {
@@ -47,20 +36,14 @@ namespace Bouncer.Run
         bool _won;
         bool _finished;
 
-        /// <summary>Мама позвала (у хозяина комнаты — чтобы позвала и у гостей): выбит ли босс.</summary>
         public static event System.Action<bool> CallStarted;
 
         public static HomeCall Instance { get; private set; }
-        /// <summary>Эта арена — финал прогулки: продержаться до зова мамы.</summary>
         public bool IsFinale { get; private set; }
-        /// <summary>Мама позвала.</summary>
         public bool Called { get; private set; }
-        /// <summary>Мама позвала раньше времени: босс выбит.</summary>
         public bool BossDefeated { get; private set; }
-        /// <summary>Игрок дошёл до прохода и бежит к подъезду.</summary>
         public bool GoingHome => _runner != null;
 
-        /// <summary>Сколько секунд осталось до зова.</summary>
         public float Remaining
         {
             get
@@ -70,7 +53,6 @@ namespace Bouncer.Run
             }
         }
 
-        /// <summary>0 — начало финала, 1 — мама зовёт.</summary>
         public float Progress01
         {
             get
@@ -104,14 +86,12 @@ namespace Bouncer.Run
                 Instance = null;
         }
 
-        /// <summary>Мама позвала: время вышло или босс выбит (<see cref="ArenaDirector"/>).</summary>
         public void BeginCall(bool bossDefeated)
         {
             if (!IsFinale || Called)
                 return;
             Called = true;
             BossDefeated = bossDefeated;
-            // Во дворе зажигается всё: босс больше не погасит свет.
             LightsOut.End();
             if (windows)
             {
@@ -152,7 +132,6 @@ namespace Bouncer.Run
                 RunHome(Time.deltaTime);
         }
 
-        /// <summary>По сети, у хозяина: дома все, кто ещё в строю (выбитые тоже идут в счёт), — прогулка пройдена.</summary>
         void CheckEveryoneHome()
         {
             if (_finished)
@@ -172,7 +151,6 @@ namespace Bouncer.Run
                 ArenaDirector.Instance.WinFromHome(BossDefeated);
         }
 
-        /// <summary>Кто из живых игроков дошёл до прохода — тот бежит домой.</summary>
         void WaitAtGate()
         {
             var session = GameSession.Instance;
@@ -184,7 +162,6 @@ namespace Bouncer.Run
                     continue;
                 Vector3 delta = target.Position - goal.position;
                 delta.y = 0f;
-                // По сети к двери ведёт каждый компьютер своего игрока.
                 if (delta.sqrMagnitude > goalRadius * goalRadius || !target.TryGetComponent(out PlayerController player)
                     || !player.IsLocal)
                     continue;
@@ -201,8 +178,6 @@ namespace Bouncer.Run
         {
             if (GameFeel.Paused)
                 return;
-            // Пока бежит домой, двор замер: сумеречным до подъезда не добраться. По сети двор не замирает — другим
-            // ещё добегать, а бегущий и так неуязвим.
             if (!Online.Active)
                 Targetable.FreezeEnemies(0.5f);
             var runner = _runner.transform;
@@ -225,7 +200,6 @@ namespace Bouncer.Run
             runner.rotation = Quaternion.RotateTowards(runner.rotation, Quaternion.LookRotation(to), 720f * dt);
         }
 
-        /// <summary>У двери подъезда: прогулка пройдена (по сети — ждать остальных, победу объявит хозяин).</summary>
         void Arrive()
         {
             _won = true;

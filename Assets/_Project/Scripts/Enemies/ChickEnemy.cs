@@ -5,14 +5,6 @@ using UnityEngine;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Заводной жестяной цыплёнок — камикадзе. Появившись, заводится (ключ крутится и искрит — видно, что сейчас побежит),
-    /// потом бежит по прямой туда, где стоял игрок, и взрывается о стену, об игрока или через несколько секунд.
-    /// Взрыв бьёт всех вокруг, врагов тоже. Сбитый мячом взрывается на месте — так можно подорвать толпу.
-    /// Петушок (элитный) по дороге дважды поворачивает к игроку, и взрыв у него больше.
-    /// По сети бежит и взрывается только у хозяина комнаты; у гостя копия заводится и бежит по его вестям,
-    /// а взрыв (кольцо, огонь, звук) хозяин показывает гостям сам.
-    /// </summary>
     [RequireComponent(typeof(Rigidbody), typeof(Health), typeof(Targetable))]
     public sealed class ChickEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
@@ -110,7 +102,6 @@ namespace Bouncer.Enemies
                 return;
             if (_self.IsFrozen)
             {
-                // Заморожен: стоит, завод не кончается.
                 _rb.linearVelocity = new Vector3(0f, _rb.linearVelocity.y, 0f);
                 return;
             }
@@ -145,7 +136,6 @@ namespace Bouncer.Enemies
                         _rb.linearVelocity = new Vector3(0f, _rb.linearVelocity.y, 0f);
                         break;
                     }
-                    // Петушок поворачивает к игроку несколько раз за разбег.
                     if (_zigzagsLeft > 0 && _stateTime >= _nextZigzag && target != null)
                     {
                         _zigzagsLeft--;
@@ -175,7 +165,6 @@ namespace Bouncer.Enemies
             return delta.sqrMagnitude <= definition.triggerDistance * definition.triggerDistance;
         }
 
-        /// <summary>Бах: бьёт всех вокруг — игроков и врагов. source — кто виноват (выбит игроком или сам добежал).</summary>
         void Explode(Team source)
         {
             if (_exploded)
@@ -248,8 +237,6 @@ namespace Bouncer.Enemies
             }
         }
 
-        // ---------- Попадания ----------
-
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)
         {
             if (_health.IsDead || _exploded)
@@ -287,20 +274,16 @@ namespace Bouncer.Enemies
         {
             if (hit.Has(HitFlags.Despawn))
             {
-                // Арена пройдена: цыплёнок просто разваливается, без взрыва.
                 _exploded = true;
                 GameEvents.RaiseEnemyKilled(gameObject, hit);
                 Break(Vector3.up, 0f);
                 return;
             }
-            // Выбит — взрывается на месте; виноват тот, кто его выбил (игрок получает монетки и за соседей).
             Team source = hit.SourceTeam == Team.Player ? Team.Player : Team.Enemy;
             GameEvents.RaiseEnemyKilled(gameObject, hit);
             Explode(source);
             Break(hit.Direction, hit.Force * 0.2f);
         }
-
-        // ---------- Вид ----------
 
         void Update()
         {
@@ -326,8 +309,6 @@ namespace Bouncer.Enemies
             _state = state;
             _stateTime = 0f;
         }
-
-        // ---------- Сеть ----------
 
         public void WriteNet(NetWriter writer)
         {

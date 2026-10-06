@@ -7,13 +7,6 @@ using UnityEngine.EventSystems;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// Маленький вкладыш в кармане: обёртка своего цвета, окошко с картинкой, рамка у редких и золотых, повторы
-    /// («2/3»), подпись под ним. Пустой карман — меловой пунктир. Так показаны карманы на HUD, на экране выбора,
-    /// в ларьке и на экране карманов; на экране карманов вкладыш — кнопка: выбранный (мышью, стрелками, геймпадом)
-    /// больше и подсвечен, отмеченный на выброс или продажу — перечёркнут. Размер задаёт масштаб объекта
-    /// (префаб — 120×120). Анимации — по реальному времени: на экранах карточек игра стоит.
-    /// </summary>
     public sealed class PocketCardMini : MonoBehaviour, IPointerEnterHandler, ISelectHandler, IDeselectHandler
     {
         [SerializeField] UnityEngine.UI.Button button;
@@ -65,7 +58,6 @@ namespace Bouncer.UI
             Animate();
         }
 
-        /// <summary>Вкладыш в кармане. taken — сколько раз он взят (для «2/3»).</summary>
         public void Show(UpgradeCard card, int taken)
         {
             Card = card;
@@ -82,7 +74,6 @@ namespace Bouncer.UI
             SetLabel(null);
         }
 
-        /// <summary>Не вкладыш, а вещь (кооп: портфели в рюкзаке): обёртка цвета color с картинкой и числом.</summary>
         public void ShowItem(Sprite sprite, Color color, string count)
         {
             Card = null;
@@ -98,7 +89,6 @@ namespace Bouncer.UI
             SetLabel(null);
         }
 
-        /// <summary>Пустой карман: пунктир мелом.</summary>
         public void ShowEmpty()
         {
             Card = null;
@@ -111,7 +101,6 @@ namespace Bouncer.UI
             SetLabel(null);
         }
 
-        /// <summary>Подпись под вкладышем (название, цена). Пусто — без подписи.</summary>
         public void SetLabel(string text, Color? color = null)
         {
             if (!label)
@@ -121,10 +110,6 @@ namespace Bouncer.UI
             label.color = color ?? labelColor;
         }
 
-        /// <summary>
-        /// Размер подписи в единицах вкладыша (ряд с маленькими вкладышами делит экранный размер на свой масштаб).
-        /// wrap = false — в одну строку: длинное название мельчает, а не переносится.
-        /// </summary>
         public void SetLabelStyle(float fontSize, float width, bool wrap)
         {
             if (!label)
@@ -136,7 +121,6 @@ namespace Bouncer.UI
             label.rectTransform.sizeDelta = new Vector2(width, fontSize * (wrap ? 2.6f : 1.6f));
         }
 
-        /// <summary>Номер для быстрого выбора (1–6); 0 — без номера.</summary>
         public void SetHotkey(int number)
         {
             if (hotkey)
@@ -149,14 +133,12 @@ namespace Bouncer.UI
                 mark.SetActive(marked);
         }
 
-        /// <summary>Можно ли выбрать и нажать (на HUD и у пустых карманов — нет).</summary>
         public void SetInteractable(bool interactable)
         {
             if (button)
                 button.interactable = interactable;
         }
 
-        /// <summary>Новая карточка легла в карман — подпрыгнуть.</summary>
         public void Pop() => _popAt = Time.unscaledTime;
 
         void Update() => Animate();

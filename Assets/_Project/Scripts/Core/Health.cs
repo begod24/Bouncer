@@ -19,13 +19,11 @@ namespace Bouncer.Core
             get => resetAfterSeconds;
             set => resetAfterSeconds = Mathf.Max(0f, value);
         }
-        /// <summary>Ниже стольких жизней урон не опускает (обучение: игрока не выбить). 0 — как обычно.</summary>
         public int Floor { get; set; }
 
         public event Action<HitInfo> Damaged;
         public event Action<HitInfo> Died;
         public event Action<int> Healed;
-        /// <summary>Здоровье снова полное (спавн или сброс серии).</summary>
         public event Action Restored;
 
         float _invulnerableUntil;
@@ -81,7 +79,6 @@ namespace Bouncer.Core
             Healed?.Invoke(amount);
         }
 
-        /// <summary>Задать здоровье напрямую — например, сердца, перенесённые с прошлой арены.</summary>
         public void SetCurrent(int value)
         {
             if (IsDead)
@@ -89,11 +86,6 @@ namespace Bouncer.Core
             Current = Mathf.Clamp(value, 1, max);
         }
 
-        /// <summary>
-        /// По сети: здоровье копии (врага у гостя, игрока другого компьютера) — как у оригинала. Урон и лечение
-        /// сообщают события, как настоящие: полосы здоровья и оттенки работают сами. Выбить так нельзя — копию
-        /// убирает сеть.
-        /// </summary>
         public void Mirror(int current, int maxHealth, bool dead, in HitInfo hit = default)
         {
             max = Mathf.Max(1, maxHealth);

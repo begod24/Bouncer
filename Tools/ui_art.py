@@ -15,7 +15,6 @@ from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "Assets", "_Project", "Art", "UI")
-# Иконки на вкладышах «напечатаны» тёмными чернилами (ячейка window палитры), HUD — белым мелом.
 INK = (43, 54, 70)
 
 
@@ -37,7 +36,6 @@ class Canvas:
         ys, xs = np.mgrid[0:h, 0:w].astype(np.float32)
         self.x, self.y = xs + 0.5, ys + 0.5
         self.alpha = np.zeros((h, w), np.float32)
-        # Неровный край мелового штриха: общий плавный шум на всю картинку.
         self.edge = self.noise(5.0) - 0.5
 
     def noise(self, cell_x, cell_y=None):
@@ -46,8 +44,6 @@ class Canvas:
         grid = (self.rng.random((gh, gw)) * 255).astype(np.uint8)
         img = Image.fromarray(grid).resize((self.w, self.h), Image.BICUBIC)
         return np.asarray(img, np.float32) / 255.0
-
-    # ---------- штрихи ----------
 
     def stroke(self, pts, width, closed=False, opacity=1.0, rough=1.2, dash=0):
         pts = [tuple(map(float, p)) for p in pts]
@@ -58,7 +54,6 @@ class Canvas:
         for (x0, y0), (x1, y1) in zip(pts[:-1], pts[1:]):
             dx, dy = x1 - x0, y1 - y0
             length = math.hypot(dx, dy)
-            # Пунктир: пропускаем каждый второй отрезок длиной dash.
             if dash and int(travelled // dash) % 2 == 1:
                 travelled += length
                 continue
@@ -92,8 +87,6 @@ class Canvas:
             cover = cover * np.clip((np.sin(phase + wobble) + 0.35) * 1.6, 0.0, 1.0)
         self.alpha = np.maximum(self.alpha, cover * opacity)
 
-    # ---------- фигуры ----------
-
     @staticmethod
     def circle_pts(cx, cy, r, a0=0.0, a1=360.0, n=72):
         return [(cx + r * math.cos(math.radians(a)), cy + r * math.sin(math.radians(a)))
@@ -121,8 +114,6 @@ class Canvas:
         for side in (-1, 1):
             b = a + math.pi + side * math.radians(28)
             self.stroke([tip, (tip[0] + size * math.cos(b), tip[1] + size * math.sin(b))], width)
-
-    # ---------- запись ----------
 
     def save(self, name, chalky=True, grain=0.45, pits=0.07, color=(255, 255, 255)):
         a = self.alpha
@@ -162,8 +153,6 @@ def rotate(pts, cx, cy, degrees, dx=0.0, dy=0.0):
     ca, sa = math.cos(a), math.sin(a)
     return [(cx + (x - cx) * ca - (y - cy) * sa + dx, cy + (x - cx) * sa + (y - cy) * ca + dy) for x, y in pts]
 
-
-# ================================================================ HUD
 
 def hud():
     c = Canvas(128, 128, 1)
@@ -218,17 +207,17 @@ def hud():
     c.stroke([(x, y + 8) for x, y in pts[10:70]], 4, opacity=0.6)
     c.save("HUD_Underline.png")
 
-    c = Canvas(128, 128, 10)  # монетка (тиын, тенге): счётчик в HUD и цены в ларьке
+    c = Canvas(128, 128, 10)
     coin = c.circle_pts(64, 64, 46)
     c.fill(coin, opacity=0.35, hatch=(30, 7))
     c.stroke(coin, 7, closed=True)
     c.stroke(c.circle_pts(64, 64, 35), 4, closed=True, opacity=0.6)
-    for y in (46, 58):                                   # знак тенге ₸
+    for y in (46, 58):
         c.stroke([(46, y), (82, y)], 7)
     c.stroke([(64, 58), (64, 90)], 7)
     c.save("HUD_Coin.png")
 
-    c = Canvas(128, 128, 11)  # «Крышка от кастрюли»: готовность блока в HUD
+    c = Canvas(128, 128, 11)
     lid = c.circle_pts(64, 64, 46)
     c.fill(lid, opacity=0.3, hatch=(30, 7))
     c.stroke(lid, 7, closed=True)
@@ -238,41 +227,37 @@ def hud():
     c.stroke(knob, 5, closed=True)
     c.save("HUD_Lid.png")
 
-    c = Canvas(256, 128, 12)  # стрелка мелом на асфальте: выход на следующую арену, метка над ларьком
+    c = Canvas(256, 128, 12)
     c.stroke([(18, 64), (196, 64)], 18)
     c.arrow_head((238, 64), 0, 62, 18)
     for y in (40, 88):
         c.stroke([(26, y), (86, y)], 7, opacity=0.7)
     c.save("Exit_Arrow.png")
 
-    # Финал «Мама зовёт домой»: часы до зова — панелька мелом, окна поверх неё загораются одно за другим.
     c = Canvas(256, 320, 13)
     c.stroke(wobble([(28, 70), (228, 70), (228, 306), (28, 306)], 1.5, 13), 7, closed=True)
-    c.stroke([(18, 70), (238, 70)], 7)                                        # край крыши
-    for x, top in ((64, 34), (186, 42)):                                      # антенны
+    c.stroke([(18, 70), (238, 70)], 7)
+    for x, top in ((64, 34), (186, 42)):
         c.stroke([(x, 70), (x, top)], 4)
         c.stroke([(x - 14, top + 8), (x + 14, top + 8)], 4)
         c.stroke([(x - 9, top + 18), (x + 9, top + 18)], 4)
-    c.stroke([(112, 306), (112, 266), (144, 266), (144, 306)], 6)             # дверь подъезда
-    c.stroke([(102, 260), (154, 260)], 5)                                     # козырёк
+    c.stroke([(112, 306), (112, 266), (144, 266), (144, 306)], 6)
+    c.stroke([(102, 260), (154, 260)], 5)
     c.save("HUD_Panelka.png")
 
-    c = Canvas(64, 64, 14)  # окно в часах: горит
+    c = Canvas(64, 64, 14)
     window = c.round_rect_pts(10, 8, 54, 56, 4)
     c.fill(window, opacity=0.85, hatch=(45, 6))
     c.stroke(window, 5, closed=True)
     c.stroke([(32, 10), (32, 54)], 3, opacity=0.8)
     c.save("HUD_WindowLit.png")
 
-    c = Canvas(64, 64, 15)  # окно в часах: тёмное
+    c = Canvas(64, 64, 15)
     c.stroke(c.round_rect_pts(10, 8, 54, 56, 4), 4, closed=True, opacity=0.85)
     c.save("HUD_WindowDark.png")
 
 
-# ================================================================ Карточки
-
 def card_frames():
-    # Вкладыш: бумажка с зубчатым «обжимом» сверху и снизу, как у обёртки жвачки.
     c = Canvas(360, 520, 20)
     tooth, depth, top, bottom = 18.0, 9.0, 6.0, 514.0
     pts = []
@@ -298,7 +283,6 @@ def card_frames():
     c.alpha = np.clip(blur(c.alpha, 6.0) * 2.2, 0, 1)
     c.save("Card_Glow.png", chalky=False)
 
-    # Рамка редкости по контуру вкладыша (цвет — в Unity): у редких синяя, у золотых золотая.
     c = Canvas(360, 520, 23)
     c.stroke(pts, 12, closed=True, rough=0)
     c.save("Card_RarityFrame.png", chalky=False)
@@ -307,7 +291,7 @@ def card_frames():
 def icons():
     ink = 11
 
-    c = Canvas(256, 256, 30)  # Бумеранг: мяч улетает по дуге и возвращается
+    c = Canvas(256, 256, 30)
     arc = c.circle_pts(128, 136, 78, 205, 505, 90)
     c.stroke(arc, ink)
     end = arc[-1]
@@ -317,7 +301,7 @@ def icons():
     c.stroke(ball, 8, closed=True)
     c.save("Icons/Icon_Boomerang.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 31)  # Раздвоение: мяч и две расходящиеся стрелки
+    c = Canvas(256, 256, 31)
     ball = c.circle_pts(72, 128, 34)
     c.fill(ball, opacity=0.5, hatch=(30, 8))
     c.stroke(ball, 8, closed=True)
@@ -326,7 +310,7 @@ def icons():
         c.arrow_head(tip, math.degrees(math.atan2(tip[1] - 128, tip[0] - 150)), 28, ink)
     c.save("Icons/Icon_Split.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 32)  # На резинке: мяч на пружинящей резинке, привязанной к руке
+    c = Canvas(256, 256, 32)
     ball = c.circle_pts(128, 184, 40)
     c.fill(ball, opacity=0.5, hatch=(30, 8))
     c.stroke(ball, 8, closed=True)
@@ -335,7 +319,7 @@ def icons():
     c.stroke(c.circle_pts(128, 24, 14), 8, closed=True)
     c.save("Icons/Icon_Elastic.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 33)  # Ещё мяч: два мяча и плюс
+    c = Canvas(256, 256, 33)
     for cx, cy in ((96, 152), (148, 132)):
         ball = c.circle_pts(cx, cy, 44)
         c.fill(ball, opacity=0.45, hatch=(30, 8))
@@ -344,7 +328,7 @@ def icons():
     c.stroke([(178, 68), (234, 68)], 12)
     c.save("Icons/Icon_ExtraBall.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 34)  # Новые кеды: кед сбоку и полоски скорости
+    c = Canvas(256, 256, 34)
     shoe = [(70, 190), (70, 138), (104, 128), (130, 96), (162, 96), (170, 134), (228, 152), (236, 190)]
     c.fill(shoe, opacity=0.35, hatch=(-30, 9))
     c.stroke(shoe, 9, closed=True)
@@ -355,7 +339,7 @@ def icons():
         c.stroke([(x0, y), (x0 + 42, y)], 7, opacity=0.85)
     c.save("Icons/Icon_Speed.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 35)  # Цепкие руки: мяч в «ладонях» и искры
+    c = Canvas(256, 256, 35)
     ball = c.circle_pts(128, 132, 38)
     c.fill(ball, opacity=0.5, hatch=(30, 8))
     c.stroke(ball, 8, closed=True)
@@ -366,7 +350,7 @@ def icons():
         c.stroke([(128 + ca * 92, 132 + sa * 92), (128 + ca * 112, 132 + sa * 112)], 7)
     c.save("Icons/Icon_Catch.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 36)  # Длинные руки: магнит притягивает мяч
+    c = Canvas(256, 256, 36)
     c.stroke(c.circle_pts(84, 128, 52, 90, 270, 40), 26, rough=0.6)
     c.stroke([(84, 76), (132, 76)], 26, rough=0.6)
     c.stroke([(84, 180), (132, 180)], 26, rough=0.6)
@@ -379,7 +363,7 @@ def icons():
         c.stroke(c.circle_pts(x - 60, 128, 60, -22, 22, 10), 5, opacity=0.8)
     c.save("Icons/Icon_Pickup.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 37)  # Бутерброд: хлеб и колбаса
+    c = Canvas(256, 256, 37)
     bread = c.round_rect_pts(40, 120, 216, 196, 26)
     c.fill(bread, opacity=0.35, hatch=(40, 10))
     c.stroke(bread, 9, closed=True)
@@ -391,7 +375,7 @@ def icons():
         c.stroke(c.circle_pts(x, 104, 6), 4, closed=True, opacity=0.8)
     c.save("Icons/Icon_Sandwich.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 38)  # Попрыгунчик: мяч скачет по асфальту
+    c = Canvas(256, 256, 38)
     c.stroke([(12, 226), (244, 226)], 9)
     fall = [(14 + 90 * t, 222 - 104 * (1 - t * t)) for t in np.linspace(0, 1, 24)]
     hop = [(104 + 96 * t, 222 - 120 * (2 * t - t * t)) for t in np.linspace(0, 0.8, 20)]
@@ -403,7 +387,7 @@ def icons():
     c.stroke(ball, 8, closed=True)
     c.save("Icons/Icon_Bouncy.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 39)  # Горячая картошка: картошка пышет жаром и вот-вот бахнет
+    c = Canvas(256, 256, 39)
     potato = wobble([(128 + 84 * math.cos(a) + 6 * math.cos(3 * a), 160 + 56 * math.sin(a))
                      for a in np.linspace(0, 2 * math.pi, 60, endpoint=False)], 1.5, 39)
     c.fill(potato, opacity=0.4, hatch=(30, 9))
@@ -417,7 +401,7 @@ def icons():
         c.stroke([(128 + ca * 100, 160 + sa * 70), (128 + ca * 122, 160 + sa * 84)], 7)
     c.save("Icons/Icon_HotPotato.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 40)  # Жвачка: мяч тянет липкие нитки от пятна на асфальте
+    c = Canvas(256, 256, 40)
     splat = wobble([(96 + 72 * math.cos(a) * (1 + 0.12 * math.sin(5 * a)), 206 + 26 * math.sin(a) * (1 + 0.12 * math.sin(5 * a)))
                     for a in np.linspace(0, 2 * math.pi, 60, endpoint=False)], 1.5, 40)
     c.fill(splat, opacity=0.45, hatch=(-30, 8))
@@ -425,7 +409,6 @@ def icons():
     ball = c.circle_pts(186, 66, 34)
     c.fill(ball, opacity=0.5, hatch=(30, 8))
     c.stroke(ball, 8, closed=True)
-    # Нитки тянутся от пятна к мячу и провисают — видно, что липкое.
     for (x0, y0), (x1, y1), sag in (((66, 196), (164, 92), 22), ((102, 190), (180, 100), -12), ((136, 196), (196, 98), 14)):
         length = math.hypot(x1 - x0, y1 - y0)
         nx, ny = (y1 - y0) / length, -(x1 - x0) / length
@@ -433,7 +416,7 @@ def icons():
                   for t in np.linspace(0, 1, 24)], 4)
     c.save("Icons/Icon_Gum.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 41)  # Подкат: кед едет подошвой вперёд, из-под пятки пыль
+    c = Canvas(256, 256, 41)
     shoe = [(70, 190), (70, 138), (104, 128), (130, 96), (162, 96), (170, 134), (228, 152), (236, 190)]
     shoe = rotate(shoe, 150, 150, -20, -28, 12)
     c.fill(shoe, opacity=0.35, hatch=(-30, 9))
@@ -450,7 +433,7 @@ def icons():
     c.stroke([(8, 248), (248, 248)], 7, opacity=0.9)
     c.save("Icons/Icon_Tackle.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 42)  # Хулиганство: кулак — четыре согнутых пальца, поперёк большой, ниже запястье в рукаве
+    c = Canvas(256, 256, 42)
     for i, lift in enumerate((6, 0, 3, 12)):
         finger = c.round_rect_pts(58 + 35 * i, 62 + lift, 93 + 35 * i, 130, 16)
         c.fill(finger, opacity=0.4, hatch=(30, 8))
@@ -463,16 +446,14 @@ def icons():
     c.stroke([(198, 130), (198, 176), (178, 202), (86, 202), (64, 184), (60, 164)], 8)
     c.stroke([(96, 202), (96, 216)], 8)
     c.stroke([(168, 202), (168, 216)], 8)
-    # Рукав олимпийки с тремя полосками уходит за край картинки.
     c.stroke(c.round_rect_pts(74, 216, 190, 276, 8), 8, closed=True)
     for x in (108, 132, 156):
         c.stroke([(x, 226), (x, 256)], 7)
-    # Кулак трясётся от злости.
     for x0, y0, x1, y1 in ((40, 70, 24, 58), (34, 100, 14, 98), (216, 70, 232, 58), (222, 100, 242, 98)):
         c.stroke([(x0, y0), (x1, y1)], 7)
     c.save("Icons/Icon_Hooligan.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 43)  # «Замри!»: снежинка над волнами — «море волнуется, замри»
+    c = Canvas(256, 256, 43)
     cx, cy, arm = 128, 100, 72
     for k in range(6):
         a = math.radians(90 + k * 60)
@@ -487,7 +468,7 @@ def icons():
         c.stroke([(12 + i * 4, y0 + 9 * math.sin(i * 0.36)) for i in range(59)], 8)
     c.save("Icons/Icon_Freeze.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 44)  # Стеночка: мяч отскакивает от кирпичной стенки и бьёт сильнее
+    c = Canvas(256, 256, 44)
     wall = [(180, 20), (236, 20), (236, 236), (180, 236)]
     c.fill(wall, opacity=0.3, hatch=(45, 10))
     c.stroke(wall, 9, closed=True)
@@ -508,7 +489,7 @@ def icons():
     c.stroke(ball, 8, closed=True)
     c.save("Icons/Icon_Wall.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 45)  # Рогатка: рогатка, резинка натянута, мяч в кожанке
+    c = Canvas(256, 256, 45)
     c.stroke([(128, 248), (128, 150)], 18, rough=0.8)
     c.stroke([(128, 156), (74, 64)], 15, rough=0.8)
     c.stroke([(128, 156), (182, 64)], 15, rough=0.8)
@@ -521,7 +502,7 @@ def icons():
         c.stroke([(x0, y0), (x0 + 22, y0 - 22)], 6, opacity=0.85)
     c.save("Icons/Icon_Slingshot.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 46)  # Глаз-алмаз: глаз, и мяч по дуге сам заходит в мишень
+    c = Canvas(256, 256, 46)
     upper = [(20 + 120 * t, 92 - 34 * math.sin(math.pi * t)) for t in np.linspace(0, 1, 24)]
     lower = [(140 - 120 * t, 92 + 30 * math.sin(math.pi * t)) for t in np.linspace(0, 1, 24)]
     c.stroke(upper + lower, 8, closed=True)
@@ -539,7 +520,7 @@ def icons():
     c.fill(c.circle_pts(204, 212, 10), opacity=0.9)
     c.save("Icons/Icon_EagleEye.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 47)  # Домино: костяшки падают одна на другую
+    c = Canvas(256, 256, 47)
     c.stroke([(12, 224), (244, 224)], 8)
     for x, angle in ((50, 50), (122, 25), (196, 0)):
         tile = rotate(c.round_rect_pts(x - 20, 124, x + 20, 220, 8), x + 20, 220, angle)
@@ -553,7 +534,7 @@ def icons():
         c.stroke([(x0, y0), (x0 - 20, y0 + 6)], 6, opacity=0.8)
     c.save("Icons/Icon_Domino.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 48)  # Копилка: свинка-копилка и монетка над щелью
+    c = Canvas(256, 256, 48)
     body = [(124 + 82 * math.cos(a), 158 + 56 * math.sin(a)) for a in np.linspace(0, 2 * math.pi, 60, endpoint=False)]
     c.fill(body, opacity=0.35, hatch=(30, 9))
     c.stroke(body, 9, closed=True)
@@ -575,7 +556,7 @@ def icons():
     c.stroke([(128, 42), (128, 56)], 5)
     c.save("Icons/Icon_Piggy.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 49)  # Крышка от кастрюли: мяч отскакивает от крышки, как от щита
+    c = Canvas(256, 256, 49)
     lid = c.circle_pts(108, 142, 80)
     c.fill(lid, opacity=0.3, hatch=(30, 9))
     c.stroke(lid, 9, closed=True)
@@ -592,7 +573,7 @@ def icons():
     c.stroke(ball, 8, closed=True)
     c.save("Icons/Icon_Lid.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 50)  # Йо-йо: йо-йо на нитке крутится и возвращается в руку
+    c = Canvas(256, 256, 50)
     yoyo = c.circle_pts(128, 170, 58)
     c.fill(yoyo, opacity=0.4, hatch=(30, 9))
     c.stroke(yoyo, 9, closed=True)
@@ -606,7 +587,7 @@ def icons():
     c.stroke(c.circle_pts(128, 170, 80, 20, 110, 24), 7, opacity=0.8)
     c.save("Icons/Icon_Yoyo.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 51)  # Скакалка: верёвка дугой над головой, две ручки и полоски движения
+    c = Canvas(256, 256, 51)
     rope = [(64 + 128 * t, 196 - 170 * math.sin(math.pi * t)) for t in np.linspace(0, 1, 40)]
     c.stroke(rope, 7)
     for x, a in ((64, 20), (192, -20)):
@@ -618,7 +599,7 @@ def icons():
         c.stroke([(256 - x0, y), (226 - x0, y)], 6, opacity=0.8)
     c.save("Icons/Icon_JumpRope.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 52)  # Зеркальце: овальное зеркальце с ручкой, в нём глаз, по стеклу блики
+    c = Canvas(256, 256, 52)
     glass = [(128 + 60 * math.cos(a), 100 + 78 * math.sin(a)) for a in np.linspace(0, 2 * math.pi, 64, endpoint=False)]
     c.fill(glass, opacity=0.15, hatch=(45, 12))
     c.stroke(glass, 11, closed=True)
@@ -636,7 +617,7 @@ def icons():
         c.stroke([(x0, y0), (x1, y1)], 6, opacity=0.85)
     c.save("Icons/Icon_Mirror.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 53)  # Фонарик: фонарик светит широким конусом
+    c = Canvas(256, 256, 53)
     body = rotate(c.round_rect_pts(22, 108, 104, 148, 10), 64, 128, 0)
     c.fill(body, opacity=0.45, hatch=(30, 8))
     c.stroke(body, 9, closed=True)
@@ -650,7 +631,7 @@ def icons():
     c.stroke(c.circle_pts(140, 128, 110, -30, 30, 16), 7)
     c.save("Icons/Icon_Flashlight.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 54)  # Свисток: свисток на шнурке, от него волны звука и снежинка — все замерли
+    c = Canvas(256, 256, 54)
     whistle = [(46, 118), (150, 118), (150, 110), (176, 110), (176, 134)]
     whistle += [(148 + 34 * math.cos(a), 150 + 34 * math.sin(a)) for a in np.linspace(math.radians(-20), math.radians(200), 20)]
     whistle += [(46, 150)]
@@ -666,7 +647,7 @@ def icons():
         c.stroke([(cx - math.cos(a) * 22, cy + math.sin(a) * 22), (cx + math.cos(a) * 22, cy - math.sin(a) * 22)], 6)
     c.save("Icons/Icon_Whistle.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 55)  # Второе дыхание: сердце с пластырем крест-накрест и искры
+    c = Canvas(256, 256, 55)
     heart = c.heart_pts(128, 132, 6.2)
     c.fill(heart, opacity=0.35, hatch=(30, 9))
     c.stroke(heart, 10, closed=True)
@@ -679,7 +660,7 @@ def icons():
         c.stroke([(x, y - 12), (x, y + 12)], 6)
     c.save("Icons/Icon_SecondWind.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 56)  # Бабушкины пирожки: два пирожка со швом, над ними пар
+    c = Canvas(256, 256, 56)
     for cx, cy, a in ((96, 178, -8), (160, 150, 10)):
         pie = rotate([(cx + 62 * math.cos(t), cy + 30 * math.sin(t)) for t in np.linspace(0, 2 * math.pi, 50, endpoint=False)], cx, cy, a)
         c.fill(pie, opacity=0.35, hatch=(30, 9))
@@ -690,7 +671,7 @@ def icons():
         c.stroke([(x + 9 * math.sin(i * 1.1), 108 - i * 12) for i in range(7)], 7)
     c.save("Icons/Icon_Pies.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 57)  # Резиновые сапоги: сапог шлёпает по луже, брызги
+    c = Canvas(256, 256, 57)
     boot = [(92, 30), (150, 30), (150, 150), (212, 172), (220, 206), (80, 206), (80, 150)]
     c.fill(boot, opacity=0.4, hatch=(-30, 9))
     c.stroke(boot, 9, closed=True)
@@ -703,7 +684,7 @@ def icons():
         c.fill(c.circle_pts(x1, y1 - 8, 5), opacity=0.9)
     c.save("Icons/Icon_Boots.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 58)  # Прыгающая бомба: мяч скачет, и на каждом отскоке — взрыв
+    c = Canvas(256, 256, 58)
     c.stroke([(8, 222), (248, 222)], 8)
     path = [(20 + 90 * t, 214 - 150 * 4 * t * (1 - t)) for t in np.linspace(0, 1, 24)]
     path += [(110 + 70 * t, 214 - 110 * 4 * t * (1 - t)) for t in np.linspace(0, 1, 20)][1:]
@@ -722,7 +703,7 @@ def icons():
     c.stroke(c.circle_pts(242, 62, 7), 5, closed=True)
     c.save("Icons/Icon_BounceBomb.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 59)  # Град: теннисный мяч раскалывается на мячики, мячики — ещё раз
+    c = Canvas(256, 256, 59)
     ball = c.circle_pts(62, 128, 32)
     c.fill(ball, opacity=0.5, hatch=(30, 8))
     c.stroke(ball, 8, closed=True)
@@ -739,7 +720,7 @@ def icons():
             c.stroke(kb, 5, closed=True)
     c.save("Icons/Icon_Hail.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 60)  # Гиря: чугунная гиря бьёт в пол, вокруг звёздочки — все оглушены
+    c = Canvas(256, 256, 60)
     bell = [(128 + 70 * math.cos(a), 168 + 58 * math.sin(a)) for a in np.linspace(math.radians(-60), math.radians(240), 40)]
     c.fill(bell, opacity=0.45, hatch=(30, 9))
     c.stroke(bell, 10, closed=True)
@@ -753,7 +734,7 @@ def icons():
             c.stroke([(x, y), (x + math.cos(a) * 14, y + math.sin(a) * 14)], 5)
     c.save("Icons/Icon_Kettlebell.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 61)  # Кувырок: кед в рывке по дуге подхватывает летящий мяч
+    c = Canvas(256, 256, 61)
     arc = c.circle_pts(128, 150, 88, 190, 350, 40)
     c.stroke(arc, 8, dash=14)
     c.arrow_head(arc[-1], math.degrees(math.atan2(arc[-1][1] - arc[-3][1], arc[-1][0] - arc[-3][0])), 28, 8)
@@ -768,7 +749,7 @@ def icons():
     c.stroke(c.circle_pts(128, 70, 44, -70, 70, 14), 6)
     c.save("Icons/Icon_Roll.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 62)  # Шпаргалка: сложенная бумажка со строчками и галочкой
+    c = Canvas(256, 256, 62)
     sheet = [(56, 30), (190, 30), (214, 54), (214, 226), (56, 226)]
     c.fill(sheet, opacity=0.2, hatch=(45, 12))
     c.stroke(sheet, 9, closed=True)
@@ -778,7 +759,7 @@ def icons():
     c.stroke([(150, 200), (170, 218), (232, 152)], 10)
     c.save("Icons/Icon_CheatSheet.png", grain=0.3, color=INK)
 
-    c = Canvas(256, 256, 63)  # Счастливый фантик: фантик-конфета, на нём клевер-четырёхлистник
+    c = Canvas(256, 256, 63)
     wrap = [(40, 90), (84, 106), (172, 106), (216, 90), (206, 128), (216, 166), (172, 150), (84, 150), (40, 166), (50, 128)]
     c.fill(wrap, opacity=0.25, hatch=(30, 10))
     c.stroke(wrap, 9, closed=True)
@@ -795,10 +776,7 @@ def icons():
     c.save("Icons/Icon_LuckyWrapper.png", grain=0.3, color=INK)
 
 
-# ================================================================ Карманы
-
 def pockets():
-    # Пустой карман: пунктир мелом — ряд карманов на HUD, на экране выбора, в ларьке и на экране карманов.
     c = Canvas(128, 128, 70)
     frame = wobble(c.round_rect_pts(10, 10, 118, 118, 18), 0.8, 70)
     c.stroke(dense(frame + [frame[0]], 2.0), 5, opacity=0.9, dash=12)

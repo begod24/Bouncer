@@ -9,13 +9,6 @@ using UnityEngine.Localization.Settings;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// Экран «Настройки» с вкладками: игра (тряска, прицел, подсказки), видео (окно, разрешение, синхронизация),
-    /// звук (громкости), язык и авторы (только надписи, пунктов нет). Всё меняется сразу и пишется в <see cref="GameSettings"/>; на диск — при
-    /// закрытии (<see cref="Save"/>). Язык выбирает и запоминает пакет Localization. Вкладки листаются
-    /// стрелками на ряду вкладок, Q / E или LB / RB откуда угодно и кликом мыши. Открывает и закрывает экран
-    /// <see cref="RunScreens"/>. Разрешение и режим окна в редакторе не меняются — только в билде.
-    /// </summary>
     [RequireComponent(typeof(CanvasGroup))]
     public sealed class SettingsScreen : MonoBehaviour
     {
@@ -95,7 +88,6 @@ namespace Bouncer.UI
 
         void OnDisable() => LocalizationSettings.SelectedLocaleChanged -= OnLocaleChanged;
 
-        /// <summary>Показать текущие значения — перед открытием экрана.</summary>
         public void Refresh()
         {
             screenShake.SetValueWithoutNotify(GameSettings.ScreenShake);
@@ -118,7 +110,6 @@ namespace Bouncer.UI
             _applyScreenAt = -1f;
         }
 
-        /// <summary>Экран закрывается: применить отложенное разрешение и записать настройки на диск.</summary>
         public void Save()
         {
             if (_applyScreenAt >= 0f)
@@ -137,8 +128,6 @@ namespace Bouncer.UI
                 tabs.Step(step);
         }
 
-        // Надписи в префабе переводит LocalizeStringEvent, а подписи значений собираются здесь — заново,
-        // с теми же выбранными значениями.
         void OnLocaleChanged(Locale locale)
         {
             var onOff = OnOff;
@@ -156,7 +145,6 @@ namespace Bouncer.UI
             for (int i = 0; i < pages.Length; i++)
                 pages[i].panel.SetActive(i == index);
 
-            // Вверх-вниз по кругу: ряд вкладок → пункты вкладки → «Назад».
             var tabsItem = tabs.GetComponent<UnityEngine.UI.Selectable>();
             _navigation.Clear();
             _navigation.Add(tabsItem);
@@ -172,8 +160,6 @@ namespace Bouncer.UI
                 };
             }
 
-            // Выбранный пункт остался на спрятанной вкладке — переходим на первый пункт новой (у «Авторов» пунктов
-            // нет — на ряд вкладок).
             var events = EventSystem.current;
             var selected = events != null ? events.currentSelectedGameObject : null;
             if (selected != null && !selected.activeInHierarchy)
@@ -201,7 +187,6 @@ namespace Bouncer.UI
             language.SetOptions(names, Mathf.Max(0, _locales.IndexOf(LocalizationSettings.SelectedLocale)));
         }
 
-        /// <summary>Язык называется на самом себе: English, Русский.</summary>
         static string NativeName(Locale locale)
         {
             var culture = locale.Identifier.CultureInfo;
@@ -218,7 +203,6 @@ namespace Bouncer.UI
                 if (size.x >= 800 && size.y >= 600 && !_resolutions.Contains(size))
                     _resolutions.Add(size);
             }
-            // Окно могли растянуть вручную — такого размера нет в списке монитора.
             var current = new Vector2Int(Screen.width, Screen.height);
             if (!_resolutions.Contains(current))
                 _resolutions.Add(current);
@@ -232,7 +216,6 @@ namespace Bouncer.UI
 
         void OnDisplayModeChanged()
         {
-            // Окно размером с монитор не влезет вместе с рамкой — берём самое большое разрешение, которое влезает.
             if (displayMode.Index == 0)
             {
                 var desktop = Screen.currentResolution;

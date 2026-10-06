@@ -12,18 +12,6 @@ using UnityEngine.InputSystem.UI;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// Экран карманов: сверху ряд вкладышей (<see cref="PocketCardMini"/>), под ним выбранный — крупно. Три режима:
-    /// <list type="bullet">
-    /// <item>«Посмотреть» — Tab / Select в бою и на экране выбора, кнопка «Карманы» в паузе: что лежит в карманах и
-    /// без кармана (тип мяча, карточки-деньги). Выкинуть отсюда нельзя: только когда карманы полны или в ларьке.</item>
-    /// <item>«Замена» — карманы полны, а выбрана новая карточка: слева отмеченная на выброс, справа новая.
-    /// Отметить (клик, Enter, 1–6), ещё раз или кнопкой — выкинуть и взять. Можно вернуться к выбору или не брать новую.</item>
-    /// <item>«Продажа» — ларёк: отметить и продать за полцены. Покупка при полных карманах открывает обмен:
-    /// слева то, что продаёшь, справа покупка, одно подтверждение — продать и купить.</item>
-    /// </list>
-    /// Экран собран в префабе, ряд — из префаба вкладыша. Esc / B — назад (в замене — к выбору).
-    /// </summary>
     public sealed class PocketsPanel : MonoBehaviour
     {
         public enum Mode
@@ -97,21 +85,16 @@ namespace Bouncer.UI
         bool _open;
         float _openedAt;
         int _openedFrame = -1;
-        /// <summary>Отмечена на выброс или продажу.</summary>
         UpgradeCard _chosen;
-        /// <summary>Что сейчас показано крупно.</summary>
         UpgradeCard _previewed;
         bool _previewShown;
-        /// <summary>Что было выбрано до открытия (экран выбора, ларёк, пауза) — туда вернуться.</summary>
         GameObject _returnTo;
 
         public static PocketsPanel Instance => s_instance;
         public bool IsOpen => _open;
         public Mode CurrentMode => _mode;
-        /// <summary>Кадр, в котором экран закрылся: та же клавиша в этом кадре его снова не открывает.</summary>
         public int ClosedFrame { get; private set; } = -1;
 
-        /// <summary>Экран закрылся — открывший экран снова принимает ввод.</summary>
         public event Action Closed;
 
         bool AcceptsInput => Time.unscaledTime - _openedAt >= inputDelay;
@@ -143,7 +126,6 @@ namespace Bouncer.UI
                 _cards.DiscardChanged -= OnDiscardChanged;
         }
 
-        /// <summary>Карманы своего игрока: он мог появиться позже панели.</summary>
         void Bind(PlayerController player)
         {
             if (_cards != null)
@@ -153,12 +135,8 @@ namespace Bouncer.UI
                 _cards.DiscardChanged += OnDiscardChanged;
         }
 
-        // ---------- Открыть и закрыть ----------
-
-        /// <summary>Посмотреть карманы (выкидывать нельзя).</summary>
         public void OpenView() => Open(Mode.View);
 
-        /// <summary>Ларёк: продать вкладыш. buySlot ≥ 0 — карманы полны при покупке этой жвачки: обмен.</summary>
         public void OpenSell(ShopStock stock, int buySlot = -1)
         {
             _stock = stock;
@@ -200,7 +178,6 @@ namespace Bouncer.UI
             _open = false;
             ClosedFrame = Time.frameCount;
             SetVisible(false);
-            // В замене экран выбора сам выберет карточку, когда откроется снова.
             var events = EventSystem.current;
             if (events != null)
                 events.SetSelectedGameObject(_mode != Mode.Replace && _returnTo != null && _returnTo.activeInHierarchy ? _returnTo : null);
@@ -215,8 +192,6 @@ namespace Bouncer.UI
             group.interactable = visible;
             group.blocksRaycasts = visible;
         }
-
-        // ---------- Содержимое ----------
 
         void Refresh()
         {
@@ -237,7 +212,6 @@ namespace Bouncer.UI
 
         void BuildRow()
         {
-            // В замене все карманы заняты; в остальных режимах пустые показаны пунктиром.
             int slots = _mode == Mode.Replace ? _pockets.Count : Mathf.Max(_cards.MaxPockets, _pockets.Count);
             int count = slots + _free.Count;
             while (_minis.Count < count)
@@ -303,7 +277,6 @@ namespace Bouncer.UI
             var rect = (RectTransform)mini.transform;
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.pivot = new Vector2(0.5f, 0.5f);
-            // Название в одну строку: под рядом — крупные вкладыши.
             float scale = miniSize / Mathf.Max(1f, rect.rect.width);
             mini.SetLabelStyle(nameSize / scale, (miniSpacing - 12f) / scale, wrap: false);
             mini.Clicked += OnMiniClicked;
@@ -336,7 +309,6 @@ namespace Bouncer.UI
                     break;
             }
 
-            // Пара: слева то, что отдаёшь, справа то, что получаешь.
             giveSide.anchoredPosition = new Vector2(pair ? -sideOffset : 0f, giveSide.anchoredPosition.y);
             takeSide.gameObject.SetActive(pair);
             if (arrow)
@@ -374,7 +346,6 @@ namespace Bouncer.UI
                 : Loc.Get("pockets.sell.short");
         }
 
-        /// <summary>Видимые кнопки — в ряд по центру: назад, подтвердить, не брать.</summary>
         void LayoutButtons()
         {
             var visible = new List<UnityEngine.UI.Button>(3);
@@ -388,12 +359,6 @@ namespace Bouncer.UI
             }
         }
 
-        // ---------- Крупный вкладыш ----------
-
-        /// <summary>
-        /// Что показать крупно: вкладыш под курсором или выбранный стрелками; если выбрана кнопка — отмеченный
-        /// (в «Посмотреть» — последний показанный).
-        /// </summary>
         UpgradeCard PreviewTarget()
         {
             var focused = FocusedMini();
@@ -460,8 +425,6 @@ namespace Bouncer.UI
             return null;
         }
 
-        // ---------- Действия ----------
-
         void OnMiniClicked(PocketCardMini mini)
         {
             if (!_open || !AcceptsInput || mini.Card == null || _mode == Mode.View)
@@ -469,7 +432,6 @@ namespace Bouncer.UI
             Choose(mini.Card);
         }
 
-        /// <summary>Отметить карточку на выброс или продажу; отмеченную ещё раз — подтвердить.</summary>
         void Choose(UpgradeCard card)
         {
             if (card == null || !_pockets.Contains(card))
@@ -485,7 +447,6 @@ namespace Bouncer.UI
             GameEvents.PlaySound(SoundCue.UiMove, Vector3.zero);
             RefreshConfirm();
             _previewShown = false;
-            // Дальше — подтверждение: Enter / A ещё раз, клик по кнопке или по той же карточке.
             if (EventSystem.current != null && confirmButton.interactable)
                 EventSystem.current.SetSelectedGameObject(confirmButton.gameObject);
             RefreshPreview();
@@ -498,7 +459,6 @@ namespace Bouncer.UI
             switch (_mode)
             {
                 case Mode.Replace:
-                    // Экран закроется сам, когда карманы решены (DiscardChanged).
                     _cards.ResolveDiscard(_chosen);
                     break;
                 case Mode.Sell when _buySlot >= 0:
@@ -522,7 +482,6 @@ namespace Bouncer.UI
             }
         }
 
-        /// <summary>Esc / B и кнопка «Назад»: в замене — вернуться к выбору «1 из 3», иначе закрыть.</summary>
         void Back()
         {
             if (!_open)
@@ -533,21 +492,16 @@ namespace Bouncer.UI
                 Close();
         }
 
-        /// <summary>Замена: не брать новую карточку.</summary>
         void Skip()
         {
             if (_open && _mode == Mode.Replace && AcceptsInput)
                 _cards.ResolveDiscard(null);
         }
 
-        // ---------- Ввод ----------
-
         void Update()
         {
             if (!_open)
             {
-                // Tab / Select на экране выбора «1 из 3»: посмотреть свои карманы. В бою и в паузе экран открывает
-                // RunScreens (с паузой), в ларьке — витрина (продажа).
                 if (_cards != null && _cards.IsChoosing && ClosedFrame != Time.frameCount && TogglePressed())
                     OpenView();
                 return;
@@ -571,7 +525,6 @@ namespace Bouncer.UI
                 Close();
         }
 
-        // Esc / B — здесь, а не в Update: тот же Esc — кнопка паузы, и к этому моменту игрок его уже прочитал.
         void LateUpdate()
         {
             if (_open && Time.frameCount != _openedFrame && CancelPressed())
@@ -594,7 +547,6 @@ namespace Bouncer.UI
             events.SetSelectedGameObject(backButton ? backButton.gameObject : null);
         }
 
-        /// <summary>Клавиша карманов: Tab на клавиатуре, Select (View) на геймпаде.</summary>
         public static bool TogglePressed()
         {
             var keyboard = Keyboard.current;

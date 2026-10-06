@@ -4,12 +4,6 @@ using UnityEngine;
 
 namespace Bouncer.Player
 {
-    /// <summary>
-    /// Модель ребёнка на игроке. В префабе в слоте стоит ребёнок по умолчанию — чтобы игрока было видно в сцене;
-    /// в игре его место занимает выбранный (<see cref="GameSettings.Kid"/>), а экран выбора меняет его на ходу.
-    /// Мяч висит в правой руке, мигание неуязвимости и вспышки ударов идут по мешу ребёнка.
-    /// Аниматором управляет <see cref="KidAnimator"/>.
-    /// </summary>
     [DefaultExecutionOrder(-50)]
     public sealed class PlayerKid : MonoBehaviour
     {
@@ -28,9 +22,7 @@ namespace Bouncer.Player
 
         public KidDefinition Current { get; private set; }
         public Animator Animator { get; private set; }
-        /// <summary>Слот модели: <see cref="KidAnimator"/> поворачивает его в рывке.</summary>
         public Transform Slot => slot;
-        /// <summary>Модель сменилась (новый Animator).</summary>
         public event Action Changed;
 
         void Awake()
@@ -42,20 +34,17 @@ namespace Bouncer.Player
                 Bind(slot.GetChild(0));
         }
 
-        /// <summary>Поставить ребёнка по номеру в KidRoster (по сети — того, кого игрок выбрал в комнате).</summary>
         public void ShowKid(int index)
         {
             if (roster != null)
                 Show(roster[index]);
         }
 
-        /// <summary>Поставить другого ребёнка. Тот же — ничего не делает.</summary>
         public void Show(KidDefinition kid)
         {
             if (kid == null || kid.model == null || kid == Current)
                 return;
             Current = kid;
-            // Мяч не часть модели: снимаем его со старой руки, пока та уходит.
             if (handBall)
                 handBall.SetParent(transform, false);
             for (int i = slot.childCount - 1; i >= 0; i--)
@@ -81,7 +70,6 @@ namespace Bouncer.Player
                 Animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
             }
             var renderers = model.GetComponentsInChildren<Renderer>(true);
-            // Кувырки, подкат и падение выходят за границы позы покоя — пусть меш не пропадает у края кадра.
             foreach (var r in renderers)
                 if (r is SkinnedMeshRenderer skinned)
                     skinned.updateWhenOffscreen = true;

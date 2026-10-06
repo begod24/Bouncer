@@ -5,13 +5,6 @@ using UnityEngine.AI;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Пионер-барабанщик — поддержка. Сам не нападает: держится позади своей кучки (или на дистанции от игрока)
-    /// и бьёт в барабан. Под его барабан соседи в радиусе бегают быстрее (<see cref="Targetable.Hurry"/>),
-    /// каждые несколько ударов по земле расходится кольцо — видно, кого он подгоняет. Попадание сбивает ритм:
-    /// барабан замолкает. Выбивать первым.
-    /// По сети барабанит и подгоняет только у хозяина комнаты; у гостя копия бьёт палочками по его вестям.
-    /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
     public sealed class DrummerEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
@@ -94,8 +87,6 @@ namespace Bouncer.Enemies
 
         public void OnDespawned() { }
 
-        // ---------- Мозги ----------
-
         void Update()
         {
             if (NetHooks.IsGuest)
@@ -126,7 +117,6 @@ namespace Bouncer.Enemies
                            * GroundZone.MoveMultiplierAt(transform.position);
             _agent.isStopped = stunned || _target == null || !GameSession.IsGameplayActive;
 
-            // Лицом к игроку, пока стоит; на ходу — куда идёт.
             Vector3 velocity = Flat(_agent.velocity);
             Vector3 look = velocity.sqrMagnitude > 0.5f || _target == null ? velocity : Flat(_target.Position - transform.position);
             Face(look, dt);
@@ -138,7 +128,6 @@ namespace Bouncer.Enemies
             }
         }
 
-        /// <summary>Встать позади своих (от игрока), а без них — на дистанции; слишком близко — отступить.</summary>
         void Reposition()
         {
             if (_target == null || !_target.IsAlive)
@@ -173,7 +162,6 @@ namespace Bouncer.Enemies
                     Vector3 fromPlayer = Flat(pack - player);
                     fromPlayer = fromPlayer.sqrMagnitude > 0.01f ? fromPlayer.normalized : away;
                     desired = pack + fromPlayer * definition.behindPack;
-                    // Но не ближе своей дистанции к игроку.
                     if (Flat(desired - player).magnitude < definition.keepAwayDistance)
                         desired = player + fromPlayer * definition.keepAwayDistance;
                 }
@@ -221,8 +209,6 @@ namespace Bouncer.Enemies
             transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(direction),
                 definition.turnSpeed * dt);
         }
-
-        // ---------- Попадания ----------
 
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)
         {
@@ -279,8 +265,6 @@ namespace Bouncer.Enemies
             PoolService.Despawn(gameObject);
         }
 
-        // ---------- Вид ----------
-
         void LateUpdate()
         {
             if (!body)
@@ -296,12 +280,10 @@ namespace Bouncer.Enemies
             if (legR)
                 legR.localRotation = Quaternion.Euler(-sin * legSwing * speed01, 0f, 0f);
 
-            // Палочки по очереди: удар — рука падает на барабан, между ударами поднимается.
             float sinceBeat = Time.time - _lastBeatTime;
             float up = IsDrumming ? Mathf.Clamp01(sinceBeat / Mathf.Max(0.05f, definition.beatInterval)) : 0.3f;
             float lift = Mathf.Sin(up * Mathf.PI) * strikeAngle;
             bool left = _beat % 2 == 0;
-            // Минус вокруг X — кисть уходит вверх-вперёд.
             if (armL)
                 armL.localRotation = Quaternion.Euler(-(left ? lift : lift * 0.3f), 0f, 0f);
             if (armR)
@@ -323,8 +305,6 @@ namespace Bouncer.Enemies
                 visual.rotation = tilt * transform.rotation;
             }
         }
-
-        // ---------- Сеть ----------
 
         public void WriteNet(NetWriter writer)
         {

@@ -5,13 +5,6 @@ using UnityEngine.AI;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Неваляшка. Настоящее физическое тело с центром масс ниже центра круглого дна:
-    /// от попадания заваливается, качается и сама встаёт. Пока не оглушена — держит
-    /// равновесие, идёт к игроку по NavMesh (агент только считает путь) и бьёт телом.
-    /// Умирает от серии попаданий: Health сбрасывается, если долго не попадать.
-    /// По сети физика и мозги — только у хозяина комнаты; у гостя копия (вместе с наклоном) едет по его вестям.
-    /// </summary>
     [RequireComponent(typeof(Rigidbody), typeof(NavMeshAgent), typeof(Health))]
     [RequireComponent(typeof(Targetable))]
     public sealed class RolyPolyEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
@@ -99,8 +92,6 @@ namespace Bouncer.Enemies
 
         public void OnDespawned() { }
 
-        // ---------- Мозги ----------
-
         void Update()
         {
             if (NetHooks.IsGuest)
@@ -127,7 +118,6 @@ namespace Bouncer.Enemies
             }
             if (_self.IsFrozen)
             {
-                // Заморожена («Замри!», «Свисток»): стоит и ждёт, попадания по ней проходят.
                 Balance(1f);
                 Drive(Vector3.zero);
                 return;
@@ -144,7 +134,6 @@ namespace Bouncer.Enemies
                 case State.Stunned:
                     if (_stateTime > _stunDuration)
                     {
-                        // Мягкая помощь, если застряла лёжа (например, у стены).
                         Balance(0.35f);
                         if (Tilt < definition.recoverTilt && _rb.angularVelocity.magnitude < definition.recoverAngularSpeed)
                         {
@@ -182,7 +171,6 @@ namespace Bouncer.Enemies
                         _attackDirection = targetDirection;
                         Turn(targetDirection);
                     }
-                    // Откидывается назад — видно, что сейчас ударит.
                     _rb.AddTorque(-Vector3.Cross(Vector3.up, _attackDirection) * definition.windupLean, ForceMode.Acceleration);
                     if (_stateTime >= definition.windupTime)
                         Lunge();
@@ -231,9 +219,6 @@ namespace Bouncer.Enemies
             });
         }
 
-        // ---------- Тело ----------
-
-        /// <summary>Удержание вертикали: момент к «вверх» + гашение раскачки.</summary>
         void Balance(float strength)
         {
             Vector3 axis = Vector3.Cross(_rb.rotation * Vector3.up, Vector3.up);
@@ -262,7 +247,6 @@ namespace Bouncer.Enemies
             Vector3 acceleration = Vector3.ClampMagnitude((desired - horizontal) * 10f, definition.acceleration);
             _rb.AddForce(acceleration, ForceMode.Acceleration);
 
-            // Переваливается с боку на бок, пока идёт.
             float speed01 = Mathf.Clamp01(horizontal.magnitude / Mathf.Max(0.1f, definition.moveSpeed));
             if (speed01 > 0.05f)
             {
@@ -279,8 +263,6 @@ namespace Bouncer.Enemies
                 return forward.sqrMagnitude > 1e-4f ? forward.normalized : Vector3.forward;
             }
         }
-
-        // ---------- Попадания ----------
 
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)
         {
@@ -303,14 +285,8 @@ namespace Bouncer.Enemies
             return BallContactResult.Hit;
         }
 
-        /// <summary>
-        /// Часть босса «Большая неваляшка» открыта (попадания в полтора раза): отдыхает после своего тарана
-        /// или только что бросила маленькую. Оглушение от попаданий окном не считается — иначе быстрые броски
-        /// держали бы босса открытым всё время.
-        /// </summary>
         public bool IsBossOpen => _state == State.Recover || Time.time < _openUntil;
 
-        /// <summary>Босс открыт столько секунд (после броска маленькой неваляшки).</summary>
         public void MarkOpen(float seconds) => _openUntil = Mathf.Max(_openUntil, Time.time + seconds);
 
         public bool ApplyHit(in HitInfo hit)
@@ -318,7 +294,6 @@ namespace Bouncer.Enemies
             if (_health.IsDead)
                 return false;
 
-            // Без стоп-кадра: вздрагивает сама неваляшка (HitPunch), камеру трясёт слегка.
             bool strong = hit.Has(HitFlags.Charged);
             GameFeel.Shake(strong ? 0.25f : 0.1f);
             var counted = hit;
@@ -339,7 +314,6 @@ namespace Bouncer.Enemies
             if (!_health.IsDead)
             {
                 Knock(hit.Direction, hit.Force);
-                // Неваляшка качается — и звенит, как настоящая игрушка.
                 GameEvents.PlaySound(SoundCue.RolyPolyChime, _rb.position);
             }
             return true;
@@ -361,7 +335,6 @@ namespace Bouncer.Enemies
 
         void OnCollisionEnter(Collision collision)
         {
-            // Оглушённая неваляшка, влетев в соседку, сбивает и её.
             if (_state != State.Stunned || NetHooks.IsGuest)
                 return;
             if (collision.relativeVelocity.sqrMagnitude < definition.chainStunSpeed * definition.chainStunSpeed)
@@ -397,8 +370,6 @@ namespace Bouncer.Enemies
             PoolService.Despawn(gameObject);
         }
 
-        // ---------- Сеть ----------
-
         public void WriteNet(NetWriter writer)
         {
             writer.Byte((byte)_state);
@@ -411,8 +382,6 @@ namespace Bouncer.Enemies
             _stateTime = reader.Seconds() + age;
         }
 
-        // ---------- Служебное ----------
-
         void Enter(State state)
         {
             _state = state;
@@ -423,7 +392,6 @@ namespace Bouncer.Enemies
                 _agent.isStopped = state == State.Stunned;
         }
 
-        /// <summary>Вернуть агента к телу, если тело отбросило далеко от его позиции на NavMesh.</summary>
         void SyncAgent(bool force)
         {
             if (!_agent.enabled)

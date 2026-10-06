@@ -4,11 +4,6 @@ using UnityEngine;
 
 namespace Bouncer.Audio
 {
-    /// <summary>
-    /// Играет звуки на события игры (<see cref="GameEvents.SoundRequested"/>): свой пул источников,
-    /// случайная высота, ограничение частоты одного и того же звука. Звуки в мире наполовину
-    /// позиционные — камера далеко, чистое 3D слишком глушило бы их.
-    /// </summary>
     public sealed class SoundPlayer : MonoBehaviour
     {
         [SerializeField] SoundBank bank;
@@ -67,7 +62,6 @@ namespace Bouncer.Audio
             source.Play();
         }
 
-        /// <summary>Свободный источник, а если все заняты — тот, что звучит дольше всех.</summary>
         AudioSource NextSource()
         {
             for (int i = 0; i < _sources.Length; i++)

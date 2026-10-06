@@ -6,10 +6,6 @@ using UnityEngine;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// Подсказка над открытым ларьком: издалека — бледная «Ларёк открыт», у окошка — яркая «F — ларёк»
-    /// (у геймпада — своя кнопка). Висит над ларьком в мире, пересчитывается в экранные координаты.
-    /// </summary>
     public sealed class KioskPrompt : MonoBehaviour
     {
         [SerializeField] RectTransform prompt;

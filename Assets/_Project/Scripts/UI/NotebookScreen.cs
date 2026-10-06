@@ -10,14 +10,6 @@ using UnityEngine.UI;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// «Тетрадка» из главного меню — всё, кроме самой игры и настроек: страницы «Бестиарий»
-    /// (<see cref="BestiaryScreen"/>), «Рекорды» (лучшая победа на каждой опасности) и «Как играть» (управление,
-    /// правила двора и кнопка «Пройти тренировку» — её привязывает <see cref="RunScreens"/>). Страницы листаются
-    /// стрелками на ряду вкладок, Q / E или LB / RB откуда угодно и кликом мыши. Вкладка с непросмотренным
-    /// (новый босс, свежий рекорд) помечена «новое!»; рекорды считаются просмотренными, как только открыта их
-    /// страница. Открывает и закрывает её <see cref="RunScreens"/>.
-    /// </summary>
     [RequireComponent(typeof(CanvasGroup))]
     public sealed class NotebookScreen : MonoBehaviour
     {
@@ -50,7 +42,6 @@ namespace Bouncer.UI
         int _page = -1;
         bool _open;
 
-        /// <summary>В тетрадке есть непросмотренное: открытый босс или свежий рекорд.</summary>
         public bool HasNew => (bestiary != null && bestiary.HasNew) || RunRecords.HasUnseen;
 
         void Awake()
@@ -62,10 +53,6 @@ namespace Bouncer.UI
                 bestiary.UpTarget = _tabsSelectable;
         }
 
-        /// <summary>
-        /// Открыть на бестиарии — или сразу на рекордах, если новое только там. Возвращает, что выбрать
-        /// клавиатурой и геймпадом.
-        /// </summary>
         public Selectable Open()
         {
             _open = true;
@@ -105,7 +92,6 @@ namespace Bouncer.UI
             if (hint)
                 hint.text = string.IsNullOrEmpty(page.hintKey) ? string.Empty : Loc.Get(page.hintKey);
 
-            // Вниз с вкладок — на страницу, вверх с её первого пункта — обратно на вкладки.
             Selectable first = page.first;
             Selectable below = first;
             if (index == BestiaryPage && bestiary != null)
@@ -135,7 +121,6 @@ namespace Bouncer.UI
             }
             RefreshMarks();
 
-            // Выбранный пункт остался на спрятанной странице — перейти на новую.
             var target = first != null ? first : _tabsSelectable;
             var events = EventSystem.current;
             var selected = events != null ? events.currentSelectedGameObject : null;
@@ -160,7 +145,6 @@ namespace Bouncer.UI
             }
         }
 
-        /// <summary>Рекорды: лучшая победа на каждом уровне опасности, от высшего; ниже — прогулки вместе.</summary>
         void RefreshRecords()
         {
             if (recordsText == null)
@@ -179,7 +163,6 @@ namespace Bouncer.UI
                 lines.AppendLine(Loc.Format("records.line", level, RunRecords.FormatTime(best.time), kid,
                     best.cards != null ? best.cards.Length : 0));
             }
-            // Прогулки вместе — своим списком.
             bool coopHeader = false;
             for (int level = Danger.Max; level >= 1; level--)
             {

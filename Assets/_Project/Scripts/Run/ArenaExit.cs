@@ -5,13 +5,6 @@ using UnityEngine;
 
 namespace Bouncer.Run
 {
-    /// <summary>
-    /// Стрелка мелом на следующую арену («В коробку →»). Появляется, когда арена пройдена; игрок заходит на неё —
-    /// и прогулка идёт дальше (<see cref="ArenaDirector.LeaveArena"/>). На развилке стрелок две: каждая помнит,
-    /// на какую арену этапа ведёт.
-    /// По сети команда «голосует ногами»: дальше идут, когда все живые игроки стоят у одной стрелки (решает
-    /// хозяин комнаты); под надписью — сколько уже стоят, «2/3».
-    /// </summary>
     public sealed class ArenaExit : MonoBehaviour
     {
         [Tooltip("Стрелка и надпись: видны только на пройденной арене")]
@@ -41,7 +34,6 @@ namespace Bouncer.Run
             SetShown(false);
         }
 
-        /// <summary>Показать стрелку; variant — на какую арену следующего этапа она ведёт (0 — основная).</summary>
         public void Show(string text, int variant = 0)
         {
             _text = text;
@@ -92,7 +84,6 @@ namespace Bouncer.Run
             }
         }
 
-        /// <summary>По сети: сколько живых у стрелки; все у неё — хозяин ведёт всех дальше.</summary>
         void UpdateOnline()
         {
             int alive = 0;

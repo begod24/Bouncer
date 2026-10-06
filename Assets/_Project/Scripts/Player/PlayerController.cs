@@ -6,18 +6,6 @@ using UnityEngine;
 
 namespace Bouncer.Player
 {
-    /// <summary>
-    /// Связывает модули игрока: берёт намерение (локальный ввод, позже — сеть),
-    /// раздаёт его движению, прицелу и мячам. Принимает попадания мячей и удары.
-    /// Здесь же эффекты карточек, которые не про мяч: подкат рывком (сбивает с ног без урона), «Замри!» и «Свисток»
-    /// после ловли, «Крышка от кастрюли» (блок удара), «Домино» (выбитый враг сбивает соседей), «Второе дыхание»
-    /// и «Кувырок» (уворот в последний момент: мяч или удар прошёл рядом во время рывка — замедление и бросок
-    /// с силой «свечки»). Идеальная ловля лечит не чаще раза в catchHealCooldown. Взгляд игрока (под ним замирают
-    /// манекены), «Зеркальце» и «Фонарик» передаются в <see cref="Targetable"/> — враги читают их оттуда.
-    /// По сети: удар врага по игроку другого компьютера хозяин отправляет ему (<see cref="ApplyNetworkHit"/>), а
-    /// удары карточек по копиям врагов уходят хозяину (<see cref="NetHooks.ApplyHit"/>). Выбитого в коопе
-    /// поднимает товарищ (<see cref="Revive"/>).
-    /// </summary>
     [RequireComponent(typeof(PlayerMotor), typeof(PlayerAim), typeof(PlayerBallHandler))]
     [RequireComponent(typeof(Health), typeof(Targetable))]
     public sealed class PlayerController : MonoBehaviour, IBallTarget, IDamageable, IBallReceiver
@@ -39,42 +27,26 @@ namespace Bouncer.Player
         IPlayerIntentSource _intentSource;
 
         public PlayerStats Stats => stats;
-        /// <summary>Прибавки от карточек за этот забег.</summary>
         public PlayerModifiers Modifiers { get; } = new();
         public PlayerMotor Motor { get; private set; }
         public PlayerAim Aim { get; private set; }
         public PlayerBallHandler Balls { get; private set; }
         public Health Health { get; private set; }
         public Targetable Targetable { get; private set; }
-        /// <summary>Наводящий фонарик (если есть).</summary>
         public PlayerFlashlight Flashlight { get; private set; }
         public bool IsDead => Health.IsDead;
         public PlayerIntent LastIntent { get; private set; }
-        /// <summary>Игроком ведёт сценка (финал: бежит в подъезд): ввод не читается, удары не проходят.</summary>
         public bool IsScripted { get; private set; }
-        /// <summary>Номер игрока в прогулке (0–3): по нему в <see cref="RunState"/> лежат его монетки и сердца.</summary>
         public int Slot { get; private set; }
-        /// <summary>
-        /// Игрок за этим компьютером (а не пришедший по сети). Чужим игроком управляет его компьютер: здесь он
-        /// только виден — ввод не читается, удары и мячи его не задевают, позу присылает сеть (<see cref="RemoteAction"/>).
-        /// По сети каждого игрока сначала создаёт сеть, а своим он становится в <see cref="Setup"/>.
-        /// </summary>
         public bool IsLocal { get; private set; } = !Online.Active;
-        /// <summary>Что делает чужой игрок — присылает его компьютер.</summary>
         public PlayerActionState RemoteAction { get; set; }
-        /// <summary>Как бежит чужой игрок (по точкам его движения) — для анимации.</summary>
         public Vector3 RemoteVelocity { get; set; }
-        /// <summary>
-        /// По сети в финале: добежал до подъезда и ждёт остальных — вне игры (враги его не ищут), а когда дома все
-        /// живые, прогулка пройдена.
-        /// </summary>
         public bool IsHome
         {
             get => Targetable.OutOfPlay;
             set => Targetable.OutOfPlay = value;
         }
 
-        /// <summary>Что игрок делает прямо сейчас — для анимации.</summary>
         public PlayerActionState Action => !IsLocal ? RemoteAction : new PlayerActionState
         {
             Charging = Balls.IsCharging,
@@ -87,31 +59,21 @@ namespace Bouncer.Player
             Flashlight = Flashlight != null && Flashlight.IsOn,
         };
 
-        /// <summary>Получил урон (для визуала).</summary>
         public event Action<HitInfo> Hurt;
-        /// <summary>«Замри!»: удачная ловля замедлила всё вокруг (для визуала).</summary>
         public event Action Froze;
-        /// <summary>«Крышка от кастрюли» отбила удар (для визуала).</summary>
         public event Action LidBlocked;
-        /// <summary>«Второе дыхание» спасло от выбывания (для визуала).</summary>
         public event Action SecondWindUsed;
-        /// <summary>«Кувырок»: уворот в последний момент (для визуала).</summary>
         public event Action Dodged;
-        /// <summary>Сбит с ног медболом (для визуала).</summary>
         public event Action KnockedDown;
-        /// <summary>Выбитого подняли (кооп).</summary>
         public event Action Revived;
 
-        /// <summary>По сети удар приходит с опозданием: увернувшийся рывком за столько секунд до него — не задет.</summary>
         const float NetworkDodgeGrace = 0.15f;
 
-        /// <summary>1 — идеальная ловля снова лечит, 0 — только что вылечила.</summary>
         public float CatchHeal01 => stats.catchHealCooldown <= 0f ? 1f
             : Mathf.Clamp01(1f - (_nextCatchHealAt - Time.time) / stats.catchHealCooldown);
 
         public bool HasLid => Modifiers.LidCooldown > 0f;
         public bool LidReady => HasLid && Time.time >= _lidReadyAt;
-        /// <summary>1 — крышка готова, 0 — только что отбила удар.</summary>
         public float LidReady01 => !HasLid ? 0f
             : Mathf.Clamp01(1f - (_lidReadyAt - Time.time) / Mathf.Max(0.01f, Modifiers.LidCooldown));
 
@@ -138,7 +100,6 @@ namespace Bouncer.Player
             Modifiers.Changed += OnModifiersChanged;
         }
 
-        /// <summary>Карточки поменяли взгляд или свет — враги читают их из Targetable.</summary>
         void OnModifiersChanged()
         {
             Targetable.BackGazeHalfAngle = Modifiers.MirrorAngle;
@@ -157,7 +118,6 @@ namespace Bouncer.Player
             Players.Remove(this);
         }
 
-        /// <summary>Чей это игрок: номер в прогулке и за этим ли компьютером. Зовёт тот, кто его создал.</summary>
         public void Setup(int slot, bool isLocal)
         {
             Slot = Mathf.Clamp(slot, 0, RunState.MaxPlayers - 1);
@@ -180,7 +140,6 @@ namespace Bouncer.Player
 
             float dt = Time.deltaTime;
             UpdateDominoes();
-            // Сбитый с ног (медбол) не бросает, не ловит и не бегает.
             bool canAct = !IsDead && GameSession.IsPlayerActive && !Motor.IsDown;
             if (!canAct)
             {
@@ -209,7 +168,6 @@ namespace Bouncer.Player
                 WatchDodge();
         }
 
-        /// <summary>«Кувырок»: мяч врага пролетел рядом, пока идёт рывок, — уворот в последний момент.</summary>
         void WatchDodge()
         {
             if (_dodgedDashStart == Motor.DashStartTime)
@@ -230,7 +188,6 @@ namespace Bouncer.Player
             }
         }
 
-        /// <summary>Уворот в последний момент: на полсекунды замедление, следующий бросок — с силой «свечки».</summary>
         void PerfectDodge()
         {
             if (!Modifiers.DashCatch || _dodgedDashStart == Motor.DashStartTime)
@@ -242,13 +199,8 @@ namespace Bouncer.Player
             Dodged?.Invoke();
         }
 
-        /// <summary>
-        /// Подкат: рывок сбивает с ног врагов на пути — каждого по разу за рывок. Урона нет, сбитый оглушён;
-        /// срабатывает не чаще раза в tackleCooldown (рывок между ними — обычный).
-        /// </summary>
         void Tackle()
         {
-            // Новый рывок — снова можно сбить и тех, кого сбил прошлый.
             if (_tackleDashStart != Motor.DashStartTime)
             {
                 _tackleDashStart = Motor.DashStartTime;
@@ -271,7 +223,6 @@ namespace Bouncer.Player
                 if (target == null || _tackled.Contains(target))
                     continue;
                 _tackled.Add(target);
-                // Сбитого отбрасывает вперёд по рывку и немного в сторону — с пути.
                 Vector3 away = other.transform.position - transform.position;
                 away.y = 0f;
                 Vector3 push = direction + (away.sqrMagnitude > 1e-4f ? away.normalized * 0.5f : Vector3.zero);
@@ -290,10 +241,6 @@ namespace Bouncer.Player
             }
         }
 
-        /// <summary>
-        /// Дальше игроком ведёт сценка: мячи и ввод отключены, персонаж неуязвим, двигает его тот, кто позвал
-        /// (финал: дорога от двора до подъезда).
-        /// </summary>
         public void BeginScripted()
         {
             if (IsScripted)
@@ -309,10 +256,8 @@ namespace Bouncer.Player
             if (!IsLocal || IsDead || IsScripted || !ball.Team.IsHostileTo(Team.Player))
                 return BallContactResult.PassThrough;
 
-            // «Кувырок»: мяч, в который влетел рывок, пролетает сквозь — это уворот в последний момент.
             if (Modifiers.DashCatch && Motor.IsDashInvulnerable)
                 PerfectDodge();
-            // Окно ловли открыто и мяч прилетел спереди — пойман, даже если врезался в тело. Ёжик колется — попадание.
             if (Balls.TryCatch(ball))
                 return BallContactResult.Caught;
             if (!Motor.IsDashInvulnerable && !Health.IsInvulnerable && TryLidBlock(hit.point))
@@ -335,14 +280,12 @@ namespace Bouncer.Player
 
         public bool ApplyHit(in HitInfo hit)
         {
-            // Игрок другого компьютера: удар решил хозяин, а принять его — дело компьютера игрока.
             if (!IsLocal)
                 return !IsDead && !IsScripted && NetHooks.HitRemotePlayer != null && NetHooks.HitRemotePlayer(gameObject, hit);
             if (IsDead || IsScripted)
                 return false;
             if (Motor.IsDashInvulnerable)
             {
-                // Удар прошёл сквозь рывок — «Кувырок» считает это увортом.
                 if (Modifiers.DashCatch)
                     PerfectDodge();
                 return false;
@@ -359,7 +302,6 @@ namespace Bouncer.Player
 
             Health.SetInvulnerable(stats.hurtInvulnerability);
             Motor.AddKnockback(hit.Direction * hit.Force);
-            // Тёмный мяч Бабая: ноги вязнут.
             if (hit.Has(HitFlags.Dark))
                 Motor.Slow(stats.darkSlowMultiplier, stats.darkSlowTime);
             Balls.CancelCharge();
@@ -371,14 +313,6 @@ namespace Bouncer.Player
             return true;
         }
 
-        /// <summary>
-        /// Мяч вернулся в руки сам. Игроку другого компьютера мяч отдаёт сеть: руки его — там
-        /// (<see cref="IBallNetwork.GiveToRemote"/>).
-        /// </summary>
-        /// <summary>
-        /// По сети: удар врага, который засчитал хозяин. Пока он шёл, игрок мог увернуться — рывок за последние
-        /// <see cref="NetworkDodgeGrace"/> с спасает, как спас бы у хозяина.
-        /// </summary>
         public bool ApplyNetworkHit(in HitInfo hit)
         {
             if (!IsLocal || IsDead || IsScripted)
@@ -392,7 +326,6 @@ namespace Bouncer.Player
             return ApplyHit(hit);
         }
 
-        /// <summary>Кооп: товарищ поднял выбитого — снова в игре с lives сердцами и короткой неуязвимостью.</summary>
         public void Revive(int lives)
         {
             if (!IsDead)
@@ -413,10 +346,6 @@ namespace Bouncer.Player
             return Ball.Network != null && Ball.Network.GiveToRemote(ball, gameObject);
         }
 
-        /// <summary>
-        /// «Второе дыхание»: удар, который выбил бы, оставляет с одним сердцем и даёт пару секунд неуязвимости.
-        /// Раз за прогулку — отметка в <see cref="RunState.SecondWindUsed"/> (своя у каждого игрока) переживает смену арены.
-        /// </summary>
         bool TrySecondWind(in HitInfo hit)
         {
             if (!Modifiers.SecondWind || RunState.SecondWindUsed(Slot) || hit.Damage < Health.Current)
@@ -437,7 +366,6 @@ namespace Bouncer.Player
             return true;
         }
 
-        /// <summary>«Крышка от кастрюли»: готова — удар отбит, игрок цел, крышка перезаряжается.</summary>
         bool TryLidBlock(Vector3 point)
         {
             if (!LidReady)
@@ -450,12 +378,10 @@ namespace Bouncer.Player
             return true;
         }
 
-        /// <summary>«Домино»: выбитый игроком враг чуть позже сбивает соседей — и так по цепочке.</summary>
         void OnEnemyKilled(GameObject enemy, HitInfo hit)
         {
             if (Modifiers.DominoDamage <= 0 || enemy == null || hit.SourceTeam != Team.Player || hit.Has(HitFlags.Despawn))
                 return;
-            // В коопе «Домино» срабатывает только на тех, кого выбил сам.
             if (Online.Active && hit.Source != gameObject)
                 return;
             _dominoes.Add((enemy.transform.position, Time.time + stats.dominoDelay));
@@ -502,7 +428,6 @@ namespace Bouncer.Player
 
         void OnCaught(CatchInfo info)
         {
-            // Лечит только мяч врага, пойманный в последний момент, и не чаще раза в catchHealCooldown.
             if (info.EnemyBall && Time.time >= _nextCatchHealAt && Health.Current < Health.Max)
             {
                 int heal = info.Perfect ? stats.catchHeal : stats.earlyCatchHeal;
@@ -512,7 +437,6 @@ namespace Bouncer.Player
                     _nextCatchHealAt = Time.time + stats.catchHealCooldown;
                 }
             }
-            // Сильный мяч пойман, но толкает назад; медбол сбивает с ног.
             if (info.Heavy)
             {
                 Motor.KnockDown(stats.heavyKnockdown);
@@ -531,7 +455,6 @@ namespace Bouncer.Player
                 GameFeel.BulletTime(stats.freezeTimeScale, Modifiers.CatchFreeze);
                 Froze?.Invoke();
             }
-            // «Свисток»: идеальная ловля — и враги вокруг замирают.
             if (info.Perfect && Modifiers.WhistleFreeze > 0f)
             {
                 Targetable.FreezeAround(transform.position, stats.whistleRadius, Team.Enemy, Modifiers.WhistleFreeze);

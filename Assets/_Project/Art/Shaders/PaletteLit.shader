@@ -1,6 +1,3 @@
-// Общий шейдер всех моделей из Blender: цвет из текстуры-палитры 8×8 (UV грани внутри одной ячейки),
-// освещение без бликов, тени, туман. Палитру можно подменить глобально (время суток), подкраска и вспышка —
-// через MaterialPropertyBlock (_TintColor, _FlashColor), материалы не дублируются.
 Shader "Bouncer/PaletteLit"
 {
     Properties
@@ -42,7 +39,6 @@ Shader "Bouncer/PaletteLit"
             #pragma vertex PaletteLitVertex
             #pragma fragment PaletteLitFragment
 
-            // Universal Pipeline keywords (как у URP Simple Lit, без декалей и карт нормалей)
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
             #pragma multi_compile _ _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS
             #pragma multi_compile _ EVALUATE_SH_MIXED EVALUATE_SH_VERTEX
@@ -61,7 +57,6 @@ Shader "Bouncer/PaletteLit"
             #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ProbeVolumeVariants.hlsl"
             #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/RenderingLayers.hlsl"
 
-            // Unity defined keywords
             #pragma multi_compile _ DIRLIGHTMAP_COMBINED
             #pragma multi_compile _ LIGHTMAP_ON
             #pragma multi_compile_fragment _ LIGHTMAP_BICUBIC_SAMPLING
@@ -122,7 +117,6 @@ Shader "Bouncer/PaletteLit"
             ENDHLSL
         }
 
-        // Нужен для _CameraNormalsTexture (SSAO).
         Pass
         {
             Name "DepthNormals"

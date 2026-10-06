@@ -3,11 +3,6 @@ using UnityEngine;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Огненное пятно на асфальте (след коня-огня): пару секунд горит и обжигает игрока, вставшего в него.
-    /// Повторно не жжёт, пока у игрока неуязвимость после удара. Из пула.
-    /// По сети пятно кладёт и жжёт им хозяин комнаты; гостям он показывает такое же — только для вида.
-    /// </summary>
     public sealed class FireSpot : MonoBehaviour, IPoolable
     {
         [SerializeField] float lifetime = 3f;

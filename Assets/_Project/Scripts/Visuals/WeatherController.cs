@@ -6,16 +6,6 @@ using UnityEngine.Rendering;
 
 namespace Bouncer.Visuals
 {
-    /// <summary>
-    /// Погода на арене — случайное событие прогулки (что выпало, решает арена): дождь — капли, мокрая тусклая
-    /// палитра и лужи (в луже мяч гаснет, бег медленнее); гроза — дождь и молнии, которые на миг освещают всё
-    /// (на стройке тень в этот миг твёрдая); туман — видно метров на десять вокруг игрока, дальше всё тонет в сером.
-    /// Туман считает шейдер палитры от игрока, а не от камеры (<see cref="Shader.SetGlobalVector"/> _Bouncer_Fog*).
-    /// По сети погоду выбирает хозяин комнаты: гость получает её вместе с числом, из которого раскладываются лужи
-    /// (у всех одни и те же), а молнии бьют по вестям хозяина (<see cref="Struck"/>, <see cref="StrikeFromNetwork"/>).
-    /// Туман и капли — вокруг своего игрока.
-    /// </summary>
-    // Раньше ArenaDirector: он включает погоду из своего Awake, а этот Awake сначала всё гасит.
     [DefaultExecutionOrder(-90)]
     public sealed class WeatherController : MonoBehaviour
     {
@@ -65,12 +55,10 @@ namespace Bouncer.Visuals
         public WeatherKind Kind { get; private set; }
         bool Rainy => Kind is WeatherKind.Rain or WeatherKind.Storm;
 
-        /// <summary>Ударила молния (по сети хозяин показывает её гостям).</summary>
         public static event System.Action Struck;
 
         void Awake()
         {
-            // Префаб погоды один на все сцены: время суток — своё в каждой, его ищем сами.
             if (!timeOfDay)
                 timeOfDay = FindFirstObjectByType<TimeOfDayController>();
             if (rain)
@@ -90,10 +78,6 @@ namespace Bouncer.Visuals
                 timeOfDay.SetWeather(0f, 0f, 0f);
         }
 
-        /// <summary>
-        /// Включить погоду на эту арену. Clear — ясно. seed — из чего раскладываются лужи (0 — случайно);
-        /// remote — молнии присылает сеть, свои не бьют.
-        /// </summary>
         public void Begin(WeatherKind kind, int seed = 0, bool remote = false)
         {
             Kind = kind;
@@ -123,7 +107,6 @@ namespace Bouncer.Visuals
             _nextStrike = kind == WeatherKind.Storm && !remote ? Time.time + Random.Range(3f, 6f) : float.PositiveInfinity;
         }
 
-        /// <summary>По сети у гостя: молния, которая ударила у хозяина.</summary>
         public void StrikeFromNetwork()
         {
             _strikeStart = Time.time;
@@ -134,7 +117,6 @@ namespace Bouncer.Visuals
         void Update()
         {
             float dt = Time.deltaTime;
-            // Погода набегает за пару секунд, а не включается рывком.
             _wet = Mathf.MoveTowards(_wet, Rainy ? 1f : 0f, dt * 0.5f);
             _fog = Mathf.MoveTowards(_fog, Kind == WeatherKind.Fog ? 1f : 0f, dt * 0.4f);
 
@@ -170,7 +152,6 @@ namespace Bouncer.Visuals
                 rainLoop.volume = rainVolume * _wet * GameSettings.SfxGain * (GameFeel.Paused ? 0.3f : 1f);
         }
 
-        /// <summary>Молния: две вспышки подряд, всё освещено, через миг гром.</summary>
         void Strike()
         {
             _strikeStart = Time.time;
@@ -180,7 +161,6 @@ namespace Bouncer.Visuals
             Struck?.Invoke();
         }
 
-        /// <summary>Яркость вспышки молнии через t секунд после удара: вспыхнула, мигнула, вспыхнула и погасла.</summary>
         static float Flash01(float t)
         {
             if (t < 0f || t > 0.6f)
@@ -194,7 +174,6 @@ namespace Bouncer.Visuals
             return Mathf.Lerp(0.9f, 0f, (t - 0.22f) / 0.38f);
         }
 
-        /// <summary>Лужи в случайных (из числа seed — по сети у всех одинаковых) местах на асфальте, подальше от стен.</summary>
         void SpawnPuddles(int seed)
         {
             if (puddlePrefab == null || _puddles.Count > 0)

@@ -5,22 +5,14 @@ using UnityEngine;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>Свойство элитки — дёшево, без новой модели: над ней надпись, поведение то же, плюс своё.</summary>
     public enum AffixKind
     {
         None,
-        /// <summary>«Шустрый»: бегает на 40% быстрее.</summary>
         Swift,
-        /// <summary>«Командир»: подгоняет соседей — они бегают на четверть быстрее.</summary>
         Commander,
-        /// <summary>«Ловкач»: ловит каждый третий мяч и бросает его обратно.</summary>
         Catcher,
     }
 
-    /// <summary>
-    /// Свойство элитки. Выдаёт спавнер (<see cref="Assign"/>): на 1-й опасности — через раз, со 2-й — всегда.
-    /// Надпись над элиткой рисует интерфейс по реестру <see cref="Active"/>.
-    /// </summary>
     [DisallowMultipleComponent]
     public sealed class EliteAffix : MonoBehaviour, IBallInterceptor
     {
@@ -46,7 +38,6 @@ namespace Bouncer.Enemies
         public AffixKind Kind { get; private set; }
         public Targetable Self => _self;
 
-        /// <summary>Выдать свойство только что появившейся элитке (None — снять прошлое).</summary>
         public static void Assign(GameObject elite, AffixKind kind)
         {
             if (elite == null)
@@ -60,7 +51,6 @@ namespace Bouncer.Enemies
             affix.SetKind(kind);
         }
 
-        /// <summary>Случайное свойство.</summary>
         public static AffixKind RandomKind() => (AffixKind)Random.Range(1, 4);
 
         void Awake()
@@ -91,7 +81,6 @@ namespace Bouncer.Enemies
 
         void Update()
         {
-            // По сети подгоняет соседей и ловит мячи только настоящая элитка — у хозяина комнаты.
             if (Kind == AffixKind.None || NetHooks.IsGuest)
                 return;
             if (_health && _health.IsDead)
@@ -108,7 +97,6 @@ namespace Bouncer.Enemies
                 HoldAndThrow();
         }
 
-        /// <summary>«Командир»: враги вокруг бегают быстрее, пока он рядом.</summary>
         void Rally()
         {
             Vector3 center = transform.position;
@@ -165,7 +153,6 @@ namespace Bouncer.Enemies
             float distance = Mathf.Max(0.5f, flat.magnitude);
             float time = distance / ThrowSpeed;
             float up = (target.AimPoint.y - origin.y + 0.5f * ThrowGravity * time * time) / time;
-            // Мяч игрока остаётся мячом игрока: хозяин у броска не задан.
             ball.Launch(new BallThrow
             {
                 Origin = origin,

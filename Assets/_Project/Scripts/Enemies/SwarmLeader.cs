@@ -4,10 +4,6 @@ using UnityEngine;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Пупс в чепчике с соской — вожак роя. Пока он жив, пупсы рядом бегают быстрее, а сам он время от времени
-    /// хнычет и созывает новых пупсов. Выбей вожака — рой снова обычный.
-    /// </summary>
     [RequireComponent(typeof(Health))]
     public sealed class SwarmLeader : MonoBehaviour, IPoolable
     {
@@ -30,7 +26,6 @@ namespace Bouncer.Enemies
         float _nextCry;
         int _cries;
 
-        /// <summary>Во сколько раз быстрее бегает пупс в этой точке (рядом с живым вожаком).</summary>
         public static float SpeedMultiplierAt(Vector3 position)
         {
             foreach (var leader in s_active)
@@ -61,7 +56,6 @@ namespace Bouncer.Enemies
 
         void Update()
         {
-            // По сети подмогу зовёт только настоящий вожак — у хозяина комнаты.
             if (followerPrefab == null || _health.IsDead || _cries >= maxCries || Time.time < _nextCry || !GameSession.IsGameplayActive
                 || NetHooks.IsGuest)
                 return;

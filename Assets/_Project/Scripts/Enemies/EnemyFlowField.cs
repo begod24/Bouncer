@@ -4,11 +4,6 @@ using UnityEngine.AI;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Поле направлений к ближайшему игроку для роя (пупсы). Сетка строится по NavMesh один раз,
-    /// а расстояния до игроков пересчитываются несколько раз в секунду (Дейкстра сразу от всех игроков).
-    /// Каждый враг только читает направление в своей клетке — один расчёт на весь рой вместо пути на каждого.
-    /// </summary>
     public sealed class EnemyFlowField : MonoBehaviour
     {
         const float CellSize = 0.5f;
@@ -84,10 +79,6 @@ namespace Bouncer.Enemies
             Recalculate();
         }
 
-        /// <summary>
-        /// Направление к ближайшему игроку в обход препятствий.
-        /// false — точка вне сетки, игрок недостижим или враг уже в клетке игрока (тогда бежать прямо).
-        /// </summary>
         public bool TryGetDirection(Vector3 position, out Vector3 direction)
         {
             direction = default;
@@ -99,7 +90,6 @@ namespace Bouncer.Enemies
 
             if (!_walkable[cell])
             {
-                // Враг оттолкнули к стене или в препятствие — сначала вернуться на проходимую клетку.
                 int nearest = NearestWalkableCell(position, 3);
                 if (nearest < 0)
                     return false;
@@ -111,7 +101,6 @@ namespace Bouncer.Enemies
             if (own == Unreachable)
                 return false;
 
-            // Сглаженный градиент: взвешенная сумма шагов к соседям, которые ближе к игроку.
             int cx = cell % _width, cz = cell / _width;
             Vector3 sum = Vector3.zero;
             for (int k = 0; k < 8; k++)
@@ -164,7 +153,6 @@ namespace Bouncer.Enemies
             }
         }
 
-        /// <summary>Проходимый сосед клетки или -1. По диагонали — только если не срезаем угол препятствия.</summary>
         int Neighbour(int cx, int cz, int k)
         {
             int nx = cx + Dx[k], nz = cz + Dz[k];
@@ -220,7 +208,6 @@ namespace Bouncer.Enemies
 
         static Vector3 Flat(Vector3 v) => new(v.x, 0f, v.z);
 
-        /// <summary>Двоичная куча клеток по расстоянию (в .NET Standard 2.1 нет PriorityQueue).</summary>
         sealed class MinHeap
         {
             int[] _cells = new int[512];

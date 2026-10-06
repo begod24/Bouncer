@@ -3,11 +3,6 @@ using UnityEngine;
 
 namespace Bouncer.Visuals
 {
-    /// <summary>
-    /// Лужа после дождя: неровное блестящее пятно на асфальте. Игровая часть — <see cref="GroundZone"/> на том же
-    /// объекте (круглая): в луже катящийся мяч быстро гаснет, а бег замедляется. Форма строится в коде, размер
-    /// задаёт тот, кто кладёт лужу.
-    /// </summary>
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(GroundZone))]
     public sealed class Puddle : MonoBehaviour
     {
@@ -19,12 +14,10 @@ namespace Bouncer.Visuals
 
         void Awake() => _filter = GetComponent<MeshFilter>();
 
-        /// <summary>Лужа такого размера по X и Z, м, одна из нескольких форм, повёрнута на yaw градусов.</summary>
         public void Place(Vector3 position, Vector2 size, int variant, float yaw)
         {
             _filter.sharedMesh = Meshes()[Mathf.Abs(variant) % Meshes().Length];
             transform.SetPositionAndRotation(position + Vector3.up * 0.015f, Quaternion.Euler(0f, yaw, 0f));
-            // Меш — лужа радиусом около 1, зона — прямоугольник 2×2 с вписанным эллипсом: масштаб растягивает обоих.
             transform.localScale = new Vector3(size.x * 0.5f, 1f, size.y * 0.5f);
         }
 
@@ -39,7 +32,6 @@ namespace Bouncer.Visuals
             return s_meshes;
         }
 
-        /// <summary>Плоская неровная лужа радиусом около 1 в плоскости XZ, лицом вверх.</summary>
         static Mesh Build(System.Random random, int index)
         {
             var vertices = new Vector3[Points + 1];

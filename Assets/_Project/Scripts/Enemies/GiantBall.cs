@@ -4,13 +4,6 @@ using UnityEngine;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Огромный мяч по свистку Физрука («Мяч в игре!»): катится по коробке, отскакивает от бортов без потери
-    /// скорости и сбивает всех на пути — игрока и врагов. Коллайдер на слое окружения: мячи отскакивают
-    /// от него, как от стены. Через несколько секунд сдувается и исчезает. Из пула.
-    /// По сети мяч катит хозяин комнаты и показывает гостям такой же (<see cref="Launched"/>): у гостя он катится
-    /// сам по тем же отскокам, но никого не сбивает — удары засчитывает хозяин.
-    /// </summary>
     [RequireComponent(typeof(SphereCollider))]
     public sealed class GiantBall : MonoBehaviour, IPoolable
     {
@@ -39,7 +32,6 @@ namespace Bouncer.Enemies
         Vector3 _velocity;
         float _spawnTime;
 
-        /// <summary>Мяч покатился в эту сторону (по сети хозяин показывает его гостям).</summary>
         public static event System.Action<GiantBall, Vector3> Launched;
 
         void Awake()
@@ -60,7 +52,6 @@ namespace Bouncer.Enemies
 
         public void OnDespawned() => _lastHit.Clear();
 
-        /// <summary>Покатить мяч в эту сторону.</summary>
         public void Launch(Vector3 direction)
         {
             direction.y = 0f;
@@ -80,7 +71,6 @@ namespace Bouncer.Enemies
             }
             if (age >= lifetime)
             {
-                // Сдувается: замедляется, больше никого не бьёт.
                 _collider.enabled = false;
                 _velocity *= 0.9f;
             }
@@ -91,7 +81,6 @@ namespace Bouncer.Enemies
                 Knock();
         }
 
-        /// <summary>Шаг по полу с зеркальными отскоками от стен, как у мяча на бортах коробки.</summary>
         void Move(float dt)
         {
             Vector3 position = transform.position;
@@ -107,7 +96,6 @@ namespace Bouncer.Enemies
                 for (int k = 0; k < count; k++)
                 {
                     var hit = _hits[k];
-                    // Себя и пол не считаем: катится по полу, а не упирается в него.
                     if (hit.collider == _collider || hit.distance <= 0f || hit.normal.y > 0.6f)
                         continue;
                     if (hit.distance < best)
@@ -136,7 +124,6 @@ namespace Bouncer.Enemies
             transform.position = position;
         }
 
-        /// <summary>Сбивает всех, кого коснулся: игрока и врагов — каждого не чаще раза в sameTargetCooldown.</summary>
         void Knock()
         {
             Vector3 center = transform.position + Vector3.up * radius;
@@ -163,7 +150,6 @@ namespace Bouncer.Enemies
                     Point = other.ClosestPoint(center),
                     Direction = push.sqrMagnitude > 1e-4f ? push : Vector3.forward,
                     Force = knockback,
-                    // Враги от мяча страдают «от игрока»: за них падают монетки, как за подорванных цыплёнком.
                     SourceTeam = player ? Team.Enemy : Team.Player,
                     Source = gameObject,
                     Flags = HitFlags.Charged | HitFlags.Area,
@@ -186,7 +172,6 @@ namespace Bouncer.Enemies
             float age = Time.time - _spawnTime;
             if (age >= lifetime)
             {
-                // Сдувается и оседает на пол: корень мяча стоит на полу, поэтому сжатие по высоте прижимает к земле.
                 float k = 1f - Mathf.Clamp01((age - lifetime) / Mathf.Max(0.01f, deflateTime));
                 float spread = 1f + (1f - k) * 0.3f;
                 transform.localScale = new Vector3(spread, Mathf.Max(0.05f, k), spread);

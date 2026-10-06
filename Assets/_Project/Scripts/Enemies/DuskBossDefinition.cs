@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>Числа «Того, кто в сумерках». Тройки чисел (x, y, z) — по фазам босса: первая, вторая, третья.</summary>
     [CreateAssetMenu(menuName = "Bouncer/Dusk Boss Definition", fileName = "Enemy_DuskBoss")]
     public sealed class DuskBossDefinition : ScriptableObject
     {
@@ -162,7 +161,6 @@ namespace Bouncer.Enemies
         [Header("Смерть")]
         public float debrisForce = 6f;
 
-        /// <summary>Значение тройки для фазы 0, 1 или 2.</summary>
         public static float ByPhase(Vector3 values, int phase) => phase <= 0 ? values.x : phase == 1 ? values.y : values.z;
 
         public static int ByPhase(Vector3Int values, int phase) => phase <= 0 ? values.x : phase == 1 ? values.y : values.z;

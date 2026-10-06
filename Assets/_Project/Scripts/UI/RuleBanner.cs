@@ -4,11 +4,6 @@ using UnityEngine;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// Надпись мелом под полосой босса: правило раунда, которое объявил свистком Физрук («Замри!» и подсказка),
-    /// и полоска, сколько правилу осталось. Слушает <see cref="GameEvents.Announced"/>; время — игровое,
-    /// на паузе надпись тоже стоит.
-    /// </summary>
     public sealed class RuleBanner : MonoBehaviour
     {
         [SerializeField] CanvasGroup group;

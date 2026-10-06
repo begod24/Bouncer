@@ -10,19 +10,6 @@ using UnityEngine.InputSystem.UI;
 
 namespace Bouncer.UI
 {
-    /// <summary>
-    /// Экраны поверх прогулки: заставка, выбор ребёнка, пауза, настройки, тетрадка, «Выбит!» и победа — с кнопками
-    /// для мыши, клавиатуры и геймпада. Какой экран показать, решает состояние <see cref="GameSession"/>; кнопки только
-    /// зовут её методы. На заставке четыре пункта: «Играть» (выбор ребёнка, выбор начинает прогулку; самое первое
-    /// «Играть» сперва спрашивает «Пройти обучение?», <see cref="Tutorial"/>), «Тетрадка» (<see cref="NotebookScreen"/>:
-    /// бестиарий, рекорды, «Как играть» с тренировкой; «новое!» на кнопке, пока там есть непросмотренное),
-    /// «Настройки» (там же «Авторы») и «Выход». Настройки открываются с заставки и паузы; Esc / B возвращают назад.
-    /// Карманы (<see cref="PocketsPanel"/>) — кнопкой в паузе или Tab / Select прямо в бою: тогда игра встаёт
-    /// на паузу, а закрыл карманы — бой идёт дальше.
-    /// «Играть» сперва спрашивает «Как гуляем?»: «Одному» — дальше как раньше, «Вместе» — «Гуляем вместе»
-    /// (<see cref="OnlineScreen"/>: создать комнату или войти по коду), потом комната (<see cref="LobbyScreen"/>).
-    /// Выкинуло из комнаты — на заставке сразу открывается «Гуляем вместе» с причиной.
-    /// </summary>
     public sealed class RunScreens : MonoBehaviour
     {
         [Serializable]
@@ -34,7 +21,6 @@ namespace Bouncer.UI
             [NonSerialized] public bool Ready;
         }
 
-        /// <summary>Экран поверх заставки или паузы.</summary>
         enum Overlay
         {
             None,
@@ -42,13 +28,9 @@ namespace Bouncer.UI
             Kids,
             Pockets,
             Notebook,
-            /// <summary>«Пройти обучение?» — перед самой первой прогулкой.</summary>
             TutorialAsk,
-            /// <summary>«Как гуляем?» — одному, вместе или друг против друга.</summary>
             Mode,
-            /// <summary>«Гуляем вместе»: создать комнату или войти по коду.</summary>
             Online,
-            /// <summary>Комната: кто пришёл, кем гуляет, кто готов.</summary>
             Lobby,
         }
 
@@ -102,18 +84,13 @@ namespace Bouncer.UI
         [SerializeField] UnityEngine.UI.Button[] coopButtons;
 
         PlayerCards _cards;
-        /// <summary>Карманы открыты клавишей прямо в бою: закрылись — снять паузу.</summary>
         bool _pocketsResume;
-        /// <summary>Итог последней победы: новый рекорд, лучшее время уровня, открыт ли следующий.</summary>
         bool _newRecord;
         float _bestTime;
         int _unlockedDanger;
         Overlay _overlay;
-        /// <summary>Кнопка, открывшая экран поверх, — на неё вернуться.</summary>
         GameObject _returnTo;
-        /// <summary>Во что играть по сети: кооп или PvP («Гуляем вместе» открывается для него).</summary>
         NetMode _onlineMode;
-        /// <summary>Почему выкинуло из комнаты — показать на «Гуляем вместе» (ключ строки).</summary>
         string _onlineNotice;
 
         void Awake()
@@ -143,10 +120,6 @@ namespace Bouncer.UI
 
         void OnDisable() => GameEvents.RunFinished -= OnRunFinished;
 
-        /// <summary>
-        /// Победа: запомнить рекорд (время, опасность, ребёнок, карманы; вместе — отдельно) и открыть следующую
-        /// опасность — по сети каждому, кто гулял.
-        /// </summary>
         void OnRunFinished(bool victory)
         {
             _newRecord = false;
@@ -201,14 +174,12 @@ namespace Bouncer.UI
             UpdatePockets(session);
 
             var state = session.State;
-            // Из обучения по «Гулять!»: заставка сразу открывает выбор ребёнка (кадр спустя — пусть экран разложится).
             if (Tutorial.OpenKidsOnTitle && state == SessionState.Title && _overlay == Overlay.None && Time.timeSinceLevelLoad > 0.1f)
             {
                 Tutorial.OpenKidsOnTitle = false;
                 Open(Overlay.Kids);
             }
             UpdateOnline(state);
-            // По сети «Заново» нет: прогулку начинают вместе из комнаты.
             if (restartButtons != null)
                 foreach (var button in restartButtons)
                     if (button != null && button.gameObject.activeSelf == Online.Active)
@@ -227,11 +198,9 @@ namespace Bouncer.UI
             Show(mode, _overlay == Overlay.Mode, true);
             Show(online, _overlay == Overlay.Online, true);
             Show(lobby, _overlay == Overlay.Lobby, true);
-            // Кнопки конца забега оживают не сразу — чтобы случайное нажатие не перезапустило игру.
             Show(gameOver, state == SessionState.GameOver, session.CanRestart);
             Show(victory, state == SessionState.Victory, session.CanRestart);
 
-            // «новое!» на «Тетрадке»: открылся босс или побит рекорд, а в тетрадку ещё не заглядывали.
             if (notebookNew && state == SessionState.Title && noOverlay)
             {
                 bool hasNew = notebookScreen != null && notebookScreen.HasNew;
@@ -245,10 +214,6 @@ namespace Bouncer.UI
                 victoryStats.text = Stats(session, "victory.stats");
         }
 
-        /// <summary>
-        /// Комната на заставке: выкинуло из неё (хозяин ушёл, связь пропала) — «Гуляем вместе» с причиной;
-        /// комната закрылась, пока открыт её экран, — закрыть его.
-        /// </summary>
         void UpdateOnline(SessionState state)
         {
             if (state != SessionState.Title)
@@ -264,15 +229,10 @@ namespace Bouncer.UI
                 OpenOnline(NetMode.Coop, notice);
                 return;
             }
-            // Вернулись из прогулки (поражение) — сразу в лобби своей комнаты.
             if (inRoom && _overlay == Overlay.None && Time.timeSinceLevelLoad > 0.1f)
                 Open(Overlay.Lobby);
         }
 
-        /// <summary>
-        /// Tab / Select: карманы из паузы или прямо из боя (игра встаёт на паузу). Карманы закрылись сами
-        /// (Tab, Esc, «Закрыть») — вернуться в паузу или в бой.
-        /// </summary>
         void UpdatePockets(GameSession session)
         {
             var pockets = PocketsPanel.Instance;
@@ -302,8 +262,6 @@ namespace Bouncer.UI
                 session.TogglePause();
         }
 
-        // Esc и B закрывают экран поверх. Здесь, а не в Update: тот же Esc — это и кнопка паузы, и к этому
-        // моменту игрок его уже прочитал, а GameSession.OverlayOpen не дал снять паузу.
         void LateUpdate()
         {
             if (_overlay != Overlay.None && CancelPressed())
@@ -320,7 +278,6 @@ namespace Bouncer.UI
             screen.group.blocksRaycasts = active;
             if (active && !screen.Ready && EventSystem.current != null)
             {
-                // С экрана поверх возвращаемся на открывшую его кнопку, а не на первую кнопку экрана.
                 var target = screen.first != null ? screen.first.gameObject : null;
                 if (_returnTo != null && _returnTo.transform.IsChildOf(screen.group.transform))
                 {
@@ -407,7 +364,6 @@ namespace Bouncer.UI
             else if (_overlay == Overlay.Lobby)
             {
                 lobbyScreen.Close();
-                // Esc в комнате — уйти из неё.
                 if (NetSession.Instance != null)
                     NetSession.Instance.Leave();
             }
@@ -416,7 +372,6 @@ namespace Bouncer.UI
             if (session != null)
             {
                 session.OverlayOpen = false;
-                // Карманы открыли клавишей прямо в бою — закрыл, и бой идёт дальше, без меню паузы.
                 if (_pocketsResume && GameFeel.Paused)
                 {
                     _returnTo = null;
@@ -426,7 +381,6 @@ namespace Bouncer.UI
             _pocketsResume = false;
         }
 
-        /// <summary>«Играть»: «Как гуляем?» — одному, вместе или друг против друга.</summary>
         void Play()
         {
             if (mode.group != null)
@@ -435,10 +389,6 @@ namespace Bouncer.UI
                 PlaySolo();
         }
 
-        /// <summary>
-        /// «Одному»: сначала выбрать, с кем гулять (если экрана выбора нет — сразу в прогулку). Самый первый раз —
-        /// вопрос про обучение.
-        /// </summary>
         void PlaySolo()
         {
             CloseOverlay();
@@ -450,7 +400,6 @@ namespace Bouncer.UI
                 Session(s => s.StartRun());
         }
 
-        /// <summary>«Пройти тренировку» или «Да, научи»: тренировка во дворе.</summary>
         void StartTutorial()
         {
             Tutorial.MarkOffered();
@@ -458,7 +407,6 @@ namespace Bouncer.UI
             Session(s => s.StartTutorial());
         }
 
-        /// <summary>«Нет, сразу гулять»: больше не спрашивать, дальше как обычно — выбор ребёнка.</summary>
         void SkipTutorial()
         {
             Tutorial.MarkOffered();
@@ -466,7 +414,6 @@ namespace Bouncer.UI
             PlaySolo();
         }
 
-        /// <summary>«Гуляем вместе» для этого режима (notice — почему выкинуло из прошлой комнаты).</summary>
         void OpenOnline(NetMode netMode, string notice)
         {
             CloseOverlay();
@@ -475,7 +422,6 @@ namespace Bouncer.UI
             Open(Overlay.Online);
         }
 
-        /// <summary>Комната создана или найдена: вместо «Гуляем вместе» — сама комната.</summary>
         void OnRoomEntered()
         {
             CloseOverlay();
@@ -495,16 +441,11 @@ namespace Bouncer.UI
             return cancel != null && cancel.WasPressedThisFrame();
         }
 
-        /// <summary>
-        /// Итоги всей прогулки: время (часы прогулки), выбитые, карточки, заработанные монетки; у победы — рекорд
-        /// и открытая опасность.
-        /// </summary>
         string Stats(GameSession session, string key)
         {
             string time = RunRecords.FormatTime(RunState.RunClock > 0f ? RunState.RunClock : session.RunTime);
             int cards = _cards != null ? _cards.Count : 0;
             string stats = Loc.Format(key, time, session.RunKills, cards, RunState.CoinsEarned);
-            // По сети после конца прогулки всех вернёт в комнату.
             string backToRoom = Online.Active ? "\n" + Loc.Get("net.back.lobby") : string.Empty;
             if (session.State != SessionState.Victory)
                 return stats + backToRoom;

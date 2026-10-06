@@ -2,10 +2,6 @@ using UnityEngine;
 
 namespace Bouncer.Enemies
 {
-    /// <summary>
-    /// Процедурная анимация пупса без скелета: ножки качаются в бёдрах, тельце переваливается и подпрыгивает,
-    /// вытянутые ручки болтаются. Присед перед прыжком, в прыжке ручки вверх. Только визуал.
-    /// </summary>
     [RequireComponent(typeof(PupsikEnemy))]
     public sealed class PupsikAnimator : MonoBehaviour
     {
@@ -50,7 +46,6 @@ namespace Bouncer.Enemies
             if (running)
                 _phase += dt * stepRate * Mathf.Lerp(0.4f, 1f, speed01) * Mathf.PI;
 
-            // 0 — бег, 1 — присед/прыжок: плавно переходим между позами.
             float targetPose = state is PupsikEnemy.State.Windup or PupsikEnemy.State.Hop ? 1f : 0f;
             _pose = Mathf.MoveTowards(_pose, targetPose, dt * 8f);
 

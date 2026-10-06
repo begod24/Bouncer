@@ -8,6 +8,8 @@ namespace Bouncer.Core
     /// которое пишет Time.timeScale — пауза и эффекты не спорят друг с другом.
     /// Стоп-кадр останавливает всю игру, поэтому он только для редких важных моментов (игрока ударили,
     /// босс раскололся, ловля). На обычные попадания вздрагивает сам враг (<see cref="HitPunch"/>).
+    /// По сети (<see cref="Online"/>) время общее: Time.timeScale всегда 1, стоп-кадр и замедления не работают,
+    /// а «Замри!» замораживает врагов. Тряска камеры у каждого своя и работает всегда.
     /// </summary>
     [DefaultExecutionOrder(-100)]
     public sealed class GameFeel : MonoBehaviour
@@ -77,6 +79,11 @@ namespace Bouncer.Core
 
         void Update()
         {
+            if (Online.Active)
+            {
+                Time.timeScale = 1f;
+                return;
+            }
             float now = Time.unscaledTime;
             float scale = 1f;
             if (now < s_slowMoUntil)
@@ -89,7 +96,7 @@ namespace Bouncer.Core
 
         public static void HitStop(float seconds)
         {
-            if (seconds <= 0f)
+            if (seconds <= 0f || Online.Active)
                 return;
             float now = Time.unscaledTime;
             if (now < s_hitStopUntil)
@@ -109,6 +116,8 @@ namespace Bouncer.Core
 
         public static void SlowMotion(float scale, float seconds)
         {
+            if (Online.Active)
+                return;
             s_slowMoScale = scale;
             s_slowMoUntil = Time.unscaledTime + seconds;
         }
@@ -116,11 +125,17 @@ namespace Bouncer.Core
         /// <summary>
         /// «Замри!»: всё вокруг замедляется до scale на seconds секунд реального времени.
         /// Новый вызов, пока замедление идёт, продлевает его, а не начинает заново.
+        /// По сети время не замедлить — вместо этого враги замирают на то же время.
         /// </summary>
         public static void BulletTime(float scale, float seconds)
         {
             if (seconds <= 0f)
                 return;
+            if (Online.Active)
+            {
+                Targetable.FreezeEnemies(seconds);
+                return;
+            }
             float now = Time.unscaledTime;
             if (now >= s_bulletTimeUntil)
                 s_bulletTimeStart = now;

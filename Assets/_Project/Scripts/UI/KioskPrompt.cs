@@ -59,7 +59,7 @@ namespace Bouncer.UI
         void UpdateLabel(bool near)
         {
             if (_player == null)
-                _player = FindFirstObjectByType<PlayerController>();
+                _player = Players.Local;
             bool gamepad = _player != null && _player.LastIntent.UsingGamepad;
             int mode = near ? gamepad ? 2 : 1 : 0;
             if (mode == _mode)

@@ -40,6 +40,8 @@ namespace Bouncer.Core
 
         public Vector3 Position => transform.position;
         public Vector3 AimPoint => aimPoint ? aimPoint.position : transform.position + Vector3.up;
+        /// <summary>Точка прицеливания как объект (за ней же следит камера игрока). Нет — сам персонаж.</summary>
+        public Transform AimTransform => aimPoint ? aimPoint : transform;
         /// <summary>Сглаженная скорость — для упреждения при броске.</summary>
         public Vector3 Velocity { get; private set; }
         public Health Health => _health;

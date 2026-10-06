@@ -11,7 +11,10 @@
         "Unity.TextMeshPro",
         "Bouncer.Enemies",
         "Unity.Localization",
-        "Bouncer.Run"
+        "Bouncer.Run",
+        "Bouncer.Net",
+        "Unity.Netcode.Runtime",
+        "Unity.Collections"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

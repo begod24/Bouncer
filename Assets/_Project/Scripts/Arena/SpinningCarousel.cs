@@ -63,7 +63,8 @@ namespace Bouncer.Arena
             for (int i = 0; i < balls.Count; i++)
             {
                 var ball = balls[i];
-                if (ball.State != BallState.Loose || !OnDeck(ball.Position, center, top))
+                // Копию мяча у гостя катает хозяин комнаты — она едет по его вестям.
+                if (ball.IsPuppet || ball.State != BallState.Loose || !OnDeck(ball.Position, center, top))
                     continue;
                 Vector3 offset = ball.Position - center;
                 offset.y = 0f;

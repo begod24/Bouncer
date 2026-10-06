@@ -62,9 +62,9 @@ namespace Bouncer.Run
             IsOpen = true;
             Customer = customer;
             int interest = customer.Player.Modifiers.CoinInterest;
-            Interest = interest > 0 ? RunState.Coins / customer.Deck.interestPer * interest : 0;
+            Interest = interest > 0 ? RunState.CoinsOf(customer.Slot) / customer.Deck.interestPer * interest : 0;
             if (Interest > 0)
-                RunState.AddCoins(Interest);
+                RunState.AddCoins(customer.Slot, Interest);
             Stock = new ShopStock(customer.Deck, customer, arenaIndex);
             SetOpenVisuals(true);
             GameEvents.PlaySound(SoundCue.KioskOpen, WindowPosition);

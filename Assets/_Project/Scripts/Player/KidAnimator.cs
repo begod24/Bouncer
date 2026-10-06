@@ -78,8 +78,9 @@ namespace Bouncer.Player
             if (animator == null || !animator.isActiveAndEnabled || dt <= 0f)
                 return;
 
-            // В сценке (дорога домой) контроллер выключен и игрока двигают снаружи — скорость по смещению.
-            Vector3 velocity = player.IsScripted ? delta / dt : player.Motor.Velocity;
+            // В сценке (дорога домой) контроллер выключен и игрока двигают снаружи, чужого игрока двигает сеть —
+            // скорость по смещению.
+            Vector3 velocity = player.IsScripted || !player.IsLocal ? delta / dt : player.Motor.Velocity;
             velocity.y = 0f;
             float maxSpeed = Mathf.Max(0.1f, player.Stats.moveSpeed * player.Modifiers.MoveSpeed);
             Vector3 local = Quaternion.Inverse(_kid.Slot.rotation) * velocity / maxSpeed;
@@ -90,16 +91,16 @@ namespace Bouncer.Player
             animator.SetFloat(RunSpeed, speed > 0.3f
                 ? Mathf.Clamp(speed / naturalRunSpeed, runSpeedRange.x, runSpeedRange.y) : 1f);
 
-            var motor = player.Motor;
-            bool sliding = motor.IsDashing && player.Modifiers.TackleDamage > 0;
-            bool dashing = motor.IsDashing && !sliding;
-            bool down = player.IsDead;
+            var action = player.Action;
+            bool sliding = action.Sliding;
+            bool dashing = action.Dashing && !sliding;
+            bool down = action.Down;
             animator.SetBool(Dashing, dashing);
             animator.SetBool(Sliding, sliding);
             animator.SetBool(Down, down);
-            animator.SetBool(Charging, player.Balls.IsCharging);
-            animator.SetFloat(Charge, player.Balls.Charge01);
-            animator.SetBool(Catching, player.Balls.IsCatching);
+            animator.SetBool(Charging, action.Charging);
+            animator.SetFloat(Charge, action.Charge01);
+            animator.SetBool(Catching, action.Catching);
 
             var session = GameSession.Instance;
             var state = session != null ? session.State : SessionState.Playing;
@@ -115,11 +116,19 @@ namespace Bouncer.Player
             animator.SetLayerWeight(UpperBodyLayer, _upperWeight);
 
             // Рывок: модель ныряет туда, куда рвётся игрок, потом возвращается к взгляду.
-            Quaternion target = motor.IsDashing && motor.DashDirection.sqrMagnitude > 1e-4f
-                ? Quaternion.LookRotation(motor.DashDirection)
+            Quaternion target = action.Dashing && action.DashDirection.sqrMagnitude > 1e-4f
+                ? Quaternion.LookRotation(action.DashDirection)
                 : transform.rotation;
             _kid.Slot.rotation = Quaternion.RotateTowards(_kid.Slot.rotation, target, dashTurnSpeed * dt);
         }
+
+        /// <summary>Разовое движение чужого игрока: бросок, ловля, удар — по сигналу его компьютера.</summary>
+        public void Play(PlayerCue cue) => SetTrigger(cue switch
+        {
+            PlayerCue.Throw => Throw,
+            PlayerCue.Caught => Caught,
+            _ => Hurt,
+        });
 
         void OnHurt(HitInfo hit) => SetTrigger(Hurt);
 

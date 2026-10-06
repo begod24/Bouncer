@@ -46,8 +46,8 @@ namespace Bouncer.Core
         /// <summary>Вся прогулка: прошлые арены и эта.</summary>
         public float RunTime => RunState.PastTime + SurvivalTime;
         public int RunKills => RunState.PastKills + Kills;
-        /// <summary>Идёт бой: враги ходят, волны идут, часы арены тикают.</summary>
-        public bool IsPlaying => State == SessionState.Playing && !GameFeel.Paused;
+        /// <summary>Идёт бой: враги ходят, волны идут, часы арены тикают. По сети пауза у одного игрока бой не останавливает.</summary>
+        public bool IsPlaying => State == SessionState.Playing && (Online.Active || !GameFeel.Paused);
         /// <summary>Игрок может бегать и бросать: в бою и на пройденной арене.</summary>
         public bool PlayerCanAct => State is (SessionState.Playing or SessionState.Cleared) && !GameFeel.Paused && !ScreenFade.IsBusy;
         public bool IsFinished => State is SessionState.GameOver or SessionState.Victory;
@@ -145,9 +145,11 @@ namespace Bouncer.Core
                 GameFeel.Paused = !GameFeel.Paused;
         }
 
-        /// <summary>Заново всю прогулку с первой арены, без заставки. В обучении — обучение с начала.</summary>
+        /// <summary>Заново всю прогулку с первой арены, без заставки. В обучении — обучение с начала. По сети — нельзя.</summary>
         public void Restart()
         {
+            if (Online.Active)
+                return;
             if (Tutorial.Active)
                 Tutorial.Request();
             Reload(skipTitle: true);
@@ -160,8 +162,13 @@ namespace Bouncer.Core
             Reload(skipTitle: true);
         }
 
-        /// <summary>К заставке: первая арена грузится заново и ждёт кнопку «Играть».</summary>
-        public void ToTitle() => Reload(skipTitle: false);
+        /// <summary>К заставке: первая арена грузится заново и ждёт кнопку «Играть». По сети — сперва уйти из комнаты.</summary>
+        public void ToTitle()
+        {
+            if (Online.Active)
+                Online.Session?.Leave();
+            Reload(skipTitle: false);
+        }
 
         void Reload(bool skipTitle)
         {
@@ -222,12 +229,15 @@ namespace Bouncer.Core
             GameFeel.Frozen = false;
         }
 
-        /// <summary>Уйти на следующую арену прогулки: экран гаснет, грузится её сцена.</summary>
-        public void LeaveArena(string nextScene, int lives)
+        /// <summary>
+        /// Уйти на следующую арену прогулки: экран гаснет, грузится её сцена.
+        /// Сердца игроков к этому времени записаны в <see cref="RunState.SetLives"/>.
+        /// </summary>
+        public void LeaveArena(string nextScene)
         {
             if (State != SessionState.Cleared || ScreenFade.IsBusy)
                 return;
-            RunState.AdvanceArena(SurvivalTime, Kills, lives);
+            RunState.AdvanceArena(SurvivalTime, Kills);
             GameFeel.Frozen = true;
             ScreenFade.LoadScene(nextScene);
         }

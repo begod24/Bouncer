@@ -97,9 +97,11 @@ namespace Bouncer.Player
             if (handBall)
             {
                 handBall.enabled = !dead && balls.Balls > 0;
-                float pulse = balls.Charge01 >= 1f ? 1f + 0.12f * Mathf.Sin(Time.time * 30f) : 1f;
-                handBall.transform.localScale = _handBallScale * (heldBallScale * (1f + balls.Charge01 * 0.45f) * pulse);
-                float charge = balls.Charge01 >= 1f ? 0.7f : balls.Charge01 * 0.3f;
+                // Заряд чужого игрока присылает сеть (его поза), свой — из рук.
+                float charge01 = player.Action.Charge01;
+                float pulse = charge01 >= 1f ? 1f + 0.12f * Mathf.Sin(Time.time * 30f) : 1f;
+                handBall.transform.localScale = _handBallScale * (heldBallScale * (1f + charge01 * 0.45f) * pulse);
+                float charge = charge01 >= 1f ? 0.7f : charge01 * 0.3f;
                 // Горячий мяч тлеет, как уголёк, — перебегает от красного к жёлтому.
                 Color glow = balls.CatchPerksReady
                     ? Color.Lerp(hotColor, candleColor, 0.5f + 0.5f * Mathf.Sin(Time.time * 9f))

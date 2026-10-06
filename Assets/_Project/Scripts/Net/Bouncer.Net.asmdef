@@ -1,0 +1,26 @@
+{
+    "name": "Bouncer.Net",
+    "rootNamespace": "Bouncer.Net",
+    "references": [
+        "Bouncer.Core",
+        "Bouncer.Balls",
+        "Bouncer.Player",
+        "Unity.InputSystem",
+        "Unity.TextMeshPro",
+        "Unity.Collections",
+        "Unity.Netcode.Runtime",
+        "Unity.Networking.Transport",
+        "Unity.Services.Core",
+        "Unity.Services.Authentication",
+        "Unity.Services.Multiplayer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

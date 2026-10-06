@@ -1038,6 +1038,170 @@ MonoBehaviour:
     m_Localized: Take the practice
     m_Metadata:
       m_Items: []
+  - m_Id: 4353419954348032
+    m_Localized: How do we play?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348033
+    m_Localized: Solo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348034
+    m_Localized: Together
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348035
+    m_Localized: "Versus \xB7 soon"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348036
+    m_Localized: Play together
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348037
+    m_Localized: What's your yard name?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348038
+    m_Localized: Name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348039
+    m_Localized: Create a room
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348040
+    m_Localized: Room code or IP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348041
+    m_Localized: Join
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348042
+    m_Localized: Local network room
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348043
+    m_Localized: "Calling everyone out\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348044
+    m_Localized: Type the room code first.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348045
+    m_Localized: Online services don't respond. Try a local network room.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348046
+    m_Localized: Couldn't create a room. Try again or use a local network room.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348047
+    m_Localized: "Couldn't join \u2014 check the code."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348048
+    m_Localized: You have different game versions.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348049
+    m_Localized: The room is full.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348050
+    m_Localized: They're already out playing.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348051
+    m_Localized: The host left the room.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348052
+    m_Localized: "The arena took too long to load \u2014 connection lost."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348053
+    m_Localized: "Room \xB7 together"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348054
+    m_Localized: "Room \xB7 versus"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348055
+    m_Localized: 'Room code: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348056
+    m_Localized: 'Address: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348057
+    m_Localized: Copy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348058
+    m_Localized: Code copied!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348059
+    m_Localized: Who are you?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348060
+    m_Localized: Ready!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348061
+    m_Localized: Not ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348062
+    m_Localized: Let's go!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348063
+    m_Localized: Leave
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348064
+    m_Localized: host
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348065
+    m_Localized: ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348066
+    m_Localized: not ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348067
+    m_Localized: free
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348068
+    m_Localized: "Connecting\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348069
+    m_Localized: "Everyone's ready \u2014 let's go!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348070
+    m_Localized: Waiting for everyone to be ready.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348071
+    m_Localized: Waiting for the host to start.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348072
+    m_Localized: "Pick who you are and press \u201CReady!\u201D."
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

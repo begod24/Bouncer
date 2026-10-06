@@ -991,6 +991,170 @@ MonoBehaviour:
     m_Key: notebook.howto.tutorial
     m_Metadata:
       m_Items: []
+  - m_Id: 4353419954348032
+    m_Key: mode.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348033
+    m_Key: mode.solo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348034
+    m_Key: mode.coop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348035
+    m_Key: mode.versus
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348036
+    m_Key: online.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348037
+    m_Key: online.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348038
+    m_Key: online.name.placeholder
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348039
+    m_Key: online.create
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348040
+    m_Key: online.code.placeholder
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348041
+    m_Key: online.join
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348042
+    m_Key: online.lan
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348043
+    m_Key: online.busy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348044
+    m_Key: online.code.empty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348045
+    m_Key: net.error.signin
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348046
+    m_Key: net.error.create
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348047
+    m_Key: net.error.join
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348048
+    m_Key: net.error.version
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348049
+    m_Key: net.error.full
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348050
+    m_Key: net.error.started
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348051
+    m_Key: net.error.hostleft
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348052
+    m_Key: net.error.timeout
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348053
+    m_Key: lobby.title.coop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348054
+    m_Key: lobby.title.versus
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348055
+    m_Key: lobby.code
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348056
+    m_Key: lobby.ip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348057
+    m_Key: lobby.copy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348058
+    m_Key: lobby.copied
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348059
+    m_Key: lobby.kids
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348060
+    m_Key: lobby.ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348061
+    m_Key: lobby.unready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348062
+    m_Key: lobby.start
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348063
+    m_Key: lobby.leave
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348064
+    m_Key: lobby.host
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348065
+    m_Key: lobby.ready.mark
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348066
+    m_Key: lobby.notready.mark
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348067
+    m_Key: lobby.empty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348068
+    m_Key: lobby.connecting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348069
+    m_Key: lobby.can.start
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348070
+    m_Key: lobby.wait.ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348071
+    m_Key: lobby.wait.host
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4353419954348072
+    m_Key: lobby.pick.ready
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

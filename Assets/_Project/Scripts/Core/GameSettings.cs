@@ -24,6 +24,11 @@ namespace Bouncer.Core
         public static bool VSync = true;
         /// <summary>Ребёнок, с которым игрок выходит гулять (номер в KidRoster). Запоминается между запусками.</summary>
         public static int Kid;
+        /// <summary>Имя игрока в сетевой комнате: его видят другие над ребёнком и в списке комнаты.</summary>
+        public static string PlayerName = "";
+
+        /// <summary>Самое длинное имя в комнате, букв.</summary>
+        public const int PlayerNameLength = 16;
 
         public static bool AutoAimFor(bool gamepad) => gamepad ? AutoAimGamepad : AutoAimMouse;
 
@@ -48,6 +53,7 @@ namespace Bouncer.Core
             ScreenShake = GetFloat(nameof(ScreenShake), 1f);
             VSync = GetBool(nameof(VSync), true);
             Kid = Mathf.Max(0, PlayerPrefs.GetInt(Prefix + nameof(Kid), 0));
+            PlayerName = PlayerPrefs.GetString(Prefix + nameof(PlayerName), "");
             Apply();
         }
 
@@ -71,6 +77,7 @@ namespace Bouncer.Core
             PlayerPrefs.SetFloat(Prefix + nameof(ScreenShake), ScreenShake);
             SetBool(nameof(VSync), VSync);
             PlayerPrefs.SetInt(Prefix + nameof(Kid), Kid);
+            PlayerPrefs.SetString(Prefix + nameof(PlayerName), PlayerName ?? "");
             PlayerPrefs.Save();
         }
 

@@ -150,7 +150,7 @@ namespace Bouncer.UI
             index = roster.Clamp(index);
             GameSettings.Kid = index;
             GameSettings.Save();
-            var player = FindFirstObjectByType<PlayerKid>();
+            var player = Players.Local ? Players.Local.GetComponent<PlayerKid>() : null;
             if (player != null)
                 player.Show(roster[index]);
             Chosen?.Invoke(index);

@@ -22,7 +22,7 @@ namespace Bouncer.Run
     /// (каждая покупка делает следующие дороже), перебор витрины (каждый раз дороже), замок (жвачка ждёт
     /// в следующем ларьке), лимонад и бутерброд, продажа карточки из кармана за полцены — отдельно или обменом
     /// на жвачку, когда карманы полны.
-    /// Монетки — в <see cref="RunState"/>, отложенные жвачки — в <see cref="RunCards.Locked"/>.
+    /// Монетки — в <see cref="RunState"/>, отложенные жвачки — в <see cref="RunCards.Locked"/> (всё — покупателя).
     /// </summary>
     public sealed class ShopStock
     {
@@ -88,12 +88,12 @@ namespace Bouncer.Run
                 return PurchaseResult.Unavailable;
             var slot = _slots[index];
             if (_cards.PocketsFullFor(slot.Card))
-                return RunState.Coins + BestSellPrice() >= slot.Price ? PurchaseResult.PocketsFull : PurchaseResult.NotEnoughCoins;
-            if (!RunState.TrySpend(slot.Price))
+                return RunState.CoinsOf(_cards.Slot) + BestSellPrice() >= slot.Price ? PurchaseResult.PocketsFull : PurchaseResult.NotEnoughCoins;
+            if (!RunState.TrySpend(_cards.Slot, slot.Price))
                 return PurchaseResult.NotEnoughCoins;
             slot.Sold = true;
             slot.Locked = false;
-            RunCards.Locked.Remove(slot.Card);
+            RunCards.Locked(_cards.Slot).Remove(slot.Card);
             _cards.Take(slot.Card);
             _purchases++;
             UpdatePrices();
@@ -109,7 +109,7 @@ namespace Bouncer.Run
                 return PurchaseResult.Unavailable;
             int price = SellPriceOf(card);
             _cards.Discard(card);
-            RunState.AddCoins(price);
+            RunState.AddCoins(_cards.Slot, price);
             GameEvents.PlaySound(SoundCue.Purchase, Vector3.zero);
             Changed?.Invoke();
             return PurchaseResult.Ok;
@@ -119,7 +119,7 @@ namespace Bouncer.Run
 
         /// <summary>Хватит ли монеток на жвачку index, если продать card.</summary>
         public bool SwapAffordable(int index, UpgradeCard card) =>
-            CanBuy(index) && RunState.Coins + SellPriceOf(card) >= _slots[index].Price;
+            CanBuy(index) && RunState.CoinsOf(_cards.Slot) + SellPriceOf(card) >= _slots[index].Price;
 
         /// <summary>
         /// Карманы полны: продать card и сразу купить жвачку index. Если монеток и после продажи не хватит,
@@ -148,7 +148,7 @@ namespace Bouncer.Run
         /// <summary>Показать другие жвачки на всех местах, кроме отложенных.</summary>
         public PurchaseResult Reroll()
         {
-            if (!RunState.TrySpend(RerollPrice))
+            if (!RunState.TrySpend(_cards.Slot, RerollPrice))
                 return PurchaseResult.NotEnoughCoins;
             _rerolls++;
             Fill(keepLocked: false);
@@ -168,12 +168,12 @@ namespace Bouncer.Run
             slot.Locked = !slot.Locked;
             if (slot.Locked)
             {
-                if (!RunCards.Locked.Contains(slot.Card))
-                    RunCards.Locked.Add(slot.Card);
+                if (!RunCards.Locked(_cards.Slot).Contains(slot.Card))
+                    RunCards.Locked(_cards.Slot).Add(slot.Card);
             }
             else
             {
-                RunCards.Locked.Remove(slot.Card);
+                RunCards.Locked(_cards.Slot).Remove(slot.Card);
             }
             GameEvents.PlaySound(SoundCue.UiMove, Vector3.zero);
             Changed?.Invoke();
@@ -188,7 +188,7 @@ namespace Bouncer.Run
             var health = _cards.Player.Health;
             if (health.IsDead || health.Current >= health.Max)
                 return PurchaseResult.Unavailable;
-            if (!RunState.TrySpend(price))
+            if (!RunState.TrySpend(_cards.Slot, price))
                 return PurchaseResult.NotEnoughCoins;
             health.Heal(Mathf.Min(amount, health.Max - health.Current));
             GameEvents.PlaySound(SoundCue.Purchase, Vector3.zero);
@@ -206,11 +206,11 @@ namespace Bouncer.Run
             if (keepLocked)
             {
                 // Отложенное, которое уже нельзя купить (взято из портфеля до предела), выбрасываем.
-                RunCards.Locked.RemoveAll(card => card == null || !_cards.CanOffer(card));
+                RunCards.Locked(_cards.Slot).RemoveAll(card => card == null || !_cards.CanOffer(card));
                 for (int i = 0; i < _slots.Count; i++)
                 {
                     var slot = _slots[i];
-                    slot.Card = i < RunCards.Locked.Count ? RunCards.Locked[i] : null;
+                    slot.Card = i < RunCards.Locked(_cards.Slot).Count ? RunCards.Locked(_cards.Slot)[i] : null;
                     slot.Locked = slot.Card != null;
                     slot.Sold = false;
                 }

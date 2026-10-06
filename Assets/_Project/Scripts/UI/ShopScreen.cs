@@ -220,7 +220,7 @@ namespace Bouncer.UI
         {
             if (_stock == null)
                 return;
-            int money = RunState.Coins;
+            int money = Money;
             var stock = _stock.Slots;
             var customer = _stock.Customer;
             for (int i = 0; i < slots.Length; i++)
@@ -274,15 +274,18 @@ namespace Bouncer.UI
             if (label)
             {
                 label.text = price.ToString();
-                label.color = available && price <= RunState.Coins ? affordableColor : expensiveColor;
+                label.color = available && price <= Money ? affordableColor : expensiveColor;
             }
         }
 
         void RefreshCoins()
         {
             if (coins)
-                coins.text = RunState.Coins.ToString();
+                coins.text = Money.ToString();
         }
+
+        /// <summary>Монетки покупателя у этой витрины.</summary>
+        int Money => _stock != null ? RunState.CoinsOf(_stock.Customer.Slot) : 0;
 
         void Buy(int index)
         {

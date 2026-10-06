@@ -113,7 +113,7 @@ namespace Bouncer.Run
         {
             if (!Tutorial.Active)
                 return;
-            _player = FindFirstObjectByType<PlayerController>();
+            _player = Players.Local;
             if (_player == null)
             {
                 enabled = false;

@@ -151,7 +151,7 @@ namespace Bouncer.Run
 
         void Collect()
         {
-            RunState.AddCoins(value);
+            RunState.AddLoot(value);
             GameEvents.PlaySound(SoundCue.Coin, transform.position);
             PoolService.Despawn(gameObject);
         }

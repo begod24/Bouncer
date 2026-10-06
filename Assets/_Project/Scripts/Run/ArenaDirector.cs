@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Bouncer.Core;
+using Bouncer.Player;
 using Bouncer.Upgrades;
 using Bouncer.Visuals;
 using Bouncer.Waves;
@@ -39,7 +40,6 @@ namespace Bouncer.Run
         [SerializeField] float portfolioMinDistance = 8f;
 
         readonly List<float> _portfolioTimes = new();
-        PlayerCards _player;
         bool _complete;
 
         public static ArenaDirector Instance { get; private set; }
@@ -109,13 +109,6 @@ namespace Bouncer.Run
             GameEvents.RunFinished -= OnRunFinished;
         }
 
-        void Start()
-        {
-            var player = FindFirstObjectByType<Bouncer.Player.PlayerController>();
-            if (player)
-                player.TryGetComponent(out _player);
-        }
-
         void Apply()
         {
             ArenaMusic.FinalTheme = Arena != null && Arena.finalMusic;
@@ -133,7 +126,8 @@ namespace Bouncer.Run
             if (forkExit)
                 forkExit.Hide();
             _portfolioTimes.Clear();
-            if (Tutorial.Active)
+            // По сети врагов пока нет — сетевые враги, находки и погода придут вместе с коопом.
+            if (Tutorial.Active || Online.Active)
             {
                 if (spawner)
                     spawner.Spawning = false;
@@ -162,7 +156,7 @@ namespace Bouncer.Run
         void Update()
         {
             var session = GameSession.Instance;
-            if (Arena == null || _complete || session == null || session.State != SessionState.Playing)
+            if (Arena == null || _complete || session == null || session.State != SessionState.Playing || Online.Active)
                 return;
             float time = spawner ? spawner.WaveTime : session.SurvivalTime;
 
@@ -246,10 +240,14 @@ namespace Bouncer.Run
                 spawner.DespawnAll();
             }
             CoinPickup.CollectAll();
-            if (boss && _player)
-                _player.QueueOffer(OfferKind.Boss);
-            if (kiosk && Arena.kiosk && _player)
-                kiosk.Open(_player, ArenaIndex);
+            // Карточка за босса — каждому игроку своя.
+            if (boss)
+                foreach (var player in Players.All)
+                    if (player.TryGetComponent(out PlayerCards cards))
+                        cards.QueueOffer(OfferKind.Boss);
+            var customer = Players.Local ? Players.Local.GetComponent<PlayerCards>() : null;
+            if (kiosk && Arena.kiosk && customer)
+                kiosk.Open(customer, ArenaIndex);
             if (exit)
                 exit.Show(ArrivalLabel(NextArena), 0);
             // Развилка: вторая стрелка ведёт на другую арену следующего этапа.
@@ -276,13 +274,27 @@ namespace Bouncer.Run
             var next = run ? run.Get(ArenaIndex + 1, variant) : null;
             if (!_complete || session == null || next == null || session.State != SessionState.Cleared)
                 return false;
-            int lives = _player ? _player.Player.Health.Current : 0;
+            // Выбитый в коопе приходит на следующую арену с одним сердцем.
+            foreach (var player in Players.All)
+                RunState.SetLives(player.Slot, Mathf.Max(1, player.Health.Current));
             RunState.NextVariant = variant;
-            session.LeaveArena(next.sceneName, lives);
+            session.LeaveArena(next.sceneName);
             return true;
         }
 
-        /// <summary>Портфель где-нибудь у края арены, подальше от игрока.</summary>
+        static float DistanceToNearestPlayer(Vector3 position)
+        {
+            float best = float.PositiveInfinity;
+            foreach (var player in Players.All)
+            {
+                Vector3 delta = player.transform.position - position;
+                delta.y = 0f;
+                best = Mathf.Min(best, delta.magnitude);
+            }
+            return best;
+        }
+
+        /// <summary>Портфель где-нибудь у края арены, подальше от игроков.</summary>
         void PlaceFoundPortfolio()
         {
             if (loot == null)
@@ -290,7 +302,6 @@ namespace Bouncer.Run
             var spots = portfolioSpots != null && portfolioSpots.Length > 0 ? portfolioSpots : spawner ? spawner.SpawnPoints : null;
             if (spots == null || spots.Length == 0)
                 return;
-            Vector3 playerPosition = _player ? _player.transform.position : Vector3.zero;
             Transform best = null;
             for (int attempt = 0; attempt < 8; attempt++)
             {
@@ -298,9 +309,7 @@ namespace Bouncer.Run
                 if (!spot)
                     continue;
                 best = spot;
-                Vector3 delta = spot.position - playerPosition;
-                delta.y = 0f;
-                if (delta.sqrMagnitude >= portfolioMinDistance * portfolioMinDistance)
+                if (DistanceToNearestPlayer(spot.position) >= portfolioMinDistance)
                     break;
             }
             if (best == null)

@@ -39,16 +39,25 @@ namespace Bouncer.UI
             SetVisible(false);
         }
 
-        void Start() => Bind(FindFirstObjectByType<PlayerController>());
+        void Start()
+        {
+            Players.LocalChanged += Bind;
+            Bind(Players.Local);
+        }
 
         void OnDestroy()
         {
+            Players.LocalChanged -= Bind;
             if (_cards != null)
                 _cards.OfferChanged -= OnOfferChanged;
         }
 
+        /// <summary>Экран выбора показывает карточки своего игрока: он мог появиться позже экрана.</summary>
         void Bind(PlayerController player)
         {
+            if (_cards != null)
+                _cards.OfferChanged -= OnOfferChanged;
+            _cards = null;
             if (player == null || !player.TryGetComponent(out _cards))
                 return;
             _cards.OfferChanged += OnOfferChanged;

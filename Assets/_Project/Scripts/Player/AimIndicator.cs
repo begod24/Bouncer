@@ -31,7 +31,7 @@ namespace Bouncer.Player
         {
             var balls = player.Balls;
             var definition = balls.BallDefinition;
-            if (!GameSettings.ShowAimPreview || player.IsDead || balls.Balls == 0 || definition == null
+            if (!GameSettings.ShowAimPreview || !player.IsLocal || player.IsDead || balls.Balls == 0 || definition == null
                 || !GameSession.IsGameplayActive)
             {
                 _line.enabled = false;

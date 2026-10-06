@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Bouncer.Balls;
 using Bouncer.Core;
 using UnityEngine;
@@ -27,6 +28,7 @@ namespace Bouncer.Player
     /// Мячи в руках — просто счётчик, объект мяча появляется только в момент броска.
     /// Свои мячи (их <see cref="MaxBalls"/>) остаются на арене, пока их не подберут; подобранный или пойманный чужой
     /// мяч — «взаймы»: бросок им не возвращается (бумеранг, резинка), а упав, он снова лежит на арене как чужой.
+    /// Мяч другого игрока (пас в коопе) тоже взаймы, но остаётся его мячом: брошенный, он снова лежит как его.
     /// Бросается сперва мяч на нитке («Йо-йо»), потом чужие, потом свои.
     /// Каким мячом бросать (резиновый, волейбольный…), решают карточки — <see cref="SetBallPrefab"/>.
     /// Ловля — на тайминг: идеальная в начале окна, мячи только спереди, промахи подряд удлиняют перезарядку,
@@ -49,8 +51,12 @@ namespace Bouncer.Player
         bool _catchWindowOpen;
         /// <summary>Сколько попыток ловли подряд ушло в пустоту — за каждую перезарядка длиннее.</summary>
         int _missStreak;
-        /// <summary>Сколько мячей в руках — чужие, пойманные (одноразовые).</summary>
-        int _borrowed;
+        /// <summary>
+        /// Мячи взаймы в руках — чьи они: null — чужой (врагов, одноразовый), игрок — его мяч (пас союзника).
+        /// Бросаются с конца.
+        /// </summary>
+        readonly List<GameObject> _borrowed = new();
+        PlayerController _player;
         /// <summary>Мяч на нитке («Йо-йо») сейчас не в руках.</summary>
         bool _yoyoOut;
         /// <summary>Сколько своих мячей пропало не в руках и ждёт возвращения.</summary>
@@ -63,7 +69,7 @@ namespace Bouncer.Player
         /// <summary>Сколько мячей в руках (свои и чужие вместе).</summary>
         public int Balls { get; private set; }
         /// <summary>Сколько из них чужих — одноразовых.</summary>
-        public int BorrowedBalls => _borrowed;
+        public int BorrowedBalls => _borrowed.Count;
         public int MaxBalls => _stats.maxBalls + _mods.ExtraBalls;
         public float CatchRadius => _stats.catchRadius * _mods.CatchRadius;
         float CatchWindow => _stats.catchWindow * _mods.CatchWindow;
@@ -114,6 +120,7 @@ namespace Bouncer.Player
         {
             _stats = stats;
             _mods = mods;
+            _player = GetComponent<PlayerController>();
             _defaultBallPrefab = ballPrefab;
             // На арене игрок сразу со всеми своими мячами.
             Balls = MaxBalls;
@@ -153,12 +160,66 @@ namespace Bouncer.Player
         /// <summary>Мяч в руки: свой или чужой (одноразовый), мяч на нитке снова готов.</summary>
         void AddToHands(Ball ball)
         {
-            Balls++;
-            if (ball.Owner != gameObject)
-                _borrowed++;
-            else if (ball.IsYoyoString)
-                _yoyoOut = false;
+            AddToHands(ball.Owner, ball.IsYoyoString);
             ball.TakeInHands();
+        }
+
+        void AddToHands(GameObject owner, bool yoyoString)
+        {
+            Balls++;
+            if (owner != gameObject)
+                _borrowed.Add(owner);
+            else if (yoyoString)
+                _yoyoOut = false;
+        }
+
+        /// <summary>
+        /// По сети: хозяин комнаты отдал в руки мяч, вернувшийся сам (бумеранг, резинка, хват). owner — чей мяч.
+        /// Руки успели заполниться — свой мяч вернётся позже, как потерянный.
+        /// </summary>
+        public void ReceiveFromNetwork(GameObject owner, bool yoyoString)
+        {
+            if (Balls >= MaxBalls)
+            {
+                if (owner == gameObject)
+                    LoseOwnBall(yoyoString);
+                return;
+            }
+            AddToHands(owner, yoyoString);
+            GameEvents.PlaySound(SoundCue.Pickup, transform.position);
+            Returned?.Invoke();
+        }
+
+        /// <summary>
+        /// Игрок другого компьютера: сколько у него мячей в руках, присылает сеть (здесь его руки не считаются) —
+        /// чтобы мяч в руке был виден, только когда он есть.
+        /// </summary>
+        public void SetRemoteBalls(int count)
+        {
+            if (_player == null || _player.IsLocal)
+                return;
+            Balls = Mathf.Max(0, count);
+            TrimBorrowed();
+        }
+
+        /// <summary>По сети: хозяин комнаты не отдал мяч, который здесь уже взяли в руки (его успел взять другой).</summary>
+        public void RevokeFromNetwork(GameObject owner, bool yoyoString)
+        {
+            if (Balls <= 0)
+                return;
+            Balls--;
+            if (owner != gameObject)
+            {
+                int index = _borrowed.LastIndexOf(owner);
+                if (index < 0)
+                    index = _borrowed.Count - 1;
+                if (index >= 0)
+                    _borrowed.RemoveAt(index);
+            }
+            else if (yoyoString)
+            {
+                _yoyoOut = true;
+            }
         }
 
         public void Tick(in PlayerIntent intent, PlayerAim aim, bool canAct, bool canCatch)
@@ -225,7 +286,7 @@ namespace Bouncer.Player
         public void ClampToMax()
         {
             Balls = Mathf.Clamp(Balls, 0, MaxBalls);
-            _borrowed = Mathf.Min(_borrowed, Balls);
+            TrimBorrowed();
         }
 
         /// <summary>В руках больше мячей, чем теперь помещается (хулиганство): сперва уходят чужие, потом свои.</summary>
@@ -234,9 +295,15 @@ namespace Bouncer.Player
             while (Balls > MaxBalls)
             {
                 Balls--;
-                if (_borrowed > 0)
-                    _borrowed--;
+                if (_borrowed.Count > 0)
+                    _borrowed.RemoveAt(_borrowed.Count - 1);
             }
+        }
+
+        void TrimBorrowed()
+        {
+            while (_borrowed.Count > Balls)
+                _borrowed.RemoveAt(_borrowed.Count - 1);
         }
 
         /// <summary>
@@ -372,7 +439,7 @@ namespace Bouncer.Player
             for (int i = balls.Count - 1; i >= 0; i--)
             {
                 var ball = balls[i];
-                if (!ball.IsCatchableBy(Team.Player) || !InFront(ball))
+                if (!ball.IsCatchableBy(Team.Player, gameObject) || !InFront(ball))
                     continue;
                 // Ёжика навстречу не ловим: пусть долетит и уколет (TryCatch) — ловить его нельзя.
                 if (ball.State == BallState.Live && ball.Stats.Has(HitFlags.Spiky))
@@ -417,7 +484,7 @@ namespace Bouncer.Player
             {
                 var ball = balls[i];
                 Vector3 delta = ball.Position - feet;
-                if (ball.IsCatchableBy(Team.Player) && !(ball.State == BallState.Live && ball.Stats.Has(HitFlags.Spiky)))
+                if (ball.IsCatchableBy(Team.Player, gameObject) && !(ball.State == BallState.Live && ball.Stats.Has(HitFlags.Spiky)))
                 {
                     // Есть что ловить — ПКМ остаётся ловлей.
                     if (delta.sqrMagnitude <= blockSqr)
@@ -467,10 +534,17 @@ namespace Bouncer.Player
         /// <summary>Свой мяч пропал не в руках: через пару секунд он «вернулся» (запас мячей не тает).</summary>
         void OnOwnBallLost(Ball ball, GameObject owner)
         {
-            if (owner != gameObject)
+            // Игрок другого компьютера узнаёт о своих мячах по сети — их теряет мяч хозяина комнаты.
+            if (owner != gameObject || (_player != null && !_player.IsLocal))
                 return;
+            LoseOwnBall(ball.IsYoyoString);
+        }
+
+        /// <summary>Свой мяч пропал не в руках (или об этом сказала сеть): через пару секунд он вернётся.</summary>
+        public void LoseOwnBall(bool yoyoString)
+        {
             _lostBalls++;
-            if (ball.IsYoyoString)
+            if (yoyoString)
                 _lostYoyo = true;
             _lostReturnAt = Time.time + _stats.lostBallReturnDelay;
         }
@@ -508,7 +582,8 @@ namespace Bouncer.Player
                 CatchPerksReady = false;
             }
 
-            // Какой мяч из рук: сперва мяч на нитке, потом чужие (одноразовые), потом свои.
+            // Какой мяч из рук: сперва мяч на нитке, потом взятые взаймы (чужие — одноразовые, пас — мяч союзника),
+            // потом свои.
             bool yoyo = YoyoInHand;
             GameObject owner = gameObject;
             if (yoyo)
@@ -518,10 +593,10 @@ namespace Bouncer.Player
             else
             {
                 perks.yoyo = false;
-                if (_borrowed > 0)
+                if (_borrowed.Count > 0)
                 {
-                    _borrowed--;
-                    owner = null;
+                    owner = _borrowed[^1];
+                    _borrowed.RemoveAt(_borrowed.Count - 1);
                 }
             }
 
@@ -548,8 +623,7 @@ namespace Bouncer.Player
             bool yoyoString)
         {
             Vector3 origin = SafeOrigin(direction, radius);
-            var ball = PoolService.Spawn(ballPrefab, origin, Quaternion.identity);
-            ball.Launch(new BallThrow
+            Ball.Throw(ballPrefab, new BallThrow
             {
                 Origin = origin,
                 Direction = direction,

@@ -6,18 +6,31 @@ namespace Bouncer.Upgrades
 {
     /// <summary>
     /// Карточки прогулки поверх сцен: какие взяты (по порядку — на новой арене они применяются заново)
-    /// и какие жвачки отложены на витрине до следующего ларька. Сбрасывается сам, когда начинается новая
+    /// и какие жвачки отложены на витрине до следующего ларька. У каждого игрока свои, по его номеру (slot);
+    /// золотые считаются на всю команду — в коопе золотая одна на всех. Сбрасывается сам, когда начинается новая
     /// прогулка (<see cref="RunState.RunId"/>).
     /// </summary>
     public static class RunCards
     {
-        static readonly List<UpgradeCard> s_taken = new();
-        static readonly List<UpgradeCard> s_locked = new();
+        sealed class PlayerRunCards
+        {
+            public readonly List<UpgradeCard> Taken = new();
+            public readonly List<UpgradeCard> Locked = new();
+            public int Combos;
+
+            public void Clear()
+            {
+                Taken.Clear();
+                Locked.Clear();
+                Combos = 0;
+            }
+        }
+
+        static readonly PlayerRunCards[] s_players = { new(), new(), new(), new() };
         static int s_runId = -1;
         static int s_golds;
-        static int s_combos;
 
-        /// <summary>Сколько золотых (не комбо) взято за прогулку — даже если потом выкинуты.</summary>
+        /// <summary>Сколько золотых (не комбо) взято за прогулку всей командой — даже если потом выкинуты.</summary>
         public static int GoldsTaken
         {
             get
@@ -27,53 +40,34 @@ namespace Bouncer.Upgrades
             }
         }
 
-        /// <summary>Сколько комбо собрано за прогулку — даже если потом выкинуты.</summary>
-        public static int CombosTaken
-        {
-            get
-            {
-                Sync();
-                return s_combos;
-            }
-        }
+        /// <summary>Сколько комбо собрал игрок за прогулку — даже если потом выкинуты.</summary>
+        public static int CombosTaken(int slot) => Of(slot).Combos;
 
-        /// <summary>Взятые карточки по порядку.</summary>
-        public static IReadOnlyList<UpgradeCard> Taken
-        {
-            get
-            {
-                Sync();
-                return s_taken;
-            }
-        }
+        /// <summary>Взятые игроком карточки по порядку.</summary>
+        public static IReadOnlyList<UpgradeCard> Taken(int slot) => Of(slot).Taken;
 
-        /// <summary>Жвачки, отложенные на витрине: ждут в следующем ларьке.</summary>
-        public static List<UpgradeCard> Locked
-        {
-            get
-            {
-                Sync();
-                return s_locked;
-            }
-        }
+        /// <summary>Жвачки, отложенные игроком на витрине: ждут в следующем ларьке.</summary>
+        public static List<UpgradeCard> Locked(int slot) => Of(slot).Locked;
 
-        public static void Record(UpgradeCard card)
+        public static void Record(int slot, UpgradeCard card)
         {
-            Sync();
+            var player = Of(slot);
             if (!card)
                 return;
-            s_taken.Add(card);
+            player.Taken.Add(card);
             if (card.IsCombo)
-                s_combos++;
+                player.Combos++;
             else if (card.rarity == CardRarity.Gold)
                 s_golds++;
         }
 
         /// <summary>Выкинуть карточку из взятых (все её повторы): на следующих аренах она больше не применяется.</summary>
-        public static void Remove(UpgradeCard card)
+        public static void Remove(int slot, UpgradeCard card) => Of(slot).Taken.RemoveAll(taken => taken == card);
+
+        static PlayerRunCards Of(int slot)
         {
             Sync();
-            s_taken.RemoveAll(taken => taken == card);
+            return s_players[Mathf.Clamp(slot, 0, s_players.Length - 1)];
         }
 
         static void Sync()
@@ -81,20 +75,18 @@ namespace Bouncer.Upgrades
             if (s_runId == RunState.RunId)
                 return;
             s_runId = RunState.RunId;
-            s_taken.Clear();
-            s_locked.Clear();
+            foreach (var player in s_players)
+                player.Clear();
             s_golds = 0;
-            s_combos = 0;
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
         {
-            s_taken.Clear();
-            s_locked.Clear();
+            foreach (var player in s_players)
+                player.Clear();
             s_runId = -1;
             s_golds = 0;
-            s_combos = 0;
         }
     }
 }

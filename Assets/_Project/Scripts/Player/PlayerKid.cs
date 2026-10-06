@@ -42,6 +42,13 @@ namespace Bouncer.Player
                 Bind(slot.GetChild(0));
         }
 
+        /// <summary>Поставить ребёнка по номеру в KidRoster (по сети — того, кого игрок выбрал в комнате).</summary>
+        public void ShowKid(int index)
+        {
+            if (roster != null)
+                Show(roster[index]);
+        }
+
         /// <summary>Поставить другого ребёнка. Тот же — ничего не делает.</summary>
         public void Show(KidDefinition kid)
         {

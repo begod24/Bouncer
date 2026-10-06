@@ -3,7 +3,9 @@
     "rootNamespace": "Bouncer.EditorTools",
     "references": [
         "Unity.Localization",
-        "Unity.Localization.Editor"
+        "Unity.Localization.Editor",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [
         "Editor"

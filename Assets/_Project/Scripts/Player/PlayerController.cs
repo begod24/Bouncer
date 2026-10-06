@@ -47,6 +47,28 @@ namespace Bouncer.Player
         public PlayerIntent LastIntent { get; private set; }
         /// <summary>Игроком ведёт сценка (финал: бежит в подъезд): ввод не читается, удары не проходят.</summary>
         public bool IsScripted { get; private set; }
+        /// <summary>Номер игрока в прогулке (0–3): по нему в <see cref="RunState"/> лежат его монетки и сердца.</summary>
+        public int Slot { get; private set; }
+        /// <summary>
+        /// Игрок за этим компьютером (а не пришедший по сети). Чужим игроком управляет его компьютер: здесь он
+        /// только виден — ввод не читается, удары и мячи его не задевают, позу присылает сеть (<see cref="RemoteAction"/>).
+        /// По сети каждого игрока сначала создаёт сеть, а своим он становится в <see cref="Setup"/>.
+        /// </summary>
+        public bool IsLocal { get; private set; } = !Online.Active;
+        /// <summary>Что делает чужой игрок — присылает его компьютер.</summary>
+        public PlayerActionState RemoteAction { get; set; }
+
+        /// <summary>Что игрок делает прямо сейчас — для анимации.</summary>
+        public PlayerActionState Action => !IsLocal ? RemoteAction : new PlayerActionState
+        {
+            Charging = Balls.IsCharging,
+            Charge01 = Balls.Charge01,
+            Catching = Balls.IsCatching,
+            Dashing = Motor.IsDashing,
+            Sliding = Motor.IsDashing && Modifiers.TackleDamage > 0,
+            DashDirection = Motor.DashDirection,
+            Down = IsDead,
+        };
 
         /// <summary>Получил урон (для визуала).</summary>
         public event Action<HitInfo> Hurt;
@@ -100,13 +122,29 @@ namespace Bouncer.Player
             Targetable.LightRadius = Modifiers.LanternRadius;
         }
 
-        void OnEnable() => GameEvents.EnemyKilled += OnEnemyKilled;
+        void OnEnable()
+        {
+            GameEvents.EnemyKilled += OnEnemyKilled;
+            Players.Add(this);
+        }
 
-        void OnDisable() => GameEvents.EnemyKilled -= OnEnemyKilled;
+        void OnDisable()
+        {
+            GameEvents.EnemyKilled -= OnEnemyKilled;
+            Players.Remove(this);
+        }
+
+        /// <summary>Чей это игрок: номер в прогулке и за этим ли компьютером. Зовёт тот, кто его создал.</summary>
+        public void Setup(int slot, bool isLocal)
+        {
+            Slot = Mathf.Clamp(slot, 0, RunState.MaxPlayers - 1);
+            IsLocal = isLocal;
+            Players.Refresh();
+        }
 
         void Update()
         {
-            if (_intentSource == null)
+            if (_intentSource == null || !IsLocal)
                 return;
 
             var intent = _intentSource.ReadIntent();
@@ -244,7 +282,7 @@ namespace Bouncer.Player
 
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)
         {
-            if (IsDead || IsScripted || !ball.Team.IsHostileTo(Team.Player))
+            if (!IsLocal || IsDead || IsScripted || !ball.Team.IsHostileTo(Team.Player))
                 return BallContactResult.PassThrough;
 
             // «Кувырок»: мяч, в который влетел рывок, пролетает сквозь — это уворот в последний момент.
@@ -273,7 +311,7 @@ namespace Bouncer.Player
 
         public bool ApplyHit(in HitInfo hit)
         {
-            if (IsDead || IsScripted)
+            if (!IsLocal || IsDead || IsScripted)
                 return false;
             if (Motor.IsDashInvulnerable)
             {
@@ -306,17 +344,28 @@ namespace Bouncer.Player
             return true;
         }
 
-        public bool TryReceive(Ball ball) => !IsDead && Balls.TryReceive(ball);
+        /// <summary>
+        /// Мяч вернулся в руки сам. Игроку другого компьютера мяч отдаёт сеть: руки его — там
+        /// (<see cref="IBallNetwork.GiveToRemote"/>).
+        /// </summary>
+        public bool TryReceive(Ball ball)
+        {
+            if (IsDead)
+                return false;
+            if (IsLocal)
+                return Balls.TryReceive(ball);
+            return Ball.Network != null && Ball.Network.GiveToRemote(ball, gameObject);
+        }
 
         /// <summary>
         /// «Второе дыхание»: удар, который выбил бы, оставляет с одним сердцем и даёт пару секунд неуязвимости.
-        /// Раз за прогулку — отметка в <see cref="RunState.SecondWindUsed"/> переживает смену арены.
+        /// Раз за прогулку — отметка в <see cref="RunState.SecondWindUsed"/> (своя у каждого игрока) переживает смену арены.
         /// </summary>
         bool TrySecondWind(in HitInfo hit)
         {
-            if (!Modifiers.SecondWind || RunState.SecondWindUsed || hit.Damage < Health.Current)
+            if (!Modifiers.SecondWind || RunState.SecondWindUsed(Slot) || hit.Damage < Health.Current)
                 return false;
-            RunState.SecondWindUsed = true;
+            RunState.UseSecondWind(Slot);
             var saved = hit;
             saved.Damage = Health.Current - 1;
             if (saved.Damage > 0)

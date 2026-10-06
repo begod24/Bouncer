@@ -59,7 +59,7 @@ namespace Bouncer.UI
                 hideGroup.alpha = Mathf.MoveTowards(hideGroup.alpha, Hidden ? 0f : 1f, Time.unscaledDeltaTime * 6f);
             if (_cards == null)
             {
-                var player = FindFirstObjectByType<PlayerController>();
+                var player = Players.Local;
                 if (player == null || !player.TryGetComponent(out _cards))
                     return;
             }

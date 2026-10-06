@@ -37,7 +37,7 @@ namespace Bouncer.Upgrades
     /// Карточки игрока за прогулку. Опыта и уровней нет: карточки дают старт, портфели, босс и ларёк.
     /// Выбор «1 из 3» ставится в очередь (<see cref="QueueOffer"/>) и открывается, когда игрок может действовать;
     /// на это время игра встаёт. Сам экран — в UI, он показывает <see cref="Offer"/> и передаёт <see cref="Choose"/>.
-    /// На новой арене карточки прошлых арен применяются заново, а сердца берутся из <see cref="RunState.Lives"/>.
+    /// На новой арене карточки прошлых арен применяются заново, а сердца берутся из <see cref="RunState.LivesOf"/>.
     /// Сборка ограничена: карманов <see cref="CardDeck.pockets"/> (повторы — один карман, комбо вбирает свои
     /// части), золотых и комбо за прогулку — не больше <see cref="CardDeck.maxGolds"/> / <see cref="CardDeck.maxCombos"/>.
     /// Если карманы полны, выбранная карточка ждёт (<see cref="PendingCard"/>), пока игрок не выкинет одну
@@ -65,7 +65,9 @@ namespace Bouncer.Upgrades
         /// <summary>Открыт выбор «1 из 3» (а не решение, что выкинуть ради выбранной).</summary>
         public bool IsChoosing => _offer.Count > 0 && PendingCard == null;
         /// <summary>Сколько карточек взято за прогулку.</summary>
-        public int Count => RunCards.Taken.Count;
+        public int Count => RunCards.Taken(Slot).Count;
+        /// <summary>Номер игрока в прогулке: по нему лежат его карточки (<see cref="RunCards"/>) и монетки.</summary>
+        public int Slot => _player ? _player.Slot : 0;
         public int MaxPockets => deck ? deck.pockets : 6;
         /// <summary>Выбранная карточка ждёт свободного кармана: игрок решает, что выкинуть.</summary>
         public UpgradeCard PendingCard { get; private set; }
@@ -90,15 +92,16 @@ namespace Bouncer.Upgrades
             UpgradeCard.Replaying = true;
             try
             {
-                foreach (var card in RunCards.Taken)
+                foreach (var card in RunCards.Taken(Slot))
                     ApplyCard(card);
             }
             finally
             {
                 UpgradeCard.Replaying = false;
             }
-            if (RunState.Lives > 0)
-                _player.Health.SetCurrent(RunState.Lives);
+            int lives = RunState.LivesOf(Slot);
+            if (lives > 0)
+                _player.Health.SetCurrent(lives);
             // «Бабушкины пирожки»: на каждой следующей арене прибавляется сердце.
             if (RunState.ArenaIndex > 0 && _player.Modifiers.ArenaHeal > 0)
                 _player.Health.Heal(_player.Modifiers.ArenaHeal);
@@ -118,7 +121,7 @@ namespace Bouncer.Upgrades
                 return false;
             if (card.IsCombo)
             {
-                if (deck && RunCards.CombosTaken >= deck.maxCombos)
+                if (deck && RunCards.CombosTaken(Slot) >= deck.maxCombos)
                     return false;
                 foreach (var part in card.requires)
                     if (!Owns(part))
@@ -137,7 +140,7 @@ namespace Bouncer.Upgrades
             get
             {
                 _pockets.Clear();
-                foreach (var card in RunCards.Taken)
+                foreach (var card in RunCards.Taken(Slot))
                     if (card && card.TakesPocket && !_pockets.Contains(card) && !IsAbsorbed(card))
                         _pockets.Add(card);
                 return _pockets;
@@ -151,7 +154,7 @@ namespace Bouncer.Upgrades
         {
             if (!card)
                 return false;
-            foreach (var taken in RunCards.Taken)
+            foreach (var taken in RunCards.Taken(Slot))
                 if (taken && taken.IsCombo && Array.IndexOf(taken.requires, card) >= 0)
                     return true;
             return false;
@@ -180,7 +183,7 @@ namespace Bouncer.Upgrades
         {
             result.Clear();
             UpgradeCard ball = null;
-            foreach (var card in RunCards.Taken)
+            foreach (var card in RunCards.Taken(Slot))
             {
                 if (!card || card.TakesPocket || card.category == UpgradeCategory.Treat)
                     continue;
@@ -200,11 +203,11 @@ namespace Bouncer.Upgrades
         {
             if (!card || !Owns(card))
                 return;
-            RunCards.Remove(card);
+            RunCards.Remove(Slot, card);
             if (card.IsCombo)
                 foreach (var part in card.requires)
-                    RunCards.Remove(part);
-            RunCards.Locked.Remove(card);
+                    RunCards.Remove(Slot, part);
+            RunCards.Locked(Slot).Remove(card);
             Rebuild();
             Discarded?.Invoke(card);
         }
@@ -251,7 +254,7 @@ namespace Bouncer.Upgrades
             UpgradeCard.Rebuilding = true;
             try
             {
-                foreach (var card in RunCards.Taken)
+                foreach (var card in RunCards.Taken(Slot))
                     ApplyCard(card);
             }
             finally
@@ -279,7 +282,7 @@ namespace Bouncer.Upgrades
             if (!card)
                 return;
             ApplyCard(card);
-            RunCards.Record(card);
+            RunCards.Record(Slot, card);
             Picked?.Invoke(card);
         }
 
@@ -295,9 +298,9 @@ namespace Bouncer.Upgrades
         {
             if (deck == null)
                 return;
-            if (RunState.Active && RunState.NeedsStartCard)
+            if (RunState.NeedsStartCard(Slot))
             {
-                RunState.NeedsStartCard = false;
+                RunState.StartCardChosen(Slot);
                 QueueOffer(OfferKind.Start);
             }
             if (_pending.Count == 0 || IsChoosing || IsDiscarding || Time.unscaledTime < _offerAt || _player.IsDead)

@@ -130,17 +130,27 @@ namespace Bouncer.UI
 
         void Start()
         {
-            var player = FindFirstObjectByType<PlayerController>();
-            if (player != null && player.TryGetComponent(out _cards))
-                _cards.DiscardChanged += OnDiscardChanged;
+            Players.LocalChanged += Bind;
+            Bind(Players.Local);
         }
 
         void OnDestroy()
         {
             if (s_instance == this)
                 s_instance = null;
+            Players.LocalChanged -= Bind;
             if (_cards != null)
                 _cards.DiscardChanged -= OnDiscardChanged;
+        }
+
+        /// <summary>Карманы своего игрока: он мог появиться позже панели.</summary>
+        void Bind(PlayerController player)
+        {
+            if (_cards != null)
+                _cards.DiscardChanged -= OnDiscardChanged;
+            _cards = null;
+            if (player != null && player.TryGetComponent(out _cards))
+                _cards.DiscardChanged += OnDiscardChanged;
         }
 
         // ---------- Открыть и закрыть ----------

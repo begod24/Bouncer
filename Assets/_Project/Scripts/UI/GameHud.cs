@@ -117,8 +117,10 @@ namespace Bouncer.UI
             _homeShown = false;
         }
 
-        void OnCoinsChanged(int delta)
+        void OnCoinsChanged(int slot, int delta)
         {
+            if (slot != LocalSlot)
+                return;
             if (delta > 0)
                 _coinBump = 1f;
         }
@@ -147,7 +149,7 @@ namespace Bouncer.UI
             UpdateCoins();
             if (player == null)
             {
-                player = FindFirstObjectByType<PlayerController>();
+                player = Players.Local;
                 if (player == null)
                     return;
             }
@@ -232,12 +234,15 @@ namespace Bouncer.UI
             }
         }
 
+        /// <summary>Номер своего игрока: HUD показывает его монетки.</summary>
+        static int LocalSlot => Players.Local ? Players.Local.Slot : 0;
+
         /// <summary>Монетки: число догоняет настоящее, значок подпрыгивает на каждую прибавку.</summary>
         void UpdateCoins()
         {
             if (coinsLabel == null)
                 return;
-            int coins = RunState.Coins;
+            int coins = RunState.CoinsOf(LocalSlot);
             _coinsShown = _coinsShown < 0f || coins < _coinsShown
                 ? coins
                 : Mathf.MoveTowards(_coinsShown, coins, Time.unscaledDeltaTime * Mathf.Max(coinCountSpeed, (coins - _coinsShown) * 4f));

@@ -1,5 +1,6 @@
 using System;
 using Bouncer.Core;
+using Bouncer.Net;
 using Bouncer.Player;
 using Bouncer.Upgrades;
 using TMPro;
@@ -18,6 +19,9 @@ namespace Bouncer.UI
     /// «Настройки» (там же «Авторы») и «Выход». Настройки открываются с заставки и паузы; Esc / B возвращают назад.
     /// Карманы (<see cref="PocketsPanel"/>) — кнопкой в паузе или Tab / Select прямо в бою: тогда игра встаёт
     /// на паузу, а закрыл карманы — бой идёт дальше.
+    /// «Играть» сперва спрашивает «Как гуляем?»: «Одному» — дальше как раньше, «Вместе» — «Гуляем вместе»
+    /// (<see cref="OnlineScreen"/>: создать комнату или войти по коду), потом комната (<see cref="LobbyScreen"/>).
+    /// Выкинуло из комнаты — на заставке сразу открывается «Гуляем вместе» с причиной.
     /// </summary>
     public sealed class RunScreens : MonoBehaviour
     {
@@ -40,6 +44,12 @@ namespace Bouncer.UI
             Notebook,
             /// <summary>«Пройти обучение?» — перед самой первой прогулкой.</summary>
             TutorialAsk,
+            /// <summary>«Как гуляем?» — одному, вместе или друг против друга.</summary>
+            Mode,
+            /// <summary>«Гуляем вместе»: создать комнату или войти по коду.</summary>
+            Online,
+            /// <summary>Комната: кто пришёл, кем гуляет, кто готов.</summary>
+            Lobby,
         }
 
         [SerializeField] Screen title;
@@ -56,6 +66,14 @@ namespace Bouncer.UI
         [SerializeField] GameObject notebookNew;
         [Tooltip("«Пройти обучение?» — перед самой первой прогулкой")]
         [SerializeField] Screen tutorialAsk;
+        [Tooltip("«Как гуляем?» — после «Играть»")]
+        [SerializeField] Screen mode;
+        [Tooltip("«Гуляем вместе»: создать комнату или войти по коду")]
+        [SerializeField] Screen online;
+        [SerializeField] OnlineScreen onlineScreen;
+        [Tooltip("Комната")]
+        [SerializeField] Screen lobby;
+        [SerializeField] LobbyScreen lobbyScreen;
         [SerializeField] SettingsScreen settingsScreen;
         [SerializeField] KidSelectScreen kidSelectScreen;
         [SerializeField] TMP_Text gameOverStats;
@@ -78,6 +96,10 @@ namespace Bouncer.UI
         [Tooltip("«Нет, сразу гулять» в вопросе про обучение")]
         [SerializeField] UnityEngine.UI.Button[] skipTutorialButtons;
         [SerializeField] UnityEngine.UI.Button[] notebookButtons;
+        [Tooltip("«Одному» в «Как гуляем?»")]
+        [SerializeField] UnityEngine.UI.Button[] soloButtons;
+        [Tooltip("«Вместе» в «Как гуляем?»")]
+        [SerializeField] UnityEngine.UI.Button[] coopButtons;
 
         PlayerCards _cards;
         /// <summary>Карманы открыты клавишей прямо в бою: закрылись — снять паузу.</summary>
@@ -89,6 +111,10 @@ namespace Bouncer.UI
         Overlay _overlay;
         /// <summary>Кнопка, открывшая экран поверх, — на неё вернуться.</summary>
         GameObject _returnTo;
+        /// <summary>Во что играть по сети: кооп или PvP («Гуляем вместе» открывается для него).</summary>
+        NetMode _onlineMode;
+        /// <summary>Почему выкинуло из комнаты — показать на «Гуляем вместе» (ключ строки).</summary>
+        string _onlineNotice;
 
         void Awake()
         {
@@ -105,6 +131,12 @@ namespace Bouncer.UI
             Bind(tutorialButtons, StartTutorial);
             Bind(skipTutorialButtons, SkipTutorial);
             Bind(notebookButtons, () => Open(Overlay.Notebook));
+            Bind(soloButtons, PlaySolo);
+            Bind(coopButtons, () => OpenOnline(NetMode.Coop, null));
+            if (onlineScreen != null)
+                onlineScreen.RoomEntered += OnRoomEntered;
+            if (lobbyScreen != null)
+                lobbyScreen.Left += CloseOverlay;
         }
 
         void OnEnable() => GameEvents.RunFinished += OnRunFinished;
@@ -158,7 +190,7 @@ namespace Bouncer.UI
                 return;
             if (_cards == null)
             {
-                var player = FindFirstObjectByType<PlayerController>();
+                var player = Players.Local;
                 if (player != null)
                     player.TryGetComponent(out _cards);
             }
@@ -171,6 +203,12 @@ namespace Bouncer.UI
                 Tutorial.OpenKidsOnTitle = false;
                 Open(Overlay.Kids);
             }
+            UpdateOnline(state);
+            // По сети «Заново» нет: прогулку начинают вместе из комнаты.
+            if (restartButtons != null)
+                foreach (var button in restartButtons)
+                    if (button != null && button.gameObject.activeSelf == Online.Active)
+                        button.gameObject.SetActive(!Online.Active);
             bool paused = state is (SessionState.Playing or SessionState.Cleared) && GameFeel.Paused;
             bool titleOrPause = state == SessionState.Title || paused;
             if (_overlay != Overlay.None && !titleOrPause)
@@ -182,6 +220,9 @@ namespace Bouncer.UI
             Show(kidSelect, _overlay == Overlay.Kids, true);
             Show(notebook, _overlay == Overlay.Notebook, true);
             Show(tutorialAsk, _overlay == Overlay.TutorialAsk, true);
+            Show(mode, _overlay == Overlay.Mode, true);
+            Show(online, _overlay == Overlay.Online, true);
+            Show(lobby, _overlay == Overlay.Lobby, true);
             // Кнопки конца забега оживают не сразу — чтобы случайное нажатие не перезапустило игру.
             Show(gameOver, state == SessionState.GameOver, session.CanRestart);
             Show(victory, state == SessionState.Victory, session.CanRestart);
@@ -198,6 +239,26 @@ namespace Bouncer.UI
                 gameOverStats.text = Stats(session, "gameover.stats");
             else if (state == SessionState.Victory)
                 victoryStats.text = Stats(session, "victory.stats");
+        }
+
+        /// <summary>
+        /// Комната на заставке: выкинуло из неё (хозяин ушёл, связь пропала) — «Гуляем вместе» с причиной;
+        /// комната закрылась, пока открыт её экран, — закрыть его.
+        /// </summary>
+        void UpdateOnline(SessionState state)
+        {
+            if (state != SessionState.Title)
+                return;
+            bool inRoom = NetSession.Instance != null && NetSession.Instance.Status == NetStatus.InRoom;
+            if (_overlay == Overlay.Lobby && !inRoom)
+                CloseOverlay();
+            if (!string.IsNullOrEmpty(NetSession.PendingNotice) && (_overlay == Overlay.None || _overlay == Overlay.Lobby)
+                && Time.timeSinceLevelLoad > 0.1f)
+            {
+                string notice = NetSession.PendingNotice;
+                NetSession.PendingNotice = null;
+                OpenOnline(NetMode.Coop, notice);
+            }
         }
 
         /// <summary>
@@ -291,6 +352,24 @@ namespace Bouncer.UI
                 if (tutorialAsk.group == null)
                     return;
             }
+            else if (overlay == Overlay.Mode)
+            {
+                if (mode.group == null)
+                    return;
+            }
+            else if (overlay == Overlay.Online)
+            {
+                if (online.group == null || onlineScreen == null)
+                    return;
+                online.first = onlineScreen.Open(_onlineMode, _onlineNotice);
+                _onlineNotice = null;
+            }
+            else if (overlay == Overlay.Lobby)
+            {
+                if (lobby.group == null || lobbyScreen == null)
+                    return;
+                lobby.first = lobbyScreen.Open();
+            }
             else if (overlay == Overlay.Pockets)
             {
                 var pockets = PocketsPanel.Instance;
@@ -317,6 +396,13 @@ namespace Bouncer.UI
                 notebookScreen.Close();
             else if (_overlay == Overlay.Pockets && PocketsPanel.Instance != null)
                 PocketsPanel.Instance.Close();
+            else if (_overlay == Overlay.Lobby)
+            {
+                lobbyScreen.Close();
+                // Esc в комнате — уйти из неё.
+                if (NetSession.Instance != null)
+                    NetSession.Instance.Leave();
+            }
             _overlay = Overlay.None;
             var session = GameSession.Instance;
             if (session != null)
@@ -332,12 +418,22 @@ namespace Bouncer.UI
             _pocketsResume = false;
         }
 
-        /// <summary>
-        /// «Играть»: сначала выбрать, с кем гулять (если экрана выбора нет — сразу в прогулку). Самый первый раз —
-        /// вопрос про обучение.
-        /// </summary>
+        /// <summary>«Играть»: «Как гуляем?» — одному, вместе или друг против друга.</summary>
         void Play()
         {
+            if (mode.group != null)
+                Open(Overlay.Mode);
+            else
+                PlaySolo();
+        }
+
+        /// <summary>
+        /// «Одному»: сначала выбрать, с кем гулять (если экрана выбора нет — сразу в прогулку). Самый первый раз —
+        /// вопрос про обучение.
+        /// </summary>
+        void PlaySolo()
+        {
+            CloseOverlay();
             if (Tutorial.ShouldAsk && tutorialAsk.group != null)
                 Open(Overlay.TutorialAsk);
             else if (kidSelectScreen != null)
@@ -359,7 +455,23 @@ namespace Bouncer.UI
         {
             Tutorial.MarkOffered();
             CloseOverlay();
-            Play();
+            PlaySolo();
+        }
+
+        /// <summary>«Гуляем вместе» для этого режима (notice — почему выкинуло из прошлой комнаты).</summary>
+        void OpenOnline(NetMode netMode, string notice)
+        {
+            CloseOverlay();
+            _onlineMode = netMode;
+            _onlineNotice = notice;
+            Open(Overlay.Online);
+        }
+
+        /// <summary>Комната создана или найдена: вместо «Гуляем вместе» — сама комната.</summary>
+        void OnRoomEntered()
+        {
+            CloseOverlay();
+            Open(Overlay.Lobby);
         }
 
         void OnKidChosen(int kid)

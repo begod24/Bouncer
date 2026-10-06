@@ -83,7 +83,7 @@ namespace Bouncer.UI
         {
             if (_player == null)
             {
-                _player = FindFirstObjectByType<PlayerController>();
+                _player = Players.Local;
                 if (_player == null)
                 {
                     Hide();

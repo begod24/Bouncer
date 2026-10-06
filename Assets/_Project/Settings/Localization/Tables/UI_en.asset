@@ -1202,6 +1202,58 @@ MonoBehaviour:
     m_Localized: "Pick who you are and press \u201CReady!\u201D."
     m_Metadata:
       m_Items: []
+  - m_Id: 4410446449729536
+    m_Localized: down
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4410446453923840
+    m_Localized: hold F / X to pick up
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4410446453923841
+    m_Localized: You're down!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4410446453923842
+    m_Localized: 'A friend can pick you up: they walk over and hold F (X on a gamepad)'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4410446453923843
+    m_Localized: "Everyone has their own newsstand. Then all together: everyone to the same arrow!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4410446453923844
+    m_Localized: "picking a card"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4410446453923845
+    m_Localized: "at the newsstand"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4410446453923846
+    m_Localized: "{0} \u2014 open"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4410446453923847
+    m_Localized: "Together:"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4410446453923848
+    m_Localized: "Danger {0} \u2014 {1} \xB7 players: {2}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4410446453923849
+    m_Localized: "Back to the room in a moment"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4410446453923850
+    m_Localized: "You're home!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4410446453923851
+    m_Localized: "Waiting for the others to make it"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

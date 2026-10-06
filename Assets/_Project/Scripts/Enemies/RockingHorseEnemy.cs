@@ -9,9 +9,10 @@ namespace Bouncer.Enemies
     /// Лошадка-качалка. Подкачивается к игроку, потом раскачивается на месте всё сильнее (видно, что сейчас рванёт)
     /// и таранит по прямой. После тарана качается на месте — окно для бросков. Попадание во время раскачки сбивает
     /// разбег. Конь-огонь (элитный) оставляет на таране огненный след.
+    /// По сети таранит только у хозяина комнаты; у гостя копия качается и скачет по его вестям.
     /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
-    public sealed class RockingHorseEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable
+    public sealed class RockingHorseEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
         enum State
         {
@@ -86,6 +87,8 @@ namespace Bouncer.Enemies
 
         void Update()
         {
+            if (NetHooks.IsGuest)
+                return;
             float dt = Time.deltaTime;
             if (!_agent.isOnNavMesh)
                 return;
@@ -322,12 +325,27 @@ namespace Bouncer.Enemies
                     angle = Mathf.Sin(_rockPhase) * definition.rockAngle * (1f - Mathf.Clamp01(_stateTime / definition.recoverTime)) * 2f;
                     break;
                 default:
-                    float speed01 = _agent.isOnNavMesh ? Mathf.Clamp01(_agent.velocity.magnitude / Mathf.Max(0.1f, definition.moveSpeed)) : 0f;
+                    Vector3 velocity = NetHooks.IsGuest ? _self.Velocity : _agent.isOnNavMesh ? _agent.velocity : Vector3.zero;
+                    float speed01 = Mathf.Clamp01(Flat(velocity).magnitude / Mathf.Max(0.1f, definition.moveSpeed));
                     _rockPhase += dt * definition.rockFrequency * Mathf.PI * 2f * Mathf.Max(0.3f, speed01);
                     angle = Mathf.Sin(_rockPhase) * definition.rockAngle * Mathf.Max(0.3f, speed01);
                     break;
             }
             rocker.localRotation = _rockerRest * Quaternion.Euler(angle, 0f, 0f);
+        }
+
+        // ---------- Сеть ----------
+
+        public void WriteNet(NetWriter writer)
+        {
+            writer.Byte((byte)_state);
+            writer.Seconds(_stateTime);
+        }
+
+        public void ReadNet(NetReader reader, float age)
+        {
+            _state = (State)reader.Byte();
+            _stateTime = reader.Seconds() + age;
         }
 
         void Enter(State state)

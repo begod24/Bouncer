@@ -65,8 +65,8 @@ namespace Bouncer.Enemies
 
         void OnDied(HitInfo hit)
         {
-            // Арена пройдена и остатки исчезают — половинок не будет.
-            if (childPrefab == null || childCount <= 0 || hit.Has(HitFlags.Despawn))
+            // Арена пройдена и остатки исчезают — половинок не будет. По сети половинок выпускает хозяин комнаты.
+            if (childPrefab == null || childCount <= 0 || hit.Has(HitFlags.Despawn) || NetHooks.IsGuest)
                 return;
 
             Vector3 origin = transform.position;

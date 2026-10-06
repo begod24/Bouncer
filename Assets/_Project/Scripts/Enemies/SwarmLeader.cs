@@ -61,7 +61,9 @@ namespace Bouncer.Enemies
 
         void Update()
         {
-            if (followerPrefab == null || _health.IsDead || _cries >= maxCries || Time.time < _nextCry || !GameSession.IsGameplayActive)
+            // По сети подмогу зовёт только настоящий вожак — у хозяина комнаты.
+            if (followerPrefab == null || _health.IsDead || _cries >= maxCries || Time.time < _nextCry || !GameSession.IsGameplayActive
+                || NetHooks.IsGuest)
                 return;
             _cries++;
             _nextCry = Time.time + cryInterval;

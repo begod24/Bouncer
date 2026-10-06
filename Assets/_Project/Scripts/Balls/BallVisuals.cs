@@ -44,12 +44,16 @@ namespace Bouncer.Balls
         bool _palette;
         bool _hot;
         bool _spiky;
+        Vector3 _bodyLocal;
+        bool _offset;
 
         void Awake()
         {
             _ball = GetComponent<Ball>();
             _block = new MaterialPropertyBlock();
             _palette = body && PaletteShader.Supports(body.sharedMaterial);
+            if (body)
+                _bodyLocal = body.transform.localPosition;
         }
 
         void OnEnable()
@@ -104,7 +108,8 @@ namespace Bouncer.Balls
             {
                 if (ball.State == BallState.Idle)
                     trail.Clear();
-                trail.emitting = ball.State is BallState.Live or BallState.Popped or BallState.Returning;
+                // Пока модель догоняет мяч (ShowFrom), следа нет — он начнётся там, где модель встанет на место.
+                trail.emitting = ball.State is BallState.Live or BallState.Popped or BallState.Returning && !_offset;
                 trail.startColor = new Color(color.r, color.g, color.b, 0.8f);
                 trail.endColor = new Color(color.r, color.g, color.b, 0f);
                 bool strong = ball.State == BallState.Live && (ball.Stats.Has(HitFlags.Charged) || _hot || _spiky);
@@ -117,6 +122,18 @@ namespace Bouncer.Balls
 
         void LateUpdate()
         {
+            Vector3 offset = _ball.VisualOffset;
+            bool shifted = offset != Vector3.zero;
+            if (shifted || _offset)
+            {
+                if (body)
+                    body.transform.localPosition = _bodyLocal + transform.InverseTransformVector(offset);
+                if (shifted != _offset)
+                {
+                    _offset = shifted;
+                    Refresh(_ball);
+                }
+            }
             // Горячая картошка взорвалась, не сменив состояния (отскок от асфальта) — гасим цвет.
             if (_hot != _ball.BlastPending)
                 Refresh(_ball);

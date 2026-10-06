@@ -11,9 +11,10 @@ namespace Bouncer.Enemies
     /// Мяч застревает у него в животе: урон проходит, но мяч не отскакивает, и у игрока становится на мяч меньше.
     /// Попадание другим мячом выбивает застрявший на пол; выбитый мишка роняет всё, что застряло.
     /// Мишка-моряк (элитный) держит два мяча и выплёвывает их обратно в игрока — их можно поймать.
+    /// По сети думает, бьёт и держит мячи только у хозяина комнаты; у гостя копия идёт и замахивается по его вестям.
     /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
-    public sealed class BearEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable
+    public sealed class BearEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
         enum State
         {
@@ -103,6 +104,8 @@ namespace Bouncer.Enemies
 
         void Update()
         {
+            if (NetHooks.IsGuest)
+                return;
             float dt = Time.deltaTime;
             if (!_agent.isOnNavMesh)
                 return;
@@ -390,7 +393,7 @@ namespace Bouncer.Enemies
 
         void Animate(float dt)
         {
-            Vector3 velocity = _agent.isOnNavMesh ? Flat(_agent.velocity) : Vector3.zero;
+            Vector3 velocity = NetHooks.IsGuest ? Flat(_self.Velocity) : _agent.isOnNavMesh ? Flat(_agent.velocity) : Vector3.zero;
             float speed01 = Mathf.Clamp01(velocity.magnitude / Mathf.Max(0.1f, definition.moveSpeed));
             _walkPhase += dt * 7f * speed01;
             if (body)
@@ -415,6 +418,20 @@ namespace Bouncer.Enemies
             }
             if (pawOther)
                 pawOther.localRotation = _pawOtherRest * Quaternion.Euler(-Mathf.Sin(_walkPhase) * 18f * speed01, 0f, 0f);
+        }
+
+        // ---------- Сеть ----------
+
+        public void WriteNet(NetWriter writer)
+        {
+            writer.Byte((byte)_state);
+            writer.Seconds(_stateTime);
+        }
+
+        public void ReadNet(NetReader reader, float age)
+        {
+            _state = (State)reader.Byte();
+            _stateTime = reader.Seconds() + age;
         }
 
         // ---------- Служебное ----------

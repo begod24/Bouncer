@@ -9,9 +9,11 @@ namespace Bouncer.Enemies
     /// а где она, выдаёт тень на асфальте. Потом пикирует по прямой через то место, где стоит игрок: полоса
     /// на асфальте мигает заранее. Низко над землёй её сбивает любой мяч. Иногда вместо пике хватает чужой мяч
     /// с земли (мячи игрока не трогает) и несёт боссу в мешок; сбитая — роняет его. Через несколько заходов улетает.
+    /// По сети летает, пикирует и ворует только у хозяина комнаты (полосу пике он показывает гостям); у гостя копия
+    /// машет крыльями по его вестям.
     /// </summary>
     [RequireComponent(typeof(Health), typeof(Targetable))]
-    public sealed class CrowEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable
+    public sealed class CrowEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
         enum State
         {
@@ -123,7 +125,7 @@ namespace Bouncer.Enemies
 
         void Update()
         {
-            if (!GameSession.IsGameplayActive)
+            if (!GameSession.IsGameplayActive || NetHooks.IsGuest)
                 return;
             float dt = Time.deltaTime;
             _target = Targetable.FindNearest(transform.position, Team.Player);
@@ -448,6 +450,22 @@ namespace Bouncer.Enemies
                 float size = Mathf.Lerp(1.1f, 0.6f, Mathf.Clamp01(p.y / 7f));
                 shadowBlob.localScale = new Vector3(size, size * 0.7f, 1f);
             }
+        }
+
+        // ---------- Сеть ----------
+
+        public void WriteNet(NetWriter writer)
+        {
+            writer.Byte((byte)_state);
+            writer.Seconds(_stateTime);
+            writer.Bool(_self.HiddenFromAim);
+        }
+
+        public void ReadNet(NetReader reader, float age)
+        {
+            _state = (State)reader.Byte();
+            _stateTime = reader.Seconds() + age;
+            _self.HiddenFromAim = reader.Bool();
         }
 
         void Enter(State state, float length = 0f)

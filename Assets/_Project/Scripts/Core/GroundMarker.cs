@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace Bouncer.Core
@@ -6,6 +7,7 @@ namespace Bouncer.Core
     /// Метка опасности на асфальте: круг, куда приземлится босс, или полоса, по которой спикирует ворона.
     /// Мигает всё чаще, пока не придёт время удара, потом возвращается в пул. Рисует LineRenderer:
     /// круг — через <see cref="CircleLine"/> (префаб круга), полоса — двумя точками (префаб без неё).
+    /// По сети метки врагов показывает хозяин комнаты: у гостя такая же метка — копия (<see cref="IsPuppet"/>).
     /// </summary>
     [RequireComponent(typeof(LineRenderer))]
     public sealed class GroundMarker : MonoBehaviour, IPoolable
@@ -21,6 +23,14 @@ namespace Bouncer.Core
         float _start;
         float _until;
 
+        /// <summary>По сети у гостя: копия метки хозяина.</summary>
+        public bool IsPuppet { get; set; }
+
+        /// <summary>Метка появилась: круг (центр, радиус в a.x) или полоса (от, до), на столько секунд.</summary>
+        public static event Action<GroundMarker, bool, Vector3, Vector3, float> Shown;
+        /// <summary>Метку убрали раньше времени.</summary>
+        public static event Action<GroundMarker> Hidden;
+
         void Awake()
         {
             _line = GetComponent<LineRenderer>();
@@ -29,6 +39,7 @@ namespace Bouncer.Core
 
         public void OnSpawned()
         {
+            IsPuppet = false;
             _start = Time.time;
             _until = _start + 1f;
         }
@@ -42,6 +53,8 @@ namespace Bouncer.Core
             if (_circle)
                 _circle.Radius = radius;
             Begin(seconds);
+            if (!IsPuppet)
+                Shown?.Invoke(this, true, center, new Vector3(radius, 0f, 0f), seconds);
         }
 
         /// <summary>Полоса по земле от from до to на столько секунд.</summary>
@@ -54,10 +67,17 @@ namespace Bouncer.Core
             _line.SetPosition(0, new Vector3(from.x, height, from.z));
             _line.SetPosition(1, new Vector3(to.x, height, to.z));
             Begin(seconds);
+            if (!IsPuppet)
+                Shown?.Invoke(this, false, from, to, seconds);
         }
 
         /// <summary>Убрать раньше времени.</summary>
-        public void Hide() => PoolService.Despawn(gameObject);
+        public void Hide()
+        {
+            if (!IsPuppet)
+                Hidden?.Invoke(this);
+            PoolService.Despawn(gameObject);
+        }
 
         void Begin(float seconds)
         {
@@ -81,6 +101,13 @@ namespace Bouncer.Core
             var c = new Color(color.r, color.g, color.b, color.a * Mathf.Lerp(0.45f, 1f, t) * blink);
             _line.startColor = _line.endColor = c;
             _line.widthMultiplier = width * Mathf.Lerp(0.7f, 1.3f, t);
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics()
+        {
+            Shown = null;
+            Hidden = null;
         }
     }
 }

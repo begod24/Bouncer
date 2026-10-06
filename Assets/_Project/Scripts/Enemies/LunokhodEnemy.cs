@@ -10,9 +10,10 @@ namespace Bouncer.Enemies
     /// Раз в несколько секунд останавливается, поднимает крышку-солнечную батарею и выпускает веер колючих
     /// мячей-ёжиков по дуге (их не поймать — только увернуться). Бронированный: при закрытой крышке попадание
     /// считается за половину, при открытой — за полтора (<see cref="BossArmor"/>), так что бить его стоит в залп.
+    /// По сети ездит и стреляет только у хозяина комнаты; у гостя копия открывает крышку по его вестям.
     /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
-    public sealed class LunokhodEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable
+    public sealed class LunokhodEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
         public enum State
         {
@@ -66,6 +67,12 @@ namespace Bouncer.Enemies
             _self.Team = Team.Enemy;
             _agent.updateRotation = false;
             _health.Died += OnDied;
+            // У гостя попадания приходят от хозяина: корпус качается и от них.
+            _health.Damaged += _ =>
+            {
+                if (NetHooks.IsGuest)
+                    _jolt = 1f;
+            };
             if (lid)
                 _lidRest = lid.localRotation;
             if (body)
@@ -101,6 +108,8 @@ namespace Bouncer.Enemies
 
         void Update()
         {
+            if (NetHooks.IsGuest)
+                return;
             float dt = Time.deltaTime;
             if (!_agent.isOnNavMesh)
                 return;
@@ -308,7 +317,8 @@ namespace Bouncer.Enemies
             if (lid)
                 lid.localRotation = _lidRest * Quaternion.Euler(lidOpenAngle * _lid, 0f, 0f);
 
-            float speed = _agent.isOnNavMesh ? Vector3.Dot(_agent.velocity, transform.forward) : 0f;
+            Vector3 velocity = NetHooks.IsGuest ? _self.Velocity : _agent.isOnNavMesh ? _agent.velocity : Vector3.zero;
+            float speed = Vector3.Dot(velocity, transform.forward);
             _wheelAngle += speed / Mathf.Max(0.05f, wheelRadius) * Mathf.Rad2Deg * dt;
             if (wheels != null)
                 foreach (var w in wheels)
@@ -321,6 +331,20 @@ namespace Bouncer.Enemies
                 float rock = Mathf.Sin(Time.time * 9f) * 3f * _jolt + Mathf.Sin(Time.time * 4f) * 0.6f * Mathf.Clamp01(Mathf.Abs(speed));
                 body.localRotation = _bodyRest * Quaternion.Euler(rock, 0f, 0f);
             }
+        }
+
+        // ---------- Сеть ----------
+
+        public void WriteNet(NetWriter writer)
+        {
+            writer.Byte((byte)_state);
+            writer.Seconds(_stateTime);
+        }
+
+        public void ReadNet(NetReader reader, float age)
+        {
+            _state = (State)reader.Byte();
+            _stateTime = reader.Seconds() + age;
         }
 
         void Enter(State state)

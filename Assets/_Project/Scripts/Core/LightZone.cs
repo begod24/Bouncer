@@ -8,6 +8,7 @@ namespace Bouncer.Core
     /// только в темноте. Круг в плоскости XZ, проверка по реестру (как у <see cref="GroundZone"/>).
     /// Фонарь можно погасить на время (элитная тень), вспышка молнии на миг освещает всё.
     /// Сам свет (компонент Light, мерцание) ведёт Visuals, здесь только игровая часть.
+    /// По сети фонари гасит хозяин комнаты и сообщает гостям (<see cref="WentOut"/>, <see cref="FindAt"/>).
     /// </summary>
     public sealed class LightZone : MonoBehaviour
     {
@@ -25,6 +26,9 @@ namespace Bouncer.Core
         float _outStart;
 
         public static IReadOnlyList<LightZone> All => s_all;
+
+        /// <summary>Фонарь погас на столько секунд (по сети хозяин показывает это гостям).</summary>
+        public static event System.Action<LightZone, float> WentOut;
         public float Radius => radius;
         /// <summary>Горит (не погашен тенью).</summary>
         public bool IsOn => Time.time >= _outUntil;
@@ -67,6 +71,25 @@ namespace Bouncer.Core
             if (now >= _outUntil)
                 _outStart = now;
             _outUntil = Mathf.Max(_outUntil, now + seconds);
+            WentOut?.Invoke(this, seconds);
+        }
+
+        /// <summary>Фонарь в этой точке (его центр), не дальше tolerance. null — нет.</summary>
+        public static LightZone FindAt(Vector3 center, float tolerance = 0.5f)
+        {
+            LightZone best = null;
+            float bestSqr = tolerance * tolerance;
+            foreach (var zone in s_all)
+            {
+                Vector3 delta = zone.Center - center;
+                delta.y = 0f;
+                if (delta.sqrMagnitude <= bestSqr)
+                {
+                    bestSqr = delta.sqrMagnitude;
+                    best = zone;
+                }
+            }
+            return best;
         }
 
         /// <summary>Зажечь погашенный фонарь сейчас же.</summary>
@@ -176,6 +199,7 @@ namespace Bouncer.Core
         {
             s_all.Clear();
             s_flashUntil = 0f;
+            WentOut = null;
         }
     }
 }

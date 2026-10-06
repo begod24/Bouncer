@@ -10,9 +10,11 @@ namespace Bouncer.Enemies
     /// и полоса на земле ведут игрока, за мгновение до выстрела замирают — и выстрел бьёт вдоль полосы.
     /// Кто успел уйти с линии — цел. Поймать нечего: это свет, а не мяч. Попадание сбивает прицел.
     /// Кинематический, без NavMesh-агента: точки прыжков берутся с NavMesh.
+    /// По сети целится и стреляет только у хозяина комнаты (полосу на земле он показывает гостям); у гостя копия
+    /// ведёт лазер и вспыхивает выстрелом по его вестям.
     /// </summary>
     [RequireComponent(typeof(Rigidbody), typeof(Health), typeof(Targetable))]
-    public sealed class DendyGunEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable
+    public sealed class DendyGunEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
         public enum State
         {
@@ -96,6 +98,8 @@ namespace Bouncer.Enemies
 
         void FixedUpdate()
         {
+            if (NetHooks.IsGuest)
+                return;
             float dt = Time.fixedDeltaTime;
             if (_self.IsFrozen)
                 return;
@@ -351,7 +355,7 @@ namespace Bouncer.Enemies
                     laser.startColor = laser.endColor = c;
                 }
             }
-            if (aiming && _stateTime >= definition.trackTime && _marker == null && lineMarkerPrefab)
+            if (aiming && _stateTime >= definition.trackTime && _marker == null && lineMarkerPrefab && !NetHooks.IsGuest)
             {
                 // Прицел замер: полоса на земле показывает, куда ударит.
                 Vector3 from = MuzzlePosition;
@@ -369,6 +373,35 @@ namespace Bouncer.Enemies
             }
             if (trigger)
                 trigger.localRotation = Quaternion.Euler(flashing ? -25f : 0f, 0f, 0f);
+        }
+
+        // ---------- Сеть ----------
+
+        public void WriteNet(NetWriter writer)
+        {
+            writer.Byte((byte)_state);
+            writer.Seconds(_stateTime);
+            writer.Direction(_aimDirection);
+            writer.Bool(_hopping);
+        }
+
+        public void ReadNet(NetReader reader, float age)
+        {
+            var state = (State)reader.Byte();
+            _stateTime = reader.Seconds() + age;
+            _aimDirection = reader.Direction();
+            bool hopping = reader.Bool();
+            // Прицел кончился отдачей — это выстрел: луч вспыхивает.
+            if (_state == State.Aim && state == State.Recoil)
+            {
+                Vector3 from = MuzzlePosition;
+                _beamEnd = from + _aimDirection * ShotLength(from);
+                _flashUntil = Time.time + FlashTime;
+            }
+            if (_hopping && !hopping)
+                _squash = 1f;
+            _hopping = hopping;
+            _state = state;
         }
 
         void Enter(State state)

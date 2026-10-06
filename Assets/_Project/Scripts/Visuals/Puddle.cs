@@ -19,11 +19,11 @@ namespace Bouncer.Visuals
 
         void Awake() => _filter = GetComponent<MeshFilter>();
 
-        /// <summary>Лужа такого размера по X и Z, м, одна из нескольких форм.</summary>
-        public void Place(Vector3 position, Vector2 size, int variant)
+        /// <summary>Лужа такого размера по X и Z, м, одна из нескольких форм, повёрнута на yaw градусов.</summary>
+        public void Place(Vector3 position, Vector2 size, int variant, float yaw)
         {
             _filter.sharedMesh = Meshes()[Mathf.Abs(variant) % Meshes().Length];
-            transform.SetPositionAndRotation(position + Vector3.up * 0.015f, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
+            transform.SetPositionAndRotation(position + Vector3.up * 0.015f, Quaternion.Euler(0f, yaw, 0f));
             // Меш — лужа радиусом около 1, зона — прямоугольник 2×2 с вписанным эллипсом: масштаб растягивает обоих.
             transform.localScale = new Vector3(size.x * 0.5f, 1f, size.y * 0.5f);
         }

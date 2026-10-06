@@ -6,6 +6,7 @@ namespace Bouncer.Enemies
     /// <summary>
     /// Огненное пятно на асфальте (след коня-огня): пару секунд горит и обжигает игрока, вставшего в него.
     /// Повторно не жжёт, пока у игрока неуязвимость после удара. Из пула.
+    /// По сети пятно кладёт и жжёт им хозяин комнаты; гостям он показывает такое же — только для вида.
     /// </summary>
     public sealed class FireSpot : MonoBehaviour, IPoolable
     {
@@ -31,6 +32,8 @@ namespace Bouncer.Enemies
             _spawnTime = Time.time;
             if (visual)
                 visual.localScale = _scale;
+            if (!NetHooks.IsGuest)
+                NetHooks.MirrorSpawn?.Invoke(gameObject);
         }
 
         public void OnDespawned() { }
@@ -49,7 +52,7 @@ namespace Bouncer.Enemies
                 float jitter = 1f + Mathf.Sin(Time.time * 23f + _spawnTime * 7f) * flicker;
                 visual.localScale = _scale * (fade * jitter);
             }
-            if (!GameSession.IsGameplayActive)
+            if (!GameSession.IsGameplayActive || NetHooks.IsGuest)
                 return;
             var target = Targetable.FindNearest(transform.position, Team.Player, radius);
             if (target == null || !target.TryGetComponent(out IDamageable damageable))

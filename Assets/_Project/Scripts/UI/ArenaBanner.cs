@@ -36,7 +36,9 @@ namespace Bouncer.UI
                     _introShown = true;
                     Show(Loc.Get("tutorial.banner"), Loc.Get("tutorial.banner.hint"), introTime + 1.2f);
                 }
-                if (!_introShown && session.State == SessionState.Playing && !director.Arena.title.IsEmpty)
+                // По сети — когда закрыта стартовая карточка и гость узнал от хозяина погоду.
+                if (!_introShown && session.State == SessionState.Playing && session.Menu == LocalMenu.None
+                    && director.WeatherKnown && !director.Arena.title.IsEmpty)
                 {
                     _introShown = true;
                     string weather = WeatherKey(director.Weather);
@@ -47,12 +49,13 @@ namespace Bouncer.UI
                         hintText.Length > 0 ? introTime + 1.2f : introTime);
                 }
                 // Сначала выбор карточки за босса, потом плашка — иначе её не видно под экраном выбора.
-                if (!_clearedShown && director.IsComplete && session.State == SessionState.Cleared)
+                if (!_clearedShown && director.IsComplete && session.State == SessionState.Cleared && session.Menu == LocalMenu.None)
                 {
                     _clearedShown = true;
-                    Show(Loc.Get("arena.cleared"), Loc.Get("arena.cleared.hint"), clearedTime);
+                    // По сети дальше идут все вместе: подсказка про общую стрелку.
+                    Show(Loc.Get("arena.cleared"), Loc.Get(Online.Active ? "arena.cleared.hint.coop" : "arena.cleared.hint"), clearedTime);
                 }
-                if (session.State is SessionState.Shop or SessionState.GameOver or SessionState.Victory)
+                if (session.IsShopOpen || session.State is SessionState.GameOver or SessionState.Victory)
                     _hideAt = 0f;
             }
             float target = Time.unscaledTime < _hideAt ? 1f : 0f;

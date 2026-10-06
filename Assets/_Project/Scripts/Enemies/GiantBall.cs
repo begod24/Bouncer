@@ -8,6 +8,8 @@ namespace Bouncer.Enemies
     /// Огромный мяч по свистку Физрука («Мяч в игре!»): катится по коробке, отскакивает от бортов без потери
     /// скорости и сбивает всех на пути — игрока и врагов. Коллайдер на слое окружения: мячи отскакивают
     /// от него, как от стены. Через несколько секунд сдувается и исчезает. Из пула.
+    /// По сети мяч катит хозяин комнаты и показывает гостям такой же (<see cref="Launched"/>): у гостя он катится
+    /// сам по тем же отскокам, но никого не сбивает — удары засчитывает хозяин.
     /// </summary>
     [RequireComponent(typeof(SphereCollider))]
     public sealed class GiantBall : MonoBehaviour, IPoolable
@@ -37,6 +39,9 @@ namespace Bouncer.Enemies
         Vector3 _velocity;
         float _spawnTime;
 
+        /// <summary>Мяч покатился в эту сторону (по сети хозяин показывает его гостям).</summary>
+        public static event System.Action<GiantBall, Vector3> Launched;
+
         void Awake()
         {
             _collider = GetComponent<SphereCollider>();
@@ -61,6 +66,8 @@ namespace Bouncer.Enemies
             direction.y = 0f;
             _velocity = (direction.sqrMagnitude > 1e-4f ? direction.normalized : Vector3.forward) * speed;
             GameEvents.PlaySound(SoundCue.AreaThud, transform.position);
+            if (!NetHooks.IsGuest)
+                Launched?.Invoke(this, direction);
         }
 
         void FixedUpdate()
@@ -80,7 +87,7 @@ namespace Bouncer.Enemies
             if (GameFeel.Paused || !GameSession.IsGameplayActive)
                 return;
             Move(Time.fixedDeltaTime);
-            if (age < lifetime)
+            if (age < lifetime && !NetHooks.IsGuest)
                 Knock();
         }
 
@@ -185,5 +192,8 @@ namespace Bouncer.Enemies
                 transform.localScale = new Vector3(spread, Mathf.Max(0.05f, k), spread);
             }
         }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() => Launched = null;
     }
 }

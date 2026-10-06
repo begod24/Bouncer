@@ -11,6 +11,9 @@ namespace Bouncer.Visuals
     /// палитра и лужи (в луже мяч гаснет, бег медленнее); гроза — дождь и молнии, которые на миг освещают всё
     /// (на стройке тень в этот миг твёрдая); туман — видно метров на десять вокруг игрока, дальше всё тонет в сером.
     /// Туман считает шейдер палитры от игрока, а не от камеры (<see cref="Shader.SetGlobalVector"/> _Bouncer_Fog*).
+    /// По сети погоду выбирает хозяин комнаты: гость получает её вместе с числом, из которого раскладываются лужи
+    /// (у всех одни и те же), а молнии бьют по вестям хозяина (<see cref="Struck"/>, <see cref="StrikeFromNetwork"/>).
+    /// Туман и капли — вокруг своего игрока.
     /// </summary>
     // Раньше ArenaDirector: он включает погоду из своего Awake, а этот Awake сначала всё гасит.
     [DefaultExecutionOrder(-90)]
@@ -62,6 +65,9 @@ namespace Bouncer.Visuals
         public WeatherKind Kind { get; private set; }
         bool Rainy => Kind is WeatherKind.Rain or WeatherKind.Storm;
 
+        /// <summary>Ударила молния (по сети хозяин показывает её гостям).</summary>
+        public static event System.Action Struck;
+
         void Awake()
         {
             // Префаб погоды один на все сцены: время суток — своё в каждой, его ищем сами.
@@ -84,8 +90,11 @@ namespace Bouncer.Visuals
                 timeOfDay.SetWeather(0f, 0f, 0f);
         }
 
-        /// <summary>Включить погоду на эту арену. Clear — ясно.</summary>
-        public void Begin(WeatherKind kind)
+        /// <summary>
+        /// Включить погоду на эту арену. Clear — ясно. seed — из чего раскладываются лужи (0 — случайно);
+        /// remote — молнии присылает сеть, свои не бьют.
+        /// </summary>
+        public void Begin(WeatherKind kind, int seed = 0, bool remote = false)
         {
             Kind = kind;
             Weather.Current = kind;
@@ -110,8 +119,16 @@ namespace Bouncer.Visuals
                     rainLoop.Play();
             }
             if (Rainy)
-                SpawnPuddles();
-            _nextStrike = kind == WeatherKind.Storm ? Time.time + Random.Range(3f, 6f) : float.PositiveInfinity;
+                SpawnPuddles(seed != 0 ? seed : Random.Range(1, int.MaxValue));
+            _nextStrike = kind == WeatherKind.Storm && !remote ? Time.time + Random.Range(3f, 6f) : float.PositiveInfinity;
+        }
+
+        /// <summary>По сети у гостя: молния, которая ударила у хозяина.</summary>
+        public void StrikeFromNetwork()
+        {
+            _strikeStart = Time.time;
+            _thunderAt = Time.time + Random.Range(thunderDelay.x, thunderDelay.y);
+            LightZone.Flash(0.35f);
         }
 
         void Update()
@@ -140,7 +157,7 @@ namespace Bouncer.Visuals
             if (wetVolume)
                 wetVolume.weight = _wet;
 
-            var player = Targetable.FindNearest(Vector3.zero, Team.Player);
+            var player = Targetable.LocalPlayer ? Targetable.LocalPlayer : Targetable.FindNearest(Vector3.zero, Team.Player);
             Vector3 center = player ? player.Position : Vector3.zero;
             Shader.SetGlobalVector(FogCenterId, center);
             Shader.SetGlobalVector(FogParamsId, new Vector4(fogStart, fogEnd, _fog, 0f));
@@ -160,6 +177,7 @@ namespace Bouncer.Visuals
             _nextStrike = Time.time + Random.Range(lightningInterval.x, lightningInterval.y);
             _thunderAt = Time.time + Random.Range(thunderDelay.x, thunderDelay.y);
             LightZone.Flash(0.35f);
+            Struck?.Invoke();
         }
 
         /// <summary>Яркость вспышки молнии через t секунд после удара: вспыхнула, мигнула, вспыхнула и погасла.</summary>
@@ -176,18 +194,21 @@ namespace Bouncer.Visuals
             return Mathf.Lerp(0.9f, 0f, (t - 0.22f) / 0.38f);
         }
 
-        /// <summary>Лужи в случайных местах на проходимом асфальте, подальше от стен.</summary>
-        void SpawnPuddles()
+        /// <summary>Лужи в случайных (из числа seed — по сети у всех одинаковых) местах на асфальте, подальше от стен.</summary>
+        void SpawnPuddles(int seed)
         {
             if (puddlePrefab == null || _puddles.Count > 0)
                 return;
+            var random = new System.Random(seed);
+            float Range(float from, float to) => Mathf.Lerp(from, to, (float)random.NextDouble());
             int placed = 0;
             for (int attempt = 0; attempt < puddles * 6 && placed < puddles; attempt++)
             {
-                var point = new Vector3(Random.Range(-area.x, area.x) * 0.5f, 0f, Random.Range(-area.y, area.y) * 0.5f);
+                var point = new Vector3(Range(-area.x, area.x) * 0.5f, 0f, Range(-area.y, area.y) * 0.5f);
+                var size = new Vector2(Range(puddleSize.x, puddleSize.y), Range(puddleSize.x, puddleSize.y));
+                float yaw = Range(0f, 360f);
                 if (!NavMesh.SamplePosition(point, out NavMeshHit hit, 1f, NavMesh.AllAreas))
                     continue;
-                var size = new Vector2(Random.Range(puddleSize.x, puddleSize.y), Random.Range(puddleSize.x, puddleSize.y));
                 if (NavMesh.FindClosestEdge(hit.position, out NavMeshHit edge, NavMesh.AllAreas) && edge.distance < Mathf.Max(size.x, size.y) * 0.5f)
                     continue;
                 bool overlaps = false;
@@ -197,10 +218,13 @@ namespace Bouncer.Visuals
                 if (overlaps)
                     continue;
                 var puddle = Instantiate(puddlePrefab, transform);
-                puddle.Place(new Vector3(hit.position.x, 0f, hit.position.z), size, placed);
+                puddle.Place(new Vector3(hit.position.x, 0f, hit.position.z), size, placed, yaw);
                 _puddles.Add(puddle);
                 placed++;
             }
         }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() => Struck = null;
     }
 }

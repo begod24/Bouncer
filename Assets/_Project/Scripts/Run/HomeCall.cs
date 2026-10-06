@@ -13,6 +13,9 @@ namespace Bouncer.Run
     /// светится дорога к подъезду (в этот свет сумеречные не заходят). Добежал до прохода — дальше персонаж
     /// бежит к двери сам, и прогулка пройдена; выбили по дороге — нет. На других аренах сцены двора всё
     /// ночное спрятано, а гараж стоит на месте прохода.
+    /// По сети маму слышат все (зов приходит от хозяина комнаты, <see cref="CallStarted"/>), каждый бежит к подъезду
+    /// сам и, добежав, ждёт у двери вне игры (<see cref="PlayerController.IsHome"/>); когда дома все живые (выбитые
+    /// тоже идут в счёт), хозяин объявляет победу. Двор при этом не замирает — остальным ещё добегать.
     /// </summary>
     [DefaultExecutionOrder(-70)]
     public sealed class HomeCall : MonoBehaviour
@@ -42,6 +45,10 @@ namespace Bouncer.Run
         PlayerController _runner;
         int _waypoint;
         bool _won;
+        bool _finished;
+
+        /// <summary>Мама позвала (у хозяина комнаты — чтобы позвала и у гостей): выбит ли босс.</summary>
+        public static event System.Action<bool> CallStarted;
 
         public static HomeCall Instance { get; private set; }
         /// <summary>Эта арена — финал прогулки: продержаться до зова мамы.</summary>
@@ -116,6 +123,8 @@ namespace Bouncer.Run
             if (goalArrow)
                 goalArrow.Show(goalLabel.IsEmpty ? "↑" : goalLabel.GetLocalizedString());
             GameEvents.RaiseMomCalled();
+            if (!NetHooks.IsGuest)
+                CallStarted?.Invoke(bossDefeated);
             GameEvents.PlaySound(SoundCue.MomCall, momWindow ? momWindow.position : transform.position);
             GameEvents.Announce(new Announcement
             {
@@ -131,12 +140,36 @@ namespace Bouncer.Run
                 return;
             if (windows && !Called)
                 windows.Progress01 = Progress01;
-            if (!Called || _won)
+            if (!Called)
+                return;
+            if (Online.Active && Online.IsHost)
+                CheckEveryoneHome();
+            if (_won)
                 return;
             if (_runner == null)
                 WaitAtGate();
             else
                 RunHome(Time.deltaTime);
+        }
+
+        /// <summary>По сети, у хозяина: дома все, кто ещё в строю (выбитые тоже идут в счёт), — прогулка пройдена.</summary>
+        void CheckEveryoneHome()
+        {
+            if (_finished)
+                return;
+            bool anyHome = false;
+            foreach (var player in Players.All)
+            {
+                if (player.IsHome)
+                    anyHome = true;
+                else if (!player.IsDead)
+                    return;
+            }
+            if (!anyHome)
+                return;
+            _finished = true;
+            if (ArenaDirector.Instance != null)
+                ArenaDirector.Instance.WinFromHome(BossDefeated);
         }
 
         /// <summary>Кто из живых игроков дошёл до прохода — тот бежит домой.</summary>
@@ -151,7 +184,9 @@ namespace Bouncer.Run
                     continue;
                 Vector3 delta = target.Position - goal.position;
                 delta.y = 0f;
-                if (delta.sqrMagnitude > goalRadius * goalRadius || !target.TryGetComponent(out PlayerController player))
+                // По сети к двери ведёт каждый компьютер своего игрока.
+                if (delta.sqrMagnitude > goalRadius * goalRadius || !target.TryGetComponent(out PlayerController player)
+                    || !player.IsLocal)
                     continue;
                 _runner = player;
                 _waypoint = 0;
@@ -166,8 +201,10 @@ namespace Bouncer.Run
         {
             if (GameFeel.Paused)
                 return;
-            // Пока бежит домой, двор замер: сумеречным до подъезда не добраться.
-            Targetable.FreezeEnemies(0.5f);
+            // Пока бежит домой, двор замер: сумеречным до подъезда не добраться. По сети двор не замирает — другим
+            // ещё добегать, а бегущий и так неуязвим.
+            if (!Online.Active)
+                Targetable.FreezeEnemies(0.5f);
             var runner = _runner.transform;
             if (pathHome == null || _waypoint >= pathHome.Length || pathHome[_waypoint] == null)
             {
@@ -188,13 +225,22 @@ namespace Bouncer.Run
             runner.rotation = Quaternion.RotateTowards(runner.rotation, Quaternion.LookRotation(to), 720f * dt);
         }
 
-        /// <summary>У двери подъезда: прогулка пройдена.</summary>
+        /// <summary>У двери подъезда: прогулка пройдена (по сети — ждать остальных, победу объявит хозяин).</summary>
         void Arrive()
         {
             _won = true;
+            if (Online.Active)
+            {
+                _runner.IsHome = true;
+                GameEvents.AnnounceLocal(new Announcement { Title = "net.home.title", Hint = "net.home.hint", Seconds = 4f });
+                return;
+            }
             var session = GameSession.Instance;
             if (session != null)
                 session.Win();
         }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() => CallStarted = null;
     }
 }

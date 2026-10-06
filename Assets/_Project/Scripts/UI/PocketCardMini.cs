@@ -82,6 +82,22 @@ namespace Bouncer.UI
             SetLabel(null);
         }
 
+        /// <summary>Не вкладыш, а вещь (кооп: портфели в рюкзаке): обёртка цвета color с картинкой и числом.</summary>
+        public void ShowItem(Sprite sprite, Color color, string count)
+        {
+            Card = null;
+            slot.enabled = false;
+            wrapper.gameObject.SetActive(true);
+            wrapper.color = color;
+            icon.sprite = sprite;
+            icon.enabled = sprite != null;
+            border.enabled = false;
+            stacks.text = count ?? string.Empty;
+            SetMarked(false);
+            SetHotkey(0);
+            SetLabel(null);
+        }
+
         /// <summary>Пустой карман: пунктир мелом.</summary>
         public void ShowEmpty()
         {

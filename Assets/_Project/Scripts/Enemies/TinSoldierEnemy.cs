@@ -10,9 +10,10 @@ namespace Bouncer.Enemies
     /// Оловянный солдатик. Ходит строем (<see cref="SoldierSquad"/>): шеренга встаёт на дистанции от игрока,
     /// разом замахивается и бросает по очереди. Его мячи можно ловить — это главный запас мячей и жизней игрока.
     /// Негнущийся: от попадания качается как игрушка и пропускает залп. Выбитый роняет мяч из руки.
+    /// По сети думает и бросает только у хозяина комнаты; у гостя — копия, которой двигает сеть.
     /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
-    public sealed class TinSoldierEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, IGroupMember
+    public sealed class TinSoldierEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, IGroupMember, INetEnemy
     {
         public enum State
         {
@@ -50,7 +51,8 @@ namespace Bouncer.Enemies
         public bool HasBall { get; private set; }
         /// <summary>0..1 — насколько поднята рука для броска.</summary>
         public float AimProgress => _state == State.Aim ? Mathf.Clamp01(_stateTime / Mathf.Max(0.05f, definition.aimTime)) : 0f;
-        public Vector3 PlanarVelocity => _agent.isOnNavMesh ? Flat(_agent.velocity) : Vector3.zero;
+        public Vector3 PlanarVelocity => NetHooks.IsGuest ? Flat(_self.Velocity)
+            : _agent.isOnNavMesh ? Flat(_agent.velocity) : Vector3.zero;
         public Vector3 LastHitDirection { get; private set; } = Vector3.back;
 
         void Awake()
@@ -115,6 +117,8 @@ namespace Bouncer.Enemies
 
         void Update()
         {
+            if (NetHooks.IsGuest)
+                return;
             float dt = Time.deltaTime;
             if (!_agent.isOnNavMesh)
                 return;
@@ -317,6 +321,24 @@ namespace Bouncer.Enemies
             GameEvents.PlaySound(SoundCue.SoldierPop, transform.position);
             GameFeel.Shake(0.25f);
             PoolService.Despawn(gameObject);
+        }
+
+        // ---------- Сеть ----------
+
+        public void WriteNet(NetWriter writer)
+        {
+            writer.Byte((byte)_state);
+            writer.Seconds(_stateTime);
+            writer.Bool(HasBall);
+            writer.Direction(LastHitDirection);
+        }
+
+        public void ReadNet(NetReader reader, float age)
+        {
+            _state = (State)reader.Byte();
+            _stateTime = reader.Seconds() + age;
+            HasBall = reader.Bool();
+            LastHitDirection = reader.Direction();
         }
 
         // ---------- Служебное ----------

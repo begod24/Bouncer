@@ -10,9 +10,10 @@ namespace Bouncer.Enemies
     /// и бьёт в барабан. Под его барабан соседи в радиусе бегают быстрее (<see cref="Targetable.Hurry"/>),
     /// каждые несколько ударов по земле расходится кольцо — видно, кого он подгоняет. Попадание сбивает ритм:
     /// барабан замолкает. Выбивать первым.
+    /// По сети барабанит и подгоняет только у хозяина комнаты; у гостя копия бьёт палочками по его вестям.
     /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
-    public sealed class DrummerEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable
+    public sealed class DrummerEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
         const float RepathInterval = 0.5f;
 
@@ -97,6 +98,8 @@ namespace Bouncer.Enemies
 
         void Update()
         {
+            if (NetHooks.IsGuest)
+                return;
             float dt = Time.deltaTime;
             if (!_agent.isOnNavMesh)
                 return;
@@ -283,7 +286,8 @@ namespace Bouncer.Enemies
             if (!body)
                 return;
             float dt = Time.deltaTime;
-            float speed01 = _agent.isOnNavMesh ? Mathf.Clamp01(_agent.velocity.magnitude / Mathf.Max(0.1f, definition.moveSpeed)) : 0f;
+            Vector3 velocity = NetHooks.IsGuest ? _self.Velocity : _agent.isOnNavMesh ? _agent.velocity : Vector3.zero;
+            float speed01 = Mathf.Clamp01(Flat(velocity).magnitude / Mathf.Max(0.1f, definition.moveSpeed));
             _phase += dt * stepRate * Mathf.PI * Mathf.Max(speed01, 0.001f);
             float sin = Mathf.Sin(_phase);
             body.localPosition = _bodyRest + Vector3.up * (Mathf.Abs(sin) * 0.03f * speed01);
@@ -318,6 +322,27 @@ namespace Bouncer.Enemies
                 }
                 visual.rotation = tilt * transform.rotation;
             }
+        }
+
+        // ---------- Сеть ----------
+
+        public void WriteNet(NetWriter writer)
+        {
+            writer.Seconds(Mathf.Max(0f, _silentUntil - Time.time));
+            writer.Seconds(Mathf.Min(60f, Time.time - _lastBeatTime));
+            writer.Byte((byte)(_beat & 0xFF));
+            writer.Seconds(Mathf.Min(60f, Time.time - _staggerStart));
+            writer.Direction(_lastHitDirection);
+        }
+
+        public void ReadNet(NetReader reader, float age)
+        {
+            float silent = reader.Seconds() - age;
+            _silentUntil = silent > 0f ? Time.time + silent : 0f;
+            _lastBeatTime = Time.time - reader.Seconds() - age;
+            _beat = reader.Byte();
+            _staggerStart = Time.time - reader.Seconds() - age;
+            _lastHitDirection = reader.Direction();
         }
 
         static Vector3 Flat(Vector3 v) => new(v.x, 0f, v.z);

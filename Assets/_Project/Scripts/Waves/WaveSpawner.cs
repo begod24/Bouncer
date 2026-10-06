@@ -18,6 +18,8 @@ namespace Bouncer.Waves
     /// идут реже. Дорожки, которые ещё не начались, не сдвигаются: фазы арены остаются на своих секундах.
     /// Раз в секунду проверяет, не вылетел ли кто из врагов за проходимую часть арены (отброс сквозь тонкую стену),
     /// и возвращает его на ближайшее проходимое место.
+    /// В коопе на каждого второго лишнего игрока на арене на одну элитку больше. По сети врагов выпускает только
+    /// хозяин комнаты; у гостя часы волн просто идут, а метки на полу присылает хозяин (<see cref="GroupQueued"/>).
     /// </summary>
     public sealed class WaveSpawner : MonoBehaviour
     {
@@ -61,6 +63,12 @@ namespace Bouncer.Waves
         bool _bossSpawned;
         float _nextStrayCheck;
 
+        /// <summary>
+        /// Группа встала в очередь: элитная ли, где метки. По сети хозяин показывает те же метки гостям
+        /// (<see cref="ShowMarkers"/>).
+        /// </summary>
+        public static event System.Action<bool, IReadOnlyList<Vector3>> GroupQueued;
+
         /// <summary>Враг дальше этого от проходимого места — вылетел за арену.</summary>
         const float StrayDistance = 1.2f;
         /// <summary>Выше этого над землёй — летает (вороны), не трогаем.</summary>
@@ -98,6 +106,7 @@ namespace Bouncer.Waves
         }
         /// <summary>Сколько врагов ждут появления (метки уже на полу).</summary>
         public int PendingEnemies => PendingCount(null);
+        public float TelegraphTime => telegraphTime;
         /// <summary>Секунды забега по часам волн. Отладка может перемотать вперёд.</summary>
         public float WaveTime { get; set; }
         public bool Spawning
@@ -135,7 +144,8 @@ namespace Bouncer.Waves
 
         void OnSpawnRequested(SpawnRequest request)
         {
-            if (!GameSession.IsGameplayActive)
+            // По сети подмогу (замена Физрука, машинки Трансформера, пупсы плаксы) выпускает хозяин комнаты.
+            if (!GameSession.IsGameplayActive || NetHooks.IsGuest)
                 return;
             QueueGroupAt(request.Prefab, request.Count, request.Line ? GroupLayout.Line : GroupLayout.Cluster, request.Position);
         }
@@ -143,8 +153,15 @@ namespace Bouncer.Waves
         void Update()
         {
             UpdatePending();
-            if (wave == null || !GameSession.IsGameplayActive)
+            // По сети в начале прогулки часы волн ждут, пока все выберут стартовую карточку.
+            if (wave == null || !GameSession.IsGameplayActive || Online.WavesHeld)
                 return;
+            if (NetHooks.IsGuest)
+            {
+                // Гость: врагов выпускает хозяин, часы волн идут для времени суток (хозяин их поправляет).
+                WaveTime += Time.deltaTime;
+                return;
+            }
             CheckVictory();
             EnsureSchedule();
             WaveTime += Time.deltaTime;
@@ -239,7 +256,7 @@ namespace Bouncer.Waves
         {
             _extraBursts.Clear();
             _extraDone.Clear();
-            int extra = Danger.ExtraElites;
+            int extra = Danger.ExtraElites + Mathf.Max(0, RunState.PlayerCount - 1) / 2;
             if (extra <= 0)
                 return;
             SpawnBurst first = null, second = null;
@@ -367,7 +384,25 @@ namespace Bouncer.Waves
             }
             _pending.Add(group);
             GameEvents.PlaySound(elite ? SoundCue.EliteSpawn : SoundCue.SpawnWarning, point);
+            GroupQueued?.Invoke(elite, group.Positions);
             return true;
+        }
+
+        /// <summary>По сети у гостя: метки на полу, как у группы хозяина (враги придут от него же).</summary>
+        public void ShowMarkers(bool elite, IReadOnlyList<Vector3> positions)
+        {
+            var group = _freeGroups.Count > 0 ? _freeGroups.Pop() : new PendingGroup();
+            group.Prefab = null;
+            group.SpawnAt = Time.time + telegraphTime;
+            group.Elite = elite;
+            var marker = elite && eliteMarkerPrefab ? eliteMarkerPrefab : spawnMarkerPrefab;
+            foreach (var position in positions)
+            {
+                group.Positions.Add(position);
+                if (marker)
+                    group.Markers.Add(PoolService.Spawn(marker, position, Quaternion.identity));
+            }
+            _pending.Add(group);
         }
 
         /// <summary>Отладка: сразу поставить в очередь группу с дорожки, не глядя на лимиты.</summary>
@@ -432,6 +467,9 @@ namespace Bouncer.Waves
 
         void SpawnGroup(PendingGroup group)
         {
+            // Только метки (по сети у гостя): врагов пришлёт хозяин.
+            if (group.Prefab == null)
+                return;
             if (group.Boss)
                 _bossSpawned = true;
             _spawned.Clear();

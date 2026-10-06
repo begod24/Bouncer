@@ -11,6 +11,9 @@ namespace Bouncer.Core
         [Tooltip("Через сколько секунд эффект уходит в пул — не меньше самой долгой частицы")]
         [SerializeField, Min(0.1f)] float lifetime = 1.6f;
 
+        /// <summary>Эффект сыгран (по сети хозяин показывает его гостям): эффект и масштаб.</summary>
+        public static event System.Action<ParticleBurst, float> Played;
+
         ParticleSystem[] _systems;
         float _spawnTime;
 
@@ -34,7 +37,11 @@ namespace Bouncer.Core
         }
 
         /// <summary>Эффект побольше или поменьше (взрыв петушка крупнее).</summary>
-        public void Play(float scale) => transform.localScale = Vector3.one * Mathf.Max(0.1f, scale);
+        public void Play(float scale)
+        {
+            transform.localScale = Vector3.one * Mathf.Max(0.1f, scale);
+            Played?.Invoke(this, scale);
+        }
 
         void Update()
         {

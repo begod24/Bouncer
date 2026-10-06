@@ -89,6 +89,26 @@ namespace Bouncer.Core
             Current = Mathf.Clamp(value, 1, max);
         }
 
+        /// <summary>
+        /// По сети: здоровье копии (врага у гостя, игрока другого компьютера) — как у оригинала. Урон и лечение
+        /// сообщают события, как настоящие: полосы здоровья и оттенки работают сами. Выбить так нельзя — копию
+        /// убирает сеть.
+        /// </summary>
+        public void Mirror(int current, int maxHealth, bool dead, in HitInfo hit = default)
+        {
+            max = Mathf.Max(1, maxHealth);
+            current = Mathf.Clamp(current, 0, max);
+            int before = Current;
+            Current = current;
+            IsDead = dead;
+            if (current < before && !dead)
+                Damaged?.Invoke(hit);
+            else if (current >= max && before < max)
+                Restored?.Invoke();
+            else if (current > before)
+                Healed?.Invoke(current - before);
+        }
+
         public void SetInvulnerable(float seconds) =>
             _invulnerableUntil = Mathf.Max(_invulnerableUntil, Time.time + seconds);
 

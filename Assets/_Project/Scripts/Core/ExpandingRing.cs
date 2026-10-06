@@ -11,6 +11,9 @@ namespace Bouncer.Core
         [SerializeField] float startWidth = 0.3f;
         [SerializeField] float endWidth = 0.05f;
 
+        /// <summary>Кольцо разошлось (по сети хозяин показывает его гостям): кольцо и радиус.</summary>
+        public static event System.Action<ExpandingRing, float> Played;
+
         CircleLine _circle;
         float _start;
         float _radius = 2f;
@@ -26,6 +29,7 @@ namespace Bouncer.Core
             _radius = radius;
             _start = Time.time;
             Update();
+            Played?.Invoke(this, radius);
         }
 
         void Update()

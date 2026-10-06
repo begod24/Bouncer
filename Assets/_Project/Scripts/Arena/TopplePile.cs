@@ -9,6 +9,7 @@ namespace Bouncer.Arena
     /// Гора коробок на барахолке. Обычный мяч отскакивает от неё, как от стены. Сильный (заряженный) мяч или таран
     /// Трансформера её рушат: коробки валятся в сторону удара, врагов за горой завал бьёт и оглушает. Потом коробки
     /// сжимаются и пропадают — место становится проходимым.
+    /// По сети рушит и бьёт завалом хозяин комнаты; у гостей гора валится по его вести (<see cref="BreakEvents"/>).
     /// </summary>
     public sealed class TopplePile : MonoBehaviour, IBallTarget, IBreakable
     {
@@ -82,10 +83,12 @@ namespace Bouncer.Arena
                 _bodies[i] = body;
             }
 
-            // Завал бьёт тех, кто стоит за горой.
+            // Завал бьёт тех, кто стоит за горой (по сети — у хозяина: враги там настоящие).
             Vector3 center = transform.position + direction * fallDistance;
             foreach (var t in Targetable.All)
             {
+                if (NetHooks.IsGuest)
+                    break;
                 if (t.Team != Team.Enemy || !t.IsAlive)
                     continue;
                 Vector3 delta = t.Position - center;
@@ -106,6 +109,7 @@ namespace Bouncer.Arena
             GameEvents.PlaySound(SoundCue.AreaThud, transform.position);
             GameEvents.PlaySound(SoundCue.SackSpill, transform.position);
             GameFeel.Shake(0.35f);
+            BreakEvents.Raise(this, direction, force);
         }
 
         void Update()

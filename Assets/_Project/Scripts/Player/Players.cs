@@ -55,6 +55,7 @@ namespace Bouncer.Player
             if (local == Local)
                 return;
             Local = local;
+            Bouncer.Core.Targetable.LocalPlayer = local != null ? local.Targetable : null;
             LocalChanged?.Invoke(local);
         }
 

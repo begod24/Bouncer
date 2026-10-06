@@ -7,6 +7,7 @@ namespace Bouncer.Enemies
     /// Большая неваляшка кидается маленькими: откидывается назад, на земле у игрока появляется круг, маленькая
     /// неваляшка летит дугой и, упав, бьёт всех в круге — дальше она обычный враг. Замах иногда оказывается финтом.
     /// После броска босс открыт (<see cref="RolyPolyEnemy.MarkOpen"/>).
+    /// По сети кидается только у хозяина комнаты.
     /// </summary>
     [RequireComponent(typeof(RolyPolyEnemy))]
     public sealed class BossLobber : MonoBehaviour
@@ -60,6 +61,9 @@ namespace Bouncer.Enemies
 
         void Update()
         {
+            // По сети кидается и бьёт только настоящий босс — у хозяина комнаты; метку на земле гости видят от него.
+            if (NetHooks.IsGuest)
+                return;
             if (_landAt > 0f && Time.time >= _landAt)
                 Land();
             if (_health.IsDead || !GameSession.IsGameplayActive || minionPrefab == null)
@@ -121,7 +125,7 @@ namespace Bouncer.Enemies
             if (minion.TryGetComponent(out RolyPolyEnemy roly))
                 roly.Stun(flightTime + 0.4f);
             _landAt = Time.time + flightTime;
-            _nextLob = Time.time + Random.Range(interval.x, interval.y);
+            _nextLob = Time.time + Random.Range(interval.x, interval.y) * EnemyScaling.BossCooldown;
             _body.MarkOpen(openAfter);
             GameEvents.PlaySound(SoundCue.ThrowCharged, origin);
         }

@@ -14,6 +14,9 @@ namespace Bouncer.Player
     /// и «Кувырок» (уворот в последний момент: мяч или удар прошёл рядом во время рывка — замедление и бросок
     /// с силой «свечки»). Идеальная ловля лечит не чаще раза в catchHealCooldown. Взгляд игрока (под ним замирают
     /// манекены), «Зеркальце» и «Фонарик» передаются в <see cref="Targetable"/> — враги читают их оттуда.
+    /// По сети: удар врага по игроку другого компьютера хозяин отправляет ему (<see cref="ApplyNetworkHit"/>), а
+    /// удары карточек по копиям врагов уходят хозяину (<see cref="NetHooks.ApplyHit"/>). Выбитого в коопе
+    /// поднимает товарищ (<see cref="Revive"/>).
     /// </summary>
     [RequireComponent(typeof(PlayerMotor), typeof(PlayerAim), typeof(PlayerBallHandler))]
     [RequireComponent(typeof(Health), typeof(Targetable))]
@@ -43,6 +46,8 @@ namespace Bouncer.Player
         public PlayerBallHandler Balls { get; private set; }
         public Health Health { get; private set; }
         public Targetable Targetable { get; private set; }
+        /// <summary>Наводящий фонарик (если есть).</summary>
+        public PlayerFlashlight Flashlight { get; private set; }
         public bool IsDead => Health.IsDead;
         public PlayerIntent LastIntent { get; private set; }
         /// <summary>Игроком ведёт сценка (финал: бежит в подъезд): ввод не читается, удары не проходят.</summary>
@@ -57,6 +62,17 @@ namespace Bouncer.Player
         public bool IsLocal { get; private set; } = !Online.Active;
         /// <summary>Что делает чужой игрок — присылает его компьютер.</summary>
         public PlayerActionState RemoteAction { get; set; }
+        /// <summary>Как бежит чужой игрок (по точкам его движения) — для анимации.</summary>
+        public Vector3 RemoteVelocity { get; set; }
+        /// <summary>
+        /// По сети в финале: добежал до подъезда и ждёт остальных — вне игры (враги его не ищут), а когда дома все
+        /// живые, прогулка пройдена.
+        /// </summary>
+        public bool IsHome
+        {
+            get => Targetable.OutOfPlay;
+            set => Targetable.OutOfPlay = value;
+        }
 
         /// <summary>Что игрок делает прямо сейчас — для анимации.</summary>
         public PlayerActionState Action => !IsLocal ? RemoteAction : new PlayerActionState
@@ -68,6 +84,7 @@ namespace Bouncer.Player
             Sliding = Motor.IsDashing && Modifiers.TackleDamage > 0,
             DashDirection = Motor.DashDirection,
             Down = IsDead,
+            Flashlight = Flashlight != null && Flashlight.IsOn,
         };
 
         /// <summary>Получил урон (для визуала).</summary>
@@ -82,6 +99,11 @@ namespace Bouncer.Player
         public event Action Dodged;
         /// <summary>Сбит с ног медболом (для визуала).</summary>
         public event Action KnockedDown;
+        /// <summary>Выбитого подняли (кооп).</summary>
+        public event Action Revived;
+
+        /// <summary>По сети удар приходит с опозданием: увернувшийся рывком за столько секунд до него — не задет.</summary>
+        const float NetworkDodgeGrace = 0.15f;
 
         /// <summary>1 — идеальная ловля снова лечит, 0 — только что вылечила.</summary>
         public float CatchHeal01 => stats.catchHealCooldown <= 0f ? 1f
@@ -102,6 +124,7 @@ namespace Bouncer.Player
             _intentSource = GetComponent<IPlayerIntentSource>();
 
             Targetable = GetComponent<Targetable>();
+            Flashlight = GetComponent<PlayerFlashlight>();
 
             Motor.Init(stats, Modifiers);
             Aim.Init(stats);
@@ -139,6 +162,7 @@ namespace Bouncer.Player
         {
             Slot = Mathf.Clamp(slot, 0, RunState.MaxPlayers - 1);
             IsLocal = isLocal;
+            Targetable.IsRemote = !isLocal;
             Players.Refresh();
         }
 
@@ -251,7 +275,7 @@ namespace Bouncer.Player
                 Vector3 away = other.transform.position - transform.position;
                 away.y = 0f;
                 Vector3 push = direction + (away.sqrMagnitude > 1e-4f ? away.normalized * 0.5f : Vector3.zero);
-                target.ApplyHit(new HitInfo
+                NetHooks.ApplyHit(target, new HitInfo
                 {
                     Damage = 0,
                     Point = other.ClosestPoint(center),
@@ -311,7 +335,10 @@ namespace Bouncer.Player
 
         public bool ApplyHit(in HitInfo hit)
         {
-            if (!IsLocal || IsDead || IsScripted)
+            // Игрок другого компьютера: удар решил хозяин, а принять его — дело компьютера игрока.
+            if (!IsLocal)
+                return !IsDead && !IsScripted && NetHooks.HitRemotePlayer != null && NetHooks.HitRemotePlayer(gameObject, hit);
+            if (IsDead || IsScripted)
                 return false;
             if (Motor.IsDashInvulnerable)
             {
@@ -348,6 +375,35 @@ namespace Bouncer.Player
         /// Мяч вернулся в руки сам. Игроку другого компьютера мяч отдаёт сеть: руки его — там
         /// (<see cref="IBallNetwork.GiveToRemote"/>).
         /// </summary>
+        /// <summary>
+        /// По сети: удар врага, который засчитал хозяин. Пока он шёл, игрок мог увернуться — рывок за последние
+        /// <see cref="NetworkDodgeGrace"/> с спасает, как спас бы у хозяина.
+        /// </summary>
+        public bool ApplyNetworkHit(in HitInfo hit)
+        {
+            if (!IsLocal || IsDead || IsScripted)
+                return false;
+            if (Motor.WasDashInvulnerable(NetworkDodgeGrace))
+            {
+                if (Modifiers.DashCatch)
+                    PerfectDodge();
+                return false;
+            }
+            return ApplyHit(hit);
+        }
+
+        /// <summary>Кооп: товарищ поднял выбитого — снова в игре с lives сердцами и короткой неуязвимостью.</summary>
+        public void Revive(int lives)
+        {
+            if (!IsDead)
+                return;
+            Health.Restore();
+            Health.SetCurrent(Mathf.Max(1, lives));
+            Health.SetInvulnerable(stats.hurtInvulnerability * 2f);
+            GameEvents.PlaySound(SoundCue.SecondWind, transform.position);
+            Revived?.Invoke();
+        }
+
         public bool TryReceive(Ball ball)
         {
             if (IsDead)
@@ -399,6 +455,9 @@ namespace Bouncer.Player
         {
             if (Modifiers.DominoDamage <= 0 || enemy == null || hit.SourceTeam != Team.Player || hit.Has(HitFlags.Despawn))
                 return;
+            // В коопе «Домино» срабатывает только на тех, кого выбил сам.
+            if (Online.Active && hit.Source != gameObject)
+                return;
             _dominoes.Add((enemy.transform.position, Time.time + stats.dominoDelay));
         }
 
@@ -428,7 +487,7 @@ namespace Bouncer.Player
                 s_dominoDamaged.Add(target);
                 Vector3 away = other.transform.position - center;
                 away.y = 0f;
-                target.ApplyHit(new HitInfo
+                NetHooks.ApplyHit(target, new HitInfo
                 {
                     Damage = Modifiers.DominoDamage,
                     Point = other.ClosestPoint(center),

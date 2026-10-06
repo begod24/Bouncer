@@ -33,6 +33,11 @@ namespace Bouncer.Net
         const float MaxFastForward = 0.3f;
         /// <summary>За сколько вливается поправка хозяина, с.</summary>
         const float CorrectionTime = 0.08f;
+        /// <summary>
+        /// Чужой бросок: бросивший виден чуть в прошлом, а мяч — там, где он у хозяина сейчас, то есть уже впереди.
+        /// Мяч вылетает из руки бросившего и догоняет свой путь за это время, с.
+        /// </summary>
+        const float HandBlendTime = 0.2f;
         /// <summary>Разошлись больше этого — копия просто переносится, м.</summary>
         const float SnapDistance = 3f;
         /// <summary>Бросок гостя, на который хозяин так и не ответил, убирается через столько, с.</summary>
@@ -84,8 +89,9 @@ namespace Bouncer.Net
             public double T0;
             public Vector3 LastTarget;
             public Vector3 Shown;
-            /// <summary>Разница между показанным и тем, где копия должна быть, — тает за CorrectionTime.</summary>
+            /// <summary>Разница между показанным и тем, где копия должна быть, — тает за <see cref="Blend"/>.</summary>
             public Vector3 Error;
+            public float Blend = CorrectionTime;
             public float PendingUntil;
             /// <summary>Уже попал в своего игрока — второй раз этот полёт не бьёт.</summary>
             public bool Contacted;
@@ -124,12 +130,7 @@ namespace Bouncer.Net
         /// <summary>Сколько мячей идёт по сети: у хозяина — настоящих, у гостя — копий (для отладки, F3).</summary>
         public int Count => IsServer ? _tracked.Count : _all.Count;
 
-        /// <summary>
-        /// Время хозяина «сейчас». У гостя — оценка: время сети NGO у него впереди на задержку и запас в такт.
-        /// </summary>
-        double HostNow => IsServer
-            ? NetworkManager.ServerTime.Time
-            : NetworkManager.LocalTime.Time - NetworkManager.NetworkTimeSystem.LocalBufferSec;
+        double HostNow => NetClock.HostNow(NetworkManager);
 
         public override void OnNetworkSpawn()
         {
@@ -409,7 +410,8 @@ namespace Bouncer.Net
                 Owner = SlotObject(request.OwnerSlot),
                 YoyoString = request.YoyoString,
             });
-            // Гость видит свой мяч летящим с момента броска — догнать.
+            // Гость видит свой мяч летящим с момента броска — догнать. Здесь же гость виден чуть в прошлом:
+            // пусть мяч вылетит из его руки и догонит свой путь.
             double now = HostNow;
             ball.FastForward(Mathf.Clamp((float)(now - request.HostTime), 0f, MaxFastForward));
             if (!ball.isActiveAndEnabled)
@@ -417,6 +419,7 @@ namespace Bouncer.Net
                 CancelPrediction((sbyte)player.Slot, request.Seq);
                 return;
             }
+            ball.ShowFrom(HandOf(player), HandBlendTime);
             Watch(ball, now, (sbyte)player.Slot, request.Seq);
         }
 
@@ -560,8 +563,19 @@ namespace Bouncer.Net
                 out Vector3 target, out Vector3 velocity);
             puppet.LastTarget = target;
             puppet.Error = fresh ? Vector3.zero : shown - target;
+            puppet.Blend = CorrectionTime;
             if (puppet.Error.sqrMagnitude > SnapDistance * SnapDistance)
                 puppet.Error = Vector3.zero;
+            if (fresh && state.State == BallState.Live && ball.Thrower != null
+                && ball.Thrower.TryGetComponent(out PlayerController thrower) && !thrower.IsLocal)
+            {
+                Vector3 hand = HandOf(thrower);
+                if ((hand - target).sqrMagnitude < 4f * SnapDistance * SnapDistance)
+                {
+                    puppet.Error = hand - target;
+                    puppet.Blend = HandBlendTime;
+                }
+            }
             puppet.Shown = target + puppet.Error;
             ball.SetPuppetPose(puppet.Shown, velocity, puppet.G);
         }
@@ -574,7 +588,6 @@ namespace Bouncer.Net
             if (_all.Count == 0)
                 return;
             double now = HostNow;
-            float decay = Mathf.Exp(-Time.deltaTime / CorrectionTime);
             _step.Clear();
             _step.AddRange(_all);
             foreach (var puppet in _step)
@@ -589,7 +602,7 @@ namespace Bouncer.Net
                     Remove(puppet, despawn: true);
                     continue;
                 }
-                Step(puppet, now, decay);
+                Step(puppet, now, Mathf.Exp(-Time.deltaTime / puppet.Blend));
             }
         }
 
@@ -775,6 +788,14 @@ namespace Bouncer.Net
         }
 
         int LocalSlot => Players.Local != null ? Players.Local.Slot : -1;
+
+        /// <summary>Откуда игрок бросает: перед грудью, как у <see cref="PlayerBallHandler"/>.</summary>
+        static Vector3 HandOf(PlayerController player)
+        {
+            var transform = player.transform;
+            var stats = player.Stats;
+            return transform.position + Vector3.up * stats.throwHeight + transform.forward * stats.throwForwardOffset;
+        }
 
         void Remove(Puppet puppet, bool despawn)
         {

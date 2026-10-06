@@ -10,10 +10,11 @@ namespace Bouncer.Enemies
     /// от попадания заваливается, качается и сама встаёт. Пока не оглушена — держит
     /// равновесие, идёт к игроку по NavMesh (агент только считает путь) и бьёт телом.
     /// Умирает от серии попаданий: Health сбрасывается, если долго не попадать.
+    /// По сети физика и мозги — только у хозяина комнаты; у гостя копия (вместе с наклоном) едет по его вестям.
     /// </summary>
     [RequireComponent(typeof(Rigidbody), typeof(NavMeshAgent), typeof(Health))]
     [RequireComponent(typeof(Targetable))]
-    public sealed class RolyPolyEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable
+    public sealed class RolyPolyEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
         enum State
         {
@@ -102,6 +103,8 @@ namespace Bouncer.Enemies
 
         void Update()
         {
+            if (NetHooks.IsGuest)
+                return;
             if (Time.time >= _nextRepath)
             {
                 _nextRepath = Time.time + definition.repathInterval;
@@ -115,6 +118,8 @@ namespace Bouncer.Enemies
 
         void FixedUpdate()
         {
+            if (NetHooks.IsGuest)
+                return;
             if (_rb.position.y < -5f)
             {
                 PoolService.Despawn(gameObject);
@@ -357,7 +362,7 @@ namespace Bouncer.Enemies
         void OnCollisionEnter(Collision collision)
         {
             // Оглушённая неваляшка, влетев в соседку, сбивает и её.
-            if (_state != State.Stunned)
+            if (_state != State.Stunned || NetHooks.IsGuest)
                 return;
             if (collision.relativeVelocity.sqrMagnitude < definition.chainStunSpeed * definition.chainStunSpeed)
                 return;
@@ -390,6 +395,20 @@ namespace Bouncer.Enemies
             GameEvents.PlaySound(SoundCue.RolyPolyPop, transform.position);
             GameFeel.Shake(0.3f);
             PoolService.Despawn(gameObject);
+        }
+
+        // ---------- Сеть ----------
+
+        public void WriteNet(NetWriter writer)
+        {
+            writer.Byte((byte)_state);
+            writer.Seconds(_stateTime);
+        }
+
+        public void ReadNet(NetReader reader, float age)
+        {
+            _state = (State)reader.Byte();
+            _stateTime = reader.Seconds() + age;
         }
 
         // ---------- Служебное ----------

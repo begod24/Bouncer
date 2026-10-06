@@ -155,7 +155,7 @@ namespace Bouncer.Player
                     r.enabled = !hidden;
 
             if (dashTrail)
-                dashTrail.emitting = player.Motor.IsDashing;
+                dashTrail.emitting = player.Action.Dashing;
         }
 
         void OnHurt(HitInfo hit)

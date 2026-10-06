@@ -28,11 +28,18 @@ namespace Bouncer.Core
         /// <summary>Здесь решается игра: в соло всегда, по сети — только у хозяина комнаты.</summary>
         public static bool IsHost => !Active || Session == null || Session.IsHost;
 
+        /// <summary>
+        /// Часы волн стоят: в начале сетевой прогулки ждут, пока все выберут стартовую карточку (в соло на это
+        /// время встаёт вся игра). Ставит сетевая комната.
+        /// </summary>
+        public static bool WavesHeld { get; set; }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
         {
             Active = false;
             Session = null;
+            WavesHeld = false;
         }
     }
 }

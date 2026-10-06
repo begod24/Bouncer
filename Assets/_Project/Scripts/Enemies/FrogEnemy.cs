@@ -10,9 +10,11 @@ namespace Bouncer.Enemies
     /// приземление бьёт по кругу. После нескольких прыжков завод кончается — сидит и заводится (ключ крутится
     /// назад): окно для бросков. Мяч в прыжке сбивает её — падает на спину без удара. Кинематическая, без NavMesh-агента:
     /// точки приземления берутся с NavMesh, поэтому за арену не выпрыгнет.
+    /// По сети прыгает и бьёт только у хозяина комнаты; круг приземления он показывает гостям, а копия у гостя
+    /// летит и сплющивается по его вестям.
     /// </summary>
     [RequireComponent(typeof(Rigidbody), typeof(Health), typeof(Targetable))]
-    public sealed class FrogEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable
+    public sealed class FrogEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
         public enum State
         {
@@ -92,6 +94,8 @@ namespace Bouncer.Enemies
 
         void FixedUpdate()
         {
+            if (NetHooks.IsGuest)
+                return;
             float dt = Time.fixedDeltaTime;
             if (_self.IsFrozen && _state != State.Air)
                 return;
@@ -351,6 +355,28 @@ namespace Bouncer.Enemies
             _keyAngle += keySpeed * dt;
             if (key)
                 key.localRotation = Quaternion.Euler(0f, 0f, _keyAngle);
+        }
+
+        // ---------- Сеть ----------
+
+        public void WriteNet(NetWriter writer)
+        {
+            writer.Byte((byte)_state);
+            writer.Seconds(Mathf.Max(0f, _stateTime));
+            writer.Byte((byte)Mathf.Clamp(_jumpsLeft, 0, 255));
+            writer.Direction(_lastHitDirection);
+        }
+
+        public void ReadNet(NetReader reader, float age)
+        {
+            var state = (State)reader.Byte();
+            // Приземлилась — сплющиться, как у хозяина.
+            if (_state == State.Air && state == State.Sit)
+                _squash = 1f;
+            _state = state;
+            _stateTime = reader.Seconds() + age;
+            _jumpsLeft = reader.Byte();
+            _lastHitDirection = reader.Direction();
         }
 
         void Enter(State state)

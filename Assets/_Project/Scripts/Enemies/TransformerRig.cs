@@ -64,6 +64,10 @@ namespace Bouncer.Enemies
 
         public bool IsTransforming => _progress < 1f;
         public bool IsCar => !IsTransforming && _to >= 0.5f;
+        /// <summary>Во что превращается (или уже превратился): true — в машину.</summary>
+        public bool TargetIsCar => _to >= 0.5f;
+        /// <summary>Ход превращения 0..1 (1 — превращение закончено).</summary>
+        public float Progress => _progress;
 
         public int PartCount => parts?.Length ?? 0;
 
@@ -85,6 +89,18 @@ namespace Bouncer.Enemies
 
         /// <summary>Ход превращения 0..1 (его ведёт босс по своему таймеру).</summary>
         public void SetProgress(float progress) => _progress = Mathf.Clamp01(progress);
+
+        /// <summary>По сети у гостя: превращается в машину (car) или в робота и прошёл progress хода, как у хозяина.</summary>
+        public void SetNet(bool car, float progress)
+        {
+            float to = car ? 1f : 0f;
+            if (!Mathf.Approximately(_to, to))
+            {
+                _from = 1f - to;
+                _to = to;
+            }
+            _progress = Mathf.Clamp01(progress);
+        }
 
         /// <summary>Инструмент редактора: записать обе позы и порядок.</summary>
         public void SetPoses(Transform[] partList, Vector3[] robotPos, Quaternion[] robotRot, Vector3[] carPos, Quaternion[] carRot, float[] delayList)

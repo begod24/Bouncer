@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using Bouncer.Core;
 using Bouncer.Player;
+using Bouncer.Run;
+using Bouncer.Upgrades;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
@@ -15,6 +17,12 @@ namespace Bouncer.Net
     /// опасность (её выбирает хозяин из открытых у себя). Хозяин начинает, когда все гости готовы: у всех
     /// начинается сетевая прогулка (<see cref="RunState.BeginOnline"/>), экран гаснет, первая арена грузится по сети,
     /// и на каждой загруженной арене хозяин выпускает игроков (<see cref="NetPlayer"/>) на их точки старта.
+    /// Выбиты все — у всех поражение, а через <see cref="defeatDelay"/> с все возвращаются в лобби этой же комнаты
+    /// (<see cref="ReturnToLobby"/>): можно сразу гулять заново. Победа — так же, через <see cref="victoryDelay"/>.
+    /// В начале арены волны ждут (<see cref="Online.WavesHeld"/>), пока появятся все игроки и каждый выберет
+    /// стартовую карточку. Когда арена пройдена и все живые встали у одной стрелки, хозяин ведёт всех дальше
+    /// (<see cref="NetHooks.LeaveArena"/>): у всех гаснет экран, сердца записываются, следующая арена грузится по сети.
+    /// Здесь же считается, сколько золотых взяла команда (золотая одна на всех, <see cref="RunCards.SharedGolds"/>).
     /// Живёт между сценами, пока есть комната.
     /// </summary>
     public sealed class NetRoom : NetworkBehaviour
@@ -23,11 +31,25 @@ namespace Bouncer.Net
         [SerializeField] KidRoster roster;
         [Tooltip("Сколько гаснет экран перед загрузкой арены, с")]
         [SerializeField] float fadeDelay = 0.5f;
+        [Tooltip("Сколько висит поражение, прежде чем все вернутся в комнату, с")]
+        [SerializeField] float defeatDelay = 5f;
+        [Tooltip("Сколько висит победа, прежде чем все вернутся в комнату, с")]
+        [SerializeField] float victoryDelay = 9f;
+        [Tooltip("Дольше этого волны в начале арены никого не ждут, с")]
+        [SerializeField] float holdLimit = 25f;
+
+        /// <summary>Хозяин: прогулка кончилась (поражение или победа), все скоро вернутся в комнату.</summary>
+        bool _finished;
+        /// <summary>Хозяин: все уходят на следующую арену, она грузится.</summary>
+        bool _leaving;
+        float _nextWipeCheck;
 
         NetworkList<RoomMember> _members;
         readonly NetworkVariable<NetMode> _mode = new();
         readonly NetworkVariable<byte> _danger = new(1);
         readonly NetworkVariable<bool> _started = new();
+        /// <summary>Сколько золотых карточек взяла команда за прогулку.</summary>
+        readonly NetworkVariable<byte> _teamGolds = new();
 
         public static NetRoom Current { get; private set; }
         /// <summary>В комнате что-то поменялось (или она появилась / пропала).</summary>
@@ -69,6 +91,8 @@ namespace Bouncer.Net
             _members.OnListChanged += OnMembersChanged;
             _danger.OnValueChanged += OnValueChanged;
             _started.OnValueChanged += OnValueChanged;
+            _teamGolds.OnValueChanged += OnTeamGoldsChanged;
+            RunCards.GoldRecorded += OnGoldRecorded;
             if (IsServer)
             {
                 NetworkManager.OnClientConnectedCallback += AddMember;
@@ -77,6 +101,7 @@ namespace Bouncer.Net
                     NetworkManager.SceneManager.OnLoadEventCompleted += OnArenaLoaded;
                 foreach (ulong id in NetworkManager.ConnectedClientsIds)
                     AddMember(id);
+                NetHooks.LeaveArena = LeaveArena;
             }
             // Хозяину — своё имя и кем хочется гулять.
             IntroduceRpc(Fixed(Clip(GameSettings.PlayerName)), (sbyte)GameSettings.Kid);
@@ -88,6 +113,11 @@ namespace Bouncer.Net
             _members.OnListChanged -= OnMembersChanged;
             _danger.OnValueChanged -= OnValueChanged;
             _started.OnValueChanged -= OnValueChanged;
+            _teamGolds.OnValueChanged -= OnTeamGoldsChanged;
+            RunCards.GoldRecorded -= OnGoldRecorded;
+            if (NetHooks.LeaveArena == (Func<int, bool>)LeaveArena)
+                NetHooks.LeaveArena = null;
+            Online.WavesHeld = false;
             if (IsServer && NetworkManager != null)
             {
                 NetworkManager.OnClientConnectedCallback -= AddMember;
@@ -144,6 +174,9 @@ namespace Bouncer.Net
             if (!CanStart)
                 return false;
             _started.Value = true;
+            _finished = false;
+            _leaving = false;
+            _teamGolds.Value = 0;
             BeginRunRpc((byte)_members.Count, _danger.Value);
             StartCoroutine(LoadFirstArena());
             return true;
@@ -200,6 +233,7 @@ namespace Bouncer.Net
                 GameSettings.Save();
             }
             RunState.BeginOnline(players, danger);
+            RunCards.SharedGolds = 0;
             ScreenFade.Cover();
         }
 
@@ -213,6 +247,7 @@ namespace Bouncer.Net
         /// <summary>Арена загрузилась у всех: выпустить игроков. Кто не успел загрузиться — отключить.</summary>
         void OnArenaLoaded(string sceneName, LoadSceneMode mode, List<ulong> completed, List<ulong> timedOut)
         {
+            _leaving = false;
             if (!Started)
                 return;
             foreach (var member in _members)
@@ -230,6 +265,148 @@ namespace Bouncer.Net
             var player = Instantiate(playerPrefab, pose.position, pose.rotation);
             player.Init(member);
             player.NetworkObject.SpawnAsPlayerObject(member.ClientId, destroyWithScene: true);
+        }
+
+        // ---------- Начало арены: волны ждут всех ----------
+
+        /// <summary>
+        /// Волны стоят, пока не появились все игроки и пока кто-то выбирает стартовую карточку (не дольше
+        /// <see cref="holdLimit"/> с от загрузки арены). Считает каждый компьютер сам — по копиям игроков.
+        /// </summary>
+        void UpdateHold()
+        {
+            bool hold = false;
+            var session = GameSession.Instance;
+            if (Started && session != null && session.State == SessionState.Playing && Time.timeSinceLevelLoad < holdLimit)
+            {
+                var players = Players.All;
+                hold = players.Count < _members.Count;
+                foreach (var player in players)
+                    if (player.TryGetComponent(out NetPlayer net) && net.StartPending)
+                        hold = true;
+            }
+            Online.WavesHeld = hold;
+        }
+
+        // ---------- Золотая карточка — одна на команду ----------
+
+        void OnGoldRecorded()
+        {
+            if (Started)
+                GoldTakenRpc();
+        }
+
+        [Rpc(SendTo.Server)]
+        void GoldTakenRpc() => _teamGolds.Value = (byte)Mathf.Min(255, _teamGolds.Value + 1);
+
+        void OnTeamGoldsChanged(byte previous, byte current) => RunCards.SharedGolds = current;
+
+        // ---------- Дальше по стрелке (решает хозяин) ----------
+
+        /// <summary>Хозяин: все живые у стрелки variant — у всех гаснет экран, следующая арена грузится по сети.</summary>
+        bool LeaveArena(int variant)
+        {
+            var director = ArenaDirector.Instance;
+            string scene = director != null ? director.NextSceneName(variant) : null;
+            if (!IsServer || !Started || _leaving || _finished || string.IsNullOrEmpty(scene))
+                return false;
+            _leaving = true;
+            NextArenaRpc((byte)variant);
+            StartCoroutine(LoadArena(scene));
+            return true;
+        }
+
+        [Rpc(SendTo.Everyone)]
+        void NextArenaRpc(byte variant)
+        {
+            var director = ArenaDirector.Instance;
+            if (director != null)
+                director.LeaveOnline(variant);
+        }
+
+        IEnumerator LoadArena(string scene)
+        {
+            yield return new WaitForSecondsRealtime(fadeDelay);
+            NetworkManager.SceneManager.LoadScene(scene, LoadSceneMode.Single);
+        }
+
+        // ---------- Конец прогулки и возврат в комнату (решает хозяин) ----------
+
+        void Update()
+        {
+            if (!IsSpawned)
+                return;
+            UpdateHold();
+            if (!IsServer || !Started || _finished || Time.unscaledTime < _nextWipeCheck)
+                return;
+            _nextWipeCheck = Time.unscaledTime + 0.25f;
+            var session = GameSession.Instance;
+            if (session == null)
+                return;
+            // Прогулка выиграна (последняя арена пройдена): постоять на победе — и в комнату.
+            if (session.State == SessionState.Victory)
+            {
+                _finished = true;
+                StartCoroutine(ReturnAfter(victoryDelay));
+                return;
+            }
+            if (session.State is not (SessionState.Playing or SessionState.Cleared or SessionState.Upgrade or SessionState.Shop))
+                return;
+            var players = Players.All;
+            if (players.Count == 0)
+                return;
+            foreach (var player in players)
+                if (!player.IsDead)
+                    return;
+            _finished = true;
+            LoseRpc();
+            StartCoroutine(ReturnAfter(defeatDelay));
+        }
+
+        [Rpc(SendTo.Everyone)]
+        void LoseRpc()
+        {
+            if (GameSession.Instance != null)
+                GameSession.Instance.LoseOnline();
+        }
+
+        IEnumerator ReturnAfter(float seconds)
+        {
+            yield return new WaitForSecondsRealtime(seconds);
+            ReturnToLobby();
+        }
+
+        /// <summary>Хозяин: прогулка кончилась — все в лобби этой комнаты, «Готов» снимается.</summary>
+        public void ReturnToLobby()
+        {
+            if (!IsServer || !Started)
+                return;
+            string scene = string.IsNullOrEmpty(RunState.FirstScene) ? SceneManager.GetActiveScene().name : RunState.FirstScene;
+            _started.Value = false;
+            for (int i = 0; i < _members.Count; i++)
+            {
+                var member = _members[i];
+                if (!member.Ready)
+                    continue;
+                member.Ready = false;
+                _members[i] = member;
+            }
+            EndRunRpc();
+            StartCoroutine(LoadLobby(scene));
+        }
+
+        [Rpc(SendTo.Everyone)]
+        void EndRunRpc()
+        {
+            RunState.Clear();
+            ScreenFade.Cover();
+        }
+
+        IEnumerator LoadLobby(string scene)
+        {
+            yield return new WaitForSecondsRealtime(fadeDelay);
+            _finished = false;
+            NetworkManager.SceneManager.LoadScene(scene, LoadSceneMode.Single);
         }
 
         // ---------- Список (только хозяин) ----------

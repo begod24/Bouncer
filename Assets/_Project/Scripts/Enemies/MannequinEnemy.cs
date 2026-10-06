@@ -11,9 +11,11 @@ namespace Bouncer.Enemies
     /// и бьёт вблизи; взгляд во время замаха останавливает и удар. Попадать можно всегда: замерший не шатается.
     /// Элитный манекен ещё и бросает сильный мяч в спину, если на него не смотрят.
     /// Модель — жёсткие части (корпус, голова, руки, ноги), позы и ходьба задаются в коде.
+    /// По сети смотрит (на всех игроков, и на копии гостей), крадётся и бьёт только у хозяина комнаты; у гостя
+    /// копия встаёт в те же позы по его вестям.
     /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
-    public sealed class MannequinEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable
+    public sealed class MannequinEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
         enum State
         {
@@ -104,6 +106,8 @@ namespace Bouncer.Enemies
         Pose _frozenPose;
         int _lastPose = -1;
         float _walkPhase;
+        /// <summary>У гостя: мяч в руке элитного (по вестям хозяина).</summary>
+        bool _netHandBall;
 
         public MannequinDefinition Definition => definition;
         /// <summary>Сейчас замер (на него смотрят или он заморожен).</summary>
@@ -162,6 +166,8 @@ namespace Bouncer.Enemies
 
         void Update()
         {
+            if (NetHooks.IsGuest)
+                return;
             float dt = Time.deltaTime;
             if (!_agent.isOnNavMesh)
                 return;
@@ -454,7 +460,7 @@ namespace Bouncer.Enemies
             float dt = Time.deltaTime;
             if (handBall)
             {
-                bool ready = ballPrefab && definition.backThrowMinRange > 0f && (Time.time >= _nextThrow || _state == State.Aim);
+                bool ready = HandBallReady;
                 if (handBall.activeSelf != ready)
                     handBall.SetActive(ready);
             }
@@ -524,7 +530,8 @@ namespace Bouncer.Enemies
                 default:
                 {
                     // Ходьба рывками, как на покадровой съёмке: поза меняется ступеньками.
-                    float speed01 = _agent.isOnNavMesh ? Mathf.Clamp01(_agent.velocity.magnitude / Mathf.Max(0.1f, definition.sneakSpeed)) : 0f;
+                    Vector3 velocity = NetHooks.IsGuest ? _self.Velocity : _agent.isOnNavMesh ? _agent.velocity : Vector3.zero;
+                    float speed01 = Mathf.Clamp01(Flat(velocity).magnitude / Mathf.Max(0.1f, definition.sneakSpeed));
                     _walkPhase += dt * 9f * Mathf.Max(0.2f, speed01);
                     float stepped = Mathf.Floor(_walkPhase * 1.6f) / 1.6f;
                     float swing = Mathf.Sin(stepped) * 34f * Mathf.Max(0.3f, speed01);
@@ -548,6 +555,32 @@ namespace Bouncer.Enemies
             Apply(armR, _armRRest, _current.ArmR);
             Apply(legL, _legLRest, _current.LegL);
             Apply(legR, _legRRest, _current.LegR);
+        }
+
+        bool HandBallReady => NetHooks.IsGuest ? _netHandBall
+            : ballPrefab && definition.backThrowMinRange > 0f && (Time.time >= _nextThrow || _state == State.Aim);
+
+        // ---------- Сеть ----------
+
+        public void WriteNet(NetWriter writer)
+        {
+            writer.Byte((byte)_state);
+            writer.Seconds(_stateTime);
+            writer.Byte((byte)Mathf.Max(0, _lastPose));
+            writer.Bool(HandBallReady);
+        }
+
+        public void ReadNet(NetReader reader, float age)
+        {
+            _state = (State)reader.Byte();
+            _stateTime = reader.Seconds() + age;
+            int pose = reader.Byte();
+            if (pose != _lastPose && pose < FrozenPoses.Length)
+            {
+                _lastPose = pose;
+                _frozenPose = FrozenPoses[pose];
+            }
+            _netHandBall = reader.Bool();
         }
 
         static void Apply(Transform part, Quaternion rest, Vector3 euler)

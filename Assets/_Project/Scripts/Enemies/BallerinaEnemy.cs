@@ -10,9 +10,10 @@ namespace Bouncer.Enemies
     /// в пируэт, облетает её и летит обратно в игрока — его можно поймать (это всё ещё мяч игрока). Сильный мяч
     /// пробивает пируэт и сбивает его. После пируэта — реверанс: стоит открытая, тут её и бить. Пачка вблизи
     /// задевает.
+    /// По сети кружит мячи и задевает только у хозяина комнаты; у гостя копия кружится по его вестям.
     /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
-    public sealed class BallerinaEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, IBallInterceptor
+    public sealed class BallerinaEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, IBallInterceptor, INetEnemy
     {
         public enum State
         {
@@ -97,6 +98,8 @@ namespace Bouncer.Enemies
 
         void Update()
         {
+            if (NetHooks.IsGuest)
+                return;
             float dt = Time.deltaTime;
             if (!_agent.isOnNavMesh)
                 return;
@@ -353,6 +356,20 @@ namespace Bouncer.Enemies
                 armL.localRotation = Quaternion.Euler(0f, 0f, _arms);
             if (armR)
                 armR.localRotation = Quaternion.Euler(0f, 0f, -_arms);
+        }
+
+        // ---------- Сеть ----------
+
+        public void WriteNet(NetWriter writer)
+        {
+            writer.Byte((byte)_state);
+            writer.Seconds(_stateTime);
+        }
+
+        public void ReadNet(NetReader reader, float age)
+        {
+            _state = (State)reader.Byte();
+            _stateTime = reader.Seconds() + age;
         }
 
         void Enter(State state)

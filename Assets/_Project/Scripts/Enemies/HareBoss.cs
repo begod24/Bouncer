@@ -12,9 +12,11 @@ namespace Bouncer.Enemies
     /// Морковка-бумеранг летит петлёй к игроку и обратно; вблизи бьёт ушами-хлыстом. На половине жизни рвётся шов:
     /// из бока лезет вата, заяц скачет быстрее, прыгает чаще и теряет вату за собой. Держит удар (<see cref="BossArmor"/>):
     /// открыт, пока сидит после прыжка, после удара ушами и пока рвётся шов. Жизнь — на полосе босса (<see cref="BossSplit"/>).
+    /// По сети прыгает, бьёт, кладёт облака и бросает морковку только у хозяина комнаты (круги, облака и морковку он
+    /// показывает гостям); у гостя копия приседает, летит, хлещет ушами и рвётся по его вестям.
     /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
-    public sealed class HareBoss : MonoBehaviour, IBallTarget, IDamageable, IPoolable
+    public sealed class HareBoss : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
         public enum State
         {
@@ -94,7 +96,8 @@ namespace Bouncer.Enemies
         /// <summary>Открыт: сидит после прыжка, только что хлестнул ушами или у него рвётся шов.</summary>
         public bool IsOpen => _state is State.Stuck or State.Rip || Time.time < _openUntil;
         float SpeedBoost => _ripped ? definition.rippedSpeedMultiplier : 1f;
-        float CooldownScale => _ripped ? definition.rippedCooldownMultiplier : 1f;
+        /// <summary>Перезарядка приёмов: короче с разорванным швом и с каждым лишним игроком в коопе.</summary>
+        float CooldownScale => (_ripped ? definition.rippedCooldownMultiplier : 1f) * EnemyScaling.BossCooldown;
 
         void Awake()
         {
@@ -154,8 +157,8 @@ namespace Bouncer.Enemies
             _jumpHeight = definition.jumpHeight * 1.2f;
             _jumpTime = definition.jumpTime * 1.4f;
             transform.SetPositionAndRotation(_jumpFrom, Quaternion.LookRotation(inward));
-            // Приземление бьёт, как обычный прыжок, — и так же видно заранее.
-            if (circleMarkerPrefab)
+            // Приземление бьёт, как обычный прыжок, — и так же видно заранее (у гостя круг пришлёт хозяин).
+            if (circleMarkerPrefab && !NetHooks.IsGuest)
             {
                 _marker = PoolService.Spawn(circleMarkerPrefab, landing, Quaternion.identity);
                 _marker.ShowCircle(landing, definition.slamRadius, _jumpTime);
@@ -171,6 +174,8 @@ namespace Bouncer.Enemies
 
         void Update()
         {
+            if (NetHooks.IsGuest)
+                return;
             float dt = Time.deltaTime;
             _stateTime += dt;
             if (Time.time >= _nextRepath)
@@ -502,7 +507,8 @@ namespace Bouncer.Enemies
         /// <summary>На половине жизни рвётся шов: вата наружу, заяц злее.</summary>
         void OnDamaged(HitInfo hit)
         {
-            if (_ripped || _health.IsDead || _health.Current > _health.Max * definition.ripAt)
+            // У гостя шов рвётся по вестям хозяина (ReadNet), вату и надпись он показывает сам.
+            if (_ripped || _health.IsDead || _health.Current > _health.Max * definition.ripAt || NetHooks.IsGuest)
                 return;
             _ripped = true;
             _nextTrailCloud = Time.time + definition.trailCloudInterval;
@@ -549,8 +555,8 @@ namespace Bouncer.Enemies
                 return;
             float dt = Time.deltaTime;
             _squash = Mathf.MoveTowards(_squash, 0f, dt * 3f);
-            float speed01 = _agent.enabled && _agent.isOnNavMesh
-                ? Mathf.Clamp01(_agent.velocity.magnitude / Mathf.Max(0.1f, definition.hopSpeed)) : 0f;
+            Vector3 velocity = NetHooks.IsGuest ? Flat(_self.Velocity) : _agent.enabled && _agent.isOnNavMesh ? _agent.velocity : Vector3.zero;
+            float speed01 = Mathf.Clamp01(velocity.magnitude / Mathf.Max(0.1f, definition.hopSpeed));
             _hopPhase += dt * definition.hopRate * Mathf.PI * 2f * Mathf.Max(speed01, 0.001f);
             float hop = _state == State.Hop ? Mathf.Abs(Mathf.Sin(_hopPhase)) * 0.35f * speed01 : 0f;
             float crouch = _state == State.Crouch ? Mathf.Clamp01(_stateTime / Mathf.Max(0.05f, definition.crouchTime))
@@ -589,6 +595,37 @@ namespace Bouncer.Enemies
                 legL.localRotation = _legLRest * Quaternion.Euler(legs, 0f, 0f);
             if (legR)
                 legR.localRotation = _legRRest * Quaternion.Euler(legs, 0f, 0f);
+        }
+
+        // ---------- Сеть ----------
+
+        public void WriteNet(NetWriter writer)
+        {
+            writer.Byte((byte)_state);
+            writer.Seconds(_stateTime);
+            writer.Bool(_ripped);
+            writer.Bool(_carrotOut);
+        }
+
+        public void ReadNet(NetReader reader, float age)
+        {
+            var state = (State)reader.Byte();
+            _stateTime = reader.Seconds() + age;
+            // Приземлился — сплющиться, как у хозяина.
+            if ((_state is State.Air or State.Enter) && state is not (State.Air or State.Enter))
+                _squash = 1f;
+            _state = state;
+            _jumpTime = state == State.Enter ? definition.jumpTime * 1.4f : definition.jumpTime;
+            bool ripped = reader.Bool();
+            if (ripped != _ripped)
+            {
+                _ripped = ripped;
+                if (stuffing)
+                    stuffing.SetActive(ripped);
+            }
+            _carrotOut = reader.Bool();
+            if (carrotInHand && carrotInHand.activeSelf == _carrotOut)
+                carrotInHand.SetActive(!_carrotOut);
         }
 
         void Enter(State state)

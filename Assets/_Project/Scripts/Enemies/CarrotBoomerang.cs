@@ -7,6 +7,8 @@ namespace Bouncer.Enemies
     /// <summary>
     /// Плюшевая морковка зайца: летит петлёй-бумерангом — от лапы вперёд к цели и назад к хозяину, крутясь.
     /// Бьёт игрока, которого задевает (туда и обратно — по разу). Поймать нельзя, только увернуться. Из пула.
+    /// По сети морковку бросает хозяин комнаты и показывает гостям такую же (<see cref="Thrown"/>): у гостя она
+    /// летит к копии зайца и обратно, но не бьёт (<see cref="IsPuppet"/>) — удар засчитывает хозяин.
     /// </summary>
     public sealed class CarrotBoomerang : MonoBehaviour, IPoolable
     {
@@ -28,7 +30,13 @@ namespace Bouncer.Enemies
         bool _hitBack;
         Action _onReturned;
 
-        public void OnSpawned() { }
+        /// <summary>По сети у гостя: копия морковки хозяина — только летит.</summary>
+        public bool IsPuppet { get; set; }
+
+        /// <summary>Морковка брошена: откуда, докуда, сколько летит, радиус удара (по сети хозяин показывает гостям).</summary>
+        public static event Action<CarrotBoomerang, Vector3, Vector3, float, float> Thrown;
+
+        public void OnSpawned() => IsPuppet = false;
 
         public void OnDespawned() => _onReturned = null;
 
@@ -51,6 +59,8 @@ namespace Bouncer.Enemies
             _hitOut = _hitBack = false;
             _onReturned = onReturned;
             transform.position = start;
+            if (!IsPuppet)
+                Thrown?.Invoke(this, start, far, _flightTime, radius);
         }
 
         void Update()
@@ -82,7 +92,7 @@ namespace Bouncer.Enemies
                 visual.Rotate(Vector3.up, spinSpeed * Time.deltaTime, Space.World);
 
             bool outward = t < 0.5f;
-            if (outward ? _hitOut : _hitBack)
+            if (IsPuppet || (outward ? _hitOut : _hitBack))
                 return;
             foreach (var target in Targetable.All)
             {
@@ -109,5 +119,8 @@ namespace Bouncer.Enemies
                 break;
             }
         }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() => Thrown = null;
     }
 }

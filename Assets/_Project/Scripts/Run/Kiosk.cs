@@ -10,6 +10,8 @@ namespace Bouncer.Run
     /// Ларёк «Союзпечать» на краю арены. В бою закрыт; когда арена пройдена, окошко загорается, над ларьком
     /// прыгает стрелка, и игрок, подойдя, открывает витрину кнопкой взаимодействия. Сама витрина — экран в UI,
     /// он слушает <see cref="ShopOpened"/> и работает с <see cref="Stock"/>.
+    /// По сети у каждого компьютера свой покупатель — свой игрок со своей витриной; витрины открыты у всех разом,
+    /// и время у ларька не стоит.
     /// </summary>
     [DefaultExecutionOrder(100)]
     public sealed class Kiosk : MonoBehaviour
@@ -101,7 +103,7 @@ namespace Bouncer.Run
         public void CloseShop()
         {
             var session = GameSession.Instance;
-            if (session == null || session.State != SessionState.Shop)
+            if (session == null || !session.IsShopOpen)
                 return;
             session.EndShop();
             ShopClosed?.Invoke();

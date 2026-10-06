@@ -160,7 +160,7 @@ namespace Bouncer.UI
             }
         }
 
-        /// <summary>Рекорды: лучшая победа на каждом уровне опасности, от высшего.</summary>
+        /// <summary>Рекорды: лучшая победа на каждом уровне опасности, от высшего; ниже — прогулки вместе.</summary>
         void RefreshRecords()
         {
             if (recordsText == null)
@@ -178,6 +178,22 @@ namespace Bouncer.UI
                             kid = roster[i].displayName.GetLocalizedString();
                 lines.AppendLine(Loc.Format("records.line", level, RunRecords.FormatTime(best.time), kid,
                     best.cards != null ? best.cards.Length : 0));
+            }
+            // Прогулки вместе — своим списком.
+            bool coopHeader = false;
+            for (int level = Danger.Max; level >= 1; level--)
+            {
+                var best = RunRecords.Best(level, coop: true);
+                if (best == null)
+                    continue;
+                if (!coopHeader)
+                {
+                    coopHeader = true;
+                    if (lines.Length > 0)
+                        lines.AppendLine();
+                    lines.AppendLine(Loc.Get("records.coop"));
+                }
+                lines.AppendLine(Loc.Format("records.line.coop", level, RunRecords.FormatTime(best.time), best.players));
             }
             recordsText.text = lines.Length > 0 ? lines.ToString() : Loc.Get("records.empty");
         }

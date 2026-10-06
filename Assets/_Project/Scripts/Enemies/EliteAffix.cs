@@ -91,7 +91,8 @@ namespace Bouncer.Enemies
 
         void Update()
         {
-            if (Kind == AffixKind.None)
+            // По сети подгоняет соседей и ловит мячи только настоящая элитка — у хозяина комнаты.
+            if (Kind == AffixKind.None || NetHooks.IsGuest)
                 return;
             if (_health && _health.IsDead)
             {

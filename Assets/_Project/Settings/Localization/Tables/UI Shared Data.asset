@@ -1155,6 +1155,58 @@ MonoBehaviour:
     m_Key: lobby.pick.ready
     m_Metadata:
       m_Items: []
+  - m_Id: 4410446449729536
+    m_Key: net.downed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4410446453923840
+    m_Key: net.revive.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4410446453923841
+    m_Key: net.downed.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4410446453923842
+    m_Key: net.downed.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4410446453923843
+    m_Key: arena.cleared.hint.coop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4410446453923844
+    m_Key: net.busy.card
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4410446453923845
+    m_Key: net.busy.shop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4410446453923846
+    m_Key: hud.backpack
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4410446453923847
+    m_Key: records.coop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4410446453923848
+    m_Key: records.line.coop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4410446453923849
+    m_Key: net.back.lobby
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4410446453923850
+    m_Key: net.home.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4410446453923851
+    m_Key: net.home.hint
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

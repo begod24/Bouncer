@@ -8,9 +8,10 @@ namespace Bouncer.Enemies
     /// Пупс — быстрый рой. Бежит к игроку по общему полю направлений (<see cref="EnemyFlowField"/>),
     /// расталкивает соседей, вблизи приседает и прыгает, кусая в прыжке. Игрока телом не толкает,
     /// чтобы рой не зажимал его в угол. Выбивается с одного попадания, мяч пробивает его насквозь.
+    /// По сети думает только у хозяина комнаты; у гостя — копия, которой двигает сеть (<see cref="INetEnemy"/>).
     /// </summary>
     [RequireComponent(typeof(Rigidbody), typeof(Health), typeof(Targetable))]
-    public sealed class PupsikEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable
+    public sealed class PupsikEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
         public enum State
         {
@@ -43,7 +44,7 @@ namespace Bouncer.Enemies
         public PupsikDefinition Definition => definition;
         public State CurrentState => _state;
         public float StateTime => _stateTime;
-        public Vector3 PlanarVelocity => Flat(_rb.linearVelocity);
+        public Vector3 PlanarVelocity => NetHooks.IsGuest ? Flat(_self.Velocity) : Flat(_rb.linearVelocity);
 
         void Awake()
         {
@@ -87,6 +88,8 @@ namespace Bouncer.Enemies
 
         void FixedUpdate()
         {
+            if (NetHooks.IsGuest)
+                return;
             float dt = Time.fixedDeltaTime;
             if (_rb.position.y < -5f)
             {
@@ -308,6 +311,20 @@ namespace Bouncer.Enemies
             GameEvents.PlaySound(SoundCue.PupsikPop, transform.position);
             GameFeel.Shake(0.1f);
             PoolService.Despawn(gameObject);
+        }
+
+        // ---------- Сеть ----------
+
+        public void WriteNet(NetWriter writer)
+        {
+            writer.Byte((byte)_state);
+            writer.Seconds(_stateTime);
+        }
+
+        public void ReadNet(NetReader reader, float age)
+        {
+            _state = (State)reader.Byte();
+            _stateTime = reader.Seconds() + age;
         }
 
         // ---------- Служебное ----------

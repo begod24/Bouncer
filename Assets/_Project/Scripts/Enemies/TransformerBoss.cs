@@ -13,9 +13,11 @@ namespace Bouncer.Enemies
     /// из пушки веером (через один — ёжики, иногда кручёный, иногда финт) и бросает батарейки-мины. Потом снова
     /// машина. Держит удар (<see cref="BossArmor"/>): открыт, пока превращается, оглушён и сразу после залпа.
     /// Жизнь — на полосе босса (<see cref="BossSplit"/> без половинок).
+    /// По сети ездит, таранит, ломает прилавки, стреляет и бросает мины только у хозяина комнаты; у гостя копия
+    /// превращается, крутит колёсами и мигает по его вестям.
     /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
-    public sealed class TransformerBoss : MonoBehaviour, IBallTarget, IDamageable, IPoolable
+    public sealed class TransformerBoss : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
         public enum State
         {
@@ -120,7 +122,8 @@ namespace Bouncer.Enemies
             if (rig)
                 rig.SetMode(car: true);
             GameEvents.PlaySound(SoundCue.Siren, transform.position);
-            SummonCars();
+            if (!NetHooks.IsGuest)
+                SummonCars();
             _ramsLeft = definition.ramsPerCar;
             Enter(State.Enter);
         }
@@ -131,6 +134,11 @@ namespace Bouncer.Enemies
 
         void Update()
         {
+            if (NetHooks.IsGuest)
+            {
+                UpdateBeacon();
+                return;
+            }
             float dt = Time.deltaTime;
             if (!_agent.isOnNavMesh)
                 return;
@@ -222,7 +230,7 @@ namespace Bouncer.Enemies
                         if (_state == State.ToRobot)
                         {
                             _robotUntil = Time.time + definition.robotTime;
-                            _nextAction = Time.time + definition.actionPause;
+                            _nextAction = Time.time + definition.actionPause * EnemyScaling.BossCooldown;
                             Enter(State.Walk);
                         }
                         else
@@ -276,7 +284,7 @@ namespace Bouncer.Enemies
                         if (hasTarget)
                             Volley(_target);
                         _openUntil = Time.time + definition.openAfterVolley;
-                        _nextAction = Time.time + definition.actionPause;
+                        _nextAction = Time.time + definition.actionPause * EnemyScaling.BossCooldown;
                         Enter(State.Walk);
                     }
                     break;
@@ -298,7 +306,7 @@ namespace Bouncer.Enemies
                     {
                         if (hasTarget)
                             ThrowMines(_target);
-                        _nextAction = Time.time + definition.actionPause;
+                        _nextAction = Time.time + definition.actionPause * EnemyScaling.BossCooldown;
                         Enter(State.Walk);
                     }
                     break;
@@ -619,6 +627,42 @@ namespace Bouncer.Enemies
             GameFeel.Shake(0.9f);
             PoolService.Despawn(gameObject);
         }
+
+        // ---------- Сеть ----------
+
+        public void WriteNet(NetWriter writer)
+        {
+            writer.Byte((byte)_state);
+            writer.Seconds(_stateTime);
+            if (!rig)
+                return;
+            writer.Bool(rig.TargetIsCar);
+            writer.Byte(Unit(rig.Progress));
+            writer.Byte((byte)Mathf.Clamp(Mathf.RoundToInt(Mathf.Abs(rig.DriveSpeed) * 8f), 0, 255));
+            writer.Byte(Unit(rig.Walk));
+            writer.Byte(Unit(rig.AimCannon));
+            writer.Byte(Unit(rig.WindThrow));
+        }
+
+        public void ReadNet(NetReader reader, float age)
+        {
+            _state = (State)reader.Byte();
+            _stateTime = reader.Seconds() + age;
+            if (!rig)
+                return;
+            bool car = reader.Bool();
+            float progress = reader.Byte() / 255f;
+            // Превращение идёт и между вестями: ход по своим часам.
+            if (progress < 1f && _state is State.ToRobot or State.ToCar)
+                progress = Mathf.Clamp01(_stateTime / Mathf.Max(0.1f, definition.transformTime));
+            rig.SetNet(car, progress);
+            rig.DriveSpeed = reader.Byte() / 8f;
+            rig.Walk = reader.Byte() / 255f;
+            rig.AimCannon = reader.Byte() / 255f;
+            rig.WindThrow = reader.Byte() / 255f;
+        }
+
+        static byte Unit(float value) => (byte)Mathf.RoundToInt(Mathf.Clamp01(value) * 255f);
 
         void Enter(State state)
         {

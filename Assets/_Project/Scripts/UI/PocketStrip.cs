@@ -14,6 +14,8 @@ namespace Bouncer.UI
     /// Ряд карманов игрока: вкладыши по порядку взятия, пустые карманы пунктиром и подпись «карманы 4/6».
     /// Только показывает; новая карточка в кармане подпрыгивает. Таких рядов три: на HUD (в бою, прячется
     /// под экранами карточек и паузой), на экране выбора и в ларьке.
+    /// Ряд на HUD в коопе показывает слева от карманов ещё и рюкзак: неоткрытые портфели и кнопку, которая их
+    /// открывает («R — открыть»).
     /// </summary>
     public sealed class PocketStrip : MonoBehaviour
     {
@@ -38,6 +40,14 @@ namespace Bouncer.UI
         [SerializeField] Color captionColor = new(0.96f, 0.95f, 0.92f, 0.85f);
         [SerializeField] Color fullColor = new(1f, 0.45f, 0.38f);
 
+        [Header("Рюкзак (кооп)")]
+        [Tooltip("Показывать слева от карманов неоткрытые портфели из рюкзака")]
+        [SerializeField] bool showBackpack;
+        [SerializeField] Sprite backpackIcon;
+        [SerializeField] Color backpackColor = new(0.62f, 0.4f, 0.24f);
+        [SerializeField] string backpackKeyboardKey = "R";
+        [SerializeField] string backpackGamepadKey = "Y";
+
         readonly List<PocketCardMini> _minis = new();
         readonly List<UpgradeCard> _shown = new();
         readonly List<int> _shownStacks = new();
@@ -46,12 +56,20 @@ namespace Bouncer.UI
         int _shownMax = -1;
         bool _dirty = true;
         bool _filled;
+        PocketCardMini _backpack;
+        int _backpackShown;
+        int _backpackSlots = -1;
+        int _backpackMode = -1;
 
         void OnEnable() => LocalizationSettings.SelectedLocaleChanged += OnLocaleChanged;
 
         void OnDisable() => LocalizationSettings.SelectedLocaleChanged -= OnLocaleChanged;
 
-        void OnLocaleChanged(Locale locale) => _dirty = true;
+        void OnLocaleChanged(Locale locale)
+        {
+            _dirty = true;
+            _backpackMode = -1;
+        }
 
         void Update()
         {
@@ -66,6 +84,45 @@ namespace Bouncer.UI
             var pockets = _cards.PocketCards;
             if (_dirty || Changed(pockets))
                 Show(pockets, _cards.StacksOf, _cards.MaxPockets);
+            if (showBackpack)
+                UpdateBackpack();
+        }
+
+        /// <summary>Рюкзак слева от карманов: портфель, сколько их и какой кнопкой открыть. Пусто — не виден.</summary>
+        void UpdateBackpack()
+        {
+            int count = _cards.Backpack;
+            int slots = Mathf.Max(_shownMax, _shown.Count);
+            int mode = _cards.Player.LastIntent.UsingGamepad ? 1 : 0;
+            if (count == _backpackShown && slots == _backpackSlots && mode == _backpackMode)
+                return;
+            if (count <= 0)
+            {
+                _backpackShown = 0;
+                if (_backpack)
+                    _backpack.gameObject.SetActive(false);
+                return;
+            }
+            if (_backpack == null)
+            {
+                _backpack = CreateMini();
+                _backpack.name = "Backpack";
+            }
+            float scale = size / Mathf.Max(1f, ((RectTransform)miniPrefab.transform).rect.width);
+            var rect = (RectTransform)_backpack.transform;
+            rect.localScale = Vector3.one * scale;
+            // Через промежуток слева от первого кармана.
+            float first = alignRight ? -(slots - 1) * spacing - size * 0.5f : -(slots - 1) * 0.5f * spacing;
+            rect.anchoredPosition = new Vector2(first - spacing * 1.35f, 0f);
+            _backpack.gameObject.SetActive(true);
+            _backpack.ShowItem(backpackIcon, backpackColor, count > 1 ? "×" + count : string.Empty);
+            _backpack.SetLabelStyle(nameSize / scale, nameWidth * 1.2f / scale, wrap: false);
+            _backpack.SetLabel(Loc.Format("hud.backpack", mode == 1 ? backpackGamepadKey : backpackKeyboardKey));
+            if (count > _backpackShown)
+                _backpack.Pop();
+            _backpackShown = count;
+            _backpackSlots = slots;
+            _backpackMode = mode;
         }
 
         static bool Hidden
@@ -76,6 +133,7 @@ namespace Bouncer.UI
                 if (session == null)
                     return false;
                 return GameFeel.Paused || session.State is not (SessionState.Playing or SessionState.Cleared)
+                                       || session.Menu != LocalMenu.None
                                        || (PocketsPanel.Instance != null && PocketsPanel.Instance.IsOpen);
             }
         }

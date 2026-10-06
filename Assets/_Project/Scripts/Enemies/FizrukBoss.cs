@@ -17,9 +17,11 @@ namespace Bouncer.Enemies
     /// «Мяч в игре!» — из калитки выкатывается огромный мяч и сбивает всех, врагов тоже;
     /// «Замена!» — со скамейки выбегает подмога.
     /// Жизнь — на общей полосе босса (<see cref="BossSplit"/> без половинок).
+    /// По сети свистит, бросает и бьёт только у хозяина комнаты: правило и огромный мяч он показывает гостям,
+    /// а того, кто побежал на «Замри!», видит по копии игрока. У гостя копия Физрука машет руками по его вестям.
     /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
-    public sealed class FizrukBoss : MonoBehaviour, IBallTarget, IDamageable, IPoolable
+    public sealed class FizrukBoss : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
         enum State
         {
@@ -176,6 +178,8 @@ namespace Bouncer.Enemies
 
         void Update()
         {
+            if (NetHooks.IsGuest)
+                return;
             float dt = Time.deltaTime;
             if (!_agent.isOnNavMesh)
                 return;
@@ -254,7 +258,7 @@ namespace Bouncer.Enemies
                 case State.Recover:
                     if (_stateTime >= definition.recoverTime)
                     {
-                        _nextAttack = Time.time + definition.attackCooldown;
+                        _nextAttack = Time.time + definition.attackCooldown * EnemyScaling.BossCooldown;
                         Enter(State.Chase);
                     }
                     break;
@@ -274,7 +278,7 @@ namespace Bouncer.Enemies
                         _feinted = false;
                         if (hasTarget)
                             ThrowStrong(_target);
-                        _nextThrow = Time.time + definition.throwCooldown;
+                        _nextThrow = Time.time + definition.throwCooldown * EnemyScaling.BossCooldown;
                         Enter(State.Chase);
                     }
                     break;
@@ -316,7 +320,7 @@ namespace Bouncer.Enemies
         {
             GameEvents.PlaySound(SoundCue.Whistle, HandPosition);
             var rule = NextRule();
-            float interval = Angry ? definition.angryWhistleInterval : definition.whistleInterval;
+            float interval = (Angry ? definition.angryWhistleInterval : definition.whistleInterval) * EnemyScaling.BossCooldown;
             _nextWhistle = Time.time + interval;
             Enter(State.Chase);
             switch (rule)
@@ -671,7 +675,8 @@ namespace Bouncer.Enemies
                     default:
                     {
                         // Негнущаяся ходьба большого манекена.
-                        float speed01 = _agent.isOnNavMesh ? Mathf.Clamp01(_agent.velocity.magnitude / Mathf.Max(0.1f, definition.moveSpeed)) : 0f;
+                        Vector3 velocity = NetHooks.IsGuest ? _self.Velocity : _agent.isOnNavMesh ? _agent.velocity : Vector3.zero;
+                        float speed01 = Mathf.Clamp01(Flat(velocity).magnitude / Mathf.Max(0.1f, definition.moveSpeed));
                         _walkPhase += dt * 4.5f * speed01;
                         float swing = Mathf.Sin(_walkPhase) * 26f * speed01;
                         legLE = new Vector3(-swing, 0f, 0f);
@@ -702,6 +707,20 @@ namespace Bouncer.Enemies
         {
             if (part)
                 part.localRotation = rest * Quaternion.Euler(euler);
+        }
+
+        // ---------- Сеть ----------
+
+        public void WriteNet(NetWriter writer)
+        {
+            writer.Byte((byte)_state);
+            writer.Seconds(_stateTime);
+        }
+
+        public void ReadNet(NetReader reader, float age)
+        {
+            _state = (State)reader.Byte();
+            _stateTime = reader.Seconds() + age;
         }
 
         void Enter(State state)

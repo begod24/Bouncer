@@ -89,6 +89,9 @@ namespace Bouncer.Upgrades
         [Tooltip("«Копилка»: +1 монетка за каждые столько монеток в кармане, когда открывается ларёк")]
         [Min(1)] public int interestPer = 10;
 
+        /// <summary>Карманов у каждого игрока: в коопе меньше (вдвоём и втроём — на один, вчетвером — на два).</summary>
+        public int PocketsFor(int players) => Mathf.Max(1, players <= 1 ? pockets : players <= 3 ? pockets - 1 : pockets - 2);
+
         public int PriceOf(CardRarity rarity, int arenaIndex, int purchases = 0)
         {
             int price = rarity switch

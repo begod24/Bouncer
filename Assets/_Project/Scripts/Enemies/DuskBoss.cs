@@ -18,9 +18,12 @@ namespace Bouncer.Enemies
     /// шатается, растерян или найден в «Прятках». Обычный бросок иногда с финтом и кручёный.
     /// Мама позвала (<see cref="GameEvents.MomCalled"/>) — мелочь разбегается, а он прыгает на игрока,
     /// пока тот бежит к подъезду; в свет из двери не заходит. Жизнь — на полосе босса (<see cref="BossSplit"/>).
+    /// По сети думает, ловит, бросает и зовёт подручных только у хозяина комнаты (надписи, метки, свет и подручных
+    /// он показывает гостям); у гостя копия встаёт в те же позы, крутится, прячется и выдаёт себя глазами по его вестям.
+    /// Чем больше игроков, тем чаще приёмы (<see cref="EnemyScaling.BossCooldown"/>).
     /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
-    public sealed class DuskBoss : MonoBehaviour, IBallTarget, IDamageable, IPoolable
+    public sealed class DuskBoss : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
         public enum Ability
         {
@@ -190,6 +193,11 @@ namespace Bouncer.Enemies
         float _catchPose;
         float _throwPose;
         bool _crowsAway;
+        /// <summary>Сколько раз бросал (по сети гость по нему видит, что был бросок).</summary>
+        byte _throws;
+        // У гостя — по вестям хозяина.
+        int _netHeld;
+        int _netSack;
 
         public static DuskBoss Instance { get; private set; }
         public DuskBossDefinition Definition => definition;
@@ -282,7 +290,9 @@ namespace Bouncer.Enemies
                 _agent.Warp(hit.position);
             _agent.updatePosition = true;
             Enter(State.Appear, definition.appearTime);
-            Burst(smokePrefab, transform.position + Vector3.up * 0.5f, 1.6f);
+            // Дым появления у гостя показывает хозяин.
+            if (!NetHooks.IsGuest)
+                Burst(smokePrefab, transform.position + Vector3.up * 0.5f, 1.6f);
             GameEvents.PlaySound(SoundCue.BabaiLaugh, transform.position);
         }
 
@@ -297,6 +307,8 @@ namespace Bouncer.Enemies
 
         void Update()
         {
+            if (NetHooks.IsGuest)
+                return;
             float dt = Time.deltaTime;
             _repathNow = Time.time >= _nextRepath;
             if (_repathNow)
@@ -357,7 +369,7 @@ namespace Bouncer.Enemies
                 case State.SwipeRecover:
                     if (_stateTime >= definition.swipeRecover)
                     {
-                        _nextSwipe = Time.time + definition.swipeCooldown;
+                        _nextSwipe = Time.time + definition.swipeCooldown * EnemyScaling.BossCooldown;
                         Enter(State.Stalk);
                     }
                     break;
@@ -371,6 +383,7 @@ namespace Bouncer.Enemies
                         {
                             _feinted = true;
                             _throwPose = 1f;
+                            _throws++;
                             Enter(State.Feint, FeintTime);
                             break;
                         }
@@ -379,7 +392,8 @@ namespace Bouncer.Enemies
                             ThrowAt(_target, 0f, definition.ballSpeed, HitFlags.Charged, SoundCue.ThrowCharged, null,
                                 Random.value < CurveChance);
                         _throwPose = 1f;
-                        _nextThrow = Time.time + definition.throwCooldown;
+                        _throws++;
+                        _nextThrow = Time.time + definition.throwCooldown * EnemyScaling.BossCooldown;
                         Enter(State.Stalk);
                     }
                     break;
@@ -401,6 +415,7 @@ namespace Bouncer.Enemies
                         if (hasTarget)
                             ThrowDarkFan(_target);
                         _throwPose = 1f;
+                        _throws++;
                         EndAbility();
                     }
                     break;
@@ -464,6 +479,7 @@ namespace Bouncer.Enemies
                         _nextVolley = Time.time + definition.foundInterval;
                         ThrowAt(_target, Random.Range(-4f, 4f), definition.ballSpeed, HitFlags.Charged, SoundCue.ThrowCharged, null);
                         _throwPose = 1f;
+                        _throws++;
                     }
                     if (_volleyLeft <= 0 || !hasTarget)
                         EndAbility();
@@ -668,7 +684,7 @@ namespace Bouncer.Enemies
         /// <summary>Умение кончилось: снова ходит, следующее — через паузу своей фазы.</summary>
         void EndAbility()
         {
-            _nextAbility = Time.time + DuskBossDefinition.ByPhase(definition.abilityInterval, _phase);
+            _nextAbility = Time.time + DuskBossDefinition.ByPhase(definition.abilityInterval, _phase) * EnemyScaling.BossCooldown;
             Enter(State.Stalk);
         }
 
@@ -746,6 +762,7 @@ namespace Bouncer.Enemies
             if (caught != null && caught.State == BallState.Stuck)
                 caught.Drop(caught.Position, transform.forward * 2f);
             _throwPose = 1f;
+            _throws++;
         }
 
         void HoldBalls()
@@ -1400,7 +1417,8 @@ namespace Bouncer.Enemies
 
         void OnMomCalled()
         {
-            if (_health.IsDead || _called)
+            // У гостя всё это делает настоящий босс у хозяина.
+            if (_health.IsDead || _called || NetHooks.IsGuest)
                 return;
             _called = true;
             DispelMinions();
@@ -1548,8 +1566,9 @@ namespace Bouncer.Enemies
             float k = _stateLength > 0f ? Mathf.Clamp01(_stateTime / _stateLength) : 0f;
             Vector3 bodyE = Vector3.zero, headE = Vector3.zero, armLE = Vector3.zero, armRE = Vector3.zero;
             float height = 0f, sink = 0f, scale = 1f, follow = 12f;
-            float speed01 = _agent.isOnNavMesh && _agent.updatePosition
-                ? Mathf.Clamp01(_agent.velocity.magnitude / Mathf.Max(0.1f, definition.moveSpeed)) : 0f;
+            Vector3 velocity = NetHooks.IsGuest ? Flat(_self.Velocity)
+                : _agent.isOnNavMesh && _agent.updatePosition ? _agent.velocity : Vector3.zero;
+            float speed01 = Mathf.Clamp01(velocity.magnitude / Mathf.Max(0.1f, definition.moveSpeed));
             _walkPhase += dt * (1.5f + 3f * speed01);
             float sway = Mathf.Sin(_walkPhase);
 
@@ -1707,7 +1726,8 @@ namespace Bouncer.Enemies
                     break;
             }
 
-            _catchPose = Mathf.MoveTowards(_catchPose, _held.Count > 0 ? 0.8f : 0f, dt * 3f);
+            int held = NetHooks.IsGuest ? _netHeld : _held.Count;
+            _catchPose = Mathf.MoveTowards(_catchPose, held > 0 ? 0.8f : 0f, dt * 3f);
             _throwPose = Mathf.MoveTowards(_throwPose, 0f, dt * 3f);
             float f = 1f - Mathf.Exp(-follow * dt);
             _bodyEuler = Vector3.Lerp(_bodyEuler, bodyE, f);
@@ -1730,7 +1750,8 @@ namespace Bouncer.Enemies
             }
             if (sack)
             {
-                _sackScale = Mathf.MoveTowards(_sackScale, 1f + definition.sackGrowth * _sack.Count, dt * 1.5f);
+                int inSack = NetHooks.IsGuest ? _netSack : _sack.Count;
+                _sackScale = Mathf.MoveTowards(_sackScale, 1f + definition.sackGrowth * inSack, dt * 1.5f);
                 sack.localScale = _sackRestScale * _sackScale;
             }
             UpdateEyes();
@@ -1765,6 +1786,50 @@ namespace Bouncer.Enemies
         {
             if (part)
                 part.localRotation = rest * Quaternion.Euler(euler);
+        }
+
+        // ---------- Сеть ----------
+
+        const byte NetTangible = 1 << 0;
+        const byte NetCrowsAway = 1 << 1;
+
+        public void WriteNet(NetWriter writer)
+        {
+            writer.Byte((byte)_state);
+            writer.Seconds(_stateTime);
+            writer.Seconds(_stateLength);
+            writer.Byte((byte)Mathf.Min(255, _held.Count));
+            writer.Byte((byte)Mathf.Min(255, _sack.Count));
+            byte flags = 0;
+            if (!_self.HiddenFromAim)
+                flags |= NetTangible;
+            if (_crowsAway)
+                flags |= NetCrowsAway;
+            writer.Byte(flags);
+            writer.Byte(_throws);
+        }
+
+        public void ReadNet(NetReader reader, float age)
+        {
+            _state = (State)reader.Byte();
+            _stateTime = reader.Seconds() + age;
+            _stateLength = reader.Seconds();
+            _netHeld = reader.Byte();
+            _netSack = reader.Byte();
+            byte flags = reader.Byte();
+            bool tangible = (flags & NetTangible) != 0;
+            if (tangible == _self.HiddenFromAim)
+                SetTangible(tangible);
+            bool away = (flags & NetCrowsAway) != 0;
+            if (away != _crowsAway)
+                SetCrowsAway(away);
+            byte throws = reader.Byte();
+            // Бросил — рука уходит вперёд, как у хозяина.
+            if (throws != _throws)
+            {
+                _throws = throws;
+                _throwPose = 1f;
+            }
         }
 
         static Vector3 Flat(Vector3 v) => new(v.x, 0f, v.z);

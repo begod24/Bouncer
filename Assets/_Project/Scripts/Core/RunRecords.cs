@@ -15,10 +15,15 @@ namespace Bouncer.Core
         /// <summary>Имена ассетов карточек, которые были в карманах в конце.</summary>
         public string[] cards = Array.Empty<string>();
         public string date;
+        /// <summary>Сколько гуляло: 1 (и 0 у старых записей) — одному, больше — вместе, по сети.</summary>
+        public int players = 1;
+
+        public bool IsCoop => players > 1;
     }
 
     /// <summary>
-    /// Локальные рекорды: лучшие победы (по времени) на каждом уровне опасности. Лежат в PlayerPrefs одним JSON.
+    /// Локальные рекорды: лучшие победы (по времени) на каждом уровне опасности, отдельно одному и вместе.
+    /// Лежат в PlayerPrefs одним JSON.
     /// Новый рекорд помечается «новое!» в тетрадке, пока игрок не откроет страницу рекордов (<see cref="MarkSeen"/>).
     /// </summary>
     public static class RunRecords
@@ -74,12 +79,12 @@ namespace Bouncer.Core
             PlayerPrefs.Save();
         }
 
-        /// <summary>Лучшая победа на этом уровне опасности. null — побед ещё нет.</summary>
-        public static RunRecord Best(int danger)
+        /// <summary>Лучшая победа на этом уровне опасности (одному или вместе). null — побед ещё нет.</summary>
+        public static RunRecord Best(int danger, bool coop = false)
         {
             RunRecord best = null;
             foreach (var run in Data.runs)
-                if (run.danger == danger && (best == null || run.time < best.time))
+                if (run.danger == danger && run.IsCoop == coop && (best == null || run.time < best.time))
                     best = run;
             return best;
         }
@@ -89,23 +94,23 @@ namespace Bouncer.Core
         {
             if (record == null || record.time <= 0f)
                 return false;
-            var best = Best(record.danger);
+            var best = Best(record.danger, record.IsCoop);
             bool isBest = best == null || record.time < best.time;
             record.date = DateTime.Now.ToString("yyyy-MM-dd");
             Data.runs.Add(record);
             Data.runs.Sort((a, b) => a.danger != b.danger ? b.danger.CompareTo(a.danger) : a.time.CompareTo(b.time));
-            // На каждом уровне держим только несколько лучших.
+            // На каждом уровне держим только несколько лучших — одному и вместе отдельно.
             var kept = new Dictionary<int, int>();
             for (int i = 0; i < Data.runs.Count; i++)
             {
-                int danger = Data.runs[i].danger;
-                kept.TryGetValue(danger, out int count);
+                int group = Data.runs[i].danger * 2 + (Data.runs[i].IsCoop ? 1 : 0);
+                kept.TryGetValue(group, out int count);
                 if (count >= KeepPerDanger)
                 {
                     Data.runs.RemoveAt(i--);
                     continue;
                 }
-                kept[danger] = count + 1;
+                kept[group] = count + 1;
             }
             PlayerPrefs.SetString(Key, JsonUtility.ToJson(Data));
             if (isBest)

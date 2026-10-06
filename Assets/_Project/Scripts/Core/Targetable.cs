@@ -8,11 +8,17 @@ namespace Bouncer.Core
     /// Держит общий реестр, чтобы не искать объекты через Find.
     /// Здесь же общее для всех персонажей состояние, которое читают другие сборки: заморозка («Замри!» Физрука,
     /// «Свисток», «Гиря»), взгляд игрока (под ним замирают манекены) и свет вокруг игрока («Фонарик»).
+    /// Когда игроков несколько, враги расходятся по ним: за кем уже гонятся многие, тот для новых чуть «дальше»
+    /// (<see cref="FindNearest"/>).
     /// </summary>
     public sealed class Targetable : MonoBehaviour
     {
         /// <summary>Заморозка подсвечивает врага холодным цветом не дольше этого, с.</summary>
         const float FreezeFlashTime = 1f;
+        /// <summary>Внимание врагов к игроку забывается примерно за столько секунд.</summary>
+        const float AttentionMemory = 1f;
+        /// <summary>Насколько внимание врагов «отодвигает» игрока: расстояние² × (1 + это × внимание).</summary>
+        const float AttentionWeight = 0.12f;
 
         static readonly List<Targetable> s_all = new();
         static float s_enemiesFrozenStart;
@@ -31,6 +37,9 @@ namespace Bouncer.Core
         float _frozenUntil;
         float _hurryUntil;
         float _hurryBoost = 1f;
+        /// <summary>Сколько раз враги недавно выбирали этого игрока целью (тает со временем).</summary>
+        float _attention;
+        float _attentionTime;
 
         public Team Team
         {
@@ -45,7 +54,11 @@ namespace Bouncer.Core
         /// <summary>Сглаженная скорость — для упреждения при броске.</summary>
         public Vector3 Velocity { get; private set; }
         public Health Health => _health;
-        public bool IsAlive => _health == null || !_health.IsDead;
+        public bool IsAlive => (_health == null || !_health.IsDead) && !OutOfPlay;
+        /// <summary>
+        /// Вне игры, хоть и цел: по сети игрок уже дома, у подъезда (финал), — враги его не ищут, монетки не летят.
+        /// </summary>
+        public bool OutOfPlay { get; set; }
 
         /// <summary>Куда смотрит, в плоскости XZ.</summary>
         public Vector3 Facing
@@ -95,6 +108,9 @@ namespace Bouncer.Core
         /// <summary>Все враги заморожены («Замри!» Физрука).</summary>
         public static bool EnemiesFrozen => Time.time < s_enemiesFrozenUntil;
 
+        /// <summary>Сколько ещё длится общая заморозка врагов, с.</summary>
+        public static float EnemiesFrozenLeft => Mathf.Max(0f, s_enemiesFrozenUntil - Time.time);
+
         /// <summary>Сила общей заморозки врагов для экрана: 0 — нет, 1 — в разгаре. Плавно входит и выходит.</summary>
         public static float EnemiesFrozen01
         {
@@ -118,6 +134,7 @@ namespace Bouncer.Core
             Velocity = Vector3.zero;
             _frozenUntil = 0f;
             HiddenFromAim = false;
+            OutOfPlay = false;
             SpeedBoost = 1f;
             _hurryUntil = 0f;
             _hurryBoost = 1f;
@@ -134,10 +151,26 @@ namespace Bouncer.Core
             _lastPosition = position;
         }
 
-        /// <summary>Заморозить на столько секунд (дольше уже идущей заморозки — продлевает).</summary>
+        /// <summary>
+        /// Заморозить на столько секунд (дольше уже идущей заморозки — продлевает). У гостя сетевой игры заморозка
+        /// копии врага уходит хозяину — он заморозит настоящего, а копия замрёт по его вестям.
+        /// </summary>
         public void Freeze(float seconds)
         {
             if (seconds <= 0f || !IsAlive)
+                return;
+            if (team == Team.Enemy && NetHooks.IsGuest && NetHooks.ForwardFreeze != null)
+            {
+                NetHooks.ForwardFreeze(this, seconds);
+                return;
+            }
+            FreezeLocal(seconds);
+        }
+
+        /// <summary>Заморозить здесь и сейчас (по сети — копию, по вестям хозяина).</summary>
+        public void FreezeLocal(float seconds)
+        {
+            if (seconds <= 0f)
                 return;
             _frozenUntil = Mathf.Max(_frozenUntil, Time.time + seconds);
             if (!_flashSearched)
@@ -148,6 +181,9 @@ namespace Bouncer.Core
             if (_flash)
                 _flash.Flash(new Color(0.6f, 0.85f, 1f), Mathf.Min(seconds, FreezeFlashTime));
         }
+
+        /// <summary>Сколько ещё заморожен сам (без общей заморозки врагов), с.</summary>
+        public float FrozenLeft => Mathf.Max(0f, _frozenUntil - Time.time);
 
         /// <summary>Видит ли этот игрок точку: она в секторе взгляда спереди или («Зеркальце») за спиной.</summary>
         public bool Sees(Vector3 point)
@@ -171,9 +207,25 @@ namespace Bouncer.Core
             return false;
         }
 
-        /// <summary>«Замри!» Физрука: все враги стоят столько секунд, новые появившиеся — тоже.</summary>
+        /// <summary>
+        /// «Замри!» Физрука: все враги стоят столько секунд, новые появившиеся — тоже. У гостя сетевой игры заморозку
+        /// делает хозяин (враги — у него), а копии замирают по его вестям.
+        /// </summary>
         public static void FreezeEnemies(float seconds)
         {
+            if (NetHooks.IsGuest && NetHooks.ForwardFreezeEnemies != null && NetHooks.ForwardFreezeEnemies(seconds))
+                return;
+            FreezeEnemiesLocal(seconds);
+        }
+
+        /// <summary>Все враги заморожены на столько секунд (по сети хозяин сразу сообщает гостям).</summary>
+        public static event System.Action<float> EnemiesFroze;
+
+        /// <summary>Заморозить всех врагов здесь (по сети у гостя — по вестям хозяина).</summary>
+        public static void FreezeEnemiesLocal(float seconds)
+        {
+            if (!NetHooks.IsGuest)
+                EnemiesFroze?.Invoke(seconds);
             float now = Time.time;
             if (now >= s_enemiesFrozenUntil)
                 s_enemiesFrozenStart = now;
@@ -207,10 +259,23 @@ namespace Bouncer.Core
             return count;
         }
 
+        /// <summary>
+        /// Ближайший живой из команды. Игроков, когда их несколько, враги делят: за кем недавно погнались многие,
+        /// тот для следующих чуть «дальше», и часть врагов уходит к тому, за кем никто не гонится.
+        /// </summary>
+        /// <summary>По сети: копия чужого игрока — двигает её его компьютер, здесь её не толкают и не катают.</summary>
+        public bool IsRemote { get; set; }
+
+        /// <summary>Свой игрок (за этим компьютером): вокруг него туман, капли и т.п. Ставит реестр игроков.</summary>
+        public static Targetable LocalPlayer { get; set; }
+
         public static Targetable FindNearest(Vector3 from, Team team, float maxDistance = float.PositiveInfinity)
         {
+            bool share = team == Team.Player && CountAlive(Team.Player) > 1;
             Targetable best = null;
-            float bestSqr = maxDistance * maxDistance;
+            float bestScore = float.PositiveInfinity;
+            float maxSqr = maxDistance * maxDistance;
+            float now = Time.time;
             foreach (var t in s_all)
             {
                 if (t.team != team || !t.IsAlive)
@@ -218,13 +283,26 @@ namespace Bouncer.Core
                 Vector3 delta = t.Position - from;
                 delta.y = 0f;
                 float sqr = delta.sqrMagnitude;
-                if (sqr < bestSqr)
+                if (sqr > maxSqr)
+                    continue;
+                float score = share ? sqr * (1f + AttentionWeight * t.Attention(now)) : sqr;
+                if (score < bestScore)
                 {
-                    bestSqr = sqr;
+                    bestScore = score;
                     best = t;
                 }
             }
+            if (share && best != null)
+                best.Notice(now);
             return best;
+        }
+
+        float Attention(float now) => _attention * Mathf.Exp(-(now - _attentionTime) / AttentionMemory);
+
+        void Notice(float now)
+        {
+            _attention = Attention(now) + 1f;
+            _attentionTime = now;
         }
 
         public static int CountAlive(Team team)
@@ -242,6 +320,8 @@ namespace Bouncer.Core
             s_all.Clear();
             s_enemiesFrozenStart = 0f;
             s_enemiesFrozenUntil = 0f;
+            LocalPlayer = null;
+            EnemiesFroze = null;
         }
     }
 }

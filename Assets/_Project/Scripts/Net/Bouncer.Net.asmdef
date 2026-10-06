@@ -12,7 +12,14 @@
         "Unity.Networking.Transport",
         "Unity.Services.Core",
         "Unity.Services.Authentication",
-        "Unity.Services.Multiplayer"
+        "Unity.Services.Multiplayer",
+        "Bouncer.Enemies",
+        "Bouncer.Run",
+        "Bouncer.Waves",
+        "Bouncer.Upgrades",
+        "Bouncer.Visuals",
+        "Bouncer.Arena",
+        "Unity.Localization"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

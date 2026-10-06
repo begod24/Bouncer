@@ -31,6 +31,9 @@ namespace Bouncer.Enemies
             if (!_pending)
                 return;
             _pending = false;
+            // По сети свиту выпускает хозяин комнаты: у гостя офицер — копия, солдатики придут от хозяина.
+            if (NetHooks.IsGuest)
+                return;
             var squad = new SoldierSquad { Leader = _officer };
             _officer.JoinSquad(squad);
             if (escortPrefab == null)

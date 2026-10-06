@@ -10,6 +10,9 @@ namespace Bouncer.Enemies
         [SerializeField] float lifetime = 2.2f;
         [SerializeField] float shrinkTime = 0.4f;
 
+        /// <summary>Обломки разлетелись (по сети хозяин показывает их гостям): обломки, направление, сила, скорость врага.</summary>
+        public static event System.Action<Debris, Vector3, float, Vector3> Scattered;
+
         Vector3[] _localPositions;
         Quaternion[] _localRotations;
         Vector3[] _localScales;
@@ -51,6 +54,7 @@ namespace Bouncer.Enemies
 
         public void Burst(Vector3 direction, float force, Vector3 inheritedVelocity)
         {
+            Scattered?.Invoke(this, direction, force, inheritedVelocity);
             foreach (var piece in pieces)
             {
                 Vector3 spread = Random.insideUnitSphere * 0.5f;

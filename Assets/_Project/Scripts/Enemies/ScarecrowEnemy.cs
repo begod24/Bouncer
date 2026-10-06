@@ -11,9 +11,10 @@ namespace Bouncer.Enemies
     /// Руки ловят мячи, пролетающие рядом спереди, — и через секунду бросают обратно (их можно поймать,
     /// идеальная ловля лечит). Заряженный мяч пробивает руки, сбоку и сзади попадание обычное: чучело
     /// поворачивается медленно, его можно обойти. Элитное ловит и заряженные, а бросает сильным мячом.
+    /// По сети прыгает, ловит и бросает только у хозяина комнаты; у гостя копия прыгает и машет руками по его вестям.
     /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
-    public sealed class ScarecrowEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable
+    public sealed class ScarecrowEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
         const float RepathInterval = 0.4f;
         const float ChestHeight = 1.3f;
@@ -48,6 +49,8 @@ namespace Bouncer.Enemies
         float _catchPose;
         float _throwPose;
         int _strafeSide = 1;
+        /// <summary>У гостя: сколько мячей держит (по вестям хозяина).</summary>
+        int _netHeld;
 
         public ScarecrowDefinition Definition => definition;
         public int HeldBalls => _held.Count;
@@ -105,6 +108,8 @@ namespace Bouncer.Enemies
 
         void Update()
         {
+            if (NetHooks.IsGuest)
+                return;
             float dt = Time.deltaTime;
             if (!_agent.isOnNavMesh)
                 return;
@@ -371,7 +376,8 @@ namespace Bouncer.Enemies
                 float sway = Mathf.Sin(Time.time * 1.7f + _strafeSide) * 3f;
                 body.localRotation = _bodyRest * Quaternion.Euler(lean - _catchPose * 8f, 0f, sway);
             }
-            _catchPose = Mathf.MoveTowards(_catchPose, _held.Count > 0 ? 0.6f : 0f, dt * 3f);
+            int held = NetHooks.IsGuest ? _netHeld : _held.Count;
+            _catchPose = Mathf.MoveTowards(_catchPose, held > 0 ? 0.6f : 0f, dt * 3f);
             _throwPose = Mathf.MoveTowards(_throwPose, 0f, dt * 4f);
             // Руки смыкаются спереди, когда держат мяч, и выстреливают вперёд на броске.
             float grab = _catchPose * 55f + _throwPose * 35f;
@@ -379,6 +385,26 @@ namespace Bouncer.Enemies
                 armL.localRotation = _armLRest * Quaternion.Euler(0f, grab, _throwPose * -20f);
             if (armR)
                 armR.localRotation = _armRRest * Quaternion.Euler(0f, -grab, _throwPose * 20f);
+        }
+
+        // ---------- Сеть ----------
+
+        public void WriteNet(NetWriter writer)
+        {
+            writer.Seconds(Mathf.Min(60f, Time.time - _hopStart));
+            writer.Byte((byte)_held.Count);
+            writer.Bool(_strafeSide > 0);
+        }
+
+        public void ReadNet(NetReader reader, float age)
+        {
+            _hopStart = Time.time - reader.Seconds() - age;
+            int held = reader.Byte();
+            // Мяч из рук ушёл — это бросок.
+            if (held < _netHeld)
+                _throwPose = 1f;
+            _netHeld = held;
+            _strafeSide = reader.Bool() ? 1 : -1;
         }
 
         static Vector3 Flat(Vector3 v) => new(v.x, 0f, v.z);

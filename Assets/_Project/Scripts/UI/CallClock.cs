@@ -53,7 +53,7 @@ namespace Bouncer.UI
             var home = HomeCall.Instance;
             var session = GameSession.Instance;
             bool finale = home != null && home.IsFinale;
-            bool visible = finale && (session == null || session.State is not (SessionState.Title or SessionState.Shop));
+            bool visible = finale && (session == null || session.State != SessionState.Title && !session.IsShopOpen);
             group.alpha = Mathf.MoveTowards(group.alpha, visible ? 1f : 0f, Time.unscaledDeltaTime * fadeSpeed);
             if (!finale)
                 return;

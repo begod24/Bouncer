@@ -18,6 +18,8 @@ namespace Bouncer.Player
         public Vector3 DashDirection;
         /// <summary>Выбит: лежит.</summary>
         public bool Down;
+        /// <summary>Светит наводящим фонариком (тёмные арены).</summary>
+        public bool Flashlight;
     }
 
     /// <summary>Разовые движения ребёнка, которые чужой игрок показывает по сигналу своего компьютера.</summary>

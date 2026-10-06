@@ -143,7 +143,10 @@ namespace Bouncer.UI
 
         void OnDisable() => GameEvents.RunFinished -= OnRunFinished;
 
-        /// <summary>Победа: запомнить рекорд (время, опасность, ребёнок, карманы) и открыть следующую опасность.</summary>
+        /// <summary>
+        /// Победа: запомнить рекорд (время, опасность, ребёнок, карманы; вместе — отдельно) и открыть следующую
+        /// опасность — по сети каждому, кто гулял.
+        /// </summary>
         void OnRunFinished(bool victory)
         {
             _newRecord = false;
@@ -157,9 +160,10 @@ namespace Bouncer.UI
                 danger = level,
                 kid = KidName(GameSettings.Kid),
                 cards = CardNames(),
+                players = RunState.PlayerCount,
             };
             _newRecord = RunRecords.Add(record);
-            var best = RunRecords.Best(level);
+            var best = RunRecords.Best(level, record.IsCoop);
             _bestTime = best != null ? best.time : record.time;
             if (Danger.UnlockAfterWin(level))
                 _unlockedDanger = level + 1;
@@ -258,7 +262,11 @@ namespace Bouncer.UI
                 string notice = NetSession.PendingNotice;
                 NetSession.PendingNotice = null;
                 OpenOnline(NetMode.Coop, notice);
+                return;
             }
+            // Вернулись из прогулки (поражение) — сразу в лобби своей комнаты.
+            if (inRoom && _overlay == Overlay.None && Time.timeSinceLevelLoad > 0.1f)
+                Open(Overlay.Lobby);
         }
 
         /// <summary>
@@ -496,13 +504,15 @@ namespace Bouncer.UI
             string time = RunRecords.FormatTime(RunState.RunClock > 0f ? RunState.RunClock : session.RunTime);
             int cards = _cards != null ? _cards.Count : 0;
             string stats = Loc.Format(key, time, session.RunKills, cards, RunState.CoinsEarned);
+            // По сети после конца прогулки всех вернёт в комнату.
+            string backToRoom = Online.Active ? "\n" + Loc.Get("net.back.lobby") : string.Empty;
             if (session.State != SessionState.Victory)
-                return stats;
+                return stats + backToRoom;
             stats += "\n" + (_newRecord ? Loc.Format("victory.record", Danger.Level)
                 : Loc.Format("victory.best", Danger.Level, RunRecords.FormatTime(_bestTime)));
             if (_unlockedDanger > 0)
                 stats += "\n" + Loc.Format("victory.unlocked", _unlockedDanger);
-            return stats;
+            return stats + backToRoom;
         }
 
         static void Session(Action<GameSession> action)

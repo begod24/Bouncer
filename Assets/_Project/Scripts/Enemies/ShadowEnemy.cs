@@ -11,9 +11,11 @@ namespace Bouncer.Enemies
     /// под фонарём, ей приходится выйти на свет. На замахе тень плотнеет где угодно: это окно, чтобы попасть.
     /// Маленький круг света вокруг игрока светом не считается, «Фонарик» — считается (<see cref="LightZone.IsLit"/>).
     /// Элитная тень гасит фонари, мимо которых пролетает. Вокруг тела всё время клубится дым.
+    /// По сети плывёт, бьёт и гасит фонари только у хозяина комнаты (погасший фонарь он показывает гостям);
+    /// у гостя копия проявляется и замахивается по его вестям.
     /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
-    public sealed class ShadowEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, IBurnable
+    public sealed class ShadowEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, IBurnable, INetEnemy
     {
         enum State
         {
@@ -133,6 +135,8 @@ namespace Bouncer.Enemies
 
         void Update()
         {
+            if (NetHooks.IsGuest)
+                return;
             float dt = Time.deltaTime;
             if (!_agent.isOnNavMesh)
                 return;
@@ -365,6 +369,20 @@ namespace Bouncer.Enemies
                 armL.localRotation = _armLRest * Quaternion.Euler(reach, 0f, 0f);
             if (armR)
                 armR.localRotation = _armRRest * Quaternion.Euler(reach, 0f, 0f);
+        }
+
+        // ---------- Сеть ----------
+
+        public void WriteNet(NetWriter writer)
+        {
+            writer.Byte((byte)_state);
+            writer.Seconds(_stateTime);
+        }
+
+        public void ReadNet(NetReader reader, float age)
+        {
+            _state = (State)reader.Byte();
+            _stateTime = reader.Seconds() + age;
         }
 
         void Enter(State state)

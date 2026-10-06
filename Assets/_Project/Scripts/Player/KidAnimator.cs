@@ -78,9 +78,9 @@ namespace Bouncer.Player
             if (animator == null || !animator.isActiveAndEnabled || dt <= 0f)
                 return;
 
-            // В сценке (дорога домой) контроллер выключен и игрока двигают снаружи, чужого игрока двигает сеть —
-            // скорость по смещению.
-            Vector3 velocity = player.IsScripted || !player.IsLocal ? delta / dt : player.Motor.Velocity;
+            // В сценке (дорога домой) контроллер выключен и игрока двигают снаружи — скорость по смещению. Чужого
+            // игрока двигает сеть: скорость — из его точек движения (по смещению за кадр она дрожит).
+            Vector3 velocity = player.IsScripted ? delta / dt : !player.IsLocal ? player.RemoteVelocity : player.Motor.Velocity;
             velocity.y = 0f;
             float maxSpeed = Mathf.Max(0.1f, player.Stats.moveSpeed * player.Modifiers.MoveSpeed);
             Vector3 local = Quaternion.Inverse(_kid.Slot.rotation) * velocity / maxSpeed;

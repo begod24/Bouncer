@@ -9,9 +9,11 @@ namespace Bouncer.Enemies
     /// <summary>
     /// Кукла-плакса. Подходит к игроку и раз в несколько секунд заходится плачем: по земле расходятся волны крика,
     /// игрок в их радиусе бежит медленнее. Через раз зовёт пупсов (если их рядом ещё мало). Попадание перебивает плач.
+    /// По сети ходит, плачет и зовёт только у хозяина комнаты; у гостя копия плачет по его вестям, а замедляет
+    /// своего игрока гостя сама — бегом каждый управляет у себя.
     /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
-    public sealed class CryDollEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable
+    public sealed class CryDollEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
         public enum State
         {
@@ -92,6 +94,12 @@ namespace Bouncer.Enemies
 
         void Update()
         {
+            if (NetHooks.IsGuest)
+            {
+                if (_state == State.Cry && !_self.IsFrozen && GameSession.IsGameplayActive)
+                    SlowListeners();
+                return;
+            }
             float dt = Time.deltaTime;
             if (!_agent.isOnNavMesh)
                 return;
@@ -187,16 +195,18 @@ namespace Bouncer.Enemies
             return count;
         }
 
-        /// <summary>Крик: кто в радиусе — бежит медленнее, пока она плачет.</summary>
+        /// <summary>
+        /// Крик: кто в радиусе — бежит медленнее, пока она плачет. По сети замедляется только свой игрок: чужим
+        /// бегом управляет его компьютер (там то же делает копия куклы).
+        /// </summary>
         void SlowListeners()
         {
             float radiusSqr = definition.cryRadius * definition.cryRadius;
-            foreach (var t in Targetable.All)
+            foreach (var player in Players.All)
             {
-                if (t.Team != Team.Player || !t.IsAlive || Flat(t.Position - transform.position).sqrMagnitude > radiusSqr)
+                if (!player.IsLocal || player.IsDead || Flat(player.transform.position - transform.position).sqrMagnitude > radiusSqr)
                     continue;
-                if (t.TryGetComponent(out PlayerMotor motor))
-                    motor.Slow(definition.slowMultiplier, 0.3f);
+                player.Motor.Slow(definition.slowMultiplier, 0.3f);
             }
         }
 
@@ -281,7 +291,8 @@ namespace Bouncer.Enemies
         void LateUpdate()
         {
             float dt = Time.deltaTime;
-            float speed01 = _agent.isOnNavMesh ? Mathf.Clamp01(_agent.velocity.magnitude / Mathf.Max(0.1f, definition.moveSpeed)) : 0f;
+            Vector3 velocity = NetHooks.IsGuest ? _self.Velocity : _agent.isOnNavMesh ? _agent.velocity : Vector3.zero;
+            float speed01 = Mathf.Clamp01(Flat(velocity).magnitude / Mathf.Max(0.1f, definition.moveSpeed));
             _phase += dt * 3.2f * Mathf.PI * Mathf.Max(speed01, 0.001f);
             float sin = Mathf.Sin(_phase);
             bool crying = _state == State.Cry && !_self.IsFrozen;
@@ -300,6 +311,20 @@ namespace Bouncer.Enemies
                 armL.localRotation = Quaternion.Euler(rub, 0f, 0f);
             if (armR)
                 armR.localRotation = Quaternion.Euler(-rub, 0f, 0f);
+        }
+
+        // ---------- Сеть ----------
+
+        public void WriteNet(NetWriter writer)
+        {
+            writer.Byte((byte)_state);
+            writer.Seconds(_stateTime);
+        }
+
+        public void ReadNet(NetReader reader, float age)
+        {
+            _state = (State)reader.Byte();
+            _stateTime = reader.Seconds() + age;
         }
 
         void Enter(State state)

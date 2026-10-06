@@ -8,6 +8,7 @@ namespace Bouncer.Arena
     /// Тележка с товаром на барахолке. Мяч от неё отскакивает, как от стены, и толкает её по ходу полёта
     /// (заряженный — сильнее); игрок толкает её телом. Разогнавшаяся тележка сбивает врагов на пути: удар и
     /// отброс, по каждому — не чаще раза в секунду. Физика — обычный Rigidbody, крен запрещён.
+    /// По сети тележки катит хозяин комнаты; у гостя тележка — копия без физики, её ведёт сеть (<see cref="BecomePuppet"/>).
     /// </summary>
     [RequireComponent(typeof(Rigidbody))]
     public sealed class PushCart : MonoBehaviour, IBallTarget
@@ -24,14 +25,30 @@ namespace Bouncer.Arena
         float _lastHitTime = -10f;
         Collider _lastHitCollider;
 
+        /// <summary>Где стояла при загрузке арены: по этому месту тележку узнают по сети.</summary>
+        public Vector3 StartPosition { get; private set; }
+        public Rigidbody Body => _body;
+        public bool IsPuppet { get; private set; }
+
         void Awake()
         {
             _body = GetComponent<Rigidbody>();
             _body.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+            StartPosition = transform.position;
+        }
+
+        /// <summary>По сети у гостя: тележку ведёт хозяин — своей физики нет.</summary>
+        public void BecomePuppet()
+        {
+            IsPuppet = true;
+            _body.isKinematic = true;
+            _body.interpolation = RigidbodyInterpolation.None;
         }
 
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)
         {
+            if (IsPuppet)
+                return BallContactResult.Bounce;
             Vector3 push = ball.Velocity;
             push.y = 0f;
             if (push.sqrMagnitude < 1e-4f)
@@ -45,6 +62,8 @@ namespace Bouncer.Arena
 
         void OnCollisionEnter(Collision collision)
         {
+            if (IsPuppet)
+                return;
             Vector3 velocity = _body.linearVelocity;
             velocity.y = 0f;
             if (velocity.magnitude < hitSpeed)

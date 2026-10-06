@@ -8,6 +8,7 @@ namespace Bouncer.Run
     /// тенге, пятаки, тиыны) и портфель у элитных — но не больше <see cref="ElitePortfolioLimit"/> за арену
     /// (остальные элитки дают только монетки). Находка на арене — кучка монеток или лимонад.
     /// На 4-й опасности монеток меньше. Врагов, исчезнувших в конце арены, не трогает.
+    /// По сети добычу роняет только хозяин комнаты, портфель за арену — один на всю команду.
     /// </summary>
     public sealed class LootDropper : MonoBehaviour
     {
@@ -19,6 +20,9 @@ namespace Bouncer.Run
 
         int _elitePortfolios;
 
+        /// <summary>Префаб портфеля (по сети у гостя — для копий портфелей хозяина).</summary>
+        public PortfolioPickup PortfolioPrefab => portfolio;
+
         /// <summary>Сколько портфелей за арену дают элитки. Задаёт арена.</summary>
         public int ElitePortfolioLimit { get; set; } = 1;
 
@@ -28,7 +32,7 @@ namespace Bouncer.Run
 
         void OnEnemyKilled(GameObject enemy, HitInfo hit)
         {
-            if (enemy == null || hit.Has(HitFlags.Despawn) || !enemy.TryGetComponent(out EnemyReward reward))
+            if (enemy == null || hit.Has(HitFlags.Despawn) || NetHooks.IsGuest || !enemy.TryGetComponent(out EnemyReward reward))
                 return;
             Vector3 at = enemy.transform.position;
             at.y = Mathf.Max(at.y, 0.2f);

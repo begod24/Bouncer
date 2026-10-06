@@ -8,9 +8,10 @@ namespace Bouncer.Enemies
     /// Ложное чучело из «Пряток»: вылезает из земли вместе с настоящим «Тем, кто в сумерках» и выглядит так же,
     /// только глаза не горят. Попали — рассыпается соломой, и из неё вылетают вороны. Когда настоящего нашли
     /// (или он вышел сам), ложные осыпаются без ворон.
+    /// По сети встаёт, поворачивается и рассыпается у хозяина комнаты; у гостя копия вылезает из земли так же.
     /// </summary>
     [RequireComponent(typeof(Health), typeof(Targetable))]
-    public sealed class ScarecrowDecoy : MonoBehaviour, IBallTarget, IDamageable, IPoolable
+    public sealed class ScarecrowDecoy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
         [Tooltip("Корень модели: вылезает из-под земли")]
         [SerializeField] Transform model;
@@ -79,6 +80,8 @@ namespace Bouncer.Enemies
 
         void Update()
         {
+            if (NetHooks.IsGuest)
+                return;
             var target = Targetable.FindNearest(transform.position, Team.Player);
             if (target == null || !GameSession.IsGameplayActive)
                 return;
@@ -99,6 +102,20 @@ namespace Bouncer.Enemies
                 armL.localRotation = _armLRest * Quaternion.Euler(0f, 0f, -20f);
             if (armR)
                 armR.localRotation = _armRRest * Quaternion.Euler(0f, 0f, 20f);
+        }
+
+        // ---------- Сеть ----------
+
+        public void WriteNet(NetWriter writer)
+        {
+            writer.Seconds(_riseTime);
+            writer.Seconds(Mathf.Min(60f, Time.time - _start));
+        }
+
+        public void ReadNet(NetReader reader, float age)
+        {
+            _riseTime = Mathf.Max(0.05f, reader.Seconds());
+            _start = Time.time - reader.Seconds() - age;
         }
 
         public BallContactResult OnBallContact(Ball ball, in RaycastHit hit)

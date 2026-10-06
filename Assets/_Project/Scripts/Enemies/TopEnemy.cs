@@ -9,9 +9,10 @@ namespace Bouncer.Enemies
     /// Юла. Крутится и катится к игроку по дуге, сбивает при касании. Попадание мячом запускает её, как бильярдный шар:
     /// она летит по направлению мяча, отскакивает от стен и сбивает врагов на пути, потом снова катится к игроку.
     /// Тело кинематическое: юла движется сама (как мяч — через SphereCast), чтобы отскоки были точными.
+    /// По сети катится и бьёт только у хозяина комнаты; у гостя копия едет по его вестям.
     /// </summary>
     [RequireComponent(typeof(Rigidbody), typeof(Health), typeof(Targetable))]
-    public sealed class TopEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable
+    public sealed class TopEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
         const float Skin = 0.02f;
 
@@ -64,6 +65,8 @@ namespace Bouncer.Enemies
 
         void FixedUpdate()
         {
+            if (NetHooks.IsGuest)
+                return;
             float dt = Time.fixedDeltaTime;
             // Запущенная ударом юла катится дальше и заморозку не замечает — это уже снаряд игрока.
             if ((!GameSession.IsGameplayActive || _self.IsFrozen) && !_launched)
@@ -260,7 +263,8 @@ namespace Bouncer.Enemies
             if (!spinner)
                 return;
             float dt = Time.deltaTime;
-            float speed01 = Mathf.Clamp01(Flat(_velocity).magnitude / Mathf.Max(0.1f, definition.launchSpeed));
+            Vector3 velocity = NetHooks.IsGuest ? _self.Velocity : _velocity;
+            float speed01 = Mathf.Clamp01(Flat(velocity).magnitude / Mathf.Max(0.1f, definition.launchSpeed));
             _spin = (_spin + definition.spinSpeed * (1f + speed01) * dt) % 360f;
             _wobblePhase += dt * 5f;
             // Ось вращения медленно ходит по кругу — юла «гуляет».
@@ -268,6 +272,12 @@ namespace Bouncer.Enemies
             float tilt = definition.wobbleAngle * (_launched ? 2f : 1f);
             spinner.localRotation = Quaternion.AngleAxis(tilt, tiltAxis) * Quaternion.Euler(0f, _spin, 0f);
         }
+
+        // ---------- Сеть ----------
+
+        public void WriteNet(NetWriter writer) => writer.Bool(_launched);
+
+        public void ReadNet(NetReader reader, float age) => _launched = reader.Bool();
 
         static Vector3 Flat(Vector3 v) => new(v.x, 0f, v.z);
     }

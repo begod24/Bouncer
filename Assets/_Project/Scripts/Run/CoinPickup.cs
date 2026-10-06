@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Bouncer.Core;
 using Bouncer.Player;
@@ -9,6 +10,8 @@ namespace Bouncer.Run
     /// Монетка на асфальте (1 тиын, 5 тиын, 1 тенге). Выпрыгивает из выбитого врага, крутится над землёй и летит
     /// к игроку, когда он рядом: радиус магнита растёт от «Длинных рук». Когда арена пройдена, оставшиеся
     /// слетаются сами (<see cref="CollectAll"/>). Физики нет — движется сама, поэтому монеток может быть много.
+    /// По сети монетки роняет и раздаёт хозяин комнаты: у гостя монетка — копия (<see cref="IsPuppet"/>), она так же
+    /// выпрыгивает, а к игроку летит, когда так решил хозяин. Подобранная хозяином добыча приходит всем.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class CoinPickup : MonoBehaviour, IPoolable
@@ -53,6 +56,17 @@ namespace Bouncer.Run
 
         public int Value => value;
         public static int ActiveCount => s_active.Count;
+        /// <summary>Копия монетки хозяина у гостя: сама к игрокам не летит и добычу не даёт.</summary>
+        public bool IsPuppet { get; private set; }
+        /// <summary>С какой скоростью выпрыгнула (по сети — чтобы у гостей выпрыгнула так же).</summary>
+        public Vector3 PopVelocity { get; private set; }
+
+        /// <summary>Монетка выпала (у хозяина комнаты — чтобы показать её гостям).</summary>
+        public static event Action<CoinPickup> Spawned;
+        /// <summary>Монетка полетела к игроку.</summary>
+        public static event Action<CoinPickup, PlayerController> FlyStarted;
+        /// <summary>Монетку подобрали: сколько тиынов добычи.</summary>
+        public static event Action<CoinPickup> Collected;
 
         /// <summary>Арена пройдена: все монетки летят к ближайшему игроку.</summary>
         public static void CollectAll()
@@ -64,16 +78,34 @@ namespace Bouncer.Run
         public void OnSpawned()
         {
             s_active.Add(this);
-            Vector2 side = Random.insideUnitCircle * popSpeed;
-            _velocity = new Vector3(side.x, popUpSpeed * Random.Range(0.8f, 1.1f), side.y);
+            Vector2 side = UnityEngine.Random.insideUnitCircle * popSpeed;
+            _velocity = new Vector3(side.x, popUpSpeed * UnityEngine.Random.Range(0.8f, 1.1f), side.y);
             _landed = false;
             _flying = false;
             _target = null;
             _speed = 0f;
             _spawnTime = Time.time;
-            _phase = Random.value * 10f;
+            _phase = UnityEngine.Random.value * 10f;
             if (visual)
-                visual.localRotation = Quaternion.Euler(0f, Random.value * 360f, 0f);
+                visual.localRotation = Quaternion.Euler(0f, UnityEngine.Random.value * 360f, 0f);
+            IsPuppet = false;
+            PopVelocity = _velocity;
+            Spawned?.Invoke(this);
+        }
+
+        /// <summary>По сети у гостя: эта монетка — копия, выпрыгнула с такой скоростью.</summary>
+        public void BeginPuppet(Vector3 popVelocity)
+        {
+            IsPuppet = true;
+            _velocity = popVelocity;
+            PopVelocity = popVelocity;
+        }
+
+        /// <summary>По сети у гостя: хозяин отправил монетку к этому игроку.</summary>
+        public void FlyTo(PlayerController player)
+        {
+            _flying = false;
+            StartFlying(player);
         }
 
         public void OnDespawned() => s_active.Remove(this);
@@ -120,7 +152,7 @@ namespace Bouncer.Run
                         _landed = true;
                     }
                 }
-                if (Time.time - _spawnTime >= magnetDelay)
+                if (!IsPuppet && Time.time - _spawnTime >= magnetDelay)
                 {
                     var player = NearestPlayer(position, magnetRadius, scaleByPickup: true);
                     if (player != null)
@@ -147,12 +179,19 @@ namespace Bouncer.Run
             _target = player;
             _flying = true;
             _speed = flySpeed;
+            if (!IsPuppet)
+                FlyStarted?.Invoke(this, player);
         }
 
         void Collect()
         {
-            RunState.AddLoot(value);
-            GameEvents.PlaySound(SoundCue.Coin, transform.position);
+            // Копия долетела до игрока — добычу всем пришлёт хозяин.
+            if (!IsPuppet)
+            {
+                RunState.AddLoot(value);
+                GameEvents.PlaySound(SoundCue.Coin, transform.position);
+                Collected?.Invoke(this);
+            }
             PoolService.Despawn(gameObject);
         }
 
@@ -186,6 +225,9 @@ namespace Bouncer.Run
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
         {
+            Spawned = null;
+            FlyStarted = null;
+            Collected = null;
             s_active.Clear();
             s_players.Clear();
             s_playersFrame = -1;

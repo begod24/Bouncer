@@ -8,6 +8,7 @@ namespace Bouncer.Arena
     /// Снос предмета (прилавок барахолки): пока цел — обычное препятствие (коллайдеры, дыра в NavMesh через
     /// NavMeshObstacle). Снесённый — части модели разлетаются кусками с физикой, коллайдеры и препятствие
     /// выключаются, через пару секунд куски сжимаются и пропадают: место становится проходимым.
+    /// По сети сносит хозяин комнаты, а у гостей такой же предмет разлетается по его вести (<see cref="BreakEvents"/>).
     /// </summary>
     public sealed class BreakableProp : MonoBehaviour, IBreakable
     {
@@ -70,6 +71,7 @@ namespace Bouncer.Arena
             GameEvents.PlaySound(SoundCue.AreaThud, transform.position);
             GameEvents.PlaySound(SoundCue.DecoyBurst, transform.position);
             GameFeel.Shake(0.3f);
+            BreakEvents.Raise(this, direction, force);
         }
 
         void Update()

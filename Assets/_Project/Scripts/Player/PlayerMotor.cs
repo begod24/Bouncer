@@ -32,6 +32,10 @@ namespace Bouncer.Player
         public bool DashReady => Time.time >= _dashReadyAt;
         /// <summary>Когда начался последний рывок (Time.time) — по нему видно, что рывок новый.</summary>
         public float DashStartTime => _dashStart;
+
+        /// <summary>Неуязвимость рывка шла или кончилась не больше чем within секунд назад (по сети: удар пришёл с опозданием).</summary>
+        public bool WasDashInvulnerable(float within) =>
+            _dashStart > 0f && Time.time < _dashStart + _stats.dashInvulnerability + within;
         public Vector3 DashDirection => _dashDirection;
         /// <summary>0 — только что использован, 1 — готов.</summary>
         public float DashReady01
@@ -43,6 +47,21 @@ namespace Bouncer.Player
             }
         }
         public Vector3 Velocity => (IsDashing ? DashVelocity : _velocity) + _knockback;
+        /// <summary>
+        /// Как игрок сдвинулся на самом деле за последний шаг (упёрся в стену — ноль), по земле. По сети это
+        /// скорость для остальных: они ведут его по ней между точками.
+        /// </summary>
+        public Vector3 ActualVelocity
+        {
+            get
+            {
+                if (_controller == null || !_controller.enabled)
+                    return Vector3.zero;
+                Vector3 velocity = _controller.velocity;
+                velocity.y = 0f;
+                return velocity;
+            }
+        }
         float DashCooldown => Mathf.Max(_stats.dashCooldownMin, _stats.dashCooldown * _mods.DashCooldown);
         Vector3 DashVelocity => _dashDirection * (_stats.dashDistance * _mods.DashDistance / Mathf.Max(0.01f, _stats.dashDuration));
 

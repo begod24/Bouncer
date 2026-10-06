@@ -136,13 +136,14 @@ namespace Bouncer.UI
             }
             // Подсказка только посреди игры: под паузой, карточками и «Выбит!» она мешает. В обучении управление
             // объясняют задания.
-            if (help)
-                help.SetActive(GameSettings.ShowHints && GameSession.IsGameplayActive && !Tutorial.Active);
             var session = GameSession.Instance;
+            if (help)
+                help.SetActive(GameSettings.ShowHints && GameSession.IsGameplayActive && !Tutorial.Active
+                               && (session == null || session.Menu == LocalMenu.None));
             if (hudGroup)
             {
                 // На заставке и у витрины ларька HUD прячется: у витрины свои монетки.
-                bool hidden = session != null && session.State is (SessionState.Title or SessionState.Shop);
+                bool hidden = session != null && (session.State == SessionState.Title || session.IsShopOpen);
                 hudGroup.alpha = Mathf.MoveTowards(hudGroup.alpha, hidden ? 0f : 1f, Time.unscaledDeltaTime * 4f);
             }
 

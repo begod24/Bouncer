@@ -7,7 +7,7 @@ namespace Bouncer.Net
 {
     /// <summary>
     /// <see cref="PlayerActionState"/> в сжатом виде для сети: флаги в одном байте, заряд и направление рывка —
-    /// по байту. Шлётся, только когда поменялось.
+    /// по байту. Едет в каждой точке движения игрока — так поза показывается в тот же миг, что и положение.
     /// </summary>
     public struct NetPose : INetworkSerializable, IEquatable<NetPose>
     {
@@ -16,10 +16,23 @@ namespace Bouncer.Net
         const byte DashingFlag = 1 << 2;
         const byte SlidingFlag = 1 << 3;
         const byte DownFlag = 1 << 4;
+        const byte FlashlightFlag = 1 << 5;
+
+        /// <summary>Сколько байт поза занимает в точке движения (<see cref="Write"/>).</summary>
+        public const int Size = 3;
 
         byte _flags;
         byte _charge;
         byte _dashAngle;
+
+        public void Write(byte[] bytes)
+        {
+            bytes[0] = _flags;
+            bytes[1] = _charge;
+            bytes[2] = _dashAngle;
+        }
+
+        public static NetPose Read(byte[] bytes) => new() { _flags = bytes[0], _charge = bytes[1], _dashAngle = bytes[2] };
 
         public static NetPose From(in PlayerActionState action)
         {
@@ -34,6 +47,8 @@ namespace Bouncer.Net
                 flags |= SlidingFlag;
             if (action.Down)
                 flags |= DownFlag;
+            if (action.Flashlight)
+                flags |= FlashlightFlag;
             float angle = action.Dashing ? Mathf.Atan2(action.DashDirection.x, action.DashDirection.z) * Mathf.Rad2Deg : 0f;
             return new NetPose
             {
@@ -56,6 +71,7 @@ namespace Bouncer.Net
                 Sliding = (_flags & SlidingFlag) != 0,
                 DashDirection = dashing ? new Vector3(Mathf.Sin(angle), 0f, Mathf.Cos(angle)) : Vector3.zero,
                 Down = (_flags & DownFlag) != 0,
+                Flashlight = (_flags & FlashlightFlag) != 0,
             };
         }
 

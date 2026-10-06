@@ -6,6 +6,7 @@ namespace Bouncer.Core
     /// «Гасит свет» финального босса: на время гаснут фонари, окна и луна, двор тонет в темноте, а у игрока
     /// загорается круг света, как на стройке (<see cref="DarkArena.Active"/>). Фонари гаснут здесь же
     /// (<see cref="LightZone.PutOut"/>), луну и окна приглушают те, кто их ведёт, — по <see cref="Dark01"/>.
+    /// По сети свет гасит хозяин комнаты и сообщает гостям (<see cref="Triggered"/>).
     /// </summary>
     public static class LightsOut
     {
@@ -15,6 +16,9 @@ namespace Bouncer.Core
 
         static float s_start;
         static float s_until;
+
+        /// <summary>Свет погашен на столько секунд (по сети хозяин показывает это гостям).</summary>
+        public static event System.Action<float> Triggered;
 
         /// <summary>Свет погашен (или ещё гаснет).</summary>
         public static bool Active => Time.time < s_until;
@@ -44,6 +48,8 @@ namespace Bouncer.Core
             s_until = Mathf.Max(s_until, now + seconds);
             foreach (var zone in LightZone.All)
                 zone.PutOut(seconds);
+            if (!NetHooks.IsGuest)
+                Triggered?.Invoke(seconds);
         }
 
         /// <summary>Вернуть свет сейчас же (мама позвала — во дворе зажигается всё).</summary>
@@ -65,6 +71,10 @@ namespace Bouncer.Core
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() => Clear();
+        static void ResetStatics()
+        {
+            Clear();
+            Triggered = null;
+        }
     }
 }

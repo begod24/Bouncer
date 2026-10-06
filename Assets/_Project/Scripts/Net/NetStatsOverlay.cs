@@ -1,4 +1,5 @@
 using System.Text;
+using Bouncer.Player;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
@@ -9,6 +10,8 @@ namespace Bouncer.Net
     /// <summary>
     /// Отладка сети по F3, пока есть комната: тип комнаты, пинг (у хозяина — до каждого гостя), кадры в секунду и
     /// такт сети. Для закрытых тестов — понять, откуда задержка: связь, слабый компьютер или сглаживание.
+    /// По каждому чужому игроку: на сколько он показан в прошлом (буфер), разброс доставки его точек, сколько
+    /// времени точек не хватало («голод» — тогда он бежит наугад) и сколько было рывков-телепортов.
     /// </summary>
     public sealed class NetStatsOverlay : MonoBehaviour
     {
@@ -68,8 +71,20 @@ namespace Bouncer.Net
             var room = NetRoom.Current;
             if (room != null && room.TryGetComponent(out NetBalls balls))
                 _text.AppendLine().Append("balls: ").Append(balls.Count);
+            if (room != null && room.TryGetComponent(out NetEnemies enemies))
+                _text.Append("  enemies: ").Append(enemies.Count);
+            foreach (var player in Players.All)
+            {
+                if (player.IsLocal || !player.TryGetComponent(out NetPlayer net))
+                    continue;
+                var motion = net.Motion;
+                _text.AppendLine().Append(net.DisplayName).Append(": buffer ").Append(Mathf.RoundToInt(motion.Delay * 1000f))
+                    .Append(" ms  jitter ").Append(Mathf.RoundToInt(motion.Jitter * 1000f))
+                    .Append(" ms  starved ").Append(Mathf.RoundToInt(motion.StarvedShare * 100f))
+                    .Append("%  snaps ").Append(motion.Snaps);
+            }
 
-            GUI.Box(new Rect(12f, 12f, 280f, 24f + 20f * CountLines()), _text.ToString(), _style);
+            GUI.Box(new Rect(12f, 12f, 420f, 24f + 20f * CountLines()), _text.ToString(), _style);
         }
 
         int CountLines()

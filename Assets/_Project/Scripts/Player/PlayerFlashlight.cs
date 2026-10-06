@@ -8,6 +8,8 @@ namespace Bouncer.Player
     /// по прицелу. В луче тень твёрдая и горит (теряет попадание раз в flashlightBurnInterval), манекенов луч
     /// тоже видит — это свет (<see cref="LightBeams"/>). Заряд кончается за flashlightBattery секунд и
     /// восстанавливается, пока фонарик выключен. Карточка «Фонарик» делает луч длиннее и заряд дольше.
+    /// По сети у копии чужого игрока луч горит, когда горит у него (по его позе), и светит туда, куда он смотрит;
+    /// жжёт тени только свой фонарик (удар уходит хозяину).
     /// </summary>
     [RequireComponent(typeof(PlayerController))]
     public sealed class PlayerFlashlight : MonoBehaviour, ILightBeam
@@ -37,7 +39,7 @@ namespace Bouncer.Player
         {
             get
             {
-                Vector3 direction = _player && _player.Aim != null ? _player.Aim.Direction : transform.forward;
+                Vector3 direction = _player && _player.IsLocal && _player.Aim != null ? _player.Aim.Direction : transform.forward;
                 direction.y = 0f;
                 return direction.sqrMagnitude > 1e-4f ? direction.normalized : transform.forward;
             }
@@ -79,6 +81,13 @@ namespace Bouncer.Player
             if (GameFeel.Paused || _player == null)
                 return;
             float dt = Time.deltaTime;
+            if (!_player.IsLocal)
+            {
+                // Чужой игрок: луч как у него, без заряда и без ожогов — их считает его компьютер.
+                _on = Available && !_player.IsDead && _player.RemoteAction.Flashlight;
+                UpdateBeam();
+                return;
+            }
             bool canUse = Available && !_player.IsDead && !_player.IsScripted && GameSession.IsPlayerActive;
             bool wants = canUse && _player.LastIntent.FlashlightHeld && _charge > 0f;
             if (wants != _on)
@@ -103,7 +112,11 @@ namespace Bouncer.Player
             {
                 _charge = Mathf.Min(1f, _charge + dt / Mathf.Max(0.1f, Stats.flashlightRecharge));
             }
+            UpdateBeam();
+        }
 
+        void UpdateBeam()
+        {
             if (beam)
             {
                 beam.enabled = _on;
@@ -137,7 +150,7 @@ namespace Bouncer.Player
                     continue;
                 Vector3 away = target.Position - transform.position;
                 away.y = 0f;
-                damageable.ApplyHit(new HitInfo
+                NetHooks.ApplyHit(damageable, new HitInfo
                 {
                     Damage = 1,
                     Point = target.AimPoint,

@@ -10,9 +10,10 @@ namespace Bouncer.Enemies
     /// мяч спереди отскакивает от крышки, как от стены. Бить его надо сбоку, сзади, рикошетом от бортов или
     /// бумерангом. Сильный (заряженный) мяч выбивает крышку в сторону — пару секунд он открыт со всех сторон.
     /// Вблизи замахивается половником и бьёт крышкой.
+    /// По сети думает, отбивает и бьёт только у хозяина комнаты; у гостя копия (с крышкой) по его вестям.
     /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
-    public sealed class ShieldSoldierEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable
+    public sealed class ShieldSoldierEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
         public enum State
         {
@@ -51,7 +52,8 @@ namespace Bouncer.Enemies
         public bool GuardUp => Time.time >= _guardBrokenUntil;
         /// <summary>1 сразу после отбитого мяча, затухает: крышка вздрагивает.</summary>
         public float BlockKick { get; private set; }
-        public Vector3 PlanarVelocity => _agent.isOnNavMesh ? Flat(_agent.velocity) : Vector3.zero;
+        public Vector3 PlanarVelocity => NetHooks.IsGuest ? Flat(_self.Velocity)
+            : _agent.isOnNavMesh ? Flat(_agent.velocity) : Vector3.zero;
         public Vector3 LastHitDirection { get; private set; } = Vector3.back;
 
         void Awake()
@@ -95,6 +97,11 @@ namespace Bouncer.Enemies
         void Update()
         {
             float dt = Time.deltaTime;
+            if (NetHooks.IsGuest)
+            {
+                BlockKick = Mathf.MoveTowards(BlockKick, 0f, dt * 4f);
+                return;
+            }
             if (!_agent.isOnNavMesh)
                 return;
             if (_self.IsFrozen)
@@ -292,6 +299,30 @@ namespace Bouncer.Enemies
             GameEvents.PlaySound(SoundCue.SoldierPop, transform.position);
             GameFeel.Shake(0.25f);
             PoolService.Despawn(gameObject);
+        }
+
+        // ---------- Сеть ----------
+
+        public void WriteNet(NetWriter writer)
+        {
+            writer.Byte((byte)_state);
+            writer.Seconds(_stateTime);
+            writer.Seconds(Mathf.Max(0f, _guardBrokenUntil - Time.time));
+            writer.Byte((byte)Mathf.RoundToInt(Mathf.Clamp01(BlockKick) * 255f));
+            writer.Direction(LastHitDirection);
+        }
+
+        public void ReadNet(NetReader reader, float age)
+        {
+            _state = (State)reader.Byte();
+            _stateTime = reader.Seconds() + age;
+            float broken = reader.Seconds() - age;
+            _guardBrokenUntil = broken > 0f ? Time.time + broken : 0f;
+            // Вздрагивание крышки: новое начинается с прихода, а не тянется с каждой вестью.
+            float kick = reader.Byte() / 255f;
+            if (kick > BlockKick + 0.3f)
+                BlockKick = kick;
+            LastHitDirection = reader.Direction();
         }
 
         // ---------- Служебное ----------

@@ -8,9 +8,10 @@ namespace Bouncer.Enemies
     /// <summary>
     /// Машинка на пульте. Носится кругами вокруг игрока, потом газует на месте (колёса буксуют) и таранит по прямой,
     /// в конце уходит в занос. Мяч переворачивает её вверх колёсами — пару секунд она беспомощна.
+    /// По сети носится и таранит только у хозяина комнаты; у гостя копия буксует и переворачивается по его вестям.
     /// </summary>
     [RequireComponent(typeof(NavMeshAgent), typeof(Health), typeof(Targetable))]
-    public sealed class RCCarEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable
+    public sealed class RCCarEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
         public enum State
         {
@@ -102,6 +103,8 @@ namespace Bouncer.Enemies
 
         void Update()
         {
+            if (NetHooks.IsGuest)
+                return;
             float dt = Time.deltaTime;
             if (!_agent.isOnNavMesh)
                 return;
@@ -361,6 +364,24 @@ namespace Bouncer.Enemies
                 _antennaSwing = Vector3.ClampMagnitude(_antennaSwing, 0.6f);
                 antenna.localRotation = Quaternion.Euler(_antennaSwing.z * 40f, 0f, -_antennaSwing.x * 40f);
             }
+        }
+
+        // ---------- Сеть ----------
+
+        public void WriteNet(NetWriter writer)
+        {
+            writer.Byte((byte)_state);
+            writer.Seconds(_stateTime);
+            writer.Bool(_orbitSide > 0f);
+            writer.Bool(_skidSign > 0f);
+        }
+
+        public void ReadNet(NetReader reader, float age)
+        {
+            _state = (State)reader.Byte();
+            _stateTime = reader.Seconds() + age;
+            _orbitSide = reader.Bool() ? 1f : -1f;
+            _skidSign = reader.Bool() ? 1f : -1f;
         }
 
         void Enter(State state)

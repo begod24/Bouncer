@@ -109,13 +109,12 @@ namespace Bouncer.Core
 
         /// <summary>
         /// Сетевая прогулка: все в комнате начинают её вместе, на опасности, которую выбрал хозяин. Первая арена
-        /// грузится по сети уже как продолжение прогулки — сразу бой, без заставки.
-        /// Стартовой карточки пока нет: карточки по сети появятся вместе с коопом.
+        /// грузится по сети уже как продолжение прогулки — сразу бой, без заставки. Стартовую карточку каждый
+        /// выбирает сам (волны в это время ждут).
         /// </summary>
         public static void BeginOnline(int players, int danger)
         {
             BeginNew(players);
-            ResetPlayers(needStartCard: false);
             Danger = Mathf.Clamp(danger, 1, Bouncer.Core.Danger.Max);
             ContinuesRun = true;
         }

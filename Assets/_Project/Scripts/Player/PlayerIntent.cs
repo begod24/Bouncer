@@ -23,8 +23,12 @@ namespace Bouncer.Player
         public bool PausePressed;
         /// <summary>Взаимодействие: открыть ларёк и т.п.</summary>
         public bool InteractPressed;
+        /// <summary>Кнопка взаимодействия зажата (кооп: поднять выбитого товарища).</summary>
+        public bool InteractHeld;
         /// <summary>Наводящий фонарик: светит, пока кнопка зажата (на тёмных аренах).</summary>
         public bool FlashlightHeld;
+        /// <summary>Кооп: открыть портфель из рюкзака.</summary>
+        public bool BackpackPressed;
     }
 
     public interface IPlayerIntentSource

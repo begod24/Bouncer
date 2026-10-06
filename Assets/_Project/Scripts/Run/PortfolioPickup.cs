@@ -1,3 +1,4 @@
+using System;
 using Bouncer.Core;
 using Bouncer.Player;
 using Bouncer.Upgrades;
@@ -8,6 +9,8 @@ namespace Bouncer.Run
     /// <summary>
     /// Портфель с вкладышами: падает с элитного врага или лежит где-нибудь у края арены. Кто подобрал,
     /// выбирает 1 карточку из 3 (<see cref="OfferKind.Portfolio"/>). Покачивается и поблёскивает, чтобы его было видно.
+    /// По сети портфели роняет и раздаёт хозяин комнаты: у гостя портфель — копия (<see cref="IsPuppet"/>), а
+    /// подобранный кем угодно портфель ложится в рюкзак подобравшего (<see cref="PlayerCards.AddToBackpack"/>).
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class PortfolioPickup : MonoBehaviour, IPoolable
@@ -30,7 +33,29 @@ namespace Bouncer.Run
 
         Vector3 _velocity;
         bool _landed;
+        bool _announce;
         float _spawnTime;
+
+        /// <summary>По сети у гостя: копия портфеля хозяина — подбирает его хозяин.</summary>
+        public bool IsPuppet { get; private set; }
+        /// <summary>Как летит, пока не лёг (по сети гостю — чтобы копия летела так же). Лежит — ноль.</summary>
+        public Vector3 PopVelocity => _landed ? Vector3.zero : _velocity;
+        public bool Landed => _landed;
+
+        /// <summary>Хозяин: портфель появился (выпал или лёг на землю).</summary>
+        public static event Action<PortfolioPickup> Spawned;
+        /// <summary>Хозяин: портфель подобран.</summary>
+        public static event Action<PortfolioPickup> Taken;
+
+        /// <summary>По сети у гостя: копия портфеля хозяина. popVelocity — ноль, если лежит на земле.</summary>
+        public void BeginPuppet(Vector3 popVelocity)
+        {
+            IsPuppet = true;
+            if (popVelocity.sqrMagnitude < 1e-4f)
+                PlaceOnGround();
+            else
+                _velocity = popVelocity;
+        }
 
         /// <summary>Портфель появился на месте, а не выпал из врага: сразу лежит.</summary>
         public void PlaceOnGround()
@@ -46,9 +71,11 @@ namespace Bouncer.Run
 
         public void OnSpawned()
         {
-            Vector2 side = Random.insideUnitCircle * popSpeed;
+            Vector2 side = UnityEngine.Random.insideUnitCircle * popSpeed;
             _velocity = new Vector3(side.x, popUpSpeed, side.y);
             _landed = false;
+            IsPuppet = false;
+            _announce = true;
             _spawnTime = Time.time;
             if (glint)
                 glint.SetActive(false);
@@ -80,7 +107,14 @@ namespace Bouncer.Run
                 visual.localPosition = new Vector3(0f, _landed ? (Mathf.Sin(Time.time * 3f) * 0.5f + 0.5f) * bobHeight : 0f, 0f);
                 visual.localRotation = Quaternion.Euler(0f, turnSpeed * dt, 0f) * visual.localRotation;
             }
-            if (Time.time - _spawnTime >= pickupDelay && GameSession.IsPlayerActive)
+            // Хозяин говорит гостям о портфеле в первом кадре: к этому времени ясно, выпрыгнул он или лёг на землю.
+            if (_announce)
+            {
+                _announce = false;
+                if (!IsPuppet)
+                    Spawned?.Invoke(this);
+            }
+            if (!IsPuppet && Time.time - _spawnTime >= pickupDelay && GameSession.IsPlayerActive)
                 TryPickUp(position);
         }
 
@@ -94,11 +128,30 @@ namespace Bouncer.Run
                 delta.y = 0f;
                 if (delta.sqrMagnitude > pickupRadius * pickupRadius || !target.TryGetComponent(out PlayerCards cards))
                     continue;
-                cards.QueueOffer(OfferKind.Portfolio);
-                GameEvents.PlaySound(SoundCue.Portfolio, position);
+                if (!Online.Active)
+                {
+                    cards.QueueOffer(OfferKind.Portfolio);
+                    GameEvents.PlaySound(SoundCue.Portfolio, position);
+                }
+                else if (cards.Player.IsLocal)
+                {
+                    cards.AddToBackpack();
+                }
+                else if (NetHooks.GivePortfolio == null || !NetHooks.GivePortfolio(target.gameObject))
+                {
+                    continue;
+                }
+                Taken?.Invoke(this);
                 PoolService.Despawn(gameObject);
                 return;
             }
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics()
+        {
+            Spawned = null;
+            Taken = null;
         }
     }
 }

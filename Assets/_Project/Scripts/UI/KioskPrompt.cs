@@ -37,7 +37,7 @@ namespace Bouncer.UI
             var session = GameSession.Instance;
             var camera = Camera.main;
             bool show = kiosk != null && kiosk.IsOpen && session != null && session.State == SessionState.Cleared
-                        && !GameFeel.Paused && camera != null;
+                        && session.Menu == LocalMenu.None && !GameFeel.Paused && camera != null;
             if (show)
             {
                 Vector3 screen = camera.WorldToScreenPoint(kiosk.WindowPosition + Vector3.up * height);

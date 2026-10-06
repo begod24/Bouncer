@@ -21,10 +21,23 @@ namespace Bouncer.Core
         Victory,
     }
 
+    /// <summary>Экран поверх игры у своего игрока по сети: игра при этом идёт дальше (<see cref="GameSession.Menu"/>).</summary>
+    public enum LocalMenu
+    {
+        None,
+        /// <summary>Выбор карточки «1 из 3».</summary>
+        Card,
+        /// <summary>Витрина ларька.</summary>
+        Shop,
+    }
+
     /// <summary>
     /// Арена в прогулке: заставка, бой, выбор карточки, ларёк после боя, пауза, конец игры и рестарт.
     /// Что переходит между аренами (монетки, сердца, итоги), лежит в <see cref="RunState"/>.
     /// Первая арена может загрузиться и тренировкой (<see cref="Tutorial"/>): тогда сразу бой, но без волн.
+    /// По сети время общее: выбор карточки и ларёк не останавливают игру и не меняют состояние арены — это
+    /// только экран своего игрока (<see cref="Menu"/>), а сам он в это время стоит. Переход на следующую арену
+    /// и конец прогулки решает хозяин комнаты (<see cref="AdvanceOnline"/>, <see cref="Win"/>, <see cref="LoseOnline"/>).
     /// </summary>
     [DefaultExecutionOrder(-90)]
     public sealed class GameSession : MonoBehaviour
@@ -48,8 +61,15 @@ namespace Bouncer.Core
         public int RunKills => RunState.PastKills + Kills;
         /// <summary>Идёт бой: враги ходят, волны идут, часы арены тикают. По сети пауза у одного игрока бой не останавливает.</summary>
         public bool IsPlaying => State == SessionState.Playing && (Online.Active || !GameFeel.Paused);
-        /// <summary>Игрок может бегать и бросать: в бою и на пройденной арене.</summary>
-        public bool PlayerCanAct => State is (SessionState.Playing or SessionState.Cleared) && !GameFeel.Paused && !ScreenFade.IsBusy;
+        /// <summary>Игрок может бегать и бросать: в бою и на пройденной арене, не на экране карточки или ларька.</summary>
+        public bool PlayerCanAct => State is (SessionState.Playing or SessionState.Cleared) && Menu == LocalMenu.None
+                                    && !GameFeel.Paused && !ScreenFade.IsBusy;
+        /// <summary>По сети: какой экран открыт у своего игрока (игра при этом идёт). В соло всегда None — там состояния.</summary>
+        public LocalMenu Menu { get; private set; }
+        /// <summary>Открыт выбор карточки (в соло — время стоит, по сети — только у своего игрока).</summary>
+        public bool IsChoosingCard => State == SessionState.Upgrade || Menu == LocalMenu.Card;
+        /// <summary>Открыта витрина ларька.</summary>
+        public bool IsShopOpen => State == SessionState.Shop || Menu == LocalMenu.Shop;
         public bool IsFinished => State is SessionState.GameOver or SessionState.Victory;
         public bool CanRestart => IsFinished && Time.unscaledTime - _gameOverTime > restartDelay;
 
@@ -141,7 +161,7 @@ namespace Bouncer.Core
 
         public void TogglePause()
         {
-            if (State is (SessionState.Playing or SessionState.Cleared) && !OverlayOpen)
+            if (State is (SessionState.Playing or SessionState.Cleared) && Menu == LocalMenu.None && !OverlayOpen)
                 GameFeel.Paused = !GameFeel.Paused;
         }
 
@@ -183,11 +203,21 @@ namespace Bouncer.Core
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
 
-        /// <summary>Остановить игру на выбор карточки (в бою или на пройденной арене). Пауза не включается.</summary>
+        /// <summary>
+        /// Остановить игру на выбор карточки (в бою или на пройденной арене). Пауза не включается.
+        /// По сети игра не встаёт: выбор — экран своего игрока.
+        /// </summary>
         public bool BeginUpgradeChoice()
         {
             if (State is not (SessionState.Playing or SessionState.Cleared))
                 return false;
+            if (Online.Active)
+            {
+                if (Menu != LocalMenu.None)
+                    return false;
+                Menu = LocalMenu.Card;
+                return true;
+            }
             _resumeState = State;
             State = SessionState.Upgrade;
             GameFeel.Frozen = true;
@@ -196,6 +226,11 @@ namespace Bouncer.Core
 
         public void EndUpgradeChoice()
         {
+            if (Menu == LocalMenu.Card)
+            {
+                Menu = LocalMenu.None;
+                return;
+            }
             if (State != SessionState.Upgrade)
                 return;
             State = _resumeState;
@@ -211,11 +246,18 @@ namespace Bouncer.Core
                 _resumeState = SessionState.Cleared;
         }
 
-        /// <summary>Открыть витрину ларька: время стоит.</summary>
+        /// <summary>Открыть витрину ларька: время стоит (по сети — не стоит, витрина только у своего игрока).</summary>
         public bool BeginShop()
         {
             if (State != SessionState.Cleared || GameFeel.Paused)
                 return false;
+            if (Online.Active)
+            {
+                if (Menu != LocalMenu.None)
+                    return false;
+                Menu = LocalMenu.Shop;
+                return true;
+            }
             State = SessionState.Shop;
             GameFeel.Frozen = true;
             return true;
@@ -223,6 +265,11 @@ namespace Bouncer.Core
 
         public void EndShop()
         {
+            if (Menu == LocalMenu.Shop)
+            {
+                Menu = LocalMenu.None;
+                return;
+            }
             if (State != SessionState.Shop)
                 return;
             State = SessionState.Cleared;
@@ -242,11 +289,25 @@ namespace Bouncer.Core
             ScreenFade.LoadScene(nextScene);
         }
 
+        /// <summary>
+        /// По сети: хозяин комнаты ведёт всех на следующую арену — экран гаснет, а сцену грузит сеть.
+        /// Сердца своего игрока к этому времени записаны в <see cref="RunState.SetLives"/>.
+        /// </summary>
+        public void AdvanceOnline()
+        {
+            if (State != SessionState.Cleared)
+                return;
+            Menu = LocalMenu.None;
+            RunState.AdvanceArena(SurvivalTime, Kills);
+            ScreenFade.Cover();
+        }
+
         /// <summary>Прогулка пройдена: враги замирают, показывается победа.</summary>
         public void Win()
         {
             if (State is not (SessionState.Playing or SessionState.Cleared))
                 return;
+            Menu = LocalMenu.None;
             State = SessionState.Victory;
             _gameOverTime = Time.unscaledTime;
             GameFeel.SlowMotion(0.3f, 1.5f);
@@ -262,7 +323,8 @@ namespace Bouncer.Core
 
         void OnPlayerDied(GameObject player)
         {
-            if (State is not (SessionState.Playing or SessionState.Cleared))
+            // По сети выбиты ли все, решает хозяин комнаты (<see cref="LoseOnline"/>): здесь сердца других — копии.
+            if (Online.Active || State is not (SessionState.Playing or SessionState.Cleared))
                 return;
             // В коопе забег кончается, когда выбиты все.
             if (Targetable.CountAlive(Team.Player) > 0)
@@ -270,6 +332,19 @@ namespace Bouncer.Core
             State = SessionState.GameOver;
             _gameOverTime = Time.unscaledTime;
             GameFeel.SlowMotion(0.25f, 1.2f);
+            GameEvents.PlaySound(SoundCue.GameOver, Vector3.zero);
+            GameEvents.RaiseRunFinished(false);
+        }
+
+        /// <summary>По сети: хозяин комнаты сказал, что выбиты все, — прогулка проиграна у всех.</summary>
+        public void LoseOnline()
+        {
+            if (State is not (SessionState.Playing or SessionState.Cleared or SessionState.Upgrade or SessionState.Shop))
+                return;
+            Menu = LocalMenu.None;
+            State = SessionState.GameOver;
+            _gameOverTime = Time.unscaledTime;
+            GameFeel.Frozen = false;
             GameEvents.PlaySound(SoundCue.GameOver, Vector3.zero);
             GameEvents.RaiseRunFinished(false);
         }

@@ -10,9 +10,11 @@ namespace Bouncer.Enemies
     /// потом бежит по прямой туда, где стоял игрок, и взрывается о стену, об игрока или через несколько секунд.
     /// Взрыв бьёт всех вокруг, врагов тоже. Сбитый мячом взрывается на месте — так можно подорвать толпу.
     /// Петушок (элитный) по дороге дважды поворачивает к игроку, и взрыв у него больше.
+    /// По сети бежит и взрывается только у хозяина комнаты; у гостя копия заводится и бежит по его вестям,
+    /// а взрыв (кольцо, огонь, звук) хозяин показывает гостям сам.
     /// </summary>
     [RequireComponent(typeof(Rigidbody), typeof(Health), typeof(Targetable))]
-    public sealed class ChickEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable
+    public sealed class ChickEnemy : MonoBehaviour, IBallTarget, IDamageable, IPoolable, INetEnemy
     {
         enum State
         {
@@ -101,6 +103,8 @@ namespace Bouncer.Enemies
 
         void FixedUpdate()
         {
+            if (NetHooks.IsGuest)
+                return;
             float dt = Time.fixedDeltaTime;
             if (_exploded)
                 return;
@@ -321,6 +325,20 @@ namespace Bouncer.Enemies
         {
             _state = state;
             _stateTime = 0f;
+        }
+
+        // ---------- Сеть ----------
+
+        public void WriteNet(NetWriter writer)
+        {
+            writer.Byte((byte)_state);
+            writer.Seconds(_stateTime);
+        }
+
+        public void ReadNet(NetReader reader, float age)
+        {
+            _state = (State)reader.Byte();
+            _stateTime = reader.Seconds() + age;
         }
 
         static Vector3 Flat(Vector3 v) => new(v.x, 0f, v.z);

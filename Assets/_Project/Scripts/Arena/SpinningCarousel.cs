@@ -43,7 +43,8 @@ namespace Bouncer.Arena
 
             foreach (var t in Targetable.All)
             {
-                if (!t.IsAlive || t.IsFrozen)
+                // Чужого игрока по сети катает его компьютер, копии врагов у гостя — хозяин.
+                if (!t.IsAlive || t.IsFrozen || t.IsRemote || (NetHooks.IsGuest && t.Team == Team.Enemy))
                     continue;
                 Vector3 position = t.transform.position;
                 if (!OnDeck(position, center, top))

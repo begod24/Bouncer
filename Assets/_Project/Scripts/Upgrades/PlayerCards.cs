@@ -43,6 +43,10 @@ namespace Bouncer.Upgrades
     /// Если карманы полны, выбранная карточка ждёт (<see cref="PendingCard"/>), пока игрок не выкинет одну
     /// (<see cref="ResolveDiscard"/>); выкинутая возвращается в колоду, её действие снимается. Само предложение
     /// при этом не пропадает: можно вернуться к нему и взять другую (<see cref="CancelDiscard"/>).
+    /// По сети карточки выбирает только свой игрок (копии чужих игроков здесь ничего не берут), игра на выбор не
+    /// встаёт, карманов меньше (<see cref="CardDeck.PocketsFor"/>), а портфель, подобранный в бою, ложится в рюкзак
+    /// (<see cref="Backpack"/>): игрок открывает его кнопкой, когда удобно, а неоткрытые открываются сами, когда
+    /// арена пройдена. Невыбранное (выбитый не успел) и рюкзак переходят на следующую арену (<see cref="RunCards"/>).
     /// </summary>
     [RequireComponent(typeof(PlayerController))]
     public sealed class PlayerCards : MonoBehaviour
@@ -68,10 +72,17 @@ namespace Bouncer.Upgrades
         public int Count => RunCards.Taken(Slot).Count;
         /// <summary>Номер игрока в прогулке: по нему лежат его карточки (<see cref="RunCards"/>) и монетки.</summary>
         public int Slot => _player ? _player.Slot : 0;
-        public int MaxPockets => deck ? deck.pockets : 6;
+        public int MaxPockets => deck ? deck.PocketsFor(RunState.Active ? RunState.PlayerCount : 1) : 6;
         /// <summary>Выбранная карточка ждёт свободного кармана: игрок решает, что выкинуть.</summary>
         public UpgradeCard PendingCard { get; private set; }
         public bool IsDiscarding => PendingCard != null;
+        /// <summary>Открыт выбор или решение, что выкинуть.</summary>
+        public bool IsBusy => _offer.Count > 0 || PendingCard != null;
+        /// <summary>По сети: неоткрытые портфели в рюкзаке.</summary>
+        public int Backpack => RunCards.BackpackOf(Slot);
+        /// <summary>Стартовая карточка ещё не выбрана (по сети волны ждут, пока все выберут).</summary>
+        public bool StartPending => RunState.NeedsStartCard(Slot) || _pending.Contains(OfferKind.Start)
+                                    || (_offer.Count > 0 && OfferKind == OfferKind.Start);
 
         /// <summary>Предложение карточек открылось, сменилось или закрылось.</summary>
         public event Action OfferChanged;
@@ -81,12 +92,15 @@ namespace Bouncer.Upgrades
         public event Action<UpgradeCard> Discarded;
         /// <summary>Карманы полны и надо выбрать, что выкинуть (или выбор закрыт).</summary>
         public event Action DiscardChanged;
+        /// <summary>В рюкзаке стало больше или меньше портфелей.</summary>
+        public event Action BackpackChanged;
 
         void Awake() => _player = GetComponent<PlayerController>();
 
         void Start()
         {
-            if (!RunState.Active)
+            // По сети карточки — только у своего игрока: копия чужого здесь ничего не применяет.
+            if (!RunState.Active || !_player.IsLocal)
                 return;
             // Новая арена той же прогулки: игрок новый, поэтому взятое раньше применяется заново, без эффектов.
             UpgradeCard.Replaying = true;
@@ -105,6 +119,52 @@ namespace Bouncer.Upgrades
             // «Бабушкины пирожки»: на каждой следующей арене прибавляется сердце.
             if (RunState.ArenaIndex > 0 && _player.Modifiers.ArenaHeal > 0)
                 _player.Health.Heal(_player.Modifiers.ArenaHeal);
+            // Выбор, который не успели открыть на прошлой арене, — здесь.
+            var carried = RunCards.Carried(Slot);
+            foreach (var kind in carried)
+                QueueOffer(kind);
+            carried.Clear();
+        }
+
+        void OnDestroy()
+        {
+            // Арена кончилась, а выбор ещё ждёт (кооп: игрок был выбит) — он откроется на следующей.
+            if (!RunState.Active || _player == null || !_player.IsLocal || (_offer.Count == 0 && _pending.Count == 0))
+                return;
+            var carried = RunCards.Carried(Slot);
+            if (_offer.Count > 0)
+                carried.Add(OfferKind);
+            carried.AddRange(_pending);
+        }
+
+        /// <summary>По сети: подобранный в бою портфель — в рюкзак.</summary>
+        public void AddToBackpack()
+        {
+            RunCards.SetBackpack(Slot, Backpack + 1);
+            GameEvents.PlaySound(SoundCue.Portfolio, transform.position);
+            BackpackChanged?.Invoke();
+        }
+
+        /// <summary>Открыть портфель из рюкзака: выбор «1 из 3». false — открыть нечего или сейчас нельзя.</summary>
+        public bool OpenBackpack()
+        {
+            if (Backpack <= 0 || _player.IsDead || IsBusy || _pending.Count > 0)
+                return false;
+            RunCards.SetBackpack(Slot, Backpack - 1);
+            QueueOffer(OfferKind.Portfolio);
+            BackpackChanged?.Invoke();
+            return true;
+        }
+
+        /// <summary>Арена пройдена: всё, что осталось в рюкзаке, открывается само.</summary>
+        public void OpenWholeBackpack()
+        {
+            if (Backpack <= 0)
+                return;
+            for (int i = Backpack; i > 0; i--)
+                QueueOffer(OfferKind.Portfolio);
+            RunCards.SetBackpack(Slot, 0);
+            BackpackChanged?.Invoke();
         }
 
         public int StacksOf(UpgradeCard card) => card && _stacks.TryGetValue(card, out int stacks) ? stacks : 0;
@@ -296,17 +356,20 @@ namespace Bouncer.Upgrades
 
         void Update()
         {
-            if (deck == null)
+            if (deck == null || !_player.IsLocal)
                 return;
             if (RunState.NeedsStartCard(Slot))
             {
                 RunState.StartCardChosen(Slot);
                 QueueOffer(OfferKind.Start);
             }
+            var session = GameSession.Instance;
+            // Кооп: портфель из рюкзака — своей кнопкой, когда удобно.
+            if (Backpack > 0 && _player.LastIntent.BackpackPressed && (session == null || session.PlayerCanAct))
+                OpenBackpack();
             if (_pending.Count == 0 || IsChoosing || IsDiscarding || Time.unscaledTime < _offerAt || _player.IsDead)
                 return;
             // Выбор открывается только посреди обычной игры: не на паузе, не в ларьке, не во время перехода.
-            var session = GameSession.Instance;
             if (session != null && !session.PlayerCanAct)
                 return;
             if (!OpenNext())

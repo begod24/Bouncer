@@ -30,6 +30,13 @@ namespace Bouncer.Net
                 label.color = slotColors[Mathf.Abs(slot) % slotColors.Length];
         }
 
+        /// <summary>Сменить надпись (имя и что с игроком), не трогая цвет.</summary>
+        public void SetText(string text)
+        {
+            if (label != null && label.text != text)
+                label.text = text;
+        }
+
         void LateUpdate()
         {
             if (_camera == null)

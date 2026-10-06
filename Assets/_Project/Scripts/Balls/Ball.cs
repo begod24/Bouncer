@@ -159,6 +159,8 @@ namespace Bouncer.Balls
         /// <summary>Полёт прогоняется вперёд разом (<see cref="FastForward"/>): двигать сразу, а не к следующему шагу физики.</summary>
         bool _fastForward;
         bool _puppetHot;
+        Vector3 _visualOffset;
+        float _visualBlend = 0.1f;
 
         public BallDefinition Definition => definition;
         /// <summary>Копия мяча хозяина у гостя: сама не летит и ни во что не попадает, её ставит сеть.</summary>
@@ -167,6 +169,10 @@ namespace Bouncer.Balls
         public int Life { get; private set; }
         /// <summary>Гравитация полёта сейчас (у летящего и «свечки»).</summary>
         public float Gravity => _gravity;
+        /// <summary>
+        /// Насколько модель мяча сдвинута от его настоящего места (тает до нуля) — только для глаз, см. <see cref="ShowFrom"/>.
+        /// </summary>
+        public Vector3 VisualOffset => _visualOffset;
         public BallState State { get; private set; }
         /// <summary>Команда бросившего. У лежащего мяча — Neutral.</summary>
         public Team Team { get; private set; }
@@ -234,6 +240,7 @@ namespace Bouncer.Balls
             }
             _puppetHot = false;
             _fastForward = false;
+            _visualOffset = Vector3.zero;
             Team = Team.Neutral;
             Thrower = null;
             _receiver = null;
@@ -284,6 +291,12 @@ namespace Bouncer.Balls
 
         public void Launch(in BallThrow t)
         {
+            // У гостя настоящих мячей нет — все мячи бросает хозяин комнаты. Брошенный здесь чужим кодом — убрать.
+            if (IsGuest && !IsPuppet)
+            {
+                PoolService.Despawn(gameObject);
+                return;
+            }
             Team = t.Team;
             Thrower = t.Thrower;
             _receiver = t.Thrower ? t.Thrower.GetComponent<IBallReceiver>() : null;
@@ -371,6 +384,11 @@ namespace Bouncer.Balls
             if (IsPuppet)
             {
                 Network?.Drop(this, position, velocity);
+                return;
+            }
+            if (IsGuest)
+            {
+                PoolService.Despawn(gameObject);
                 return;
             }
             _elasticDone = true;
@@ -541,6 +559,25 @@ namespace Bouncer.Balls
             Vector3 reflected = Vector3.Reflect(_velocity, flat.normalized);
             _velocity = new Vector3(reflected.x * definition.wallSpeedKeep, reflected.y, reflected.z * definition.wallSpeedKeep);
             MakeKinematicAt(position);
+        }
+
+        /// <summary>
+        /// Показать мяч вылетающим из start и догоняющим своё настоящее место за time секунд — только модель, полёт
+        /// не меняется. У хозяина по сети: бросивший гость виден чуть в прошлом, а его мяч уже впереди.
+        /// </summary>
+        public void ShowFrom(Vector3 start, float time)
+        {
+            _visualOffset = start - Position;
+            _visualBlend = Mathf.Max(0.01f, time);
+        }
+
+        void Update()
+        {
+            if (_visualOffset == Vector3.zero)
+                return;
+            _visualOffset *= Mathf.Exp(-Time.deltaTime / _visualBlend);
+            if (_visualOffset.sqrMagnitude < 1e-4f)
+                _visualOffset = Vector3.zero;
         }
 
         /// <summary>У гостя: этот мяч — копия мяча хозяина. Зовёт сеть сразу после выдачи из пула.</summary>

@@ -97,7 +97,11 @@ namespace Bouncer.Core
                 return;
             var rotation = Quaternion.FromToRotation(Vector3.up, hit.normal) * Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
             PoolService.Spawn(prefab, hit.point + hit.normal * SurfaceOffset, rotation);
+            Dropped?.Invoke(prefab, above);
         }
+
+        /// <summary>Пятно положено (по сети хозяин кладёт такое же у гостей): префаб и точка над асфальтом.</summary>
+        public static event System.Action<GumSpot, Vector3> Dropped;
 
         /// <summary>Множитель скорости врага в точке: 1 — жвачки тут нет.</summary>
         public static float EnemyMoveMultiplierAt(Vector3 position)

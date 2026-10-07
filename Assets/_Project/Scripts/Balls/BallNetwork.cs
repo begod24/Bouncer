@@ -15,5 +15,7 @@ namespace Bouncer.Balls
         bool Summon(Ball puppet, GameObject taker);
 
         bool GiveToRemote(Ball ball, GameObject player);
+
+        void Carry(Ball puppet, Vector3 center, Quaternion turn);
     }
 }

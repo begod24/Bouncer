@@ -65,6 +65,11 @@ namespace Bouncer.Core
                 RunState.BeginTutorial();
                 State = SessionState.Playing;
             }
+            else if (Online.Joining)
+            {
+                RunState.Clear();
+                State = SessionState.Title;
+            }
             else if (RunState.ContinuesRun)
             {
                 RunState.ConsumeContinuation();
@@ -122,6 +127,15 @@ namespace Bouncer.Core
                 return;
             RunState.BeginNew();
             State = SessionState.Playing;
+        }
+
+        public void JoinRunning(float arenaTime)
+        {
+            Menu = LocalMenu.None;
+            State = SessionState.Playing;
+            SurvivalTime = Mathf.Max(0f, arenaTime);
+            GameFeel.Paused = false;
+            GameFeel.Frozen = false;
         }
 
         public void TogglePause()

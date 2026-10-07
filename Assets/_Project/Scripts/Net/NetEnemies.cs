@@ -24,6 +24,7 @@ namespace Bouncer.Net
         sealed class Tracked
         {
             public ushort Id;
+            public ushort Prefab;
             public GameObject Go;
             public Targetable Self;
             public Health Health;
@@ -185,17 +186,37 @@ namespace Bouncer.Net
             _tracked[go] = tracked;
             _trackedById[tracked.Id] = tracked;
 
+            tracked.Prefab = (ushort)prefab;
+            SpawnRpc(SpawnOf(tracked));
+        }
+
+        static NetEnemySpawn SpawnOf(Tracked tracked)
+        {
+            var go = tracked.Go;
             var affix = go.TryGetComponent(out EliteAffix elite) ? elite.Kind : AffixKind.None;
-            SpawnRpc(new NetEnemySpawn
+            return new NetEnemySpawn
             {
                 Id = tracked.Id,
-                Prefab = (ushort)prefab,
+                Prefab = tracked.Prefab,
                 Position = go.transform.position,
                 Rotation = go.transform.rotation,
                 Affix = (byte)affix,
                 Health = (ushort)(tracked.Health ? tracked.Health.Current : 1),
                 MaxHealth = (ushort)(tracked.Health ? tracked.Health.Max : 1),
-            });
+            };
+        }
+
+        public void SendAllTo(ulong clientId)
+        {
+            if (!IsServer || !IsSpawned)
+                return;
+            foreach (var tracked in _tracked.Values)
+            {
+                if (tracked.Go == null || !tracked.Go.activeInHierarchy)
+                    continue;
+                SpawnRpc(SpawnOf(tracked), RpcTarget.Single(clientId, RpcTargetUse.Temp));
+                tracked.SentTime = double.NegativeInfinity;
+            }
         }
 
         void Untrack(Tracked tracked)
@@ -351,8 +372,8 @@ namespace Bouncer.Net
         [Rpc(SendTo.Server)]
         void FreezeAllRpc(float seconds) => Targetable.FreezeEnemies(Mathf.Clamp(seconds, 0f, 10f));
 
-        [Rpc(SendTo.NotServer)]
-        void SpawnRpc(NetEnemySpawn spawn)
+        [Rpc(SendTo.NotServer, AllowTargetOverride = true)]
+        void SpawnRpc(NetEnemySpawn spawn, RpcParams rpc = default)
         {
             if (_puppets.ContainsKey(spawn.Id) || spawn.Prefab >= prefabs.Length || prefabs[spawn.Prefab] == null)
                 return;

@@ -230,6 +230,47 @@ namespace Bouncer.Net
             }
         }
 
+        public void SendStateTo(ulong clientId)
+        {
+            if (!IsServer || !IsSpawned)
+                return;
+            foreach (var pair in _coinIds)
+            {
+                var coin = pair.Key;
+                int index = coin != null && coin.isActiveAndEnabled ? CoinIndex(coin.Value) : -1;
+                if (index >= 0)
+                    CoinSpawnRpc(pair.Value, (byte)index, coin.transform.position, Vector3.zero, To(clientId));
+            }
+            foreach (var pair in _healIds)
+            {
+                var heal = pair.Key;
+                int index = heal != null && heal.isActiveAndEnabled ? HealIndex(heal) : -1;
+                if (index >= 0)
+                    HealSpawnRpc(pair.Value, (byte)index, heal.transform.position, To(clientId));
+            }
+            foreach (var pair in _portfolioIds)
+                if (pair.Key != null && pair.Key.isActiveAndEnabled)
+                    PortfolioSpawnRpc(pair.Value, pair.Key.transform.position, Vector3.zero, To(clientId));
+
+            var director = ArenaDirector.Instance;
+            if (director != null)
+                ArenaRpc(director.ArenaTime, Targetable.EnemiesFrozen ? Targetable.EnemiesFrozenLeft : 0f, (byte)director.Weather,
+                    director.WeatherSeed, To(clientId));
+            if (LightsOut.Active)
+                LightsOutRpc(LightsOut.Left, To(clientId));
+            foreach (var lamp in LightZone.All)
+                if (lamp != null && !lamp.IsOn)
+                    LampOutRpc(lamp.Center, lamp.OutLeft, To(clientId));
+            var home = HomeCall.Instance;
+            if (home != null && home.Called)
+                MomCallRpc(home.BossDefeated, To(clientId));
+            foreach (var behaviour in FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
+                if (behaviour is IBreakable { IsBroken: true })
+                    BreakRpc(behaviour.transform.position, Vector3.forward, 0.5f, To(clientId));
+        }
+
+        RpcParams To(ulong clientId) => RpcTarget.Single(clientId, RpcTargetUse.Temp);
+
         void OnSound(SoundCue cue, Vector3 position)
         {
             if (IsLocalCue(cue) || _sounds.Count >= MaxSoundsPerTick)
@@ -677,8 +718,8 @@ namespace Bouncer.Net
             _spawner.ShowMarkers(elite, _markerPositions);
         }
 
-        [Rpc(SendTo.NotServer, Delivery = RpcDelivery.Unreliable)]
-        void ArenaRpc(float waveTime, float enemiesFrozen, byte weather, int weatherSeed)
+        [Rpc(SendTo.NotServer, Delivery = RpcDelivery.Unreliable, AllowTargetOverride = true)]
+        void ArenaRpc(float waveTime, float enemiesFrozen, byte weather, int weatherSeed, RpcParams rpc = default)
         {
             var director = ArenaDirector.Instance;
             if (director != null)
@@ -714,8 +755,8 @@ namespace Bouncer.Net
             }
         }
 
-        [Rpc(SendTo.NotServer)]
-        void BreakRpc(Vector3 position, Vector3 direction, float force)
+        [Rpc(SendTo.NotServer, AllowTargetOverride = true)]
+        void BreakRpc(Vector3 position, Vector3 direction, float force, RpcParams rpc = default)
         {
             IBreakable best = null;
             float bestSqr = 1f;
@@ -733,18 +774,18 @@ namespace Bouncer.Net
             best?.Break(direction, force);
         }
 
-        [Rpc(SendTo.NotServer)]
-        void LightsOutRpc(float seconds) => LightsOut.Trigger(seconds);
+        [Rpc(SendTo.NotServer, AllowTargetOverride = true)]
+        void LightsOutRpc(float seconds, RpcParams rpc = default) => LightsOut.Trigger(seconds);
 
-        [Rpc(SendTo.NotServer)]
-        void MomCallRpc(bool bossDefeated)
+        [Rpc(SendTo.NotServer, AllowTargetOverride = true)]
+        void MomCallRpc(bool bossDefeated, RpcParams rpc = default)
         {
             if (HomeCall.Instance != null)
                 HomeCall.Instance.BeginCall(bossDefeated);
         }
 
-        [Rpc(SendTo.NotServer)]
-        void LampOutRpc(Vector3 center, float seconds)
+        [Rpc(SendTo.NotServer, AllowTargetOverride = true)]
+        void LampOutRpc(Vector3 center, float seconds, RpcParams rpc = default)
         {
             var lamp = LightZone.FindAt(center);
             if (lamp != null)
@@ -767,8 +808,8 @@ namespace Bouncer.Net
                 _weather.StrikeFromNetwork();
         }
 
-        [Rpc(SendTo.NotServer)]
-        void PortfolioSpawnRpc(ushort id, Vector3 position, Vector3 popVelocity)
+        [Rpc(SendTo.NotServer, AllowTargetOverride = true)]
+        void PortfolioSpawnRpc(ushort id, Vector3 position, Vector3 popVelocity, RpcParams rpc = default)
         {
             if (_loot == null)
                 _loot = FindFirstObjectByType<LootDropper>();
@@ -789,8 +830,8 @@ namespace Bouncer.Net
                 PoolService.Despawn(portfolio.gameObject);
         }
 
-        [Rpc(SendTo.NotServer)]
-        void CoinSpawnRpc(ushort id, byte prefab, Vector3 position, Vector3 popVelocity)
+        [Rpc(SendTo.NotServer, AllowTargetOverride = true)]
+        void CoinSpawnRpc(ushort id, byte prefab, Vector3 position, Vector3 popVelocity, RpcParams rpc = default)
         {
             if (prefab >= coins.Length || coins[prefab] == null)
                 return;
@@ -819,8 +860,8 @@ namespace Bouncer.Net
             }
         }
 
-        [Rpc(SendTo.NotServer)]
-        void HealSpawnRpc(ushort id, byte prefab, Vector3 position)
+        [Rpc(SendTo.NotServer, AllowTargetOverride = true)]
+        void HealSpawnRpc(ushort id, byte prefab, Vector3 position, RpcParams rpc = default)
         {
             if (prefab >= heals.Length || heals[prefab] == null)
                 return;

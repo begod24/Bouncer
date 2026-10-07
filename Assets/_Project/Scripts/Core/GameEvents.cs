@@ -66,6 +66,7 @@ namespace Bouncer.Core
         public string Title;
         public string Hint;
         public float Seconds;
+        public string Arg;
     }
 
     public struct SpawnRequest

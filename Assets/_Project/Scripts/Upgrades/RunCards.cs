@@ -83,6 +83,28 @@ namespace Bouncer.Upgrades
             }
         }
 
+        public static void Restore(int slot, IEnumerable<UpgradeCard> taken, IEnumerable<UpgradeCard> locked,
+            IEnumerable<OfferKind> carried, int backpack)
+        {
+            var player = Of(slot);
+            player.Clear();
+            foreach (var card in taken)
+            {
+                if (!card)
+                    continue;
+                player.Taken.Add(card);
+                if (card.IsCombo)
+                    player.Combos++;
+                else if (card.rarity == CardRarity.Gold)
+                    s_golds++;
+            }
+            foreach (var card in locked)
+                if (card)
+                    player.Locked.Add(card);
+            player.Carried.AddRange(carried);
+            player.Backpack = Mathf.Max(0, backpack);
+        }
+
         public static void Remove(int slot, UpgradeCard card) => Of(slot).Taken.RemoveAll(taken => taken == card);
 
         static PlayerRunCards Of(int slot)

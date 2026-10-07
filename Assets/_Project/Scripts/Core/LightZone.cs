@@ -23,6 +23,7 @@ namespace Bouncer.Core
         public static event System.Action<LightZone, float> WentOut;
         public float Radius => radius;
         public bool IsOn => Time.time >= _outUntil;
+        public float OutLeft => Mathf.Max(0f, _outUntil - Time.time);
         public float Out01
         {
             get

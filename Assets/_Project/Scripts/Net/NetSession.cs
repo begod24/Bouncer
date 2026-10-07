@@ -11,6 +11,7 @@ using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Multiplayer;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Bouncer.Net
 {
@@ -37,12 +38,19 @@ namespace Bouncer.Net
         [SerializeField] NetRoom roomPrefab;
         [Tooltip("Сколько ждать подключения, с")]
         [SerializeField] float connectTimeout = 10f;
+        [Tooltip("Сколько ещё ждать, пока грузится арена идущей прогулки, с")]
+        [SerializeField] float syncTimeout = 40f;
+        [Tooltip("Сколько ждать своё место после входа в идущую прогулку, с")]
+        [SerializeField] float rejoinTimeout = 15f;
 
         NetworkManager _network;
         UnityTransport _transport;
         bool _runInBackground;
         ISession _session;
         string _rejectKey;
+        bool _syncStarted;
+        float _joinedAt;
+        int _joinScenes;
 
         public static NetSession Instance { get; private set; }
         public NetStatus Status { get; private set; }
@@ -52,6 +60,9 @@ namespace Bouncer.Net
         public string ErrorKey { get; private set; } = "";
 
         public static string PendingNotice { get; set; }
+        public static string LastJoinCode { get; private set; }
+
+        public double HostTime => _network != null && _network.IsListening ? NetClock.HostNow(_network) : Time.timeAsDouble;
 
         public event Action Changed;
 
@@ -83,6 +94,7 @@ namespace Bouncer.Net
             _network.NetworkConfig.ConnectionApproval = true;
             _network.ConnectionApprovalCallback = Approve;
             _network.OnClientDisconnectCallback += OnClientDisconnect;
+            _network.OnClientStarted += OnClientStarted;
             if (!TryGetComponent<NetStatsOverlay>(out _))
                 gameObject.AddComponent<NetStatsOverlay>();
         }
@@ -93,7 +105,12 @@ namespace Bouncer.Net
                 return;
             Instance = null;
             if (_network != null)
+            {
                 _network.OnClientDisconnectCallback -= OnClientDisconnect;
+                _network.OnClientStarted -= OnClientStarted;
+                if (_network.SceneManager != null)
+                    _network.SceneManager.OnSynchronize -= OnSynchronize;
+            }
             if (Online.Session == this)
             {
                 Online.Session = null;
@@ -147,7 +164,11 @@ namespace Bouncer.Net
                 return false;
             SetBusy();
             _rejectKey = null;
-            _network.NetworkConfig.ConnectionData = Encoding.UTF8.GetBytes(Handshake);
+            _syncStarted = false;
+            bool signedIn = !LooksLikeAddress(code) && await SignIn();
+            string playerId = signedIn ? AuthenticationService.Instance.PlayerId : "";
+            _network.NetworkConfig.ConnectionData = Encoding.UTF8.GetBytes(
+                Handshake + "\n" + s_profile + "\n" + CleanName(GameSettings.PlayerName) + "\n" + playerId);
             try
             {
                 if (LooksLikeAddress(code))
@@ -159,9 +180,9 @@ namespace Bouncer.Net
                 }
                 else
                 {
-                    if (!await SignIn())
+                    if (!signedIn)
                         return Fail("net.error.signin");
-                    _session = await MultiplayerService.Instance.JoinSessionByCodeAsync(code.ToUpperInvariant());
+                    _session = await JoinByCode(code.ToUpperInvariant());
                 }
                 Code = _session != null ? _session.Code : code;
                 if (!await WaitConnected())
@@ -172,8 +193,71 @@ namespace Bouncer.Net
                 Debug.LogWarning($"[Net] Войти не вышло: {e}");
                 return Fail(_rejectKey ?? "net.error.join");
             }
+            LastJoinCode = Code;
             EnterRoom();
+            _joinedAt = Time.realtimeSinceStartup;
             return true;
+        }
+
+        static async Task<ISession> JoinByCode(string code)
+        {
+            try
+            {
+                return await MultiplayerService.Instance.JoinSessionByCodeAsync(code);
+            }
+            catch (Exception e)
+            {
+                var session = await RejoinSession(code);
+                if (session != null)
+                    return session;
+                Debug.LogWarning($"[Net] Войти по коду не вышло: {e.Message}");
+                throw;
+            }
+        }
+
+        static async Task<ISession> RejoinSession(string code)
+        {
+            try
+            {
+                foreach (string id in await MultiplayerService.Instance.GetJoinedSessionIdsAsync())
+                {
+                    var session = await MultiplayerService.Instance.ReconnectToSessionAsync(id);
+                    if (session != null && string.Equals(session.Code, code, StringComparison.OrdinalIgnoreCase))
+                        return session;
+                    if (session != null)
+                        await session.LeaveAsync();
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[Net] Вернуться в старую сессию не вышло: {e.Message}");
+            }
+            return null;
+        }
+
+        public void RemoveFromSession(string playerId)
+        {
+            if (Status != NetStatus.InRoom || _session == null || !_session.IsHost || string.IsNullOrEmpty(playerId))
+                return;
+            _ = RemovePlayer(_session, playerId);
+        }
+
+        static async Task RemovePlayer(ISession session, string playerId)
+        {
+            try
+            {
+                foreach (var player in session.Players)
+                {
+                    if (player.Id != playerId)
+                        continue;
+                    await session.AsHost().RemovePlayerAsync(playerId);
+                    return;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[Net] Убрать игрока из сессии не вышло: {e.Message}");
+            }
         }
 
         public void Leave()
@@ -182,6 +266,7 @@ namespace Bouncer.Net
                 return;
             Status = NetStatus.Offline;
             Online.Active = false;
+            Online.Joining = false;
             Application.runInBackground = _runInBackground;
             if (Online.Session == (IOnlineSession)this)
                 Online.Session = null;
@@ -214,10 +299,62 @@ namespace Bouncer.Net
 
         bool Fail(string key)
         {
+            bool synced = _syncStarted;
             Leave();
             ErrorKey = key;
             Changed?.Invoke();
+            if (synced)
+            {
+                PendingNotice = key;
+                BackToTitle();
+            }
             return false;
+        }
+
+        static void BackToTitle()
+        {
+            var game = GameSession.Instance;
+            if (game != null)
+            {
+                game.ToTitle();
+                return;
+            }
+            string first = RunState.FirstScene;
+            if (!string.IsNullOrEmpty(first) && Application.CanStreamedLevelBeLoaded(first))
+                SceneManager.LoadScene(first);
+            else
+                SceneManager.LoadScene(0);
+        }
+
+        void OnClientStarted()
+        {
+            if (_network.IsServer || _network.SceneManager == null)
+                return;
+            _network.SceneManager.OnSynchronize -= OnSynchronize;
+            _network.SceneManager.OnSynchronize += OnSynchronize;
+        }
+
+        void OnSynchronize(ulong clientId)
+        {
+            if (_network.IsServer || clientId != _network.LocalClientId || Status != NetStatus.Busy)
+                return;
+            _syncStarted = true;
+            Online.Session = this;
+            Online.Active = true;
+            Online.Joining = true;
+            ScreenFade.CoverNow();
+            var placeholder = SceneManager.CreateScene("NetJoining" + ++_joinScenes);
+            SceneManager.SetActiveScene(placeholder);
+        }
+
+        void Update()
+        {
+            if (!Online.Joining || Status != NetStatus.InRoom || Time.realtimeSinceStartup - _joinedAt < rejoinTimeout)
+                return;
+            Debug.LogWarning("[Net] Своё место в идущей прогулке так и не пришло.");
+            PendingNotice = "net.error.join";
+            Leave();
+            BackToTitle();
         }
 
         async Task<bool> WaitConnected()
@@ -225,6 +362,8 @@ namespace Bouncer.Net
             float until = Time.realtimeSinceStartup + connectTimeout;
             while (!_network.IsConnectedClient)
             {
+                if (_syncStarted)
+                    until = Mathf.Max(until, Time.realtimeSinceStartup + syncTimeout);
                 if (_rejectKey != null || !_network.IsListening || Time.realtimeSinceStartup > until)
                     return false;
                 await Task.Delay(100);
@@ -242,15 +381,22 @@ namespace Bouncer.Net
             }
             string reason = null;
             var room = NetRoom.Current;
-            string handshake = request.Payload != null ? Encoding.UTF8.GetString(request.Payload) : "";
-            if (handshake != Handshake)
+            string[] payload = (request.Payload != null ? Encoding.UTF8.GetString(request.Payload) : "").Split('\n');
+            string profile = payload.Length > 1 ? payload[1] : "";
+            string playerName = payload.Length > 2 ? payload[2] : "";
+            string playerId = payload.Length > 3 ? payload[3] : "";
+            if (payload[0] != Handshake)
                 reason = "net.error.version";
-            else if (room == null || room.Started)
+            else if (room == null)
+                reason = "net.error.started";
+            else if (room.Started && !room.ApproveRejoin(request.ClientNetworkId, profile, playerName))
                 reason = "net.error.started";
             else if (_network.ConnectedClientsIds.Count >= MaxPlayers(room.Mode))
                 reason = "net.error.full";
             response.Approved = reason == null;
             response.Reason = reason ?? "";
+            if (response.Approved)
+                room.NoteIdentity(request.ClientNetworkId, profile, playerName, playerId);
         }
 
         void OnClientDisconnect(ulong clientId)
@@ -262,12 +408,19 @@ namespace Bouncer.Net
                 _rejectKey = reason;
             if (Status != NetStatus.InRoom)
                 return;
-            PendingNotice = _rejectKey ?? "net.error.hostleft";
+            bool running = RunState.Active || (NetRoom.Current != null && NetRoom.Current.Started);
+            PendingNotice = _rejectKey ?? (running ? "net.error.lost" : "net.error.hostleft");
             var game = GameSession.Instance;
             bool inGame = game != null && game.State != Bouncer.Core.SessionState.Title;
             Leave();
             if (inGame)
                 game.ToTitle();
+        }
+
+        static string CleanName(string name)
+        {
+            name = (name ?? "").Trim().Replace("\n", " ");
+            return name.Length > GameSettings.PlayerNameLength ? name.Substring(0, GameSettings.PlayerNameLength) : name;
         }
 
         static async Task<bool> SignIn()
@@ -330,6 +483,7 @@ namespace Bouncer.Net
         {
             Instance = null;
             PendingNotice = null;
+            LastJoinCode = null;
         }
     }
 }

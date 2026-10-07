@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Bouncer.Balls;
 using Bouncer.Core;
 using Bouncer.Player;
@@ -17,6 +18,8 @@ namespace Bouncer.Net
         const float MotionKeepalive = 0.2f;
         const int MotionEveryTicks = 2;
         const float HitResendInterval = 0.25f;
+        const float SaveInterval = 0.5f;
+        const byte NoBallType = byte.MaxValue;
         public const float ReviveTime = 2f;
         const float ReviveRange = 1.8f;
 
@@ -31,6 +34,7 @@ namespace Bouncer.Net
         readonly NetworkVariable<byte> _maxLives = new(writePerm: NetworkVariableWritePermission.Owner);
         readonly NetworkVariable<byte> _status = new(writePerm: NetworkVariableWritePermission.Owner);
         readonly NetworkVariable<NetPlayerMods> _mods = new(writePerm: NetworkVariableWritePermission.Owner);
+        readonly NetworkVariable<byte> _ballType = new(NoBallType, writePerm: NetworkVariableWritePermission.Owner);
 
         const byte StatusCard = 1 << 0;
         const byte StatusShop = 1 << 1;
@@ -61,6 +65,10 @@ namespace Bouncer.Net
         Vector3 _lastFramePosition;
         float _lastFrameYaw;
         bool _hasLastFrame;
+        float _nextSaveAt;
+        NetRunSave _sentSave;
+        bool _saveSent;
+        readonly List<OfferKind> _saveOffers = new();
 
         RoomMember _member;
         bool _hasMember;
@@ -106,8 +114,12 @@ namespace Bouncer.Net
             _name.OnValueChanged += OnNameChanged;
             _balls.OnValueChanged += OnBallsChanged;
             _mods.OnValueChanged += OnModsChanged;
+            _ballType.OnValueChanged += OnBallTypeChanged;
             if (!IsOwner)
+            {
                 ApplyMods(_mods.Value);
+                ApplyBallType(_ballType.Value);
+            }
             if (IsOwner)
             {
                 NetworkManager.NetworkTickSystem.Tick += OnTick;
@@ -120,6 +132,16 @@ namespace Bouncer.Net
 
         public override void OnNetworkDespawn()
         {
+            if (IsServer && !IsOwner)
+            {
+                var room = NetRoom.Current;
+                if (room != null)
+                    room.NotePlayerGone(_slot.Value, transform.position, transform.rotation, _lives.Value, _balls.Value,
+                        gameObject.scene.name);
+                if (NetBalls.Instance != null)
+                    NetBalls.Instance.NoteOrphans(_slot.Value, gameObject);
+            }
+            _ballType.OnValueChanged -= OnBallTypeChanged;
             _slot.OnValueChanged -= OnSlotChanged;
             _kid.OnValueChanged -= OnKidChanged;
             _name.OnValueChanged -= OnNameChanged;
@@ -149,6 +171,9 @@ namespace Bouncer.Net
                 _maxLives.Value = (byte)Mathf.Clamp(health.Max, 1, 255);
                 _status.Value = OwnStatus();
                 _mods.Value = NetPlayerMods.From(_player.Modifiers);
+                _ballType.Value = BallTypeIndex();
+                if (!IsServer)
+                    UpdateSave();
                 UpdateRevive();
                 if (health.IsDead && !_wasDown)
                     GameEvents.AnnounceLocal(new Announcement { Title = "net.downed.title", Hint = "net.downed.hint", Seconds = 4f });
@@ -187,6 +212,41 @@ namespace Bouncer.Net
             if (_player.IsHome)
                 status |= StatusHome;
             return status;
+        }
+
+        byte BallTypeIndex()
+        {
+            var balls = NetBalls.Instance;
+            int index = balls != null ? balls.IndexOf(_player.Balls.BallPrefab) : -1;
+            return index is >= 0 and < NoBallType ? (byte)index : NoBallType;
+        }
+
+        void OnBallTypeChanged(byte previous, byte current) => ApplyBallType(current);
+
+        void ApplyBallType(byte index)
+        {
+            if (IsOwner || index == NoBallType)
+                return;
+            var balls = NetBalls.Instance;
+            var prefab = balls != null ? balls.PrefabAt(index) : null;
+            if (prefab != null)
+                _player.Balls.SetBallPrefab(prefab);
+        }
+
+        void UpdateSave()
+        {
+            if (_cards == null || !RunState.Active || Time.unscaledTime < _nextSaveAt)
+                return;
+            _nextSaveAt = Time.unscaledTime + SaveInterval;
+            var room = NetRoom.Current;
+            if (room == null || !room.Started)
+                return;
+            var save = NetRunSave.Capture(_cards, _saveOffers);
+            if (_saveSent && save.Equals(_sentSave))
+                return;
+            room.SendSave(save);
+            _sentSave = save;
+            _saveSent = true;
         }
 
         void OnModsChanged(NetPlayerMods previous, NetPlayerMods current)

@@ -30,6 +30,14 @@ namespace Bouncer.Core
             Ensure().StartCoroutine(s_instance.RunCover());
         }
 
+        public static void CoverNow()
+        {
+            var fade = Ensure();
+            fade._alpha = 1f;
+            if (!IsBusy)
+                fade.StartCoroutine(fade.RunCover());
+        }
+
         static ScreenFade Ensure()
         {
             if (s_instance == null)

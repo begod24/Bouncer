@@ -24,6 +24,49 @@ namespace Bouncer.Net
         [SerializeField] float victoryDelay = 9f;
         [Tooltip("Дольше этого волны в начале арены никого не ждут, с")]
         [SerializeField] float holdLimit = 25f;
+        [Tooltip("Сколько хозяин держит место вылетевшего игрока, с")]
+        [SerializeField] float awayHold = 60f;
+
+        struct Identity
+        {
+            public string Key;
+            public string PlayerId;
+        }
+
+        struct LastSeen
+        {
+            public bool Valid;
+            public string Scene;
+            public Vector3 Position;
+            public Quaternion Rotation;
+            public byte Lives;
+            public byte Hands;
+        }
+
+        sealed class AwaySlot
+        {
+            public string Key;
+            public RoomMember Member;
+            public bool HasSave;
+            public NetRunSave Save;
+            public int CoinsAtDrop;
+            public LastSeen Seen;
+            public int ArenaAtDrop;
+            public bool ClearSeen;
+            public int BossCards;
+            public float Until;
+        }
+
+        readonly Dictionary<ulong, Identity> _identities = new();
+        readonly Dictionary<ulong, string> _rejoinKeys = new();
+        readonly Dictionary<ulong, AwaySlot> _rejoining = new();
+        readonly List<AwaySlot> _away = new();
+        readonly NetRunSave[] _saves = new NetRunSave[RunState.MaxPlayers];
+        readonly bool[] _hasSave = new bool[RunState.MaxPlayers];
+        readonly LastSeen[] _seen = new LastSeen[RunState.MaxPlayers];
+        readonly List<UpgradeCard> _restoreTaken = new();
+        readonly List<UpgradeCard> _restoreLocked = new();
+        readonly List<OfferKind> _restoreCarried = new();
 
         bool _finished;
         bool _leaving;
@@ -73,9 +116,11 @@ namespace Bouncer.Net
             _started.OnValueChanged += OnValueChanged;
             _teamGolds.OnValueChanged += OnTeamGoldsChanged;
             RunCards.GoldRecorded += OnGoldRecorded;
+            if (!IsServer && !Started)
+                Online.Joining = false;
             if (IsServer)
             {
-                NetworkManager.OnClientConnectedCallback += AddMember;
+                NetworkManager.OnClientConnectedCallback += OnClientConnected;
                 NetworkManager.OnClientDisconnectCallback += RemoveMember;
                 if (NetworkManager.SceneManager != null)
                     NetworkManager.SceneManager.OnLoadEventCompleted += OnArenaLoaded;
@@ -99,7 +144,7 @@ namespace Bouncer.Net
             Online.WavesHeld = false;
             if (IsServer && NetworkManager != null)
             {
-                NetworkManager.OnClientConnectedCallback -= AddMember;
+                NetworkManager.OnClientConnectedCallback -= OnClientConnected;
                 NetworkManager.OnClientDisconnectCallback -= RemoveMember;
                 if (NetworkManager.SceneManager != null)
                     NetworkManager.SceneManager.OnLoadEventCompleted -= OnArenaLoaded;
@@ -150,6 +195,7 @@ namespace Bouncer.Net
             _finished = false;
             _leaving = false;
             _teamGolds.Value = 0;
+            ForgetAway();
             BeginRunRpc((byte)_members.Count, _danger.Value);
             StartCoroutine(LoadFirstArena());
             return true;
@@ -169,7 +215,8 @@ namespace Bouncer.Net
             }
             var member = _members[index];
             member.Name = CleanName(playerName.ToString(), member.Slot);
-            member.Kid = FreeKid(kid, id);
+            if (!Started)
+                member.Kid = FreeKid(kid, id);
             _members[index] = member;
         }
 
@@ -223,19 +270,24 @@ namespace Bouncer.Net
                 return;
             foreach (var member in _members)
                 if (completed.Contains(member.ClientId))
-                    SpawnPlayer(member);
+                    SpawnPlayer(member, StartPose(member.Slot));
             foreach (ulong id in timedOut)
                 if (id != NetworkManager.ServerClientId)
                     NetworkManager.DisconnectClient(id, "net.error.timeout");
         }
 
-        void SpawnPlayer(in RoomMember member)
+        static Pose StartPose(int slot)
         {
             var spawner = PlayerSpawner.Instance;
-            var pose = spawner != null ? spawner.StartPose(member.Slot) : new Pose(Vector3.zero, Quaternion.identity);
+            return spawner != null ? spawner.StartPose(slot) : new Pose(Vector3.zero, Quaternion.identity);
+        }
+
+        NetPlayer SpawnPlayer(in RoomMember member, Pose pose)
+        {
             var player = Instantiate(playerPrefab, pose.position, pose.rotation);
             player.Init(member);
             player.NetworkObject.SpawnAsPlayerObject(member.ClientId, destroyWithScene: true);
+            return player;
         }
 
         void UpdateHold()
@@ -271,6 +323,7 @@ namespace Bouncer.Net
             if (!IsServer || !Started || _leaving || _finished || string.IsNullOrEmpty(scene))
                 return false;
             _leaving = true;
+            NoteArenaLeft(director);
             NextArenaRpc((byte)variant);
             StartCoroutine(LoadArena(scene));
             return true;
@@ -295,6 +348,8 @@ namespace Bouncer.Net
             if (!IsSpawned)
                 return;
             UpdateHold();
+            if (IsServer)
+                ExpireAway();
             if (!IsServer || !Started || _finished || Time.unscaledTime < _nextWipeCheck)
                 return;
             _nextWipeCheck = Time.unscaledTime + 0.25f;
@@ -339,6 +394,7 @@ namespace Bouncer.Net
                 return;
             string scene = string.IsNullOrEmpty(RunState.FirstScene) ? SceneManager.GetActiveScene().name : RunState.FirstScene;
             _started.Value = false;
+            ForgetAway();
             for (int i = 0; i < _members.Count; i++)
             {
                 var member = _members[i];
@@ -365,9 +421,26 @@ namespace Bouncer.Net
             NetworkManager.SceneManager.LoadScene(scene, LoadSceneMode.Single);
         }
 
+        void OnClientConnected(ulong clientId)
+        {
+            AddMember(clientId);
+            if (!_rejoining.TryGetValue(clientId, out var away))
+                return;
+            _rejoining.Remove(clientId);
+            _rejoinKeys.Remove(clientId);
+            FinishRejoin(clientId, away);
+        }
+
         void AddMember(ulong clientId)
         {
             if (!IsServer || IndexOf(clientId) >= 0)
+                return;
+            if (_rejoinKeys.TryGetValue(clientId, out string key))
+            {
+                ClaimAway(clientId, key);
+                return;
+            }
+            if (Started)
                 return;
             int slot = FreeSlot();
             if (slot < 0)
@@ -383,10 +456,269 @@ namespace Bouncer.Net
 
         void RemoveMember(ulong clientId)
         {
+            if (!IsServer)
+                return;
+            _identities.TryGetValue(clientId, out var identity);
+            _identities.Remove(clientId);
+            _rejoinKeys.Remove(clientId);
+            _rejoining.TryGetValue(clientId, out var unfinished);
+            _rejoining.Remove(clientId);
+            if (NetSession.Instance != null)
+                NetSession.Instance.RemoveFromSession(identity.PlayerId);
             int index = IndexOf(clientId);
-            if (IsServer && index >= 0)
+            if (index >= 0)
+            {
+                var member = _members[index];
                 _members.RemoveAt(index);
+                if (unfinished == null && Started && !_finished && !string.IsNullOrEmpty(identity.Key))
+                    KeepAway(member, identity.Key);
+            }
+            if (unfinished != null && Started && !_finished)
+                _away.Add(unfinished);
         }
+
+        public void NoteIdentity(ulong clientId, string profile, string playerName, string playerId)
+        {
+            if (IsServer)
+                _identities[clientId] = new Identity { Key = KeyOf(profile, playerName), PlayerId = playerId ?? "" };
+        }
+
+        public bool ApproveRejoin(ulong clientId, string profile, string playerName)
+        {
+            if (!IsServer || !Started || _finished || string.IsNullOrEmpty(profile))
+                return false;
+            string key = KeyOf(profile, playerName);
+            if (FindAway(key) == null)
+            {
+                ulong stale = ulong.MaxValue;
+                foreach (var pair in _identities)
+                    if (pair.Key != clientId && pair.Value.Key == key && IndexOf(pair.Key) >= 0)
+                        stale = pair.Key;
+                if (stale == ulong.MaxValue)
+                    return false;
+                NetworkManager.DisconnectClient(stale);
+            }
+            _rejoinKeys[clientId] = key;
+            return true;
+        }
+
+        static string KeyOf(string profile, string playerName) => (profile ?? "") + "\n" + Clip(playerName);
+
+        AwaySlot FindAway(string key)
+        {
+            foreach (var away in _away)
+                if (away.Key == key)
+                    return away;
+            return null;
+        }
+
+        void KeepAway(in RoomMember member, string key)
+        {
+            int slot = Mathf.Clamp(member.Slot, 0, RunState.MaxPlayers - 1);
+            _away.RemoveAll(away => away.Key == key);
+            _away.Add(new AwaySlot
+            {
+                Key = key,
+                Member = member,
+                HasSave = _hasSave[slot],
+                Save = _saves[slot],
+                CoinsAtDrop = RunState.CoinsOf(slot),
+                Seen = _seen[slot],
+                ArenaAtDrop = RunState.ArenaIndex,
+                ClearSeen = _hasSave[slot] && _saves[slot].ClearedArena == RunState.ArenaIndex + 1,
+                Until = Time.unscaledTime + awayHold,
+            });
+            _hasSave[slot] = false;
+            _seen[slot] = default;
+            AwayRpc(member.Name);
+        }
+
+        void ClaimAway(ulong clientId, string key)
+        {
+            var away = FindAway(key);
+            if (away == null)
+            {
+                _rejoinKeys.Remove(clientId);
+                NetworkManager.DisconnectClient(clientId, "net.error.started");
+                return;
+            }
+            _away.Remove(away);
+            var member = away.Member;
+            member.ClientId = clientId;
+            member.Ready = false;
+            _members.Add(member);
+            _rejoining[clientId] = away;
+        }
+
+        void ExpireAway()
+        {
+            for (int i = _away.Count - 1; i >= 0; i--)
+                if (Time.unscaledTime > _away[i].Until)
+                    _away.RemoveAt(i);
+        }
+
+        void ForgetAway()
+        {
+            _away.Clear();
+            _rejoinKeys.Clear();
+            _rejoining.Clear();
+            for (int slot = 0; slot < RunState.MaxPlayers; slot++)
+            {
+                _hasSave[slot] = false;
+                _seen[slot] = default;
+            }
+        }
+
+        void NoteArenaLeft(ArenaDirector director)
+        {
+            bool boss = director != null && director.IsComplete && director.ClearedByBoss;
+            foreach (var away in _away)
+            {
+                bool sawClear = away.ArenaAtDrop == RunState.ArenaIndex && away.ClearSeen;
+                if (boss && !sawClear)
+                    away.BossCards++;
+                away.ArenaAtDrop = -1;
+                away.ClearSeen = false;
+            }
+        }
+
+        public void NotePlayerGone(int slot, Vector3 position, Quaternion rotation, int lives, int hands, string scene)
+        {
+            if (!IsServer || !Started || slot < 0 || slot >= RunState.MaxPlayers)
+                return;
+            _seen[slot] = new LastSeen
+            {
+                Valid = true,
+                Scene = scene,
+                Position = position,
+                Rotation = rotation,
+                Lives = (byte)Mathf.Clamp(lives, 0, 255),
+                Hands = (byte)Mathf.Clamp(hands, 0, 254),
+            };
+        }
+
+        public void SendSave(in NetRunSave save)
+        {
+            if (IsSpawned && !IsServer && Started)
+                SaveRpc(save);
+        }
+
+        [Rpc(SendTo.Server)]
+        void SaveRpc(NetRunSave save, RpcParams rpc = default)
+        {
+            if (!Started || !TryGet(rpc.Receive.SenderClientId, out var member) || member.Slot >= RunState.MaxPlayers)
+                return;
+            _saves[member.Slot] = save;
+            _hasSave[member.Slot] = true;
+        }
+
+        void FinishRejoin(ulong clientId, AwaySlot away)
+        {
+            int index = IndexOf(clientId);
+            if (index < 0 || !Started)
+                return;
+            var member = _members[index];
+            int slot = member.Slot;
+            var director = ArenaDirector.Instance;
+            bool sameArena = away.Seen.Valid && away.Seen.Scene == SceneManager.GetActiveScene().name
+                                             && away.ArenaAtDrop == RunState.ArenaIndex;
+            var save = away.HasSave ? away.Save : NetRunSave.Empty;
+            save.Coins = away.HasSave ? save.Coins + Mathf.Max(0, RunState.CoinsOf(slot) - away.CoinsAtDrop) : RunState.CoinsOf(slot);
+            save.CoinCarry = RunState.CoinCarryOf(slot);
+            bool complete = director != null && director.IsComplete;
+            var info = new NetRejoin
+            {
+                Slot = (byte)slot,
+                Kid = member.Kid,
+                Players = (byte)RunState.PlayerCount,
+                Danger = (byte)RunState.Danger,
+                ArenaIndex = (byte)RunState.ArenaIndex,
+                ArenaVariant = (byte)RunState.ArenaVariant,
+                PastTime = RunState.PastTime,
+                PastKills = RunState.PastKills,
+                CoinsEarned = RunState.CoinsEarned,
+                RunClock = RunState.RunClock,
+                ArenaTime = director != null ? director.ArenaTime : 0f,
+                Lives = (byte)(!away.Seen.Valid ? 0 : sameArena ? away.Seen.Lives : Mathf.Max(1, (int)away.Seen.Lives)),
+                Down = sameArena && away.Seen.Lives == 0,
+                Hands = sameArena ? away.Seen.Hands : byte.MaxValue,
+                Complete = complete,
+                ClearBoss = complete && director.ClearedByBoss && !(sameArena && away.ClearSeen),
+                BossCards = (byte)Mathf.Min(255, away.BossCards),
+                TeamGolds = _teamGolds.Value,
+                Save = save,
+            };
+
+            _saves[slot] = save;
+            _hasSave[slot] = away.HasSave;
+            var pose = sameArena ? new Pose(away.Seen.Position, away.Seen.Rotation) : StartPose(slot);
+            var player = SpawnPlayer(member, pose);
+            TryGetComponent(out NetBalls balls);
+            if (sameArena && balls != null)
+                balls.AdoptOrphans(slot, player.gameObject);
+            RejoinRpc(info, RpcTarget.Single(clientId, RpcTargetUse.Temp));
+            if (TryGetComponent(out NetEnemies enemies))
+                enemies.SendAllTo(clientId);
+            if (balls != null)
+                balls.SendAllTo(clientId);
+            if (TryGetComponent(out NetWorld world))
+                world.SendStateTo(clientId);
+            BackRpc(member.Name, RpcTarget.Not(clientId, RpcTargetUse.Temp));
+        }
+
+        [Rpc(SendTo.SpecifiedInParams)]
+        void RejoinRpc(NetRejoin info, RpcParams rpc)
+        {
+            int slot = info.Slot;
+            RunState.ResumeOnline(info.Players, info.Danger, info.ArenaIndex, info.ArenaVariant, info.PastTime, info.PastKills,
+                info.CoinsEarned, info.RunClock);
+            EnemyScaling.Players = info.Players;
+            var deck = playerPrefab != null && playerPrefab.TryGetComponent(out PlayerCards prefabCards) ? prefabCards.Deck : null;
+            var save = info.Save;
+            NetRunSave.ToCards(deck, save.Cards, _restoreTaken);
+            NetRunSave.ToCards(deck, save.Locked, _restoreLocked);
+            _restoreCarried.Clear();
+            if (save.Carried != null)
+                foreach (byte kind in save.Carried)
+                    _restoreCarried.Add((OfferKind)kind);
+            for (int i = 0; i < info.BossCards; i++)
+                _restoreCarried.Add(OfferKind.Boss);
+            RunCards.Restore(slot, _restoreTaken, _restoreLocked, _restoreCarried, save.Backpack);
+            RunCards.SharedGolds = info.TeamGolds;
+            int hands = info.Hands == byte.MaxValue ? int.MaxValue : info.Hands;
+            RunState.RestorePlayer(slot, save.Coins, save.CoinCarry, save.SecondWindUsed, info.Lives, hands, info.Down);
+            if (info.Kid >= 0)
+                GameSettings.Kid = info.Kid;
+
+            Online.Joining = false;
+            var session = GameSession.Instance;
+            if (session != null)
+                session.JoinRunning(info.ArenaTime);
+            var local = Players.Local;
+            if (local != null && local.TryGetComponent(out PlayerCards cards))
+                cards.InitFromRun();
+            var director = ArenaDirector.Instance;
+            if (director != null)
+            {
+                director.SyncWaveTime(info.ArenaTime);
+                if (info.Complete)
+                    director.CompleteFromNetwork(info.ClearBoss, last: false);
+            }
+        }
+
+        [Rpc(SendTo.Everyone)]
+        void AwayRpc(FixedString64Bytes playerName) =>
+            GameEvents.AnnounceLocal(new Announcement
+            {
+                Title = "net.away.title",
+                Hint = "net.away.hint",
+                Seconds = 4f,
+                Arg = playerName.ToString(),
+            });
+
+        [Rpc(SendTo.Everyone, AllowTargetOverride = true)]
+        void BackRpc(FixedString64Bytes playerName, RpcParams rpc = default) =>
+            GameEvents.AnnounceLocal(new Announcement { Title = "net.back.title", Seconds = 3f, Arg = playerName.ToString() });
 
         int IndexOf(ulong clientId)
         {

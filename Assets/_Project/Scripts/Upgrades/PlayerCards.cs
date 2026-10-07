@@ -35,6 +35,7 @@ namespace Bouncer.Upgrades
         readonly Queue<OfferKind> _pending = new();
         PlayerController _player;
         float _offerAt;
+        bool _initialized;
 
         public CardDeck Deck => deck;
         public PlayerController Player => _player;
@@ -59,10 +60,13 @@ namespace Bouncer.Upgrades
 
         void Awake() => _player = GetComponent<PlayerController>();
 
-        void Start()
+        void Start() => InitFromRun();
+
+        public void InitFromRun()
         {
-            if (!RunState.Active || !_player.IsLocal)
+            if (_initialized || !RunState.Active || !_player.IsLocal)
                 return;
+            _initialized = true;
             UpgradeCard.Replaying = true;
             try
             {
@@ -73,15 +77,23 @@ namespace Bouncer.Upgrades
             {
                 UpgradeCard.Replaying = false;
             }
+            bool resumed = RunState.TakeResume(Slot, out int hands, out bool down);
             int lives = RunState.LivesOf(Slot);
             if (lives > 0)
                 _player.Health.SetCurrent(lives);
-            if (RunState.ArenaIndex > 0 && _player.Modifiers.ArenaHeal > 0)
+            if (!resumed && RunState.ArenaIndex > 0 && _player.Modifiers.ArenaHeal > 0)
                 _player.Health.Heal(_player.Modifiers.ArenaHeal);
             var carried = RunCards.Carried(Slot);
             foreach (var kind in carried)
                 QueueOffer(kind);
             carried.Clear();
+            if (!resumed)
+                return;
+            _player.Balls.SetHands(hands);
+            _player.Modifiers.NotifyChanged();
+            BackpackChanged?.Invoke();
+            if (down)
+                _player.Health.Kill(default);
         }
 
         void OnDestroy()
@@ -92,6 +104,17 @@ namespace Bouncer.Upgrades
             if (_offer.Count > 0)
                 carried.Add(OfferKind);
             carried.AddRange(_pending);
+        }
+
+        public void GetOpenOffers(List<OfferKind> result)
+        {
+            result.Clear();
+            if (RunState.NeedsStartCard(Slot))
+                result.Add(OfferKind.Start);
+            if (_offer.Count > 0 || PendingCard != null)
+                result.Add(OfferKind);
+            result.AddRange(_pending);
+            result.AddRange(RunCards.Carried(Slot));
         }
 
         public void AddToBackpack()

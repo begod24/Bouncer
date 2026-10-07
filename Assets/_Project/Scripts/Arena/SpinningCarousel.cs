@@ -26,7 +26,7 @@ namespace Bouncer.Arena
             if (dt <= 0f)
                 return;
             float step = speed * dt;
-            _angle += step;
+            _angle = Online.TryHostTime(out double hostTime) ? (float)(hostTime * speed % 360.0) : _angle + step;
             if (deck)
                 deck.localRotation = Quaternion.Euler(0f, _angle, 0f);
             if (!GameSession.IsGameplayActive)
@@ -58,8 +58,13 @@ namespace Bouncer.Arena
             for (int i = 0; i < balls.Count; i++)
             {
                 var ball = balls[i];
-                if (ball.IsPuppet || ball.State != BallState.Loose || !OnDeck(ball.Position, center, top))
+                if (ball.State != BallState.Loose || !OnDeck(ball.Position, center, top))
                     continue;
+                if (ball.IsPuppet)
+                {
+                    ball.CarryPuppet(center, turn);
+                    continue;
+                }
                 Vector3 offset = ball.Position - center;
                 offset.y = 0f;
                 if (ball.TryGetComponent(out Rigidbody body))

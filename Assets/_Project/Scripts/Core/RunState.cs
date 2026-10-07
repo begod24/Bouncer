@@ -16,6 +16,9 @@ namespace Bouncer.Core
             public int Lives;
             public bool SecondWindUsed;
             public bool NeedsStartCard;
+            public bool Resumed;
+            public int ResumeHands;
+            public bool ResumeDown;
         }
 
         static readonly PlayerRun[] s_players = { new(), new(), new(), new() };
@@ -43,6 +46,8 @@ namespace Bouncer.Core
 
         public static int CoinsOf(int slot) => Of(slot).Coins;
 
+        public static float CoinCarryOf(int slot) => Of(slot).CoinCarry;
+
         public static int LivesOf(int slot) => Of(slot).Lives;
 
         public static void SetLives(int slot, int lives) => Of(slot).Lives = Mathf.Max(0, lives);
@@ -50,6 +55,31 @@ namespace Bouncer.Core
         public static bool SecondWindUsed(int slot) => Of(slot).SecondWindUsed;
 
         public static void UseSecondWind(int slot) => Of(slot).SecondWindUsed = true;
+
+        public static void RestorePlayer(int slot, int coins, float coinCarry, bool secondWindUsed, int lives, int hands, bool down)
+        {
+            var player = Of(slot);
+            player.Coins = Mathf.Max(0, coins);
+            player.CoinCarry = Mathf.Clamp(coinCarry, 0f, 0.999f);
+            player.SecondWindUsed = secondWindUsed;
+            player.NeedsStartCard = false;
+            player.Lives = Mathf.Max(0, lives);
+            player.Resumed = true;
+            player.ResumeHands = hands;
+            player.ResumeDown = down;
+            CoinsChanged?.Invoke(slot, 0);
+        }
+
+        public static bool TakeResume(int slot, out int hands, out bool down)
+        {
+            var player = Of(slot);
+            hands = player.ResumeHands;
+            down = player.ResumeDown;
+            if (!player.Resumed)
+                return false;
+            player.Resumed = false;
+            return true;
+        }
 
         public static bool NeedsStartCard(int slot) => Active && Of(slot).NeedsStartCard;
 
@@ -79,6 +109,20 @@ namespace Bouncer.Core
             BeginNew(players);
             Danger = Mathf.Clamp(danger, 1, Bouncer.Core.Danger.Max);
             ContinuesRun = true;
+        }
+
+        public static void ResumeOnline(int players, int danger, int arenaIndex, int variant, float pastTime, int pastKills,
+            int coinsEarned, float runClock)
+        {
+            BeginNew(players);
+            Danger = Mathf.Clamp(danger, 1, Bouncer.Core.Danger.Max);
+            ArenaIndex = Mathf.Max(0, arenaIndex);
+            ArenaVariant = Mathf.Max(0, variant);
+            ResetPlayers(needStartCard: false);
+            PastTime = pastTime;
+            PastKills = pastKills;
+            CoinsEarned = coinsEarned;
+            RunClock = runClock;
         }
 
         public static void BeginTutorial()
@@ -112,6 +156,9 @@ namespace Bouncer.Core
                 player.Lives = 0;
                 player.SecondWindUsed = false;
                 player.NeedsStartCard = needStartCard;
+                player.Resumed = false;
+                player.ResumeHands = 0;
+                player.ResumeDown = false;
             }
         }
 
@@ -137,7 +184,8 @@ namespace Bouncer.Core
                 return;
             CoinsEarned += amount;
             float share = amount * LootShare;
-            for (int slot = 0; slot < PlayerCount; slot++)
+            int slots = PlayerCount > 1 ? MaxPlayers : 1;
+            for (int slot = 0; slot < slots; slot++)
             {
                 var player = s_players[slot];
                 float total = player.CoinCarry + share;

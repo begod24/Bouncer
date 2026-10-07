@@ -91,6 +91,22 @@ namespace Bouncer.Net
         readonly List<ushort> _expired = new();
         ushort _throwSeq;
 
+        readonly struct Orphan
+        {
+            public readonly Ball Ball;
+            public readonly int Life;
+
+            public Orphan(Ball ball, int life)
+            {
+                Ball = ball;
+                Life = life;
+            }
+        }
+
+        readonly List<Orphan>[] _orphans = { new(), new(), new(), new() };
+
+        public static NetBalls Instance { get; private set; }
+
         public bool IsAuthority => IsServer;
 
         public int Count => IsServer ? _tracked.Count : _all.Count;
@@ -99,6 +115,7 @@ namespace Bouncer.Net
 
         public override void OnNetworkSpawn()
         {
+            Instance = this;
             Ball.Network = this;
             SceneManager.activeSceneChanged += OnSceneChanged;
             if (IsServer)
@@ -122,6 +139,8 @@ namespace Bouncer.Net
 
         void Unhook()
         {
+            if (Instance == this)
+                Instance = null;
             if (ReferenceEquals(Ball.Network, this))
                 Ball.Network = null;
             SceneManager.activeSceneChanged -= OnSceneChanged;
@@ -142,6 +161,8 @@ namespace Bouncer.Net
             _pending.Clear();
             _byBall.Clear();
             _taken.Clear();
+            foreach (var orphans in _orphans)
+                orphans.Clear();
         }
 
         void OnTick()
@@ -189,28 +210,9 @@ namespace Bouncer.Net
                 fresh = true;
             }
 
-            var now = new NetBallState
-            {
-                Id = tracked.Id,
-                Kind = NetBallState.KindUpsert,
-                Prefab = tracked.Prefab,
-                State = ball.State,
-                Team = ball.Team,
-                Flags = ball.Stats.Flags,
-                Damage = (byte)Mathf.Clamp(ball.Stats.Damage, 0, 255),
-                Knockback = ball.Stats.Knockback,
-                OwnerSlot = tracked.Sent.OwnerSlot,
-                ThrowerSlot = tracked.Sent.ThrowerSlot,
-                Time = time,
-                Position = ball.Position,
-                Velocity = ball.Velocity,
-                Gravity = GravityOf(ball),
-                PredictSlot = predictSlot,
-                PredictSeq = predictSeq,
-            };
-            now.Phantom = ball.IsPhantom;
-            now.YoyoString = ball.IsYoyoString;
-            now.Hot = ball.BlastPending;
+            var now = StateOf(ball, tracked, time, tracked.Sent.OwnerSlot, tracked.Sent.ThrowerSlot);
+            now.PredictSlot = predictSlot;
+            now.PredictSeq = predictSeq;
             if (fresh || ball.Owner != tracked.Owner)
             {
                 tracked.Owner = ball.Owner;
@@ -242,6 +244,97 @@ namespace Bouncer.Net
             tracked.Sent = now;
             tracked.Dirty = false;
             _outbox.Add(now);
+        }
+
+        static NetBallState StateOf(Ball ball, Tracked tracked, double time, sbyte ownerSlot, sbyte throwerSlot)
+        {
+            var state = new NetBallState
+            {
+                Id = tracked.Id,
+                Kind = NetBallState.KindUpsert,
+                Prefab = tracked.Prefab,
+                State = ball.State,
+                Team = ball.Team,
+                Flags = ball.Stats.Flags,
+                Damage = (byte)Mathf.Clamp(ball.Stats.Damage, 0, 255),
+                Knockback = ball.Stats.Knockback,
+                OwnerSlot = ownerSlot,
+                ThrowerSlot = throwerSlot,
+                Time = time,
+                Position = ball.Position,
+                Velocity = ball.Velocity,
+                Gravity = GravityOf(ball),
+                PredictSlot = -1,
+            };
+            state.Phantom = ball.IsPhantom;
+            state.YoyoString = ball.IsYoyoString;
+            state.Hot = ball.BlastPending;
+            return state;
+        }
+
+        public void SendAllTo(ulong clientId)
+        {
+            if (!IsServer || !IsSpawned)
+                return;
+            double time = HostNow - (Time.timeAsDouble - Time.fixedTimeAsDouble);
+            var entries = new List<NetBallState>(_tracked.Count);
+            foreach (var pair in _tracked)
+            {
+                var ball = pair.Key;
+                var tracked = pair.Value;
+                if (ball == null || !ball.isActiveAndEnabled || ball.Life != tracked.Life)
+                    continue;
+                entries.Add(StateOf(ball, tracked, time, SlotOf(ball.Owner), SlotOf(ball.Thrower)));
+            }
+            if (entries.Count > 0)
+                BallsRpc(new NetBallBatch { Entries = entries }, RpcTarget.Single(clientId, RpcTargetUse.Temp));
+        }
+
+        public void NoteOrphans(int slot, GameObject owner)
+        {
+            if (!IsServer || slot < 0 || slot >= _orphans.Length || owner == null)
+                return;
+            var orphans = _orphans[slot];
+            orphans.Clear();
+            foreach (var ball in _tracked.Keys)
+                if (ball != null && ball.isActiveAndEnabled && ball.Owner == owner)
+                    orphans.Add(new Orphan(ball, ball.Life));
+        }
+
+        public int AdoptOrphans(int slot, GameObject owner)
+        {
+            if (!IsServer || slot < 0 || slot >= _orphans.Length)
+                return 0;
+            int adopted = 0;
+            var orphans = _orphans[slot];
+            foreach (var orphan in orphans)
+                if (orphan.Ball != null && orphan.Ball.isActiveAndEnabled && orphan.Ball.Life == orphan.Life && orphan.Ball.Adopt(owner))
+                    adopted++;
+            orphans.Clear();
+            return adopted;
+        }
+
+        public int IndexOf(Ball prefab)
+        {
+            if (prefab == null || prefabs == null)
+                return -1;
+            for (int i = 0; i < prefabs.Length; i++)
+                if (prefabs[i] == prefab)
+                    return i;
+            return -1;
+        }
+
+        public Ball PrefabAt(int index) => prefabs != null && index >= 0 && index < prefabs.Length ? prefabs[index] : null;
+
+        public void Carry(Ball puppetBall, Vector3 center, Quaternion turn)
+        {
+            if (!_byBall.TryGetValue(puppetBall, out var puppet) || puppet.State != BallState.Loose)
+                return;
+            puppet.P0 = center + turn * (puppet.P0 - center);
+            puppet.V0 = turn * puppet.V0;
+            puppet.LastTarget = center + turn * (puppet.LastTarget - center);
+            puppet.Shown = center + turn * (puppet.Shown - center);
+            puppet.Error = turn * puppet.Error;
         }
 
         void Flush()
@@ -431,8 +524,8 @@ namespace Bouncer.Net
                 ball.ForceBounce(point, normal);
         }
 
-        [Rpc(SendTo.NotServer)]
-        void BallsRpc(NetBallBatch batch)
+        [Rpc(SendTo.NotServer, AllowTargetOverride = true)]
+        void BallsRpc(NetBallBatch batch, RpcParams rpc = default)
         {
             if (batch.Entries == null)
                 return;

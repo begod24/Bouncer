@@ -6,6 +6,8 @@ namespace Bouncer.Core
     {
         bool IsHost { get; }
 
+        double HostTime { get; }
+
         void Leave();
     }
 
@@ -19,12 +21,24 @@ namespace Bouncer.Core
 
         public static bool WavesHeld { get; set; }
 
+        public static bool Joining { get; set; }
+
+        public static bool TryHostTime(out double time)
+        {
+            time = 0d;
+            if (!Active || Session == null)
+                return false;
+            time = Session.HostTime;
+            return true;
+        }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
         {
             Active = false;
             Session = null;
             WavesHeld = false;
+            Joining = false;
         }
     }
 }

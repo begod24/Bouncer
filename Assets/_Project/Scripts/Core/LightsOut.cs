@@ -14,6 +14,8 @@ namespace Bouncer.Core
 
         public static bool Active => Time.time < s_until;
 
+        public static float Left => Mathf.Max(0f, s_until - Time.time);
+
         public static float Dark01
         {
             get

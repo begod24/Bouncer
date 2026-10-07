@@ -223,6 +223,13 @@ namespace Bouncer.Player
 
         public void GiveBall(int amount = 1) => Balls = Mathf.Max(0, Balls + amount);
 
+        public void SetHands(int count)
+        {
+            Balls = Mathf.Clamp(count, 0, MaxBalls);
+            _borrowed.Clear();
+            _yoyoOut = false;
+        }
+
         public void ArmCandle() => CandleReady = true;
 
         public void ClampToMax()

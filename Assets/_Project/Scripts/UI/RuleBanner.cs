@@ -32,7 +32,9 @@ namespace Bouncer.UI
 
         void OnAnnounced(Announcement announcement)
         {
-            title.text = Loc.Get(announcement.Title);
+            title.text = string.IsNullOrEmpty(announcement.Arg)
+                ? Loc.Get(announcement.Title)
+                : Loc.Format(announcement.Title, announcement.Arg);
             if (hint)
             {
                 string text = string.IsNullOrEmpty(announcement.Hint) ? string.Empty : Loc.Get(announcement.Hint);

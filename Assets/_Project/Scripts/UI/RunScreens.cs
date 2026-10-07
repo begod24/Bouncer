@@ -189,7 +189,7 @@ namespace Bouncer.UI
             if (_overlay != Overlay.None && !titleOrPause)
                 CloseOverlay();
             bool noOverlay = _overlay == Overlay.None;
-            Show(title, state == SessionState.Title && noOverlay, true);
+            Show(title, state == SessionState.Title && noOverlay && !Online.Joining, true);
             Show(pause, paused && noOverlay, true);
             Show(settings, _overlay == Overlay.Settings, true);
             Show(kidSelect, _overlay == Overlay.Kids, true);
@@ -216,7 +216,7 @@ namespace Bouncer.UI
 
         void UpdateOnline(SessionState state)
         {
-            if (state != SessionState.Title)
+            if (state != SessionState.Title || Online.Joining)
                 return;
             bool inRoom = NetSession.Instance != null && NetSession.Instance.Status == NetStatus.InRoom;
             if (_overlay == Overlay.Lobby && !inRoom)

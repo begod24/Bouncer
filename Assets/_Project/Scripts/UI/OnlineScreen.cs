@@ -37,6 +37,8 @@ namespace Bouncer.UI
         {
             _mode = mode;
             nameField.text = GameSettings.PlayerName;
+            if (codeField.text.Length == 0 && !string.IsNullOrEmpty(NetSession.LastJoinCode))
+                codeField.text = NetSession.LastJoinCode;
             SetBusy(false);
             SetStatus(notice);
             return createButton;

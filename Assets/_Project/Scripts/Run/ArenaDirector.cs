@@ -41,6 +41,7 @@ namespace Bouncer.Run
         public bool IsLastArena => run == null || run.IsLast(ArenaIndex);
         public ArenaDefinition NextArena => run ? run.Get(ArenaIndex + 1) : null;
         public bool IsComplete => _complete;
+        public bool ClearedByBoss { get; private set; }
         public WeatherKind Weather { get; private set; }
         public int WeatherSeed { get; private set; }
         public bool WeatherKnown { get; private set; }
@@ -222,6 +223,7 @@ namespace Bouncer.Run
             if (_complete || session == null)
                 return;
             _complete = true;
+            ClearedByBoss = boss;
 
             if (IsLastArena)
             {
@@ -290,6 +292,7 @@ namespace Bouncer.Run
             if (_complete)
                 return;
             _complete = true;
+            ClearedByBoss = boss;
             if (boss)
                 OpenBossPages();
             var session = GameSession.Instance;

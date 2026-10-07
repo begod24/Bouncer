@@ -340,6 +340,21 @@ namespace Bouncer.Balls
             Consume();
         }
 
+        public void CarryPuppet(Vector3 center, Quaternion turn)
+        {
+            if (IsPuppet)
+                Network?.Carry(this, center, turn);
+        }
+
+        public bool Adopt(GameObject owner)
+        {
+            if (IsPuppet || owner == null || _owner != null || State == BallState.Idle)
+                return false;
+            _owner = owner;
+            _takenByOwner = false;
+            return true;
+        }
+
         public bool Summon(GameObject taker)
         {
             if (State != BallState.Loose || _rolling || taker == null)

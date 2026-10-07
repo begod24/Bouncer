@@ -4,8 +4,14 @@ using UnityEngine;
 
 namespace Bouncer.Net
 {
+    // 19 байт вместо 39: время в миллисекундах, позиция с шагом 1 см (±327 м — арены в пределах ±35 м),
+    // поворот 1/65536 круга, скорость только по земле с шагом 1 см/с.
     public struct MotionSample : INetworkSerializable
     {
+        const float PositionScale = 100f;
+        const float VelocityScale = 100f;
+        const float YawScale = 65536f / 360f;
+
         public double Time;
         public Vector3 Position;
         public float Yaw;
@@ -14,12 +20,37 @@ namespace Bouncer.Net
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
-            serializer.SerializeValue(ref Time);
-            serializer.SerializeValue(ref Position);
-            serializer.SerializeValue(ref Yaw);
-            serializer.SerializeValue(ref Velocity);
+            uint time = 0;
+            short x = 0, y = 0, z = 0, vx = 0, vz = 0;
+            ushort yaw = 0;
+            if (serializer.IsWriter)
+            {
+                time = (uint)(long)System.Math.Round(Time * 1000.0);
+                x = Pack(Position.x, PositionScale);
+                y = Pack(Position.y, PositionScale);
+                z = Pack(Position.z, PositionScale);
+                yaw = (ushort)Mathf.RoundToInt(Mathf.Repeat(Yaw, 360f) * YawScale);
+                vx = Pack(Velocity.x, VelocityScale);
+                vz = Pack(Velocity.z, VelocityScale);
+            }
+            serializer.SerializeValue(ref time);
+            serializer.SerializeValue(ref x);
+            serializer.SerializeValue(ref y);
+            serializer.SerializeValue(ref z);
+            serializer.SerializeValue(ref yaw);
+            serializer.SerializeValue(ref vx);
+            serializer.SerializeValue(ref vz);
             Pose.NetworkSerialize(serializer);
+            if (serializer.IsReader)
+            {
+                Time = time / 1000.0;
+                Position = new Vector3(x / PositionScale, y / PositionScale, z / PositionScale);
+                Yaw = yaw / YawScale;
+                Velocity = new Vector3(vx / VelocityScale, 0f, vz / VelocityScale);
+            }
         }
+
+        static short Pack(float value, float scale) => (short)Mathf.Clamp(Mathf.RoundToInt(value * scale), short.MinValue, short.MaxValue);
     }
 
     public sealed class MotionBuffer

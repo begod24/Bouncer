@@ -79,6 +79,8 @@ namespace Bouncer.Net
 
         public bool Equals(NetPose other) => _flags == other._flags && _charge == other._charge && _dashAngle == other._dashAngle;
 
+        public bool SameFlags(NetPose other) => _flags == other._flags;
+
         public override bool Equals(object obj) => obj is NetPose other && Equals(other);
 
         public override int GetHashCode() => _flags | (_charge << 8) | (_dashAngle << 16);

@@ -4708,6 +4708,7 @@ RectTransform:
   m_Children:
   - {fileID: 1631895462495562909}
   - {fileID: 7904227780689679725}
+  - {fileID: 4889155643421397037}
   - {fileID: 2410337806251370828}
   - {fileID: 9146668304754756415}
   - {fileID: 903355225454543371}
@@ -17589,6 +17590,11 @@ MonoBehaviour:
   hideGroup: {fileID: 0}
   captionColor: {r: 0.96, g: 0.95, b: 0.92, a: 0.85}
   fullColor: {r: 1, g: 0.45, b: 0.38, a: 1}
+  showBackpack: 0
+  backpackIcon: {fileID: 0}
+  backpackColor: {r: 0.62, g: 0.4, b: 0.24, a: 1}
+  backpackKeyboardKey: R
+  backpackGamepadKey: Y
 --- !u!1 &2139488995118626457
 GameObject:
   m_ObjectHideFlags: 0
@@ -17925,6 +17931,11 @@ MonoBehaviour:
   hideGroup: {fileID: 0}
   captionColor: {r: 0.96, g: 0.95, b: 0.92, a: 0.85}
   fullColor: {r: 1, g: 0.45, b: 0.38, a: 1}
+  showBackpack: 0
+  backpackIcon: {fileID: 0}
+  backpackColor: {r: 0.62, g: 0.4, b: 0.24, a: 1}
+  backpackKeyboardKey: R
+  backpackGamepadKey: Y
 --- !u!1 &2211557119718008769
 GameObject:
   m_ObjectHideFlags: 0
@@ -40758,6 +40769,63 @@ MonoBehaviour:
   - {r: 0.56, g: 0.86, b: 0.49, a: 1}
   freeKidColor: {r: 1, g: 1, b: 1, a: 1}
   takenKidColor: {r: 1, g: 1, b: 1, a: 0.3}
+--- !u!1 &4826494892407659122
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4889155643421397037}
+  - component: {fileID: 8819803945606273089}
+  m_Layer: 0
+  m_Name: TeammateArrows
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &4889155643421397037
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4826494892407659122}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3974407712993108594}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &8819803945606273089
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4826494892407659122}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6fdd0be05d535405799e71e52840f8a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Bouncer.UI::Bouncer.UI.TeammateArrows
+  size: 44
+  margin: 36
+  aimHeight: 0.9
+  edge: 0.02
+  slotColors:
+  - {r: 0.98, g: 0.85, b: 0.36, a: 1}
+  - {r: 0.45, g: 0.78, b: 0.96, a: 1}
+  - {r: 0.96, g: 0.56, b: 0.71, a: 1}
+  - {r: 0.56, g: 0.86, b: 0.49, a: 1}
 --- !u!1 &4866237857726861556
 GameObject:
   m_ObjectHideFlags: 0

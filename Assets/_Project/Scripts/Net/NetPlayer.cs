@@ -15,6 +15,7 @@ namespace Bouncer.Net
     public sealed class NetPlayer : NetworkBehaviour
     {
         const float MotionKeepalive = 0.2f;
+        const int MotionEveryTicks = 2;
         const float HitResendInterval = 0.25f;
         public const float ReviveTime = 2f;
         const float ReviveRange = 1.8f;
@@ -50,6 +51,7 @@ namespace Bouncer.Net
         readonly MotionBuffer _motion = new();
         readonly byte[] _poseBytes = new byte[NetPose.Size];
         bool _motionDue;
+        int _ticksSinceMotion;
         Vector3 _sentPosition;
         float _sentYaw;
         double _sentTime;
@@ -225,7 +227,11 @@ namespace Bouncer.Net
 
         void OnKidChanged(sbyte previous, sbyte current) => ShowKid(current);
 
-        void OnTick() => _motionDue = true;
+        void OnTick()
+        {
+            _motionDue = true;
+            _ticksSinceMotion++;
+        }
 
         public bool IsDown => _player.IsDead;
 
@@ -362,13 +368,17 @@ namespace Bouncer.Net
                 var pose = NetPose.From(_player.Action);
                 bool moving = velocity.sqrMagnitude >= 0.01f;
                 bool moved = (position - _sentPosition).sqrMagnitude > 1e-6f || Mathf.Abs(Mathf.DeltaAngle(yaw, _sentYaw)) > 0.5f;
+                bool started = moving && !_sentMoving;
                 bool stopped = _sentMoving && !moving;
-                if (moved || stopped || !pose.Equals(_sentPose) || now - _sentTime >= MotionKeepalive)
+                bool urgent = started || stopped || !pose.SameFlags(_sentPose);
+                bool changed = moved || !pose.Equals(_sentPose) || now - _sentTime >= MotionKeepalive;
+                if (urgent || (changed && _ticksSinceMotion >= MotionEveryTicks))
                 {
-                    if (moving && !_sentMoving && _hasLastFrame && _lastFrameTime > _sentTime)
+                    if (started && _hasLastFrame && _lastFrameTime > _sentTime)
                         SendMotion(_lastFrameTime, _lastFramePosition, _lastFrameYaw, Vector3.zero, _sentPose);
                     SendMotion(now, position, yaw, velocity, pose);
                     _sentMoving = moving;
+                    _ticksSinceMotion = 0;
                 }
             }
             _lastFrameTime = now;

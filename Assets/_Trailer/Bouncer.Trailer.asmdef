@@ -1,0 +1,28 @@
+{
+    "name": "Bouncer.Trailer",
+    "rootNamespace": "Bouncer.Trailer",
+    "references": [
+        "Bouncer.Core",
+        "Bouncer.Balls",
+        "Bouncer.Player",
+        "Bouncer.Upgrades",
+        "Bouncer.Enemies",
+        "Bouncer.Waves",
+        "Bouncer.Visuals",
+        "Bouncer.Run",
+        "Bouncer.Audio",
+        "Bouncer.Arena",
+        "Unity.Cinemachine"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_EDITOR"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

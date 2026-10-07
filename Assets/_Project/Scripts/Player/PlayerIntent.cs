@@ -17,8 +17,8 @@ namespace Bouncer.Player
         public bool PausePressed;
         public bool InteractPressed;
         public bool InteractHeld;
-        public bool FlashlightHeld;
         public bool BackpackPressed;
+        public bool AbilityPressed;
     }
 
     public interface IPlayerIntentSource

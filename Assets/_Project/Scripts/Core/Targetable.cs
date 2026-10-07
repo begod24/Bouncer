@@ -5,7 +5,10 @@ namespace Bouncer.Core
 {
     public sealed class Targetable : MonoBehaviour
     {
-        const float FreezeFlashTime = 1f;
+        // голубая вспышка в момент заморозки; дальше держится ледяная корка (HitFlash.SetFrost)
+        const float FreezeFlashTime = 0.3f;
+        const float FrostIn = 6f;
+        const float FrostOut = 2.5f;
         const float AttentionMemory = 1f;
         const float AttentionWeight = 0.12f;
 
@@ -24,6 +27,7 @@ namespace Bouncer.Core
         bool _flashSearched;
         Vector3 _lastPosition;
         float _frozenUntil;
+        float _frost;
         float _hurryUntil;
         float _hurryBoost = 1f;
         float _attention;
@@ -101,6 +105,12 @@ namespace Bouncer.Core
             _lastPosition = transform.position;
             Velocity = Vector3.zero;
             _frozenUntil = 0f;
+            if (_frost > 0f)
+            {
+                _frost = 0f;
+                if (FindFlash())
+                    _flash.SetFrost(0f);
+            }
             HiddenFromAim = false;
             OutOfPlay = false;
             SpeedBoost = 1f;
@@ -117,6 +127,27 @@ namespace Bouncer.Core
             if (dt > 0f)
                 Velocity = Vector3.Lerp(Velocity, (position - _lastPosition) / dt, 0.5f);
             _lastPosition = position;
+            UpdateFrost(dt);
+        }
+
+        void UpdateFrost(float dt)
+        {
+            bool frozen = IsFrozen && IsAlive;
+            if (!frozen && _frost <= 0f)
+                return;
+            _frost = Mathf.MoveTowards(_frost, frozen ? 1f : 0f, dt * (frozen ? FrostIn : FrostOut));
+            if (FindFlash())
+                _flash.SetFrost(_frost);
+        }
+
+        bool FindFlash()
+        {
+            if (!_flashSearched)
+            {
+                _flashSearched = true;
+                _flash = GetComponentInChildren<HitFlash>();
+            }
+            return _flash;
         }
 
         public void Freeze(float seconds)
@@ -136,12 +167,7 @@ namespace Bouncer.Core
             if (seconds <= 0f)
                 return;
             _frozenUntil = Mathf.Max(_frozenUntil, Time.time + seconds);
-            if (!_flashSearched)
-            {
-                _flashSearched = true;
-                _flash = GetComponentInChildren<HitFlash>();
-            }
-            if (_flash)
+            if (FindFlash())
                 _flash.Flash(new Color(0.6f, 0.85f, 1f), Mathf.Min(seconds, FreezeFlashTime));
         }
 

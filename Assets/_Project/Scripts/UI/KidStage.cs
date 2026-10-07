@@ -58,6 +58,7 @@ namespace Bouncer.UI
                 root.localPosition = new Vector3(x, 0f, 0f);
                 root.localRotation = Quaternion.Euler(0f, -Mathf.Sign(x) * (Mathf.Abs(x) > 0.01f ? turnIn : 0f), 0f);
                 var model = Instantiate(kid.model, root, false);
+                FxGlobals.MarkRim(model);
                 var animator = model.GetComponent<Animator>();
                 animator.runtimeAnimatorController = controller;
                 animator.applyRootMotion = false;

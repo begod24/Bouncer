@@ -295,7 +295,6 @@ namespace Bouncer.Enemies
                 return false;
 
             bool strong = hit.Has(HitFlags.Charged);
-            GameFeel.Shake(strong ? 0.25f : 0.1f);
             var counted = hit;
             if (_boss != null && !hit.Has(HitFlags.Despawn))
             {
@@ -366,7 +365,6 @@ namespace Bouncer.Enemies
             }
             GameEvents.RaiseEnemyKilled(gameObject, hit);
             GameEvents.PlaySound(SoundCue.RolyPolyPop, transform.position);
-            GameFeel.Shake(0.3f);
             PoolService.Despawn(gameObject);
         }
 

@@ -9,29 +9,48 @@ namespace Bouncer.Enemies
         [SerializeField] float radius = 0.6f;
         [SerializeField, Min(0)] int damage = 1;
         [SerializeField] float knockback = 5f;
-        [Tooltip("Модель пятна: дрожит, как пламя, и сжимается к концу")]
-        [SerializeField] Transform visual;
-        [SerializeField] float flicker = 0.12f;
+        [Tooltip("Языки пламени и искры: перестают сыпать незадолго до конца, чтобы погаснуть к уходу в пул")]
+        [SerializeField] ParticleSystem[] flames;
+        [Tooltip("Выжженное пятно с углями: одна частица на всё время жизни, остывает сама (шейдер Bouncer/Scorch)")]
+        [SerializeField] ParticleSystem scorch;
+        [Tooltip("За сколько секунд до конца пламя перестаёт сыпать")]
+        [SerializeField, Min(0f)] float flameStopBefore = 0.6f;
 
         float _spawnTime;
-        Vector3 _scale = Vector3.one;
-
-        void Awake()
-        {
-            if (visual)
-                _scale = visual.localScale;
-        }
+        bool _flamesStopped;
 
         public void OnSpawned()
         {
             _spawnTime = Time.time;
-            if (visual)
-                visual.localScale = _scale;
+            _flamesStopped = false;
+            if (scorch)
+            {
+                var main = scorch.main;
+                main.startLifetime = lifetime;
+                scorch.Clear(true);
+                scorch.Play(true);
+            }
+            if (flames != null)
+                foreach (var system in flames)
+                {
+                    if (!system)
+                        continue;
+                    system.Clear(true);
+                    system.Play(true);
+                }
             if (!NetHooks.IsGuest)
                 NetHooks.MirrorSpawn?.Invoke(gameObject);
         }
 
-        public void OnDespawned() { }
+        public void OnDespawned()
+        {
+            if (scorch)
+                scorch.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            if (flames != null)
+                foreach (var system in flames)
+                    if (system)
+                        system.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
 
         void Update()
         {
@@ -41,11 +60,12 @@ namespace Bouncer.Enemies
                 PoolService.Despawn(gameObject);
                 return;
             }
-            if (visual)
+            if (!_flamesStopped && age >= lifetime - flameStopBefore && flames != null)
             {
-                float fade = Mathf.Clamp01((lifetime - age) / 0.5f);
-                float jitter = 1f + Mathf.Sin(Time.time * 23f + _spawnTime * 7f) * flicker;
-                visual.localScale = _scale * (fade * jitter);
+                _flamesStopped = true;
+                foreach (var system in flames)
+                    if (system)
+                        system.Stop(true, ParticleSystemStopBehavior.StopEmitting);
             }
             if (!GameSession.IsGameplayActive || NetHooks.IsGuest)
                 return;

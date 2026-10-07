@@ -556,6 +556,92 @@ def sfx_content():
     write("EngineRev", motor * np.clip(t / 0.05, 0, 1) * np.clip((0.8 - t) / 0.12, 0, 1))
 
 
+def sfx_abilities():
+    """Карточки 2026-10: умения и пассивки."""
+    rng = np.random.default_rng(71)
+
+    def hiss(n, lo=None, hi=None):
+        return spectral(rng.uniform(-1.0, 1.0, n), lo=lo, hi=hi)
+
+    def wood(freq, duration=0.18):
+        n = int(SR * duration)
+        body = osc(freq, n) * decay(n, 0.04) + 0.5 * osc(freq * 2.7, n) * decay(n, 0.02)
+        return body + 0.6 * hiss(n, lo=800, hi=5000) * decay(n, 0.008)
+
+    rise = pad(0.6)
+    for k in range(9):
+        place(rise, 0.7 * wood(180 + 14 * k), 0.05 + 0.032 * k)
+    place(rise, 0.5 * hiss(int(SR * 0.5), lo=80, hi=600) * attack_decay(int(SR * 0.5), 0.05, 0.15), 0.0)
+    write("FenceRise", rise)
+    write("FenceKnock", place(pad(0.3), wood(210, 0.25), 0) + place(pad(0.3), 0.6 * wood(330, 0.2), 0.02))
+
+    n = int(SR * 0.7)
+    t = np.arange(n) / SR
+    air = hiss(n, lo=300, hi=3000) * np.clip(t / 0.1, 0, 1) * np.exp(-np.maximum(0, t - 0.3) / 0.12)
+    blub = pad(0.7)
+    for at, f in ((0.15, 520), (0.3, 640), (0.45, 580)):
+        m = int(SR * 0.08)
+        place(blub, 0.5 * osc(sweep(f, f * 1.8, m), m) * attack_decay(m, 0.004, 0.025), at)
+    write("BubbleBlow", 0.6 * air + blub)
+    m = int(SR * 0.12)
+    write("BubblePop", osc(sweep(900, 2600, m), m) * attack_decay(m, 0.001, 0.02) + 0.4 * hiss(m, lo=2000) * decay(m, 0.01))
+
+    n = int(SR * 0.9)
+    bang = hiss(n, lo=150, hi=7000) * attack_decay(n, 0.001, 0.05) + 1.2 * thump(0.9, 180, 50, 0.08)
+    for k in range(6):
+        place(bang, 0.25 * hiss(int(SR * 0.01), lo=3000) * decay(int(SR * 0.01), 0.002), 0.08 + 0.05 * k + rng.uniform(0, 0.03))
+    write("CapGun", bang)
+
+    n = int(SR * 0.9)
+    t = np.arange(n) / SR
+    charge = 0.25 * osc(sweep(1200, 4200, n), n) * np.clip(t / 0.4, 0, 1) * np.clip((0.4 - t) / 0.05, 0, 1)
+    shutter = pad(0.9)
+    place(shutter, click(0.02, 1500), 0.4)
+    place(shutter, 0.8 * click(0.015, 2500), 0.46)
+    place(shutter, 0.6 * hiss(int(SR * 0.35), lo=4000) * decay(int(SR * 0.35), 0.06), 0.4)
+    write("CameraFlash", charge + shutter)
+
+    n = int(SR * 0.8)
+    t = np.arange(n) / SR
+    f = sweep(90, 240, n)
+    hum = spectral(osc(f, n, "saw") + 0.4 * osc(f * 3, n, "square"), lo=60, hi=2500)
+    write("MagnetPull", hum * np.clip(t / 0.05, 0, 1) * np.clip((0.8 - t) / 0.2, 0, 1) * (0.7 + 0.3 * np.sin(2 * np.pi * 14 * t)))
+
+    n = int(SR * 0.7)
+    t = np.arange(n) / SR
+    chirp = osc(sweep(2400, 500, n), n, "square") * 0.3
+    tape = hiss(n, lo=1500, hi=6000) * (0.5 + 0.5 * np.sin(2 * np.pi * 38 * t))
+    write("Rewind", spectral(chirp, hi=5000) * np.clip((0.7 - t) / 0.1, 0, 1) + 0.4 * tape * np.clip(t / 0.03, 0, 1) * np.clip((0.7 - t) / 0.2, 0, 1))
+
+    n = int(SR * 0.6)
+    t = np.arange(n) / SR
+    fr = 140 * (1 + 0.08 * np.exp(-t * 8) * np.sin(2 * np.pi * 9 * t))
+    write("ElasticTwang", spectral(osc(fr, n, "saw"), hi=2500) * attack_decay(n, 0.002, 0.18))
+
+    n = int(SR * 0.6)
+    t = np.arange(n) / SR
+    static = hiss(n, lo=800, hi=5000) * (0.5 + 0.5 * (rng.uniform(0, 1, n) > 0.3)) * np.clip((0.6 - t) / 0.1, 0, 1)
+    beep = pad(0.6)
+    m = int(SR * 0.08)
+    place(beep, 0.5 * osc(1400, m, "square") * np.clip(np.arange(m) / (SR * 0.005), 0, 1), 0.02)
+    write("RadioCrackle", 0.45 * static + spectral(beep, hi=4000))
+
+    beeps = pad(0.42)
+    for k, f in enumerate((2093.0, 2637.0, 3136.0)):
+        m = int(SR * 0.09)
+        place(beeps, 0.6 * square_note(f, 0.09), 0.13 * k)
+    write("TamagotchiBeep", spectral(beeps, hi=6000))
+
+    n = int(SR * 0.35)
+    t = np.arange(n) / SR
+    grains = np.convolve((rng.uniform(0, 1, n) < 0.04).astype(float), np.hanning(48), mode="same")
+    write("ChalkScribble", hiss(n, lo=1800, hi=8000) * (0.3 + 0.7 * np.clip(grains, 0, 1)) * np.clip(t / 0.02, 0, 1) * np.clip((0.35 - t) / 0.08, 0, 1))
+
+    write("SpinWhoosh", whoosh(1.0, 300, 1400, width=700, swell=0.5) + 0.6 * whoosh(1.0, 1400, 500, width=500, swell=0.3))
+    dull = place(pad(0.15), 0.6 * thump(0.12, 220, 160, 0.03), 0)
+    write("AbilityNotReady", place(dull, 0.3 * click(0.01, 800), 0))
+
+
 if __name__ == "__main__":
     sfx_player()
     sfx_enemies()
@@ -563,3 +649,4 @@ if __name__ == "__main__":
     sfx_dusk()
     sfx_final()
     sfx_content()
+    sfx_abilities()

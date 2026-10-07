@@ -63,6 +63,7 @@ namespace Bouncer.Visuals
         {
             Shader.SetGlobalFloat(PaletteShader.GlobalPaletteActive, 0f);
             Shader.SetGlobalFloat(PaletteShader.GlobalEmissionStrength, 0f);
+            FxGlobals.ResetDefaults();
         }
 
 #if UNITY_EDITOR
@@ -132,6 +133,8 @@ namespace Bouncer.Visuals
             RenderSettings.ambientEquatorColor = Color.Lerp(a.ambientEquator, b.ambientEquator, t) * ambientDim + flash;
             RenderSettings.ambientGroundColor = Color.Lerp(a.ambientGround, b.ambientGround, t) * ambientDim + flash * 0.5f;
 
+            ApplyFx(RenderSettings.ambientSkyColor, sun ? sun.color * sun.intensity : Color.white);
+
             Color fogColor = Color.Lerp(a.fogColor, b.fogColor, t);
             float grey = fogColor.grayscale;
             fogColor = Color.Lerp(fogColor, new Color(grey, grey, grey * 1.05f), 0.5f * Mathf.Max(_wet, _fog));
@@ -164,6 +167,21 @@ namespace Bouncer.Visuals
         }
 
         public Color FogColor { get; private set; } = Color.grey;
+
+        // Частицы темнеют и синеют вместе со сценой; контровой свет в темноте сильнее и холоднее — чтобы не терять ребят и мячи
+        void ApplyFx(Color ambientSky, Color sunLight)
+        {
+            Color light = ambientSky + sunLight * 0.45f;
+            float peak = Mathf.Max(light.r, Mathf.Max(light.g, light.b));
+            Color tint = peak > 1f ? light / peak : light;
+            tint = Color.Lerp(tint, Color.white, 0.3f);
+            tint.a = 1f;
+            Shader.SetGlobalColor(FxGlobals.FxTint, tint);
+            float bright = Mathf.Clamp01(peak);
+            Shader.SetGlobalFloat(FxGlobals.RimStrength, Mathf.Lerp(0.45f, FxGlobals.DefaultRimStrength, bright));
+            Shader.SetGlobalColor(FxGlobals.RimColor, Color.Lerp(new Color(0.7f, 0.82f, 1f), FxGlobals.DefaultRimColor, bright));
+            Shader.SetGlobalFloat(FxGlobals.Wet, _wet);
+        }
 
         static Quaternion SunRotation(TimeOfDayProfile profile) =>
             Quaternion.Euler(profile.sunElevation, profile.sunAzimuth, 0f);

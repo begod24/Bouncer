@@ -91,6 +91,7 @@ namespace Bouncer.UI
                 PocketNeed.Stack => Loc.Get("pockets.tag.stack"),
                 PocketNeed.Free => Loc.Get("pockets.tag.free"),
                 PocketNeed.Combo => Loc.Get("pockets.tag.combo"),
+                PocketNeed.Swap => Loc.Get("pockets.tag.swap"),
                 _ => Loc.Get("pockets.tag.full"),
             };
             pocketTagText.color = need switch
@@ -98,7 +99,7 @@ namespace Bouncer.UI
                 PocketNeed.New => tagNewColor,
                 PocketNeed.Stack => tagStackColor,
                 PocketNeed.Free => tagFreeColor,
-                PocketNeed.Combo => tagComboColor,
+                PocketNeed.Combo or PocketNeed.Swap => tagComboColor,
                 _ => tagFullColor,
             };
         }
@@ -142,7 +143,8 @@ namespace Bouncer.UI
 
         public void OnDeselect(BaseEventData eventData) => IsSelected = false;
 
-        static string CategoryName(UpgradeCard card) => Loc.Get(card.IsCombo ? "card.category.combo" : card.category switch
+        static string CategoryName(UpgradeCard card) => Loc.Get(card.IsCombo ? "card.category.combo"
+            : card is AbilityCard ? "card.category.ability" : card.category switch
         {
             UpgradeCategory.Ball => "card.category.ball",
             UpgradeCategory.Modifier => "card.category.modifier",

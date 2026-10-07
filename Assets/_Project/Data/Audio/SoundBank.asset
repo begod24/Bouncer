@@ -476,3 +476,101 @@ MonoBehaviour:
     pitchJitter: 0.1
     ui: 0
     minInterval: 0.3
+  - cue: 66
+    clips:
+    - {fileID: 8300000, guid: bde9383b2351c4583996df2d35ae79b7, type: 3}
+    volume: 0.75
+    pitchJitter: 0.06
+    ui: 0
+    minInterval: 0.05
+  - cue: 67
+    clips:
+    - {fileID: 8300000, guid: 6c7113ef33f2e47418bb86cfd709b176, type: 3}
+    volume: 0.7
+    pitchJitter: 0.06
+    ui: 0
+    minInterval: 0.05
+  - cue: 68
+    clips:
+    - {fileID: 8300000, guid: 4b77c23312e5442209432adff9559116, type: 3}
+    volume: 0.6
+    pitchJitter: 0.06
+    ui: 0
+    minInterval: 0.05
+  - cue: 69
+    clips:
+    - {fileID: 8300000, guid: 4cc19893f4d5f4753bff3db7a404e30c, type: 3}
+    volume: 0.55
+    pitchJitter: 0.06
+    ui: 0
+    minInterval: 0.05
+  - cue: 70
+    clips:
+    - {fileID: 8300000, guid: cdefce4e2ed4e4cfba826614ee2d5257, type: 3}
+    volume: 0.85
+    pitchJitter: 0.06
+    ui: 0
+    minInterval: 0.05
+  - cue: 71
+    clips:
+    - {fileID: 8300000, guid: bac67f96aa39e43ca91832253166cac9, type: 3}
+    volume: 0.75
+    pitchJitter: 0.06
+    ui: 0
+    minInterval: 0.05
+  - cue: 72
+    clips:
+    - {fileID: 8300000, guid: c53b9dc2a95c7440c8633e0600c97343, type: 3}
+    volume: 0.6
+    pitchJitter: 0.06
+    ui: 0
+    minInterval: 0.05
+  - cue: 73
+    clips:
+    - {fileID: 8300000, guid: 1304cff04ef8f41a9af462ab3db679be, type: 3}
+    volume: 0.7
+    pitchJitter: 0.06
+    ui: 0
+    minInterval: 0.05
+  - cue: 74
+    clips:
+    - {fileID: 8300000, guid: 5a4c2c85bc1b742ea8eee0e45812e586, type: 3}
+    volume: 0.65
+    pitchJitter: 0.06
+    ui: 0
+    minInterval: 0.05
+  - cue: 75
+    clips:
+    - {fileID: 8300000, guid: d53277d0157534eebaa7626b8f1824bd, type: 3}
+    volume: 0.6
+    pitchJitter: 0.06
+    ui: 0
+    minInterval: 0.05
+  - cue: 76
+    clips:
+    - {fileID: 8300000, guid: a8b1f9f36914a44749f11f248106eb8b, type: 3}
+    volume: 0.55
+    pitchJitter: 0.06
+    ui: 0
+    minInterval: 0.05
+  - cue: 77
+    clips:
+    - {fileID: 8300000, guid: 67e59f9ab893c487fbc5f220baf465ab, type: 3}
+    volume: 0.45
+    pitchJitter: 0.06
+    ui: 0
+    minInterval: 0.05
+  - cue: 78
+    clips:
+    - {fileID: 8300000, guid: 651c0c1dcaa614543adef67be8535382, type: 3}
+    volume: 0.7
+    pitchJitter: 0.06
+    ui: 0
+    minInterval: 0.05
+  - cue: 79
+    clips:
+    - {fileID: 8300000, guid: 622f21a30214e4548819ecb4e48ef3a4, type: 3}
+    volume: 0.5
+    pitchJitter: 0.06
+    ui: 1
+    minInterval: 0.05

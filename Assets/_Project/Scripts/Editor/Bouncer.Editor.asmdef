@@ -5,7 +5,14 @@
         "Unity.Localization",
         "Unity.Localization.Editor",
         "Unity.TextMeshPro",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "Bouncer.Core",
+        "Bouncer.Balls",
+        "Bouncer.Player",
+        "Bouncer.Upgrades",
+        "Bouncer.Audio",
+        "Bouncer.UI",
+        "Bouncer.Enemies"
     ],
     "includePlatforms": [
         "Editor"

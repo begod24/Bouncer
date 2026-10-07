@@ -73,7 +73,6 @@ namespace Bouncer.Arena
             _lastBallUntil = Time.time + sameBallCooldown;
             _angularVelocity -= (along >= 0f ? 1f : -1f) * kickPerHit;
             GameFeel.HitStop(0.03f);
-            GameFeel.Shake(0.2f);
             GameEvents.PlaySound(SoundCue.SwingBat, hit.point);
             return BallContactResult.Redirected;
         }

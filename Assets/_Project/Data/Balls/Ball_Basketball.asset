@@ -1,0 +1,88 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb5cac978b2614ffb8e1def74ecedab1, type: 3}
+  m_Name: Ball_Basketball
+  m_EditorClassIdentifier: Bouncer.Balls::Bouncer.Balls.BallDefinition
+  radius: 0.26
+  mass: 0.6
+  speed: 13
+  chargedSpeed: 17
+  upVelocity: 7
+  chargedUpVelocity: 7.5
+  liveGravity: 15
+  chargedLiveGravity: 13
+  damage: 1
+  chargedDamage: 2
+  candleDamage: 3
+  knockback: 6
+  chargedKnockback: 11
+  candleKnockback: 16
+  candleSpeedMultiplier: 1.15
+  maxRicochets: 3
+  wallSpeedKeep: 0.9
+  minLiveSpeed: 7
+  maxLiveTime: 3
+  pierceSpeedKeep: 0.75
+  popUpSpeed: 9
+  popHorizontalKeep: 0.15
+  popGravity: 14
+  poppedWallKeep: 0.5
+  perks:
+    extraShots: 0
+    spreadAngle: 0
+    chainBounces: 0
+    areaRadius: 1.8
+    areaDamage: 1
+    splitOnHit: 0
+    boomerang: 0
+    elastic: 0
+    floorBounces: 0
+    gumTrail: 0
+    blastRadius: 0
+    blastDamage: 0
+    snakeAmplitude: 0
+    grazeRadius: 0
+    wallDamage: 0
+    chargedPierce: 0
+    homing: 0
+    yoyo: 0
+    bounceBlastRadius: 0
+    bounceBlastDamage: 0
+    twinSplit: 0
+    areaStun: 0
+    curve: 0
+    lob: 1
+    groundRoll: 0
+    grazeStun: 0
+    chalk: 0
+    frozenBonus: 0
+    bounceAssist: 0
+  areaEffect: {fileID: 5376990858673508986, guid: 3c2ae0d44c24e466da724e9dc70a299c, type: 3}
+  chainRange: 9
+  chainSpeedKeep: 0.9
+  splitAngle: 35
+  splitSpeedKeep: 0.8
+  boomerangDelay: 0.35
+  boomerangTurnRate: 540
+  elasticReturnSpeed: 18
+  floorBounceHeight: 1
+  floorBounceSpeedKeep: 0.85
+  gumSpacing: 1.2
+  blastKnockback: 10
+  snakeWavelength: 4.5
+  grazeKnockbackScale: 0.5
+  rollDrag: 0
+  landEffect: {fileID: 323304508709124336, guid: ff0079a1c980d4a33818d9b60267d2cc, type: 3}
+  floorBounceKeep: 0.5
+  looseDamping: 0.6
+  maxLooseBalls: 14
+  maxForeignLoose: 7

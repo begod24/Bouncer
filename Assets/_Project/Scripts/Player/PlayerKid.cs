@@ -56,6 +56,7 @@ namespace Bouncer.Player
             }
             var model = Instantiate(kid.model, slot, false);
             model.name = kid.model.name;
+            FxGlobals.MarkRim(model);
             Bind(model.transform);
             Changed?.Invoke();
         }

@@ -11,7 +11,6 @@ namespace Bouncer.Player
         public bool Sliding;
         public Vector3 DashDirection;
         public bool Down;
-        public bool Flashlight;
     }
 
     public enum PlayerCue : byte

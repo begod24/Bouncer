@@ -180,7 +180,7 @@ MonoBehaviour:
   carrotInHand: {fileID: 4361850788838931417}
   stuffing: {fileID: 8995633708805614559}
   circleMarkerPrefab: {fileID: 8557048589744460489, guid: d298813be095c4d45a5ab1ab8a1cf216, type: 3}
-  slamRing: {fileID: 8000059671102707944, guid: 3c2ae0d44c24e466da724e9dc70a299c, type: 3}
+  slamRing: {fileID: 8000059671102707944, guid: 22663374007c24d03bd72b7673ba0e54, type: 3}
   landingDust: {fileID: 7776453274198704824, guid: ff0079a1c980d4a33818d9b60267d2cc, type: 3}
   ripBurst: {fileID: 6115665609917238962, guid: 1cc24f10b27354ffdb6b45eed15ab24e, type: 3}
   cloudPrefab: {fileID: 859231878804548110, guid: c256c46878bd846058450f89eca64e3b, type: 3}
@@ -322,6 +322,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 7008672126250563859}
     m_Modifications:
+    - target: {fileID: -8744313706043877518, guid: e445020f5cacc40bda59936819afabb5, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e445020f5cacc40bda59936819afabb5, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -362,6 +366,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7352450971869302861, guid: e445020f5cacc40bda59936819afabb5, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
     - target: {fileID: -6942133768269715602, guid: e445020f5cacc40bda59936819afabb5, type: 3}
       propertyPath: m_Layer
       value: 8
@@ -374,9 +382,17 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: -2669621838597727454, guid: e445020f5cacc40bda59936819afabb5, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
     - target: {fileID: -2582921932600049829, guid: e445020f5cacc40bda59936819afabb5, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: -1996544417068161017, guid: e445020f5cacc40bda59936819afabb5, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
       objectReference: {fileID: 0}
     - target: {fileID: -1425296885560403741, guid: e445020f5cacc40bda59936819afabb5, type: 3}
       propertyPath: m_Layer
@@ -385,6 +401,22 @@ PrefabInstance:
     - target: {fileID: -1425296885560403741, guid: e445020f5cacc40bda59936819afabb5, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -975130900809686323, guid: e445020f5cacc40bda59936819afabb5, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
+    - target: {fileID: -852854422128236451, guid: e445020f5cacc40bda59936819afabb5, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
+    - target: {fileID: 217732691434712046, guid: e445020f5cacc40bda59936819afabb5, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
+    - target: {fileID: 753799361995985387, guid: e445020f5cacc40bda59936819afabb5, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: e445020f5cacc40bda59936819afabb5, type: 3}
       propertyPath: m_Name
@@ -406,9 +438,17 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 7011392290173911240, guid: e445020f5cacc40bda59936819afabb5, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
     - target: {fileID: 7979934100391763991, guid: e445020f5cacc40bda59936819afabb5, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 8618436521721273743, guid: e445020f5cacc40bda59936819afabb5, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
       objectReference: {fileID: 0}
     - target: {fileID: 8791686575525567285, guid: e445020f5cacc40bda59936819afabb5, type: 3}
       propertyPath: m_Layer

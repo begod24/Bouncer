@@ -759,6 +759,166 @@ MonoBehaviour:
     m_Key: bestiary.boss_dusk.tip
     m_Metadata:
       m_Items: []
+  - m_Id: 4788928270819328
+    m_Key: card.ability_fence.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207936
+    m_Key: card.ability_fence.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207937
+    m_Key: card.ability_bubbles.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207938
+    m_Key: card.ability_bubbles.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207939
+    m_Key: card.ability_capgun.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207940
+    m_Key: card.ability_capgun.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207941
+    m_Key: card.ability_camera.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207942
+    m_Key: card.ability_camera.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207943
+    m_Key: card.ability_magnet.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207944
+    m_Key: card.ability_magnet.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207945
+    m_Key: card.ability_rewind.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207946
+    m_Key: card.ability_rewind.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207947
+    m_Key: card.ability_carousel.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207948
+    m_Key: card.ability_carousel.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207949
+    m_Key: card.ability_elastic.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207950
+    m_Key: card.ability_elastic.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207951
+    m_Key: card.ability_walkie.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207952
+    m_Key: card.ability_walkie.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207953
+    m_Key: card.pas_countrhyme.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207954
+    m_Key: card.pas_countrhyme.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207955
+    m_Key: card.perk_chalk.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207956
+    m_Key: card.perk_chalk.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207957
+    m_Key: card.pas_gumbubble.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207958
+    m_Key: card.pas_gumbubble.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207959
+    m_Key: card.pas_tamagotchi.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207960
+    m_Key: card.pas_tamagotchi.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207961
+    m_Key: card.pas_pass.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207962
+    m_Key: card.pas_pass.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207963
+    m_Key: card.pas_circleguard.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207964
+    m_Key: card.pas_circleguard.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207965
+    m_Key: card.combo_barricade.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207966
+    m_Key: card.combo_barricade.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207967
+    m_Key: card.combo_seafigure.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207968
+    m_Key: card.combo_seafigure.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207969
+    m_Key: card.ball_basketball.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207970
+    m_Key: card.ball_basketball.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207971
+    m_Key: card.ball_pingpong.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207972
+    m_Key: card.ball_pingpong.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207973
+    m_Key: card.ball_football.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207974
+    m_Key: card.ball_football.description
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

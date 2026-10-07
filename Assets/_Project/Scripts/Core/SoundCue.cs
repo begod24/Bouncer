@@ -74,5 +74,20 @@ namespace Bouncer.Core
         WindUp,
         ZapperShot,
         EngineRev,
+
+        FenceRise,
+        FenceKnock,
+        BubbleBlow,
+        BubblePop,
+        CapGun,
+        CameraFlash,
+        MagnetPull,
+        Rewind,
+        ElasticTwang,
+        RadioCrackle,
+        TamagotchiBeep,
+        ChalkScribble,
+        SpinWhoosh,
+        AbilityNotReady,
     }
 }

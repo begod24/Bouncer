@@ -14,6 +14,7 @@ namespace Bouncer.Upgrades
         Free,
         Combo,
         Full,
+        Swap,
     }
 
     public enum OfferKind
@@ -152,6 +153,8 @@ namespace Bouncer.Upgrades
         {
             if (!card || !card.CanOffer(_player, StacksOf(card)))
                 return false;
+            if (card is AbilityCard && !card.IsCombo && OwnedAbility(card) is { IsCombo: true })
+                return false;
             if (card.IsCombo)
             {
                 if (deck && RunCards.CombosTaken(Slot) >= deck.maxCombos)
@@ -201,6 +204,8 @@ namespace Bouncer.Upgrades
                 return PocketNeed.Combo;
             if (Owns(card))
                 return PocketNeed.Stack;
+            if (card is AbilityCard && OwnedAbility(card) != null)
+                return PocketNeed.Swap;
             return PocketsUsed >= MaxPockets ? PocketNeed.Full : PocketNeed.New;
         }
 
@@ -291,10 +296,25 @@ namespace Bouncer.Upgrades
                 _offerAt = Time.unscaledTime + deck.offerDelay;
         }
 
+        public UpgradeCard OwnedAbility(UpgradeCard except = null)
+        {
+            foreach (var taken in RunCards.Taken(Slot))
+            {
+                if (taken is not AbilityCard || taken == except || IsAbsorbed(taken))
+                    continue;
+                if (except != null && System.Array.IndexOf(except.requires, taken) >= 0)
+                    continue;
+                return taken;
+            }
+            return null;
+        }
+
         public void Take(UpgradeCard card)
         {
             if (!card)
                 return;
+            if (card is AbilityCard && !card.IsCombo && OwnedAbility(card) is { } old)
+                Discard(old);
             ApplyCard(card);
             RunCards.Record(Slot, card);
             Picked?.Invoke(card);

@@ -1,3 +1,4 @@
+using Bouncer.Core;
 using Bouncer.Player;
 using UnityEngine;
 using UnityEngine.Localization;
@@ -41,6 +42,8 @@ namespace Bouncer.Upgrades
         public UpgradeCard[] requires = System.Array.Empty<UpgradeCard>();
         [Tooltip("Карточка-деньги («Копилка», «Шпаргалка», «Счастливый фантик»): не занимает карман")]
         public bool freePocket;
+        [Tooltip("Выпадает только в игре вдвоём и больше")]
+        public bool coopOnly;
 
         public static bool Replaying { get; internal set; }
 
@@ -50,7 +53,8 @@ namespace Bouncer.Upgrades
 
         public bool TakesPocket => category != UpgradeCategory.Ball && category != UpgradeCategory.Treat && !freePocket;
 
-        public virtual bool CanOffer(PlayerController player, int stacks) => stacks < maxStacks;
+        public virtual bool CanOffer(PlayerController player, int stacks) =>
+            stacks < maxStacks && (!coopOnly || (RunState.Active && RunState.PlayerCount > 1));
 
         public abstract void Apply(PlayerController player);
     }

@@ -30,6 +30,13 @@ namespace Bouncer.Player
         public BallPerks Perks;
         public BallPerks CatchPerks;
         public bool HasCatchPerks;
+        public AbilityDefinition Ability;
+        public int CountEvery;
+        public int CountBonus;
+        public bool PassCharge;
+        public float GumBubbleCooldown;
+        public bool Tamagotchi;
+        public bool CircleGuard;
 
         public event Action Changed;
 
@@ -62,6 +69,13 @@ namespace Bouncer.Player
             Perks = default;
             CatchPerks = default;
             HasCatchPerks = false;
+            Ability = null;
+            CountEvery = 0;
+            CountBonus = 0;
+            PassCharge = false;
+            GumBubbleCooldown = 0f;
+            Tamagotchi = false;
+            CircleGuard = false;
         }
     }
 }

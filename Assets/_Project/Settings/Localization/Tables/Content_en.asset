@@ -591,8 +591,8 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1455588243398699
-    m_Localized: Stand under a lamp so it has to step into the light. It turns solid
-      anywhere as it winds up, and the flashlight (Q) burns it.
+    m_Localized: "Stand under a lamp so it has to step into the light. It turns solid
+      anywhere as it winds up, and a \xABSmena\xBB camera flash burns it."
     m_Metadata:
       m_Items: []
   - m_Id: 1455588243398700
@@ -782,8 +782,8 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1455588243398741
-    m_Localized: Meet it with the flashlight (Q) and hit it as it winds up, while
-      it's solid.
+    m_Localized: "Meet it with a \xABSmena\xBB camera flash and hit it as it winds
+      up, while it's solid."
     m_Metadata:
       m_Items: []
   - m_Id: 1455588243398742
@@ -838,6 +838,183 @@ MonoBehaviour:
     m_Localized: "Hit him from the side or back \u2014 he turns slowly. A hit on
       the sack spills the balls; hide behind cover while he counts. Or just hold
       out until mom calls you home."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928270819328
+    m_Localized: Fence
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207936
+    m_Localized: 'Q: a picket fence rises in front of you for 4 s. Enemy balls bounce
+      off, yours fly through.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207937
+    m_Localized: Soap Bubbles
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207938
+    m_Localized: 'Q: blow a fan of bubbles. An enemy ball gets stuck inside and drops
+      harmless.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207939
+    m_Localized: Cap Gun
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207940
+    m_Localized: 'Q: a cap bang. Enemies within 4.5 m in front flinch, balls flying
+      at you drop.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207941
+    m_Localized: "\xABSmena\xBB Camera"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207942
+    m_Localized: 'Q: flash! Enemies in frame freeze for 1.3 s, shadows turn solid
+      and take damage.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207943
+    m_Localized: Magnet
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207944
+    m_Localized: 'Q: loose balls within 9 m fly into your hands.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207945
+    m_Localized: Rewind
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207946
+    m_Localized: 'Q: rewind yourself 3 seconds back. Nothing can hit you while the
+      tape spins.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207947
+    m_Localized: Merry-Go-Round
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207948
+    m_Localized: 'Q: spin for 1.4 s. Your balls fly out in a charged ring, enemy
+      balls nearby are caught.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207949
+    m_Localized: Jump Elastic
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207950
+    m_Localized: 'Q: stretch an elastic to a teammate for 5 s. Enemies crossing it
+      trip. Co-op only.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207951
+    m_Localized: Walkie-Talkie
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207952
+    m_Localized: 'Q: mark an enemy for 6 s. Everyone''s balls curve toward it and
+      hit 1 harder.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207953
+    m_Localized: Counting Rhyme
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207954
+    m_Localized: One, two, three! Every third throw is charged and hits 1 harder.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207955
+    m_Localized: Chalk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207956
+    m_Localized: Your ball draws a chalk cross where it lands. Step on it to run
+      30% faster.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207957
+    m_Localized: Bubble Gum
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207958
+    m_Localized: 'Every 15 s a gum bubble takes an enemy ball: it drops at your feet,
+      enemies nearby get stuck.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207959
+    m_Localized: Tamagotchi
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207960
+    m_Localized: 'Feed your pet by catching: after 5 catches a full tamagotchi saves
+      you from being knocked out.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207961
+    m_Localized: Pass
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207962
+    m_Localized: A ball caught from a teammate is charged right away. Co-op only.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207963
+    m_Localized: All for One
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207964
+    m_Localized: Reviving a teammate freezes enemies around for 1.5 s and makes you
+      untouchable for a second. Co-op only.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207965
+    m_Localized: Barricade
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207966
+    m_Localized: 'Q: a fence with a pot lid. Blocked balls fly forward as your own
+      throws.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207967
+    m_Localized: Statues
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207968
+    m_Localized: "Whistle and Freeze! hold enemies 1.5\xD7 longer, and your balls
+      hit frozen enemies 1 harder."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207969
+    m_Localized: Basketball
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207970
+    m_Localized: Lobbed over heads and shields; hits on the way down and splashes
+      where it lands.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207971
+    m_Localized: Ping-Pong Ball
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207972
+    m_Localized: 'Tiny and fast: 1 damage, but bounces up to 6 times and curves toward
+      enemies off walls.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207973
+    m_Localized: Football
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788928279207974
+    m_Localized: 'A kick along the ground: the ball rolls and knocks down everyone
+      in its path.'
     m_Metadata:
       m_Items: []
   references:

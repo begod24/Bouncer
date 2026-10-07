@@ -9,6 +9,8 @@ namespace Bouncer.Enemies
         [Tooltip("Модель морковки: крутится")]
         [SerializeField] Transform visual;
         [SerializeField] float spinSpeed = 900f;
+        [Tooltip("Оранжевый след за морковкой; чистим при броске, иначе тянется от прошлого места в пуле")]
+        [SerializeField] TrailRenderer trail;
 
         Transform _owner;
         Func<Vector3> _returnPoint;
@@ -50,6 +52,8 @@ namespace Bouncer.Enemies
             _hitOut = _hitBack = false;
             _onReturned = onReturned;
             transform.position = start;
+            if (trail)
+                trail.Clear();
             if (!IsPuppet)
                 Thrown?.Invoke(this, start, far, _flightTime, radius);
         }

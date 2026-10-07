@@ -183,10 +183,12 @@ MonoBehaviour:
   hitFlash: {fileID: 4122004430802015647}
   visual: {fileID: 5382732746020155123}
   trigger: {fileID: 6365701658821958449}
-  laserWidth: 0.035
-  beamWidth: 0.22
+  laserWidth: 0.1
+  beamWidth: 0.55
   laserColor: {r: 1, g: 0.15, b: 0.1, a: 0.85}
   beamColor: {r: 1, g: 0.95, b: 0.75, a: 1}
+  muzzleFlash: {fileID: 6584732550195818316, guid: a2a0b5a778b62412c8ce9e8adfb092ef, type: 3}
+  hitSparks: {fileID: 4968138536138432159, guid: 599cc61dd6d2b42d3afff78e56861693, type: 3}
 --- !u!114 &636989724768567535
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -309,7 +311,7 @@ LineRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 23f7f38d344ab49b891f215786d28aa0, type: 2}
+  - {fileID: 2100000, guid: 21dbcc6cc8ed3420296a4bb0d8af1935, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -384,7 +386,7 @@ LineRenderer:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
     numCornerVertices: 0
-    numCapVertices: 2
+    numCapVertices: 0
     alignment: 0
     textureMode: 0
     textureScale: {x: 1, y: 1}
@@ -441,6 +443,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -8612069625188246209, guid: 69e238956853e447d9e7ec0d5910eb35, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
     - target: {fileID: -1683417260785232300, guid: 69e238956853e447d9e7ec0d5910eb35, type: 3}
       propertyPath: m_Layer
       value: 8
@@ -456,6 +462,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 69e238956853e447d9e7ec0d5910eb35, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1025760330403114577, guid: 69e238956853e447d9e7ec0d5910eb35, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
       objectReference: {fileID: 0}
     - target: {fileID: 4292896412993846699, guid: 69e238956853e447d9e7ec0d5910eb35, type: 3}
       propertyPath: m_Layer

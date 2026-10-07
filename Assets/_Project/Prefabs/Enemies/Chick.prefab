@@ -1620,15 +1620,15 @@ ParticleSystem:
         m_NumAlphaKeys: 2
   UVModule:
     serializedVersion: 2
-    enabled: 0
+    enabled: 1
     mode: 0
     timeMode: 0
     fps: 30
     frameOverTime:
       serializedVersion: 2
-      minMaxState: 1
-      scalar: 0.9999
-      minScalar: 0.9999
+      minMaxState: 3
+      scalar: 0.124
+      minScalar: 0
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -1731,13 +1731,13 @@ ParticleSystem:
         m_PostInfinity: 2
         m_RotationOrder: 4
     speedRange: {x: 0, y: 1}
-    tilesX: 1
-    tilesY: 1
-    animationType: 0
-    rowIndex: 0
+    tilesX: 8
+    tilesY: 8
+    animationType: 1
+    rowIndex: 7
     cycles: 1
     uvChannelMask: -1
-    rowMode: 1
+    rowMode: 0
     sprites:
     - sprite: {fileID: 0}
     flipU: 0
@@ -5034,7 +5034,7 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 23f7f38d344ab49b891f215786d28aa0, type: 2}
+  - {fileID: 2100000, guid: 927ce3b140fee4bb797d820d19a038d2, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -5140,9 +5140,17 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: -6449298026648679458, guid: 6e050d9bf503b4a0db5126cdb8bef6fb, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
     - target: {fileID: -4065463055492551084, guid: 6e050d9bf503b4a0db5126cdb8bef6fb, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: -750924344918412990, guid: 6e050d9bf503b4a0db5126cdb8bef6fb, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 6e050d9bf503b4a0db5126cdb8bef6fb, type: 3}
       propertyPath: m_Name
@@ -5156,6 +5164,14 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 5704310338188586753, guid: 6e050d9bf503b4a0db5126cdb8bef6fb, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
+    - target: {fileID: 6033210603576958741, guid: 6e050d9bf503b4a0db5126cdb8bef6fb, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
     - target: {fileID: 7125714504897223885, guid: 6e050d9bf503b4a0db5126cdb8bef6fb, type: 3}
       propertyPath: m_Layer
       value: 8
@@ -5163,6 +5179,10 @@ PrefabInstance:
     - target: {fileID: 7468687660135975465, guid: 6e050d9bf503b4a0db5126cdb8bef6fb, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 8856536180061863981, guid: 6e050d9bf503b4a0db5126cdb8bef6fb, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

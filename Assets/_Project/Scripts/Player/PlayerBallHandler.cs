@@ -38,6 +38,7 @@ namespace Bouncer.Player
         int _lostBalls;
         bool _lostYoyo;
         float _lostReturnAt;
+        int _throwCount;
 
         public Ball BallPrefab => ballPrefab;
         public BallDefinition BallDefinition => ballPrefab ? ballPrefab.Definition : null;
@@ -51,6 +52,8 @@ namespace Bouncer.Player
         float PickupRadius => _stats.pickupRadius * _mods.PickupRadius;
         public bool CandleReady { get; private set; }
         public bool CatchPerksReady { get; private set; }
+        public bool PassReady { get; private set; }
+        public int CountStep => _mods.CountEvery > 0 ? _throwCount % _mods.CountEvery : 0;
         public bool IsCharging { get; private set; }
         public float Charge01 { get; private set; }
         public bool IsCatching => _catchWindowOpen && Time.time < _catchUntil;
@@ -316,6 +319,12 @@ namespace Bouncer.Player
                 CandleReady = true;
             if (_mods.HasCatchPerks)
                 CatchPerksReady = true;
+            if (_mods.PassCharge && live && ball.Team == Team.Player && ball.Thrower != null && ball.Thrower != gameObject)
+            {
+                PassReady = true;
+                int slot = ball.Thrower.TryGetComponent(out PlayerController passer) ? passer.Slot : 0;
+                PlayerFx.Play(_player, PlayerFxKind.PassCatch, transform.position, new Vector3(slot, 0f, 0f));
+            }
 
             StartCatchCooldown(_stats.catchSuccessCooldown);
             GameEvents.PlaySound(info.Candle || info.Perfect ? SoundCue.CatchCandle : SoundCue.Catch, info.Position);
@@ -496,13 +505,51 @@ namespace Bouncer.Player
             }
         }
 
-        void Throw(Vector3 direction)
+        public void ThrowAround(float startAngle)
+        {
+            int count = Balls;
+            for (int i = 0; i < count && Balls > 0; i++)
+                Throw(Quaternion.Euler(0f, startAngle + 360f * i / count, 0f) * Vector3.forward, forceCharge: true, counted: false);
+        }
+
+        public bool ForceCatch(Ball ball)
+        {
+            if (ball == null || Balls >= MaxBalls)
+                return false;
+            Vector3 position = ball.Position;
+            AddToHands(ball);
+            GameEvents.PlaySound(SoundCue.Catch, position);
+            PickedUp?.Invoke();
+            return true;
+        }
+
+        void Throw(Vector3 direction) => Throw(direction, forceCharge: false, counted: true);
+
+        void Throw(Vector3 direction, bool forceCharge, bool counted)
         {
             var definition = BallDefinition;
             bool candle = CandleReady;
-            var stats = definition.GetThrowStats(Charge01, candle);
-            stats.Damage += _mods.BonusDamage;
-            stats.BonusDamage = _mods.BonusDamage;
+            float charge = forceCharge ? 1f : Charge01;
+            int countBonus = 0;
+            if (counted && _mods.CountEvery > 0)
+            {
+                _throwCount++;
+                int step = (_throwCount - 1) % _mods.CountEvery + 1;
+                if (step == _mods.CountEvery)
+                {
+                    charge = 1f;
+                    countBonus = _mods.CountBonus;
+                }
+                PlayerFx.Play(_player, PlayerFxKind.CountThree, transform.position, new Vector3(step, _mods.CountEvery, 0f), relay: false);
+            }
+            if (PassReady)
+            {
+                charge = 1f;
+                PassReady = false;
+            }
+            var stats = definition.GetThrowStats(charge, candle);
+            stats.Damage += _mods.BonusDamage + countBonus;
+            stats.BonusDamage = _mods.BonusDamage + countBonus;
             var perks = BallPerks.Combine(definition.perks, _mods.Perks);
             if (CatchPerksReady)
             {
@@ -564,7 +611,9 @@ namespace Bouncer.Player
 
         Vector3 SafeOrigin(Vector3 direction, float radius)
         {
-            Vector3 chest = transform.position + Vector3.up * _stats.throwHeight;
+            var definition = BallDefinition;
+            float height = definition != null && definition.perks.groundRoll ? radius + 0.06f : _stats.throwHeight;
+            Vector3 chest = transform.position + Vector3.up * height;
             float distance = _stats.throwForwardOffset;
             if (Physics.SphereCast(chest, radius, direction, out RaycastHit hit, distance, Layers.BallSolidMask,
                     QueryTriggerInteraction.Ignore))

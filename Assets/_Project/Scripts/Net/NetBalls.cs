@@ -720,8 +720,16 @@ namespace Bouncer.Net
         void CheckContact(Puppet puppet, Vector3 from, Vector3 to)
         {
             var ball = puppet.Ball;
+            if (!ball.Team.IsHostileTo(Team.Player))
+                return;
+            if (SweepShield(ball, from, to, out Vector3 shieldNormal))
+            {
+                puppet.Contacted = true;
+                PredictBounce(puppet, shieldNormal);
+                return;
+            }
             var local = Players.Local;
-            if (local == null || local.IsDead || !ball.Team.IsHostileTo(Team.Player))
+            if (local == null || local.IsDead)
                 return;
             if (!SweepPlayer(local, ball.Radius, from, to, out RaycastHit hit))
                 return;
@@ -739,6 +747,48 @@ namespace Bouncer.Net
                 ContactRpc(id, ContactBounce, hit.point, hit.normal);
                 PredictBounce(puppet, hit.normal);
             }
+        }
+
+        static bool SweepShield(Ball ball, Vector3 from, Vector3 to, out Vector3 normal)
+        {
+            normal = default;
+            IBallShield struck = null;
+            Vector3 point = default;
+            Vector3 step = to - from;
+            float distance = step.magnitude;
+            if (distance < 1e-4f)
+                return false;
+            int count = Physics.SphereCastNonAlloc(from, ball.Radius, step / distance, s_hits, distance + Skin, Layers.PlayerMask,
+                QueryTriggerInteraction.Ignore);
+            float best = float.PositiveInfinity;
+            for (int i = 0; i < count; i++)
+            {
+                var hit = s_hits[i];
+                if (hit.distance >= best || hit.collider.GetComponentInParent<IBallShield>() is not { } shield || !shield.Blocks(ball))
+                    continue;
+                best = hit.distance;
+                normal = hit.distance <= 0f ? -step / distance : hit.normal;
+                struck = shield;
+                point = hit.distance <= 0f ? from : hit.point;
+            }
+            if (struck == null)
+                return false;
+            struck.Struck(point);
+            return true;
+        }
+
+        public void Neutralize(Ball puppetBall)
+        {
+            if (!_byBall.TryGetValue(puppetBall, out var puppet))
+                return;
+            puppet.Contacted = true;
+            puppet.State = BallState.Stuck;
+            puppet.P0 = puppetBall.Position;
+            puppet.V0 = Vector3.zero;
+            puppet.T0 = HostNow;
+            puppet.LastTarget = puppet.P0;
+            puppet.Error = Vector3.zero;
+            puppetBall.SetPuppetState(BallState.Stuck);
         }
 
         static bool SweepPlayer(PlayerController player, float radius, Vector3 from, Vector3 to, out RaycastHit best)

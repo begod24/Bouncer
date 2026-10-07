@@ -370,9 +370,17 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: -3127871197776576164, guid: 9cc8ee0bd5eee4f26a4690a9a5c05597, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
     - target: {fileID: -1258635125925024140, guid: 9cc8ee0bd5eee4f26a4690a9a5c05597, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: -156713334540098825, guid: 9cc8ee0bd5eee4f26a4690a9a5c05597, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
       objectReference: {fileID: 0}
     - target: {fileID: 503093660638635300, guid: 9cc8ee0bd5eee4f26a4690a9a5c05597, type: 3}
       propertyPath: m_Layer
@@ -385,6 +393,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 9cc8ee0bd5eee4f26a4690a9a5c05597, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 9032674401150935297, guid: 9cc8ee0bd5eee4f26a4690a9a5c05597, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

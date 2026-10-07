@@ -40,6 +40,7 @@ namespace Bouncer.Net
         const byte StatusShop = 1 << 1;
         const byte StatusStart = 1 << 2;
         const byte StatusHome = 1 << 3;
+        const byte StatusBubble = 1 << 4;
         float _hitSentAt = float.NegativeInfinity;
         float _reviveShown;
         float _reviveShownUntil;
@@ -127,6 +128,8 @@ namespace Bouncer.Net
                 _player.Balls.Thrown += OnThrown;
                 _player.Balls.Caught += OnCaught;
                 _player.Balls.Fumbled += OnFumbled;
+                PlayerAbilities.Casted += OnAbilityCast;
+                PlayerFx.Sent += OnFxSent;
             }
         }
 
@@ -155,6 +158,8 @@ namespace Bouncer.Net
                 _player.Balls.Thrown -= OnThrown;
                 _player.Balls.Caught -= OnCaught;
                 _player.Balls.Fumbled -= OnFumbled;
+                PlayerAbilities.Casted -= OnAbilityCast;
+                PlayerFx.Sent -= OnFxSent;
             }
         }
 
@@ -183,6 +188,7 @@ namespace Bouncer.Net
             {
                 _player.Balls.SetRemoteBalls(_balls.Value);
                 _player.IsHome = (_status.Value & StatusHome) != 0;
+                _player.RemoteGumBubble = (_status.Value & StatusBubble) != 0;
                 if (_maxLives.Value > 0)
                     _player.Health.Mirror(_lives.Value, _maxLives.Value, _lives.Value == 0);
                 ShowStatus();
@@ -211,6 +217,8 @@ namespace Bouncer.Net
                 status |= StatusStart;
             if (_player.IsHome)
                 status |= StatusHome;
+            if (_player.GumBubbleReady)
+                status |= StatusBubble;
             return status;
         }
 
@@ -340,6 +348,7 @@ namespace Bouncer.Net
             if (_reviveProgress < ReviveTime)
                 return;
             target.ReviveRpc();
+            _player.OnRevivedTeammate(target.transform.position);
             _reviving = null;
             _reviveProgress = 0f;
         }
@@ -482,6 +491,36 @@ namespace Bouncer.Net
             if (kid >= 0 && _kidView != null)
                 _kidView.ShowKid(kid);
         }
+
+        void OnAbilityCast(PlayerController caster, int index, AbilityCast cast)
+        {
+            if (caster != _player || index < 0 || index > 255 || !IsSpawned)
+                return;
+            AbilityRpc((byte)index, cast.Origin, cast.Direction, cast.Target, cast.Param, cast.Seed);
+        }
+
+        [Rpc(SendTo.NotMe)]
+        void AbilityRpc(byte index, Vector3 origin, Vector3 direction, Vector3 target, int param, int seed)
+        {
+            if (_player.Abilities != null)
+                _player.Abilities.Replay(index, new AbilityCast
+                {
+                    Origin = origin,
+                    Direction = direction,
+                    Target = target,
+                    Param = param,
+                    Seed = seed,
+                });
+        }
+
+        void OnFxSent(PlayerController player, PlayerFxKind kind, Vector3 a, Vector3 b)
+        {
+            if (player == _player && IsSpawned)
+                FxRpc((byte)kind, a, b);
+        }
+
+        [Rpc(SendTo.NotMe)]
+        void FxRpc(byte kind, Vector3 a, Vector3 b) => PlayerFx.Replay(_player, (PlayerFxKind)kind, a, b);
 
         void OnHurt(HitInfo hit) => CueRpc(PlayerCue.Hurt);
 

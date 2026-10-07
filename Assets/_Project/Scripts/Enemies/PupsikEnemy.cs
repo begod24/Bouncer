@@ -291,7 +291,6 @@ namespace Bouncer.Enemies
             }
             GameEvents.RaiseEnemyKilled(gameObject, hit);
             GameEvents.PlaySound(SoundCue.PupsikPop, transform.position);
-            GameFeel.Shake(0.1f);
             PoolService.Despawn(gameObject);
         }
 

@@ -776,6 +776,263 @@ def icons():
     c.save("Icons/Icon_LuckyWrapper.png", grain=0.3, color=INK)
 
 
+def icons_cards_2026():
+    """Карточки 2026-10: умения, пассивки, комбо. Умения сохраняются ещё и белыми для HUD (HUD_Ability_*)."""
+    ink = 11
+
+    def ball(c, x, y, r, hatch=True):
+        pts = c.circle_pts(x, y, r)
+        if hatch:
+            c.fill(pts, opacity=0.5, hatch=(30, 8))
+        c.stroke(pts, 8, closed=True)
+
+    def out(c, name, hud=False):
+        c.save(f"Icons/Icon_{name}.png", grain=0.3, color=INK)
+        if hud:
+            c.save(f"HUD_Ability_{name}.png", grain=0.3, color=(255, 255, 255))
+
+    def digit(c, d, x, y, h, w=10):
+        s = h / 2
+        shapes = {
+            "1": [[(x - s * 0.3, y - s * 0.6), (x, y - s), (x, y + s)]],
+            "2": [[(x - s * 0.6, y - s * 0.5)] + [(x + s * 0.55 * math.cos(a), y - s * 0.45 + s * 0.5 * math.sin(a))
+                  for a in np.linspace(-2.6, 0.6, 12)] + [(x - s * 0.6, y + s), (x + s * 0.65, y + s)]],
+            "3": [[(x + s * 0.55 * math.cos(a), y - s * 0.5 + s * 0.48 * math.sin(a)) for a in np.linspace(-2.8, 1.6, 14)],
+                  [(x + s * 0.6 * math.cos(a), y + s * 0.48 + s * 0.52 * math.sin(a)) for a in np.linspace(-1.6, 2.8, 14)]],
+        }
+        for line in shapes[d]:
+            c.stroke(line, w)
+
+    # Забор
+    c = Canvas(256, 256, 200)
+    for i in range(5):
+        x = 46 + i * 38
+        plank = [(x - 14, 222), (x + 14, 222), (x + 14, 96), (x, 76), (x - 14, 96)]
+        c.fill(plank, opacity=0.35, hatch=(60, 9))
+        c.stroke(plank, 8, closed=True)
+    for y in (126, 190):
+        c.stroke([(22, y), (234, y)], 9)
+    ball(c, 214, 46, 20)
+    c.stroke([(196, 58), (150, 40)], 6, dash=10)
+    c.arrow_head((228, 30), -40, 18, 6)
+    out(c, "Fence", hud=True)
+
+    # Мыльные пузыри
+    c = Canvas(256, 256, 201)
+    for x, y, r in ((104, 140, 70), (196, 70, 34), (206, 182, 24), (52, 54, 18)):
+        c.stroke(c.circle_pts(x, y, r), 7, closed=True)
+        c.stroke(c.circle_pts(x, y, r * 0.72, 200, 250, 10), 6)
+    ball(c, 104, 146, 30)
+    out(c, "Bubbles", hud=True)
+
+    # Пугач
+    c = Canvas(256, 256, 202)
+    gun = [(40, 104), (180, 104), (180, 136), (120, 136), (104, 200), (70, 200), (82, 136), (40, 136)]
+    c.fill(gun, opacity=0.4, hatch=(30, 8))
+    c.stroke(gun, 9, closed=True)
+    c.stroke(c.circle_pts(124, 120, 12), 6, closed=True)
+    for a in (-40, -15, 10, 35):
+        ca, sa = math.cos(math.radians(a)), math.sin(math.radians(a))
+        c.stroke([(196 + ca * 14, 120 + sa * 14), (196 + ca * 50, 120 + sa * 50)], 8)
+    out(c, "CapGun", hud=True)
+
+    # Фотоаппарат «Смена»
+    c = Canvas(256, 256, 203)
+    body = c.round_rect_pts(36, 92, 220, 196, 14)
+    c.fill(body, opacity=0.35, hatch=(30, 9))
+    c.stroke(body, 9, closed=True)
+    c.stroke(c.circle_pts(128, 146, 40), 9, closed=True)
+    c.stroke(c.circle_pts(128, 146, 18), 6, closed=True)
+    c.stroke([(168, 92), (168, 70), (206, 70), (206, 92)], 8)
+    for a in (-150, -120, -90, -60, -30):
+        ca, sa = math.cos(math.radians(a)), math.sin(math.radians(a))
+        c.stroke([(187 + ca * 34, 60 + sa * 34), (187 + ca * 54, 60 + sa * 54)], 6)
+    out(c, "Camera", hud=True)
+
+    # Магнит
+    c = Canvas(256, 256, 204)
+    arc = c.circle_pts(100, 120, 56, 90, 270, 30)
+    c.stroke(arc, 30, rough=0.6)
+    c.stroke([(100, 64), (150, 64)], 30, rough=0.6)
+    c.stroke([(100, 176), (150, 176)], 30, rough=0.6)
+    for y in (64, 176):
+        c.stroke([(136, y - 15), (136, y + 15)], 5, opacity=0.9)
+    ball(c, 220, 120, 24)
+    for k, r in enumerate((26, 44)):
+        c.stroke(c.circle_pts(220, 120, r + 18, 150, 210, 10), 5, opacity=0.8)
+    out(c, "Magnet", hud=True)
+
+    # Перемотка
+    c = Canvas(256, 256, 205)
+    tape = c.round_rect_pts(34, 60, 222, 176, 10)
+    c.fill(tape, opacity=0.25, hatch=(40, 10))
+    c.stroke(tape, 9, closed=True)
+    for x in (92, 164):
+        c.stroke(c.circle_pts(x, 116, 20), 7, closed=True)
+    c.stroke([(72, 148), (184, 148)], 6)
+    for x0 in (150, 104):
+        tri = [(x0, 196), (x0 + 44, 214 - 40), (x0 + 44, 236)]
+        tri = [(x0, 216), (x0 + 40, 196), (x0 + 40, 236)]
+        c.fill(tri, opacity=0.8)
+        c.stroke(tri, 6, closed=True)
+    out(c, "Rewind", hud=True)
+
+    # Карусель
+    c = Canvas(256, 256, 206)
+    c.stroke(c.circle_pts(128, 128, 22), 8, closed=True)
+    for k in range(6):
+        a = math.radians(k * 60)
+        ball(c, 128 + math.cos(a) * 82, 128 + math.sin(a) * 82, 16)
+    for a0 in (20, 200):
+        arc = c.circle_pts(128, 128, 52, a0, a0 + 120, 24)
+        c.stroke(arc, 7)
+        c.arrow_head(arc[-1], math.degrees(math.atan2(arc[-1][1] - arc[-3][1], arc[-1][0] - arc[-3][0])), 20, 7)
+    out(c, "Carousel", hud=True)
+
+    # Резиночка
+    c = Canvas(256, 256, 207)
+    for x in (34, 222):
+        c.stroke(c.circle_pts(x, 96, 16), 7, closed=True)
+        c.stroke([(x, 112), (x, 170), (x - 16, 214)], 7)
+        c.stroke([(x, 170), (x + 16, 214)], 7)
+    band = [(40 + 176 * t, 196 + 10 * math.sin(t * math.pi * 6)) for t in np.linspace(0, 1, 40)]
+    c.stroke(band, 7)
+    blob = c.circle_pts(128, 150, 30)
+    c.fill(blob, opacity=0.4, hatch=(30, 8))
+    c.stroke(blob, 7, closed=True)
+    for a in (-120, -90, -60):
+        ca, sa = math.cos(math.radians(a)), math.sin(math.radians(a))
+        c.stroke([(128 + ca * 40, 150 + sa * 40), (128 + ca * 58, 150 + sa * 58)], 6)
+    out(c, "ElasticBand", hud=True)
+
+    # Рация
+    c = Canvas(256, 256, 208)
+    radio = c.round_rect_pts(56, 92, 126, 232, 10)
+    c.fill(radio, opacity=0.35, hatch=(30, 9))
+    c.stroke(radio, 9, closed=True)
+    c.stroke([(108, 92), (108, 30)], 8)
+    for y in (122, 138, 154):
+        c.stroke([(72, y), (110, y)], 5)
+    c.stroke(c.circle_pts(190, 160, 34), 7, closed=True)
+    c.stroke(c.circle_pts(190, 160, 12), 6, closed=True)
+    for d in ((0, -1), (0, 1), (-1, 0), (1, 0)):
+        c.stroke([(190 + d[0] * 40, 160 + d[1] * 40), (190 + d[0] * 54, 160 + d[1] * 54)], 6)
+    for r in (22, 40):
+        c.stroke(c.circle_pts(108, 30, r, -60, 0, 10), 6)
+    out(c, "Walkie", hud=True)
+
+    # Баррикада (комбо: крышка + забор)
+    c = Canvas(256, 256, 209)
+    for i in range(4):
+        x = 52 + i * 34
+        plank = [(x - 12, 226), (x + 12, 226), (x + 12, 112), (x, 94), (x - 12, 112)]
+        c.fill(plank, opacity=0.3, hatch=(60, 9))
+        c.stroke(plank, 7, closed=True)
+    c.stroke([(28, 150), (176, 150)], 8)
+    lid = c.circle_pts(196, 120, 40, 200, 340, 20)
+    c.stroke(lid, 10)
+    ball(c, 112, 46, 20)
+    c.stroke([(134, 46), (214, 46)], 7)
+    c.arrow_head((228, 46), 0, 20, 7)
+    out(c, "Barricade", hud=True)
+
+    # Считалочка
+    c = Canvas(256, 256, 210)
+    for i, d in enumerate("123"):
+        digit(c, d, 52 + i * 70, 112 + (i == 2) * -10, 92 + (i == 2) * 20, w=10 + (i == 2) * 2)
+    c.stroke([(214, 70), (214, 152)], 10)
+    c.stroke(c.circle_pts(214, 172, 5), 8, closed=True)
+    ball(c, 186, 220, 18)
+    c.stroke([(40, 222), (156, 222)], 6, dash=12)
+    out(c, "CountRhyme")
+
+    # Мел
+    c = Canvas(256, 256, 211)
+    stick = [(70, 60), (110, 30), (188, 134), (148, 164)]
+    c.fill(stick, opacity=0.35, hatch=(30, 8))
+    c.stroke(stick, 8, closed=True)
+    c.stroke([(60, 176), (140, 236)], 12)
+    c.stroke([(140, 176), (60, 236)], 12)
+    for y, x0 in ((196, 168), (214, 176), (232, 168)):
+        c.stroke([(x0, y), (x0 + 50, y)], 7, opacity=0.85)
+    out(c, "Chalk")
+
+    # Жвачный пузырь
+    c = Canvas(256, 256, 212)
+    head = c.circle_pts(76, 150, 52)
+    c.stroke(head, 8, closed=True)
+    c.stroke(c.circle_pts(60, 136, 5), 6, closed=True)
+    bubble = c.circle_pts(164, 130, 62)
+    c.fill(bubble, opacity=0.3, hatch=(-30, 10))
+    c.stroke(bubble, 8, closed=True)
+    c.stroke(c.circle_pts(164, 130, 44, 200, 250, 10), 6)
+    ball(c, 228, 40, 16)
+    c.stroke([(214, 52), (196, 74)], 6, dash=8)
+    out(c, "GumBubble")
+
+    # Тамагочи
+    c = Canvas(256, 256, 213)
+    egg = [(128 + 72 * math.cos(a) * (1 - 0.12 * math.sin(a)), 136 + 92 * math.sin(a)) for a in np.linspace(0, 2 * math.pi, 60, endpoint=False)]
+    c.fill(egg, opacity=0.25, hatch=(30, 10))
+    c.stroke(egg, 9, closed=True)
+    screen = c.round_rect_pts(90, 92, 166, 152, 6)
+    c.stroke(screen, 7, closed=True)
+    for x, y in ((112, 112), (144, 112), (116, 134), (128, 138), (140, 134)):
+        c.fill(c.round_rect_pts(x - 4, y - 4, x + 4, y + 4, 1), opacity=1.0)
+    for x in (100, 128, 156):
+        c.stroke(c.circle_pts(x, 186, 9), 6, closed=True)
+    c.stroke(c.heart_pts(212, 52, 1.6), 7, closed=True)
+    out(c, "Tamagotchi")
+
+    # Пас
+    c = Canvas(256, 256, 214)
+    for x in (44, 212):
+        c.stroke(c.circle_pts(x, 160, 18), 7, closed=True)
+        c.stroke([(x, 178), (x, 236)], 7)
+    arc = c.circle_pts(128, 190, 92, 200, 340, 30)
+    c.stroke(arc, 7, dash=14)
+    c.arrow_head(arc[-1], math.degrees(math.atan2(arc[-1][1] - arc[-3][1], arc[-1][0] - arc[-3][0])), 22, 7)
+    ball(c, 128, 98, 22)
+    for a in (-150, -90, -30):
+        ca, sa = math.cos(math.radians(a)), math.sin(math.radians(a))
+        c.stroke([(128 + ca * 30, 98 + sa * 30), (128 + ca * 44, 98 + sa * 44)], 5)
+    out(c, "Pass")
+
+    # Круговая порука
+    c = Canvas(256, 256, 215)
+    for k in range(6):
+        a = math.radians(k * 60 - 90)
+        x, y = 128 + math.cos(a) * 84, 128 + math.sin(a) * 84
+        palm = c.circle_pts(x, y, 16)
+        c.fill(palm, opacity=0.5)
+        c.stroke(palm, 6, closed=True)
+        for f in (-1, 0, 1):
+            fa = a + f * 0.45
+            c.stroke([(x + math.cos(fa) * 14, y + math.sin(fa) * 14), (x + math.cos(fa) * 30, y + math.sin(fa) * 30)], 5)
+    c.stroke(c.circle_pts(128, 112, 16), 7, closed=True)
+    c.stroke([(128, 128), (128, 168)], 7)
+    c.stroke([(108, 146), (148, 146)], 7)
+    out(c, "CircleGuard")
+
+    # Морская фигура (комбо: свисток + замри)
+    c = Canvas(256, 256, 216)
+    wave = [(20 + 216 * t, 214 + 12 * math.sin(t * math.pi * 5)) for t in np.linspace(0, 1, 50)]
+    c.stroke(wave, 8)
+    c.stroke(c.circle_pts(98, 70, 18), 7, closed=True)
+    c.stroke([(98, 88), (98, 150), (70, 190)], 7)
+    c.stroke([(98, 150), (126, 190)], 7)
+    c.stroke([(98, 110), (60, 80)], 7)
+    c.stroke([(98, 110), (140, 96)], 7)
+    for k in range(6):
+        a = math.radians(k * 60)
+        c.stroke([(196, 92), (196 + math.cos(a) * 34, 92 + math.sin(a) * 34)], 6)
+        b0 = (196 + math.cos(a) * 22, 92 + math.sin(a) * 22)
+        for side in (-1, 1):
+            b1 = a + side * 0.8
+            c.stroke([b0, (b0[0] + math.cos(b1) * 9, b0[1] + math.sin(b1) * 9)], 4)
+    out(c, "SeaFigure")
+
+
 def pockets():
     c = Canvas(128, 128, 70)
     frame = wobble(c.round_rect_pts(10, 10, 118, 118, 18), 0.8, 70)
@@ -787,4 +1044,5 @@ if __name__ == "__main__":
     hud()
     card_frames()
     icons()
+    icons_cards_2026()
     pockets()

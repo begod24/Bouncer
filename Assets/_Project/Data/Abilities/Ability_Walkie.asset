@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5dfdf8de021642b0af12f4960e8e584, type: 3}
+  m_Name: Ability_Walkie
+  m_EditorClassIdentifier: Bouncer.Player::Bouncer.Player.WalkieAbility
+  cooldown: 12
+  hudIcon: {fileID: 21300000, guid: 37c0556b25e454de1b3e417ca3e72610, type: 3}
+  range: 18
+  halfAngle: 30
+  duration: 6
+  bonus: 1
+  walkie: {fileID: 4123516029803493444, guid: 3bf0318d093314407891d9e2db20b610, type: 3}
+  markView: {fileID: 5298249474721587141, guid: 9bc078fd0b20042429b4b1b70117406b, type: 3}

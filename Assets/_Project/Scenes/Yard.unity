@@ -38920,6 +38920,7 @@ MonoBehaviour:
   label: {fileID: 726303624}
   pulse: {fileID: 885910712}
   radius: 1.6
+  gatherTime: 0.6
 --- !u!4 &2005619131
 Transform:
   m_ObjectHideFlags: 0

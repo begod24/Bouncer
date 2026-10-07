@@ -54,6 +54,18 @@ namespace Bouncer.Upgrades
         [Min(0)] public int freeRerolls;
         [Tooltip("«Счастливый фантик»: на столько карточек больше на выбор в портфеле и за босса")]
         [Min(0)] public int extraChoices;
+        [Tooltip("«Считалочка»: каждый такой по счёту бросок сам заряжен. 0 — нет")]
+        [Min(0)] public int countEvery;
+        [Tooltip("«Считалочка»: и бьёт на столько сильнее")]
+        [Min(0)] public int countBonus;
+        [Tooltip("«Пас»: мяч, пойманный у товарища, сразу заряжен")]
+        public bool passCharge;
+        [Tooltip("«Жвачный пузырь»: раз в столько секунд пузырь принимает чужой мяч. 0 — нет")]
+        [Min(0f)] public float gumBubbleCooldown;
+        [Tooltip("«Тамагочи»: сытый питомец спасает от выбивания")]
+        public bool tamagotchi;
+        [Tooltip("«Круговая порука»: подняв товарища, замораживаешь врагов вокруг")]
+        public bool circleGuard;
 
         public override bool CanOffer(PlayerController player, int stacks) =>
             base.CanOffer(player, stacks) && player.Balls.MaxBalls + extraBalls >= 1;
@@ -84,6 +96,14 @@ namespace Bouncer.Upgrades
             mods.DashCatch |= dashCatch;
             mods.FreeRerolls += freeRerolls;
             mods.ExtraChoices += extraChoices;
+            if (countEvery > 0)
+                mods.CountEvery = mods.CountEvery > 0 ? Mathf.Min(mods.CountEvery, countEvery) : countEvery;
+            mods.CountBonus += countBonus;
+            mods.PassCharge |= passCharge;
+            if (gumBubbleCooldown > 0f)
+                mods.GumBubbleCooldown = mods.GumBubbleCooldown > 0f ? Mathf.Min(mods.GumBubbleCooldown, gumBubbleCooldown) : gumBubbleCooldown;
+            mods.Tamagotchi |= tamagotchi;
+            mods.CircleGuard |= circleGuard;
             if (extraBalls > 0 && !Rebuilding)
                 player.Balls.GiveBall(extraBalls);
             else if (extraBalls < 0)

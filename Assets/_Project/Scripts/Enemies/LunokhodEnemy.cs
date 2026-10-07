@@ -260,8 +260,6 @@ namespace Bouncer.Enemies
             if (_health.IsDead)
                 return false;
             bool open = LidOpen;
-            bool strong = hit.Has(HitFlags.Charged);
-            GameFeel.Shake(strong ? 0.2f : 0.08f);
             BossArmor.Flash(hitFlash, open);
             GameEvents.PlaySound(open ? SoundCue.EnemyHitStrong : SoundCue.ShieldBlock, hit.Point);
             _jolt = 1f;
@@ -284,7 +282,6 @@ namespace Bouncer.Enemies
             }
             GameEvents.RaiseEnemyKilled(gameObject, hit);
             GameEvents.PlaySound(SoundCue.Explosion, transform.position);
-            GameFeel.Shake(0.4f);
             PoolService.Despawn(gameObject);
         }
 

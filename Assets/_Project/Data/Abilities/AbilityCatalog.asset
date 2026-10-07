@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b25f206032fe04763a34563664d9f4cc, type: 3}
+  m_Name: AbilityCatalog
+  m_EditorClassIdentifier: Bouncer.Player::Bouncer.Player.AbilityCatalog
+  abilities:
+  - {fileID: 11400000, guid: d8e47312bbf774d70aa12553f7526ba7, type: 2}
+  - {fileID: 11400000, guid: cdcf70ac142a1421f8accd06ff823a0b, type: 2}
+  - {fileID: 11400000, guid: 8f0f985bb30d44c8a9c0b36a91cad0e2, type: 2}
+  - {fileID: 11400000, guid: ea65bd05034b14cf1be27fe50163b712, type: 2}
+  - {fileID: 11400000, guid: 86fb28a44072f4a76a1ac4849d49744f, type: 2}
+  - {fileID: 11400000, guid: 22de1975d1db945f583c4a6a4b245815, type: 2}
+  - {fileID: 11400000, guid: 77c5efb18bc014a7d9f6166220aff7a8, type: 2}
+  - {fileID: 11400000, guid: eb48fc59814b947dba9b492658da03d2, type: 2}
+  - {fileID: 11400000, guid: 08f044332d8f54f18b68d8231b104d6c, type: 2}
+  - {fileID: 11400000, guid: 9909951e9b0d04b8aa09850a6f089c5c, type: 2}

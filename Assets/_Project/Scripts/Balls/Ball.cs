@@ -76,6 +76,8 @@ namespace Bouncer.Balls
         [SerializeField] GumSpot gumSpot;
         [Tooltip("Кольцо взрыва («Горячая картошка»), из пула")]
         [SerializeField] ExpandingRing blastRing;
+        [Tooltip("Меловой крестик («Мел»), из пула")]
+        [SerializeField] ChalkMark chalkMark;
 
         readonly RaycastHit[] _hits = new RaycastHit[16];
         readonly RaycastHit[] _columnHits = new RaycastHit[16];
@@ -112,6 +114,8 @@ namespace Bouncer.Balls
         Vector3 _rollTo;
         bool _fastForward;
         bool _puppetHot;
+        bool _lobLanded;
+        Collider _bonusFor;
         Vector3 _visualOffset;
         float _visualBlend = 0.1f;
 
@@ -203,6 +207,8 @@ namespace Bouncer.Balls
             _blastDone = false;
             _travel = 0f;
             _yoyoBack = false;
+            _lobLanded = false;
+            _bonusFor = null;
             MakeKinematicAt(transform.position);
             SetState(BallState.Idle);
         }
@@ -263,6 +269,8 @@ namespace Bouncer.Balls
             _blastDone = false;
             _travel = 0f;
             _yoyoBack = false;
+            _lobLanded = false;
+            _bonusFor = null;
             _gumDistance = definition.gumSpacing * 0.5f;
 
             Vector3 direction = Flat(t.Direction);
@@ -604,17 +612,22 @@ namespace Bouncer.Balls
                     Curve(dt);
                 if (live && Perks.snakeAmplitude > 0f)
                     Snake(dt);
+                if (live && Team == Team.Player && !IsComingBack && TargetMark.Active)
+                    HomeToMark(dt);
+                if (live && definition.rollDrag > 0f)
+                    Drag(dt);
             }
 
             Vector3 position = _rb.position;
             float remaining = _velocity.magnitude * dt;
-            int mask = live && !Grazes ? Layers.LiveBallMask(Team) : Layers.BallSolidMask;
+            bool overhead = live && Perks.lob && (_velocity.y > 0f || position.y > LobStrikeHeight);
+            int mask = live && !Grazes && !overhead ? Layers.LiveBallMask(Team) : Layers.BallSolidMask;
             _ignored.Clear();
 
             for (int i = 0; i < MaxSweepIterations && remaining > 1e-5f; i++)
             {
                 Vector3 direction = _velocity.normalized;
-                if (!Sweep(position, direction, remaining, mask, out RaycastHit hit, column: live && !Grazes))
+                if (!Sweep(position, direction, remaining, mask, out RaycastHit hit, column: live && !Grazes && !Perks.lob))
                 {
                     Advance(ref position, direction * remaining, live);
                     break;
@@ -632,6 +645,7 @@ namespace Bouncer.Balls
                         return;
                     if (target != null)
                     {
+                        AddTargetBonus(hit.collider);
                         var result = target.OnBallContact(this, hit);
                         if (result is BallContactResult.PassThrough or BallContactResult.Redirected)
                         {
@@ -674,6 +688,10 @@ namespace Bouncer.Balls
 
                 if (hit.normal.y > 0.6f)
                 {
+                    if (live && Perks.chalk && !IsPhantom)
+                        DropChalk(hit.point);
+                    if (live && Perks.lob && !_lobLanded)
+                        LobLand(hit.point);
                     if (BlastPending)
                         Blast(hit.point, null);
                     if (live && _floorBouncesLeft > 0 && TryFloorBounce(hit.point, ref remaining))
@@ -709,6 +727,8 @@ namespace Bouncer.Balls
                 {
                     if (Perks.wallDamage > 0)
                         AddDamage(Perks.wallDamage);
+                    if (Perks.bounceAssist > 0f && Team == Team.Player)
+                        AssistAim(position, Perks.bounceAssist);
                     if (Perks.yoyo && TryStartYoyo(null, position))
                         return;
                     if (surface == null || !surface.Free)
@@ -1039,7 +1059,6 @@ namespace Bouncer.Balls
             if (blastRing)
                 PoolService.Spawn(blastRing, new Vector3(point.x, 0.05f, point.z), Quaternion.identity).Play(Perks.blastRadius);
             GameEvents.PlaySound(SoundCue.AreaThud, point);
-            GameFeel.Shake(0.5f);
         }
 
         void HitAround(Vector3 center, float radius, int damage, IDamageable exclude, float force, HitFlags flags, float stun = 0f)
@@ -1149,6 +1168,8 @@ namespace Bouncer.Balls
                     Source = Thrower,
                     Flags = Stats.Flags,
                 });
+                if (Perks.grazeStun > 0f && other.GetComponentInParent<Targetable>() is { } stunned)
+                    stunned.Freeze(Perks.grazeStun);
                 OnTargetHit(point, -direction, other, to);
             }
         }
@@ -1208,7 +1229,6 @@ namespace Bouncer.Balls
             if (blastRing)
                 PoolService.Spawn(blastRing, new Vector3(point.x, 0.05f, point.z), Quaternion.identity).Play(Perks.bounceBlastRadius);
             GameEvents.PlaySound(SoundCue.Explosion, point);
-            GameFeel.Shake(0.3f);
         }
 
         void AssistAim(Vector3 position, float maxAngle)
@@ -1271,6 +1291,94 @@ namespace Bouncer.Balls
             _stateTime = 0f;
             IgnoreFor(hit.collider, 0.25f);
             return true;
+        }
+
+        const float LobStrikeHeight = 1.3f;
+        const float MarkRange = 20f;
+        const float MarkTurnRate = 110f;
+
+        void AddTargetBonus(Collider struck)
+        {
+            if (Team != Team.Player || struck == null || struck == _bonusFor)
+                return;
+            var target = struck.GetComponentInParent<Targetable>();
+            if (target == null)
+                return;
+            int bonus = 0;
+            if (Perks.frozenBonus > 0 && target.IsFrozen)
+                bonus += Perks.frozenBonus;
+            if (TargetMark.Active && TargetMark.Target == target)
+                bonus += TargetMark.Bonus;
+            if (bonus <= 0)
+                return;
+            _bonusFor = struck;
+            AddDamage(bonus);
+        }
+
+        void HomeToMark(float dt)
+        {
+            Vector3 horizontal = Flat(_velocity);
+            float speed = horizontal.magnitude;
+            if (speed < 1e-3f)
+                return;
+            Vector3 to = Flat(TargetMark.Target.AimPoint - _rb.position);
+            float sqr = to.sqrMagnitude;
+            Vector3 heading = Perks.snakeAmplitude > 0f ? _snakeHeading : horizontal / speed;
+            if (sqr < 0.09f || sqr > MarkRange * MarkRange || Vector3.Angle(heading, to) > HomingCone)
+                return;
+            Vector3 turned = Vector3.RotateTowards(heading, to.normalized, MarkTurnRate * Mathf.Deg2Rad * dt, 0f);
+            if (Perks.snakeAmplitude > 0f)
+                _snakeHeading = turned;
+            else
+                _velocity = turned * speed + Vector3.up * _velocity.y;
+        }
+
+        void Drag(float dt)
+        {
+            Vector3 horizontal = Flat(_velocity);
+            float speed = horizontal.magnitude;
+            if (speed < 1e-3f)
+                return;
+            float slower = Mathf.Max(0f, speed - definition.rollDrag * dt);
+            _velocity = horizontal * (slower / speed) + Vector3.up * _velocity.y;
+        }
+
+        void DropChalk(Vector3 point)
+        {
+            if (chalkMark)
+                ChalkMark.Drop(chalkMark, point + Vector3.up * 0.3f);
+        }
+
+        void LobLand(Vector3 point)
+        {
+            _lobLanded = true;
+            if (Perks.areaRadius > 0f && Perks.areaDamage > 0)
+                DamageArea(point, null);
+            if (definition.landEffect)
+                PoolService.Spawn(definition.landEffect, new Vector3(point.x, 0.05f, point.z), Quaternion.identity);
+        }
+
+        public void TurnAround(GameObject thrower, Vector3 velocity)
+        {
+            if (IsPuppet || State != BallState.Live || thrower == null)
+                return;
+            Team = Team.Player;
+            Thrower = thrower;
+            _receiver = thrower.GetComponent<IBallReceiver>();
+            _velocity = velocity;
+            _stateTime = 0f;
+            Ricochets = 0;
+            _grazed.Clear();
+            Vector3 heading = Flat(velocity);
+            if (heading.sqrMagnitude > 1e-4f)
+                _snakeHeading = heading.normalized;
+            StateChanged?.Invoke(this);
+        }
+
+        public void Neutralize()
+        {
+            if (IsPuppet)
+                Network?.Neutralize(this);
         }
 
         void AddDamage(int amount)

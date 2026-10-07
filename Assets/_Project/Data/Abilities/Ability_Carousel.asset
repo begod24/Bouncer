@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9cbaa7d213a264c13b0bbdac3e5b59ab, type: 3}
+  m_Name: Ability_Carousel
+  m_EditorClassIdentifier: Bouncer.Player::Bouncer.Player.CarouselAbility
+  cooldown: 20
+  hudIcon: {fileID: 21300000, guid: 052e1242a54a94955984c7283f769b5d, type: 3}
+  duration: 1.4
+  catchRadius: 2.3
+  throwAt: 0.35

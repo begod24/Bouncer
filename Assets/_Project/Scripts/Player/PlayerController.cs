@@ -24,6 +24,10 @@ namespace Bouncer.Player
         float _dodgedDashStart = float.NegativeInfinity;
         float _nextCatchHealAt;
         float _lidReadyAt;
+        float _gumReadyAt;
+        int _food;
+        PlayerRewind _rewind;
+        PlayerSpin _spin;
         IPlayerIntentSource _intentSource;
 
         public PlayerStats Stats => stats;
@@ -33,7 +37,7 @@ namespace Bouncer.Player
         public PlayerBallHandler Balls { get; private set; }
         public Health Health { get; private set; }
         public Targetable Targetable { get; private set; }
-        public PlayerFlashlight Flashlight { get; private set; }
+        public PlayerAbilities Abilities { get; private set; }
         public bool IsDead => Health.IsDead;
         public PlayerIntent LastIntent { get; private set; }
         public bool IsScripted { get; private set; }
@@ -56,7 +60,6 @@ namespace Bouncer.Player
             Sliding = Motor.IsDashing && Modifiers.TackleDamage > 0,
             DashDirection = Motor.DashDirection,
             Down = IsDead,
-            Flashlight = Flashlight != null && Flashlight.IsOn,
         };
 
         public event Action<HitInfo> Hurt;
@@ -72,6 +75,15 @@ namespace Bouncer.Player
         public float CatchHeal01 => stats.catchHealCooldown <= 0f ? 1f
             : Mathf.Clamp01(1f - (_nextCatchHealAt - Time.time) / stats.catchHealCooldown);
 
+        public bool HasGumBubble => Modifiers.GumBubbleCooldown > 0f;
+        public bool GumBubbleReady => HasGumBubble && Time.time >= _gumReadyAt && !IsDead;
+        public bool RemoteGumBubble { get; set; }
+        public bool ShowsGumBubble => IsLocal ? GumBubbleReady : RemoteGumBubble && !IsDead;
+        public bool HasTamagotchi => Modifiers.Tamagotchi;
+        public float TamagotchiFood01 => Mathf.Clamp01(_food / (float)Mathf.Max(1, stats.tamagotchiFood));
+        public bool IsSpinning => _spin != null && _spin.Active;
+        public bool IsRewinding => _rewind != null && _rewind.Active;
+
         public bool HasLid => Modifiers.LidCooldown > 0f;
         public bool LidReady => HasLid && Time.time >= _lidReadyAt;
         public float LidReady01 => !HasLid ? 0f
@@ -86,7 +98,9 @@ namespace Bouncer.Player
             _intentSource = GetComponent<IPlayerIntentSource>();
 
             Targetable = GetComponent<Targetable>();
-            Flashlight = GetComponent<PlayerFlashlight>();
+            Abilities = GetComponent<PlayerAbilities>();
+            _rewind = GetComponent<PlayerRewind>();
+            _spin = GetComponent<PlayerSpin>();
 
             Motor.Init(stats, Modifiers);
             Aim.Init(stats);
@@ -135,11 +149,13 @@ namespace Bouncer.Player
             LastIntent = intent;
             if (intent.PausePressed && GameSession.Instance != null)
                 GameSession.Instance.TogglePause();
-            if (GameFeel.Paused || IsScripted)
+            if (GameFeel.Paused || IsScripted || IsRewinding)
                 return;
 
             float dt = Time.deltaTime;
             UpdateDominoes();
+            if (!IsDead && ChalkMark.At(transform.position))
+                Motor.Boost(stats.chalkBoost, stats.chalkBoostTime);
             bool canAct = !IsDead && GameSession.IsPlayerActive && !Motor.IsDown;
             if (!canAct)
             {
@@ -155,7 +171,10 @@ namespace Bouncer.Player
             if (intent.DashPressed && !Balls.IsCatching)
                 Motor.TryDash(intent.Move);
 
-            Balls.Tick(intent, Aim, canAct: true, canCatch: !Motor.IsDashing);
+            bool spinning = IsSpinning;
+            Balls.Tick(intent, Aim, canAct: !spinning, canCatch: !Motor.IsDashing && !spinning);
+            if (Abilities != null)
+                Abilities.Tick(intent, !spinning && !Balls.IsCharging);
 
             float speedMultiplier = Balls.IsCharging ? stats.chargingMoveMultiplier
                 : Balls.IsCatching ? stats.catchingMoveMultiplier
@@ -260,6 +279,8 @@ namespace Bouncer.Player
                 PerfectDodge();
             if (Balls.TryCatch(ball))
                 return BallContactResult.Caught;
+            if (!Motor.IsDashInvulnerable && !Health.IsInvulnerable && TryGumBubble(ball))
+                return BallContactResult.Caught;
             if (!Motor.IsDashInvulnerable && !Health.IsInvulnerable && TryLidBlock(hit.point))
                 return BallContactResult.Bounce;
 
@@ -294,6 +315,8 @@ namespace Bouncer.Player
                 return false;
             if (TryLidBlock(hit.Point))
                 return false;
+            if (TryTamagotchi(hit))
+                return true;
             if (TrySecondWind(hit))
                 return true;
 
@@ -364,6 +387,49 @@ namespace Bouncer.Player
             Hurt?.Invoke(saved);
             SecondWindUsed?.Invoke();
             return true;
+        }
+
+        bool TryGumBubble(Ball ball)
+        {
+            if (!GumBubbleReady)
+                return false;
+            _gumReadyAt = Time.time + Modifiers.GumBubbleCooldown;
+            Vector3 feet = transform.position;
+            ball.Drop(feet + transform.forward * 0.6f + Vector3.up * 0.4f, Vector3.zero);
+            Health.SetInvulnerable(0.3f);
+            Targetable.FreezeAround(feet, stats.gumBubbleRadius, Team.Enemy, stats.gumBubbleStick);
+            GameEvents.PlaySound(SoundCue.BubblePop, feet);
+            PlayerFx.Play(this, PlayerFxKind.GumBubblePop, feet + transform.forward * 0.5f);
+            return true;
+        }
+
+        bool TryTamagotchi(in HitInfo hit)
+        {
+            if (!Modifiers.Tamagotchi || _food < stats.tamagotchiFood || hit.Damage < Health.Current)
+                return false;
+            _food = 0;
+            var saved = hit;
+            saved.Damage = Health.Current - 1;
+            if (saved.Damage > 0)
+                Health.TryDamage(saved);
+            Health.SetInvulnerable(stats.tamagotchiInvulnerability);
+            Motor.AddKnockback(hit.Direction * hit.Force);
+            Balls.CancelCharge();
+            GameFeel.HitStop(0.1f);
+            GameFeel.Shake(0.8f);
+            GameEvents.PlaySound(SoundCue.TamagotchiBeep, transform.position);
+            Hurt?.Invoke(saved);
+            PlayerFx.Play(this, PlayerFxKind.TamagotchiSave, transform.position);
+            return true;
+        }
+
+        public void OnRevivedTeammate(Vector3 at)
+        {
+            if (!Modifiers.CircleGuard)
+                return;
+            Targetable.FreezeAround(at, stats.circleGuardRadius, Team.Enemy, stats.circleGuardFreeze);
+            Health.SetInvulnerable(stats.circleGuardInvulnerability);
+            PlayerFx.Play(this, PlayerFxKind.CircleGuard, at);
         }
 
         bool TryLidBlock(Vector3 point)
@@ -449,17 +515,30 @@ namespace Bouncer.Player
                 Motor.AddKnockback(info.Direction * stats.strongCatchPush);
             }
             GameFeel.HitStop(info.Candle || info.Perfect ? 0.06f : 0.04f);
-            GameFeel.Shake(0.25f);
+            if (info.Perfect)
+                PlayerFx.Play(this, PlayerFxKind.PerfectCatch, info.Position);
+            if (Modifiers.Tamagotchi && _food < stats.tamagotchiFood)
+            {
+                _food++;
+                if (_food >= stats.tamagotchiFood)
+                    GameEvents.PlaySound(SoundCue.TamagotchiBeep, transform.position);
+            }
+            bool sea = Modifiers.Perks.frozenBonus > 0;
+            float seaScale = sea ? stats.seaFigureFreeze : 1f;
             if (Modifiers.CatchFreeze > 0f)
             {
-                GameFeel.BulletTime(stats.freezeTimeScale, Modifiers.CatchFreeze);
+                GameFeel.BulletTime(stats.freezeTimeScale, Modifiers.CatchFreeze * seaScale);
                 Froze?.Invoke();
+                if (sea)
+                    PlayerFx.Play(this, PlayerFxKind.SeaFigure, transform.position, new Vector3(Modifiers.CatchFreeze * seaScale, 0f, 0f));
             }
             if (info.Perfect && Modifiers.WhistleFreeze > 0f)
             {
-                Targetable.FreezeAround(transform.position, stats.whistleRadius, Team.Enemy, Modifiers.WhistleFreeze);
+                Targetable.FreezeAround(transform.position, stats.whistleRadius, Team.Enemy, Modifiers.WhistleFreeze * seaScale);
                 GameEvents.PlaySound(SoundCue.Whistle, transform.position);
                 Froze?.Invoke();
+                if (sea)
+                    PlayerFx.Play(this, PlayerFxKind.SeaFigure, transform.position, new Vector3(Modifiers.WhistleFreeze * seaScale, 0f, 0f));
             }
         }
 

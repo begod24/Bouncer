@@ -576,7 +576,6 @@ namespace Bouncer.Enemies
                 return false;
             bool open = IsOpen;
             bool strong = hit.Has(HitFlags.Charged);
-            GameFeel.Shake(strong ? 0.3f : 0.12f);
             BossArmor.Flash(hitFlash, open);
             GameEvents.PlaySound(strong || open ? SoundCue.EnemyHitStrong : SoundCue.ShieldBlock, hit.Point);
             var counted = hit;

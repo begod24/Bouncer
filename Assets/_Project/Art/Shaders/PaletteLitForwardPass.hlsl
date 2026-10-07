@@ -155,6 +155,45 @@ Varyings PaletteLitVertex(Attributes input)
     return output;
 }
 
+float FrostHash(float3 p)
+{
+    p = frac(p * 0.3183099 + 0.1);
+    p *= 17.0;
+    return frac(p.x * p.y * p.z * (p.x + p.y + p.z));
+}
+
+float FrostNoise(float3 p)
+{
+    float3 i = floor(p);
+    float3 f = frac(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return lerp(lerp(lerp(FrostHash(i), FrostHash(i + float3(1, 0, 0)), f.x),
+                     lerp(FrostHash(i + float3(0, 1, 0)), FrostHash(i + float3(1, 1, 0)), f.x), f.y),
+                lerp(lerp(FrostHash(i + float3(0, 0, 1)), FrostHash(i + float3(1, 0, 1)), f.x),
+                     lerp(FrostHash(i + float3(0, 1, 1)), FrostHash(i + float3(1, 1, 1)), f.x), f.y), f.z);
+}
+
+// Ледяная корка: голубые грани трёх оттенков с белыми трещинами, иней сверху, холодный ободок и блёстки
+half3 ApplyFrost(half3 color, float3 positionWS, half3 n, half ndv, half amount)
+{
+    float ice = FrostNoise(positionWS * 4.5) * 3.0;
+    half facet = (half)(floor(ice) / 3.0);
+    float edge = min(frac(ice), 1.0 - frac(ice));
+    half crack = (half)(1.0 - saturate(edge / max(fwidth(ice) * 1.2, 1e-4)));
+    // своя окраска врага просвечивает сквозь лёд — его можно узнать
+    half3 iceColor = half3(0.45h, 0.74h, 1.0h) * (0.7h + 0.4h * facet);
+    half3 frozen = lerp(color, color * 0.5h + iceColor * 0.55h, 0.75h);
+    frozen += half3(0.8h, 0.92h, 1.0h) * (saturate(n.y * 1.6h - 0.4h) * 0.22h);
+    frozen = lerp(frozen, half3(0.92h, 0.97h, 1.0h), crack * 0.5h);
+    frozen += half3(0.5h, 0.82h, 1.0h) * ((half)pow(1.0h - ndv, 2.5h) * 0.7h);
+    float3 cell = floor(positionWS * 14.0);
+    float h = FrostHash(cell);
+    float3 local = frac(positionWS * 14.0) - 0.5;
+    half sparkle = (half)(step(0.92, h) * step(length(local), 0.22) * step(0.4, sin(_Time.y * 6.0 + h * 40.0)));
+    frozen += sparkle * 0.9h;
+    return lerp(color, frozen, amount);
+}
+
 void PaletteLitFragment(
     Varyings input
     , out half4 outColor : SV_Target0
@@ -186,6 +225,34 @@ void PaletteLitFragment(
     InitializeBakedGIData(input, inputData);
 
     half4 color = UniversalFragmentBlinnPhong(inputData, surfaceData);
+    half3 n = inputData.normalWS;
+    half ndv = saturate(dot(n, inputData.viewDirectionWS));
+    if ((GetMeshRenderingLayer() & BOUNCER_RIM_LAYER) != 0u)
+    {
+        // мультяшный ободок по краю силуэта, чуть сильнее сверху
+        half rim = smoothstep(0.6h, 0.85h, 1.0h - ndv) * saturate(n.y * 0.5h + 0.75h);
+        color.rgb += _Bouncer_RimColor.rgb * (rim * (half)_Bouncer_RimStrength);
+    }
+    else if (_Bouncer_Wet > 0.0)
+    {
+        // мокрые горизонтальные поверхности: темнее, блик солнца и отсвет неба по краю
+        half wet = (half)_Bouncer_Wet * saturate(n.y * 3.0h - 2.0h);
+        Light mainLight = GetMainLight(inputData.shadowCoord, inputData.positionWS, inputData.shadowMask);
+        half3 h = SafeNormalize(mainLight.direction + inputData.viewDirectionWS);
+        half spec = pow(saturate(dot(n, h)), 48.0h) * mainLight.shadowAttenuation;
+        half sheen = pow(1.0h - ndv, 4.0h);
+        color.rgb *= 1.0h - 0.28h * wet;
+        color.rgb += wet * (mainLight.color * (spec * 0.55h) + _GlossyEnvironmentColor.rgb * (sheen * 0.35h));
+    }
+    if (_FrostAmount > 0.001h)
+        color.rgb = ApplyFrost(color.rgb, input.positionWS, n, ndv, _FrostAmount);
+    if (_GlowColor.a > 0.001h)
+    {
+        // элита: цветной пульсирующий контур по краю силуэта
+        half contour = smoothstep(0.3h, 0.75h, 1.0h - ndv);
+        half pulse = 0.7h + 0.3h * (half)sin(_Time.y * 5.0);
+        color.rgb = lerp(color.rgb, _GlowColor.rgb * 1.6h, saturate(contour * pulse * _GlowColor.a));
+    }
     color.rgb = lerp(color.rgb, _FlashColor.rgb, _FlashColor.a);
     color.rgb = MixFog(color.rgb, inputData.fogCoord);
     color.rgb = MixRadialFog(color.rgb, input.positionWS);

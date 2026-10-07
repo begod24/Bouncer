@@ -45,6 +45,8 @@ namespace Bouncer.UI
         [SerializeField] UnityEngine.UI.Image dashIcon;
         [Tooltip("«Крышка от кастрюли»: видна, только когда карточка взята")]
         [SerializeField] UnityEngine.UI.Image lidIcon;
+        [Tooltip("Умение на Q / LB: значок берётся из умения, видно, только когда умение есть")]
+        [SerializeField] UnityEngine.UI.Image abilityIcon;
         [SerializeField] Color readyColor = new(0.96f, 0.95f, 0.92f);
         [SerializeField] Color activeColor = new(0.49f, 0.73f, 0.31f);
         [SerializeField] Color cooldownColor = new(1f, 1f, 1f, 0.3f);
@@ -217,6 +219,22 @@ namespace Bouncer.UI
                     float lid = player.LidReady01;
                     lidIcon.fillAmount = lid;
                     lidIcon.color = lid >= 1f ? readyColor : cooldownColor;
+                }
+            }
+            if (abilityIcon)
+            {
+                var abilities = player.Abilities;
+                var ability = abilities != null ? abilities.Current : null;
+                bool has = ability != null && ability.hudIcon != null;
+                if (abilityIcon.gameObject.activeSelf != has)
+                    abilityIcon.gameObject.SetActive(has);
+                if (has)
+                {
+                    if (abilityIcon.sprite != ability.hudIcon)
+                        abilityIcon.sprite = ability.hudIcon;
+                    float ready = abilities.Ready01;
+                    abilityIcon.fillAmount = ready;
+                    abilityIcon.color = ready >= 1f ? readyColor : cooldownColor;
                 }
             }
         }

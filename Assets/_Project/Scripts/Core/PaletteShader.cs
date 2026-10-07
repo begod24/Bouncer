@@ -7,6 +7,8 @@ namespace Bouncer.Core
         public static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
         public static readonly int TintColor = Shader.PropertyToID("_TintColor");
         public static readonly int FlashColor = Shader.PropertyToID("_FlashColor");
+        public static readonly int FrostAmount = Shader.PropertyToID("_FrostAmount");
+        public static readonly int GlowColor = Shader.PropertyToID("_GlowColor");
 
         public static readonly int GlobalPaletteA = Shader.PropertyToID("_Bouncer_PaletteA");
         public static readonly int GlobalPaletteB = Shader.PropertyToID("_Bouncer_PaletteB");

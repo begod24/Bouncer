@@ -327,9 +327,17 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -8486103845475325845, guid: 2d91c67ae5d0f4862bc8aaf35aafb4e2, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
     - target: {fileID: -8394694956313344106, guid: 2d91c67ae5d0f4862bc8aaf35aafb4e2, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: -8238819314375336121, guid: 2d91c67ae5d0f4862bc8aaf35aafb4e2, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
       objectReference: {fileID: 0}
     - target: {fileID: -8072411614241918931, guid: 2d91c67ae5d0f4862bc8aaf35aafb4e2, type: 3}
       propertyPath: m_Layer
@@ -343,9 +351,21 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: -7555199130009188859, guid: 2d91c67ae5d0f4862bc8aaf35aafb4e2, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
     - target: {fileID: -7269769618667487104, guid: 2d91c67ae5d0f4862bc8aaf35aafb4e2, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: -6681947596087866837, guid: 2d91c67ae5d0f4862bc8aaf35aafb4e2, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
+    - target: {fileID: -4514511816659445885, guid: 2d91c67ae5d0f4862bc8aaf35aafb4e2, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
       objectReference: {fileID: 0}
     - target: {fileID: -4226060451994761186, guid: 2d91c67ae5d0f4862bc8aaf35aafb4e2, type: 3}
       propertyPath: m_Layer
@@ -355,9 +375,29 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: -3770760768136332913, guid: 2d91c67ae5d0f4862bc8aaf35aafb4e2, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
     - target: {fileID: -2585756845535772552, guid: 2d91c67ae5d0f4862bc8aaf35aafb4e2, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: -2474385139139844083, guid: 2d91c67ae5d0f4862bc8aaf35aafb4e2, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
+    - target: {fileID: -2212985346913832835, guid: 2d91c67ae5d0f4862bc8aaf35aafb4e2, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
+    - target: {fileID: -2181715775556630301, guid: 2d91c67ae5d0f4862bc8aaf35aafb4e2, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
+    - target: {fileID: 62888895044096144, guid: 2d91c67ae5d0f4862bc8aaf35aafb4e2, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 2d91c67ae5d0f4862bc8aaf35aafb4e2, type: 3}
       propertyPath: m_Name

@@ -1395,7 +1395,6 @@ namespace Bouncer.Enemies
             if (!hit.Has(HitFlags.Despawn))
                 damage.Damage = _armor.Take(damage.Damage, open);
             bool strong = hit.Has(HitFlags.Charged) || found || open;
-            GameFeel.Shake(strong ? 0.3f : 0.12f);
             BossArmor.Flash(hitFlash, open);
             GameEvents.PlaySound(strong ? SoundCue.EnemyHitStrong : SoundCue.EnemyHit, hit.Point);
             if (damage.Damage > 0 || hit.Has(HitFlags.Despawn))

@@ -286,7 +286,6 @@ namespace Bouncer.Enemies
             if (_health.IsDead || (!IsSolid && !hit.Has(HitFlags.Despawn)))
                 return false;
             bool strong = hit.Has(HitFlags.Charged);
-            GameFeel.Shake(strong ? 0.25f : 0.1f);
             if (hitFlash)
                 hitFlash.Flash(new Color(0.75f, 0.8f, 1f), 0.15f);
             GameEvents.PlaySound(strong ? SoundCue.EnemyHitStrong : SoundCue.EnemyHit, hit.Point);
@@ -310,7 +309,6 @@ namespace Bouncer.Enemies
                 PoolService.Spawn(poof, transform.position + Vector3.up * 1f, Quaternion.identity);
             GameEvents.RaiseEnemyKilled(gameObject, hit);
             GameEvents.PlaySound(SoundCue.ShadowHiss, transform.position);
-            GameFeel.Shake(0.2f);
             PoolService.Despawn(gameObject);
         }
 

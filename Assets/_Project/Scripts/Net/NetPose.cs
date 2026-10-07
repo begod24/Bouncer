@@ -12,7 +12,6 @@ namespace Bouncer.Net
         const byte DashingFlag = 1 << 2;
         const byte SlidingFlag = 1 << 3;
         const byte DownFlag = 1 << 4;
-        const byte FlashlightFlag = 1 << 5;
 
         public const int Size = 3;
 
@@ -42,8 +41,6 @@ namespace Bouncer.Net
                 flags |= SlidingFlag;
             if (action.Down)
                 flags |= DownFlag;
-            if (action.Flashlight)
-                flags |= FlashlightFlag;
             float angle = action.Dashing ? Mathf.Atan2(action.DashDirection.x, action.DashDirection.z) * Mathf.Rad2Deg : 0f;
             return new NetPose
             {
@@ -66,7 +63,6 @@ namespace Bouncer.Net
                 Sliding = (_flags & SlidingFlag) != 0,
                 DashDirection = dashing ? new Vector3(Mathf.Sin(angle), 0f, Mathf.Cos(angle)) : Vector3.zero,
                 Down = (_flags & DownFlag) != 0,
-                Flashlight = (_flags & FlashlightFlag) != 0,
             };
         }
 

@@ -17,6 +17,8 @@ namespace Bouncer.Core
         float _flashDuration;
         Color _tintColor = Color.white;
         float _tintAmount;
+        float _frost;
+        Color _glow = Color.clear;
         bool _dirty = true;
 
         void Awake()
@@ -49,6 +51,8 @@ namespace Bouncer.Core
         void OnEnable()
         {
             _flashDuration = 0f;
+            _frost = 0f;
+            _glow = Color.clear;
             _dirty = true;
         }
 
@@ -67,6 +71,26 @@ namespace Bouncer.Core
                 return;
             _tintColor = color;
             _tintAmount = amount;
+            _dirty = true;
+        }
+
+        // Ледяная корка на всё время заморозки (0..1, плавно ведёт Targetable)
+        public void SetFrost(float amount)
+        {
+            amount = Mathf.Clamp01(amount);
+            if (Mathf.Abs(amount - _frost) < 0.004f && (amount > 0f || _frost == 0f))
+                return;
+            _frost = amount;
+            _dirty = true;
+        }
+
+        // Пульсирующий цветной контур (элита). strength 0 — выключить
+        public void SetGlow(Color color, float strength)
+        {
+            var glow = PaletteShader.Tint(color, strength);
+            if (glow == _glow)
+                return;
+            _glow = glow;
             _dirty = true;
         }
 
@@ -96,6 +120,8 @@ namespace Bouncer.Core
                 {
                     _block.SetColor(PaletteShader.TintColor, PaletteShader.Tint(_tintColor, _tintAmount));
                     _block.SetColor(PaletteShader.FlashColor, PaletteShader.Tint(_flashColor, flash));
+                    _block.SetFloat(PaletteShader.FrostAmount, _frost);
+                    _block.SetColor(PaletteShader.GlowColor, _glow);
                 }
                 else
                 {

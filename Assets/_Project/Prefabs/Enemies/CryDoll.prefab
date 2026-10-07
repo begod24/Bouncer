@@ -330,6 +330,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: -3057769123426349042, guid: e36f67782f6ba42f2a7562309d6a0f3e, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
     - target: {fileID: -3035121994782758926, guid: e36f67782f6ba42f2a7562309d6a0f3e, type: 3}
       propertyPath: m_Layer
       value: 8
@@ -337,6 +341,10 @@ PrefabInstance:
     - target: {fileID: -2301393765918099132, guid: e36f67782f6ba42f2a7562309d6a0f3e, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: -2290351446510764645, guid: e36f67782f6ba42f2a7562309d6a0f3e, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
       objectReference: {fileID: 0}
     - target: {fileID: 527653162389244314, guid: e36f67782f6ba42f2a7562309d6a0f3e, type: 3}
       propertyPath: m_Layer
@@ -350,9 +358,25 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 2655652810351765332, guid: e36f67782f6ba42f2a7562309d6a0f3e, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
+    - target: {fileID: 2821504620351213198, guid: e36f67782f6ba42f2a7562309d6a0f3e, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
+    - target: {fileID: 4770429285225489181, guid: e36f67782f6ba42f2a7562309d6a0f3e, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
     - target: {fileID: 5121947854792065383, guid: e36f67782f6ba42f2a7562309d6a0f3e, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7946715710651757476, guid: e36f67782f6ba42f2a7562309d6a0f3e, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

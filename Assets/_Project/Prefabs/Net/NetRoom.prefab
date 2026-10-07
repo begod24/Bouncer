@@ -80,6 +80,9 @@ MonoBehaviour:
   roster: {fileID: 11400000, guid: 6143c16425eff42e9a20ae4e9bfe3eb8, type: 2}
   fadeDelay: 0.5
   defeatDelay: 5
+  victoryDelay: 9
+  holdLimit: 25
+  awayHold: 60
 --- !u!114 &256239419710743846
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -99,6 +102,9 @@ MonoBehaviour:
   - {fileID: 6046830448127597153, guid: 4e1ee430a2b58488780c80b74423bbb3, type: 3}
   - {fileID: 9135535968229420765, guid: e92423024997447e6aeaa521347bcf58, type: 3}
   - {fileID: 5476214897875000723, guid: 9f903774667484d11b046280a0bcc667, type: 3}
+  - {fileID: 4636000945257043656, guid: f305ae5a06f4249d9871269efcb7c86f, type: 3}
+  - {fileID: 4636000945257043656, guid: 52b05d32b96874f23903407ade6c7635, type: 3}
+  - {fileID: 4636000945257043656, guid: f859fe28414de4187a964a7669e74ee6, type: 3}
 --- !u!114 &6823151562776241346
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -211,6 +217,9 @@ MonoBehaviour:
   - {fileID: 4707136491541746811, guid: ea4892cce049d4ce7be2c686b3d2b3a2, type: 3}
   - {fileID: 5793776425080298207, guid: 2c3a3a02320e9437a8fd8361316cbbe6, type: 3}
   - {fileID: 3285909257222339937, guid: 7a2796172bd13474c9a0e71425250e85, type: 3}
+  - {fileID: 8473581652349677663, guid: e263eec0523d44580b09e0aa2403882a, type: 3}
+  - {fileID: 5376990858673508986, guid: 22663374007c24d03bd72b7673ba0e54, type: 3}
+  - {fileID: 7774159917984678961, guid: db95eda503cef411d9dee46de53ecfe5, type: 3}
   coins:
   - {fileID: 4880608893769434112, guid: 971c9783cb8894246b55b00f62efe92f, type: 3}
   - {fileID: 4215785562065816585, guid: 00e66279848e745fb88bc00c5a513838, type: 3}

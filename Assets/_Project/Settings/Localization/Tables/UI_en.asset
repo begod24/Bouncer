@@ -100,11 +100,11 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 155645370388
     m_Localized: "WASD \u2014 run    mouse \u2014 aim    LMB \u2014 throw (hold to
-      charge)    Q \u2014 flashlight in the dark\nRMB / E \u2014 catch or grab a
-      ball nearby    Space / Shift \u2014 dash    F \u2014 newsstand    Tab \u2014
-      pockets    Esc \u2014 pause\nGamepad: left stick, right stick, RT \u2014 throw,
-      LT \u2014 catch, A \u2014 dash, LB \u2014 flashlight, X \u2014 newsstand, Select
-      \u2014 pockets\nH \u2014 hide hints"
+      charge)    Q \u2014 card ability\nRMB / E \u2014 catch or grab a ball nearby   
+      Space / Shift \u2014 dash    F \u2014 newsstand    Tab \u2014 pockets    Esc
+      \u2014 pause\nGamepad: left stick, right stick, RT \u2014 throw, LT \u2014
+      catch, A \u2014 dash, LB \u2014 ability, X \u2014 newsstand, Select \u2014
+      pockets\nH \u2014 hide hints"
     m_Metadata:
       m_Items: []
   - m_Id: 155645370390
@@ -1015,9 +1015,9 @@ MonoBehaviour:
   - m_Id: 1461472126296068
     m_Localized: "WASD / left stick \u2014 run\nmouse / right stick \u2014 aim\nLMB
       / RT \u2014 throw, hold to charge\nRMB / E / LT \u2014 catch or grab a ball
-      nearby\nSpace / Shift / A \u2014 dash\nQ / LB \u2014 flashlight in the dark\nF
-      / X \u2014 newsstand    Tab / Select \u2014 pockets\nEsc / Start \u2014 pause   
-      H \u2014 in-game hints"
+      nearby\nSpace / Shift / A \u2014 dash\nQ / LB \u2014 card ability\nF / X \u2014
+      newsstand    Tab / Select \u2014 pockets\nEsc / Start \u2014 pause    H \u2014
+      in-game hints"
     m_Metadata:
       m_Items: []
   - m_Id: 1461472126296069
@@ -1271,6 +1271,14 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 4754615739342849
     m_Localized: '{0} is back'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788930380554240
+    m_Localized: replaces ability
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788930380554241
+    m_Localized: ability
     m_Metadata:
       m_Items: []
   references:

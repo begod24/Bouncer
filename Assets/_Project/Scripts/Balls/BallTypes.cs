@@ -54,6 +54,18 @@ namespace Bouncer.Balls
         [Min(0f)] public float areaStun;
         [Tooltip("Кручёный мяч: летит дугой, поворачивая на столько градусов в секунду (знак — в какую сторону). 0 — прямо")]
         public float curve;
+        [Tooltip("Баскетбольный: летит навесом над головами и щитами, бьёт только на излёте — и по площади, когда падает")]
+        public bool lob;
+        [Tooltip("Футбольный: катится по асфальту и задевает всех на пути")]
+        public bool groundRoll;
+        [Tooltip("Задетые мячом (сдутый, футбольный) сбиты с ног на столько секунд. 0 — нет")]
+        [Min(0f)] public float grazeStun;
+        [Tooltip("Мел: коснувшись асфальта, мяч оставляет меловой крестик — наступил, и бежишь быстрее")]
+        public bool chalk;
+        [Tooltip("Морская фигура: по замершему врагу этот мяч бьёт на столько сильнее")]
+        [Min(0)] public int frozenBonus;
+        [Tooltip("Пинг-понг: отскочив от стены, доворачивает к врагу в пределах стольких градусов. 0 — нет")]
+        [Min(0f)] public float bounceAssist;
 
         public BallPerks ForTwin() => new()
         {
@@ -68,6 +80,9 @@ namespace Bouncer.Balls
             wallDamage = wallDamage,
             chargedPierce = chargedPierce,
             areaStun = areaStun,
+            grazeStun = grazeStun,
+            frozenBonus = frozenBonus,
+            bounceAssist = bounceAssist,
         };
 
         public static BallPerks Combine(in BallPerks a, in BallPerks b) => new()
@@ -95,12 +110,25 @@ namespace Bouncer.Balls
             twinSplit = a.twinSplit || b.twinSplit,
             areaStun = Mathf.Max(a.areaStun, b.areaStun),
             curve = a.curve + b.curve,
+            lob = a.lob || b.lob,
+            groundRoll = a.groundRoll || b.groundRoll,
+            grazeStun = Mathf.Max(a.grazeStun, b.grazeStun),
+            chalk = a.chalk || b.chalk,
+            frozenBonus = a.frozenBonus + b.frozenBonus,
+            bounceAssist = Mathf.Max(a.bounceAssist, b.bounceAssist),
         };
     }
 
     public interface IBallInterceptor
     {
         bool TryIntercept(Ball ball);
+    }
+
+    public interface IBallShield
+    {
+        bool Blocks(Ball ball);
+
+        void Struck(Vector3 point);
     }
 
     public interface IBallReceiver

@@ -79,18 +79,18 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Flashlight",
+                    "name": "Backpack",
                     "type": "Button",
-                    "id": "f6a52b3a-80b2-4de1-aefb-673151c2aad7",
-                    "expectedControlType": "",
+                    "id": "f752edb7-1272-4fbe-9f60-3bb022e3d95f",
+                    "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Backpack",
+                    "name": "Ability",
                     "type": "Button",
-                    "id": "f752edb7-1272-4fbe-9f60-3bb022e3d95f",
+                    "id": "c3ee9f27-b2fe-4545-82ab-6ab456454e8d",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -320,28 +320,6 @@
                 },
                 {
                     "name": "",
-                    "id": "3906a17e-2996-42d4-83c8-ae7d62cccc41",
-                    "path": "<Keyboard>/q",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "Flashlight",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "cb4586be-b347-4268-8626-ddc07ebcb759",
-                    "path": "<Gamepad>/leftShoulder",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Gamepad",
-                    "action": "Flashlight",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "76cb28b1-58ba-489c-9c43-cd57b5c9cec7",
                     "path": "<Keyboard>/r",
                     "interactions": "",
@@ -359,6 +337,28 @@
                     "processors": "",
                     "groups": "Gamepad",
                     "action": "Backpack",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e6f76df7-a75b-4321-927d-239334a87dbf",
+                    "path": "<Keyboard>/q",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Ability",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "d7e622be-6351-41a0-9783-35588879295d",
+                    "path": "<Gamepad>/leftShoulder",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "Ability",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

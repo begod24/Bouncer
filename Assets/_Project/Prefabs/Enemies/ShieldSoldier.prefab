@@ -361,6 +361,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: -1988107361379109207, guid: 7d009434ee2024310878334a3dd5105c, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 7d009434ee2024310878334a3dd5105c, type: 3}
       propertyPath: m_Name
       value: Enemy_ShieldSoldier
@@ -369,13 +373,33 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 3086736988516522816, guid: 7d009434ee2024310878334a3dd5105c, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
     - target: {fileID: 4026271386518031024, guid: 7d009434ee2024310878334a3dd5105c, type: 3}
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 5524192113996445412, guid: 7d009434ee2024310878334a3dd5105c, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
     - target: {fileID: 6112792484460510672, guid: 7d009434ee2024310878334a3dd5105c, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 6527574358922568564, guid: 7d009434ee2024310878334a3dd5105c, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
+    - target: {fileID: 7885474040065316360, guid: 7d009434ee2024310878334a3dd5105c, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
+    - target: {fileID: 9203552140658706431, guid: 7d009434ee2024310878334a3dd5105c, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -158,6 +158,12 @@ namespace Bouncer.Net
             s.SerializeValue(ref p.twinSplit);
             s.SerializeValue(ref p.areaStun);
             s.SerializeValue(ref p.curve);
+            s.SerializeValue(ref p.lob);
+            s.SerializeValue(ref p.groundRoll);
+            s.SerializeValue(ref p.grazeStun);
+            s.SerializeValue(ref p.chalk);
+            s.SerializeValue(ref p.frozenBonus);
+            s.SerializeValue(ref p.bounceAssist);
         }
     }
 

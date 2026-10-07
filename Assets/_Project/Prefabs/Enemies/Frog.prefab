@@ -144,7 +144,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Bouncer.Enemies::Bouncer.Enemies.FrogEnemy
   definition: {fileID: 11400000, guid: c7fc94153efa04a479f961ae4dde30f5, type: 2}
   markerPrefab: {fileID: 8557048589744460489, guid: d298813be095c4d45a5ab1ab8a1cf216, type: 3}
-  ringPrefab: {fileID: 4322836193269252346, guid: b96959c9369214f7a92b749c5b87c4b3, type: 3}
+  ringPrefab: {fileID: 8000059671102707944, guid: 22663374007c24d03bd72b7673ba0e54, type: 3}
   landingDust: {fileID: 7776453274198704824, guid: ff0079a1c980d4a33818d9b60267d2cc, type: 3}
   debrisPrefab: {fileID: 812413585256986309, guid: 5e239ef4001804812ab76e3e272e56aa, type: 3}
   hitFlash: {fileID: 3152697569100520179}
@@ -306,9 +306,21 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: -6573214531087692276, guid: dbd2b8307e4304c84a76322fd84bc7a0, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
     - target: {fileID: -5328395329865563493, guid: dbd2b8307e4304c84a76322fd84bc7a0, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: -1604940518503149976, guid: dbd2b8307e4304c84a76322fd84bc7a0, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
+    - target: {fileID: -346028431992627192, guid: dbd2b8307e4304c84a76322fd84bc7a0, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
       objectReference: {fileID: 0}
     - target: {fileID: 176987863327827003, guid: dbd2b8307e4304c84a76322fd84bc7a0, type: 3}
       propertyPath: m_Layer
@@ -322,9 +334,21 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 1052642649781629640, guid: dbd2b8307e4304c84a76322fd84bc7a0, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
     - target: {fileID: 1515205113218182341, guid: dbd2b8307e4304c84a76322fd84bc7a0, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 2390953500749468848, guid: dbd2b8307e4304c84a76322fd84bc7a0, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
+    - target: {fileID: 4698882525947693437, guid: dbd2b8307e4304c84a76322fd84bc7a0, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
       objectReference: {fileID: 0}
     - target: {fileID: 8529602949323853154, guid: dbd2b8307e4304c84a76322fd84bc7a0, type: 3}
       propertyPath: m_Layer

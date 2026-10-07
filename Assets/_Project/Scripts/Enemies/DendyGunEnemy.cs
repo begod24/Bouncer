@@ -36,6 +36,9 @@ namespace Bouncer.Enemies
         [SerializeField] float beamWidth = 0.22f;
         [SerializeField] Color laserColor = new(1f, 0.15f, 0.1f, 0.85f);
         [SerializeField] Color beamColor = new(1f, 0.95f, 0.75f, 1f);
+        [Tooltip("Вспышка у дула и искры там, где луч упёрся. Не по сети: гость сам видит выстрел по смене состояния")]
+        [SerializeField] ParticleBurst muzzleFlash;
+        [SerializeField] ParticleBurst hitSparks;
 
         Rigidbody _rb;
         Health _health;
@@ -207,6 +210,7 @@ namespace Bouncer.Enemies
             float length = ShotLength(from);
             _beamEnd = from + _aimDirection * length;
             _flashUntil = Time.time + FlashTime;
+            ShotFx(from, _beamEnd);
             GameEvents.PlaySound(SoundCue.ZapperShot, from);
             GameFeel.Shake(0.12f);
             foreach (var t in Targetable.All)
@@ -231,6 +235,16 @@ namespace Bouncer.Enemies
                     Flags = HitFlags.None,
                 });
             }
+        }
+
+        void ShotFx(Vector3 from, Vector3 to)
+        {
+            Vector3 aim = _aimDirection.sqrMagnitude > 1e-4f ? _aimDirection : transform.forward;
+            // вспышка смотрит вдоль выстрела, искры летят обратно к пушке
+            if (muzzleFlash)
+                PoolService.Spawn(muzzleFlash, from, Quaternion.LookRotation(aim));
+            if (hitSparks)
+                PoolService.Spawn(hitSparks, to - aim * 0.1f, Quaternion.LookRotation(-aim));
         }
 
         void Face(Vector3 direction, float dt)
@@ -279,7 +293,6 @@ namespace Bouncer.Enemies
             if (_health.IsDead)
                 return false;
             bool strong = hit.Has(HitFlags.Charged);
-            GameFeel.Shake(strong ? 0.25f : 0.1f);
             if (hitFlash)
                 hitFlash.Flash(Color.white, 0.12f);
             GameEvents.PlaySound(strong ? SoundCue.EnemyHitStrong : SoundCue.EnemyHit, hit.Point);
@@ -313,7 +326,6 @@ namespace Bouncer.Enemies
             }
             GameEvents.RaiseEnemyKilled(gameObject, hit);
             GameEvents.PlaySound(SoundCue.SoldierPop, transform.position);
-            GameFeel.Shake(0.25f);
             PoolService.Despawn(gameObject);
         }
 
@@ -377,6 +389,7 @@ namespace Bouncer.Enemies
                 Vector3 from = MuzzlePosition;
                 _beamEnd = from + _aimDirection * ShotLength(from);
                 _flashUntil = Time.time + FlashTime;
+                ShotFx(from, _beamEnd);
             }
             if (_hopping && !hopping)
                 _squash = 1f;

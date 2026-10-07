@@ -1,6 +1,7 @@
 using Bouncer.Core;
 using Bouncer.Player;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace Bouncer.UI
@@ -13,7 +14,7 @@ namespace Bouncer.UI
             Catch,
             Heal,
             Lid,
-            Light,
+            Ability,
         }
 
         const int Count = 5;
@@ -28,7 +29,8 @@ namespace Bouncer.UI
         [SerializeField] Color catchColor = new(0.49f, 0.83f, 0.36f);
         [SerializeField] Color healColor = new(0.93f, 0.35f, 0.31f);
         [SerializeField] Color lidColor = new(0.45f, 0.72f, 1f);
-        [SerializeField] Color lightColor = new(1f, 0.86f, 0.35f);
+        [FormerlySerializedAs("lightColor")]
+        [SerializeField] Color abilityColor = new(1f, 0.86f, 0.35f);
 
         static Sprite s_ring;
 
@@ -38,13 +40,12 @@ namespace Bouncer.UI
         readonly float[] _alpha = new float[Count];
         RectTransform _canvas;
         PlayerController _player;
-        PlayerFlashlight _flashlight;
 
         void Awake()
         {
             _canvas = (RectTransform)GetComponentInParent<Canvas>().rootCanvas.transform;
             var sprite = RingSprite();
-            Color[] colors = { dashColor, catchColor, healColor, lidColor, lightColor };
+            Color[] colors = { dashColor, catchColor, healColor, lidColor, abilityColor };
             for (int i = 0; i < Count; i++)
             {
                 _backs[i] = MakeImage($"Ring_{(Ring)i}_Back", sprite, new Color(0f, 0f, 0f, 0.45f), false);
@@ -84,7 +85,6 @@ namespace Bouncer.UI
                     Hide();
                     return;
                 }
-                _player.TryGetComponent(out _flashlight);
             }
             var camera = Camera.main;
             bool active = camera != null && !_player.IsDead && GameSession.IsPlayerActive;
@@ -100,8 +100,8 @@ namespace Bouncer.UI
             Set(Ring.Catch, balls.CatchOnCooldown ? 1f - balls.CatchCooldown01 : 1f, true, now);
             Set(Ring.Heal, _player.CatchHeal01, true, now);
             Set(Ring.Lid, _player.LidReady01, _player.HasLid, now);
-            bool light = _flashlight != null && _flashlight.Available;
-            Set(Ring.Light, light ? _flashlight.Charge01 : 1f, light, now, _flashlight != null && _flashlight.IsOn);
+            var abilities = _player.Abilities;
+            Set(Ring.Ability, abilities != null ? abilities.Ready01 : 1f, abilities != null && abilities.Has, now);
 
             Vector3 screen = camera.WorldToScreenPoint(_player.transform.position);
             if (screen.z <= 0f || !RectTransformUtility.ScreenPointToLocalPointInRectangle(_canvas, screen, null, out Vector2 local))

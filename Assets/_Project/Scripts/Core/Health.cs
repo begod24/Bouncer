@@ -26,6 +26,9 @@ namespace Bouncer.Core
         public event Action<int> Healed;
         public event Action Restored;
 
+        // Любой урон по любому здоровью — для эффектов вроде «импакт-кадра». У гостя приходит из Mirror без точки удара.
+        public static event Action<Health, HitInfo> AnyDamaged;
+
         float _invulnerableUntil;
         float _lastDamageTime;
 
@@ -54,6 +57,7 @@ namespace Bouncer.Core
             Current = Mathf.Max(Mathf.Min(Floor, Current), Current - hit.Damage);
             _lastDamageTime = Time.time;
             Damaged?.Invoke(hit);
+            AnyDamaged?.Invoke(this, hit);
             if (Current == 0)
             {
                 IsDead = true;
@@ -94,7 +98,12 @@ namespace Bouncer.Core
             Current = current;
             IsDead = dead;
             if (current < before && !dead)
+            {
                 Damaged?.Invoke(hit);
+                AnyDamaged?.Invoke(this, hit);
+            }
+            else if (current < before)
+                AnyDamaged?.Invoke(this, hit);
             else if (current >= max && before < max)
                 Restored?.Invoke();
             else if (current > before)
@@ -112,5 +121,8 @@ namespace Bouncer.Core
                 Restored?.Invoke();
             }
         }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() => AnyDamaged = null;
     }
 }

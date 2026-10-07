@@ -21,10 +21,13 @@ namespace Bouncer.Player
         float _slowUntil;
         float _slowMultiplier = 1f;
         float _downUntil;
+        float _boostUntil;
+        float _boostMultiplier = 1f;
 
         public bool IsDashing => Time.time < _dashEnd;
         public bool IsDown => Time.time < _downUntil;
         public bool IsSlowed => Time.time < _slowUntil;
+        public bool IsBoosted => Time.time < _boostUntil;
         public bool IsDashInvulnerable => Time.time < _dashStart + _stats.dashInvulnerability;
         public bool DashReady => Time.time >= _dashReadyAt;
         public float DashStartTime => _dashStart;
@@ -86,7 +89,7 @@ namespace Bouncer.Player
                 return;
 
             float ground = _mods.IgnoreGround ? 1f : GroundZone.MoveMultiplierAt(transform.position);
-            float slow = IsSlowed ? _slowMultiplier : 1f;
+            float slow = (IsSlowed ? _slowMultiplier : 1f) * (IsBoosted ? _boostMultiplier : 1f);
             if (IsDown)
                 move = Vector3.zero;
             Vector3 target = move * (_stats.moveSpeed * _mods.MoveSpeed * speedMultiplier * ground * slow);
@@ -124,6 +127,14 @@ namespace Bouncer.Player
                 _slowMultiplier = 1f;
             _slowMultiplier = Mathf.Min(_slowMultiplier, Mathf.Clamp01(multiplier));
             _slowUntil = Mathf.Max(_slowUntil, Time.time + seconds);
+        }
+
+        public void Boost(float multiplier, float seconds)
+        {
+            if (!IsBoosted)
+                _boostMultiplier = 1f;
+            _boostMultiplier = Mathf.Max(_boostMultiplier, multiplier);
+            _boostUntil = Mathf.Max(_boostUntil, Time.time + seconds);
         }
 
         public void KnockDown(float seconds)

@@ -143,8 +143,6 @@ namespace Bouncer.Enemies
             if (smokePrefab)
                 PoolService.Spawn(smokePrefab, center, Quaternion.identity).Play(1.6f);
             GameEvents.PlaySound(SoundCue.DecoyBurst, center);
-            if (byPlayer)
-                GameFeel.Shake(0.25f);
             var boss = _boss;
             _boss = null;
             if (boss)

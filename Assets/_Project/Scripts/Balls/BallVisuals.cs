@@ -15,6 +15,16 @@ namespace Bouncer.Balls
         [SerializeField] GameObject spikes;
         [Tooltip("Сияние вокруг ёжика")]
         [SerializeField] GameObject glow;
+        [Tooltip("Ёжик: искры и колючие осколки за мячом в полёте")]
+        [SerializeField] ParticleSystem spikySparks;
+        [Tooltip("Ёжик: красный круг с зубцами на асфальте под мячом")]
+        [SerializeField] Transform spikyWarning;
+        [Tooltip("Ёжик: тело темнеет, светятся шипы")]
+        [SerializeField] Color spikyBodyColor = new(0.2f, 0.04f, 0.06f);
+        [Tooltip("Ёжик: оборотов в секунду на метр скорости (кувырок по ходу полёта)")]
+        [SerializeField] float spikyRoll = 0.6f;
+        [Tooltip("Ёжик: насколько шипы топорщатся (доля длины)")]
+        [SerializeField] float spikyBristle = 0.14f;
 
         [Header("Цвета")]
         [SerializeField] Color looseColor = new(0.85f, 0.18f, 0.15f);
@@ -41,6 +51,11 @@ namespace Bouncer.Balls
         bool _spiky;
         Vector3 _bodyLocal;
         bool _offset;
+        Quaternion _bodyRotation;
+        Vector3 _spikesScale = Vector3.one;
+        ParticleSystem[] _sparkSystems = System.Array.Empty<ParticleSystem>();
+        Renderer _warningRenderer;
+        MaterialPropertyBlock _warningBlock;
 
         void Awake()
         {
@@ -48,7 +63,19 @@ namespace Bouncer.Balls
             _block = new MaterialPropertyBlock();
             _palette = body && PaletteShader.Supports(body.sharedMaterial);
             if (body)
+            {
                 _bodyLocal = body.transform.localPosition;
+                _bodyRotation = body.transform.localRotation;
+            }
+            if (spikes)
+                _spikesScale = spikes.transform.localScale;
+            if (spikySparks)
+                _sparkSystems = spikySparks.GetComponentsInChildren<ParticleSystem>(true);
+            if (spikyWarning)
+            {
+                _warningRenderer = spikyWarning.GetComponentInChildren<Renderer>();
+                _warningBlock = new MaterialPropertyBlock();
+            }
         }
 
         void OnEnable()
@@ -81,6 +108,22 @@ namespace Bouncer.Balls
                 spikes.SetActive(_spiky);
             if (glow)
                 glow.SetActive(_spiky);
+            foreach (var system in _sparkSystems)
+            {
+                var emission = system.emission;
+                emission.enabled = _spiky;
+                if (_spiky && !system.isPlaying)
+                    system.Play(false);
+            }
+            if (spikyWarning)
+                spikyWarning.gameObject.SetActive(_spiky);
+            if (!_spiky && body)
+                body.transform.localRotation = _bodyRotation;
+            // у ёжика свой вид — без контрового света
+            if (body)
+                FxGlobals.SetRim(body, !_spiky);
+            if (!_spiky && spikes)
+                spikes.transform.localScale = _spikesScale;
 
             if (body)
             {
@@ -89,7 +132,8 @@ namespace Bouncer.Balls
                 {
                     bool flying = ball.State is BallState.Live or BallState.Popped;
                     bool special = live && ball.Stats.Has(HitFlags.Spiky | HitFlags.Dark | HitFlags.Wet);
-                    _block.SetColor(PaletteShader.TintColor, PaletteShader.Tint(color, flying ? special ? 0.9f : stateTint : 0f));
+                    Color tint = _spiky ? spikyBodyColor : color;
+                    _block.SetColor(PaletteShader.TintColor, PaletteShader.Tint(tint, flying ? special ? 0.9f : stateTint : 0f));
                     _block.SetColor(PaletteShader.FlashColor, PaletteShader.Tint(spikyColor, 0f));
                 }
                 else
@@ -114,6 +158,41 @@ namespace Bouncer.Balls
                 landingMarker.gameObject.SetActive(ball.State == BallState.Popped);
         }
 
+        void AnimateSpiky()
+        {
+            float dt = Time.deltaTime;
+            float wave = Mathf.Sin(Time.time * spikyPulse * Mathf.PI * 2f);
+            if (body && _palette)
+            {
+                body.GetPropertyBlock(_block);
+                _block.SetColor(PaletteShader.FlashColor, PaletteShader.Tint(spikyColor, 0.18f + 0.14f * wave));
+                body.SetPropertyBlock(_block);
+            }
+            Vector3 velocity = _ball.Velocity;
+            Vector3 flat = new(velocity.x, 0f, velocity.z);
+            if (body && flat.sqrMagnitude > 0.01f)
+            {
+                Vector3 axis = Vector3.Cross(Vector3.up, flat.normalized);
+                float degrees = flat.magnitude * spikyRoll * 360f * dt;
+                body.transform.rotation = Quaternion.AngleAxis(degrees, axis) * body.transform.rotation;
+            }
+            if (spikes)
+                spikes.transform.localScale = _spikesScale * (1f + spikyBristle * (0.5f + 0.5f * Mathf.Sin(Time.time * 17f)));
+            if (spikyWarning)
+            {
+                Vector3 p = transform.position;
+                float height = Mathf.Max(0f, p.y);
+                spikyWarning.SetPositionAndRotation(new Vector3(p.x, 0.04f, p.z), Quaternion.Euler(0f, Time.time * 140f, 0f));
+                spikyWarning.localScale = Vector3.one * Mathf.Lerp(0.9f, 1.5f, Mathf.Clamp01(height / 3f)) * (1f + 0.08f * wave);
+                if (_warningRenderer)
+                {
+                    _warningRenderer.GetPropertyBlock(_warningBlock);
+                    _warningBlock.SetColor(BaseColorId, new Color(1f, 0.18f, 0.12f, 0.55f + 0.3f * wave));
+                    _warningRenderer.SetPropertyBlock(_warningBlock);
+                }
+            }
+        }
+
         void LateUpdate()
         {
             Vector3 offset = _ball.VisualOffset;
@@ -130,13 +209,8 @@ namespace Bouncer.Balls
             }
             if (_hot != _ball.BlastPending)
                 Refresh(_ball);
-            if (_spiky && body && _palette)
-            {
-                float pulse = 0.35f + 0.25f * Mathf.Sin(Time.time * spikyPulse * Mathf.PI * 2f);
-                body.GetPropertyBlock(_block);
-                _block.SetColor(PaletteShader.FlashColor, PaletteShader.Tint(spikyColor, pulse));
-                body.SetPropertyBlock(_block);
-            }
+            if (_spiky)
+                AnimateSpiky();
             if (!landingMarker || _ball.State != BallState.Popped || !_ball.TryPredictLanding(out Vector3 point))
                 return;
             float height01 = Mathf.Clamp01(transform.position.y / 4f);

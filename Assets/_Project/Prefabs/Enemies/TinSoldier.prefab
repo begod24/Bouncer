@@ -349,13 +349,29 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: -5391779919654107908, guid: 8c891615abebc4f8eb2665685cf60d42, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
+    - target: {fileID: -4801600606897672272, guid: 8c891615abebc4f8eb2665685cf60d42, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
     - target: {fileID: -2932710217013650702, guid: 8c891615abebc4f8eb2665685cf60d42, type: 3}
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: -2072988817116794284, guid: 8c891615abebc4f8eb2665685cf60d42, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
     - target: {fileID: -109333417361587818, guid: 8c891615abebc4f8eb2665685cf60d42, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 169472319924040565, guid: 8c891615abebc4f8eb2665685cf60d42, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 8c891615abebc4f8eb2665685cf60d42, type: 3}
       propertyPath: m_Name
@@ -364,6 +380,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 8c891615abebc4f8eb2665685cf60d42, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1191224694435052050, guid: 8c891615abebc4f8eb2665685cf60d42, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
       objectReference: {fileID: 0}
     - target: {fileID: 3839872144700663395, guid: 8c891615abebc4f8eb2665685cf60d42, type: 3}
       propertyPath: m_Layer
@@ -376,6 +396,10 @@ PrefabInstance:
     - target: {fileID: 6857258089733844576, guid: 8c891615abebc4f8eb2665685cf60d42, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 8805002395270870410, guid: 8c891615abebc4f8eb2665685cf60d42, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

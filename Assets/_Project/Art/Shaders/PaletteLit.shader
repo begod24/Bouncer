@@ -8,6 +8,9 @@ Shader "Bouncer/PaletteLit"
         _EmissionStrength("Emission Strength", Range(0, 8)) = 0
         _TintColor("Tint (RGB) / Amount (A)", Color) = (1, 1, 1, 0)
         _FlashColor("Flash (RGB) / Amount (A)", Color) = (1, 1, 1, 0)
+        // ставит HitFlash: иней на замороженном враге и пульсирующий контур элиты
+        _FrostAmount("Frost", Range(0, 1)) = 0
+        _GlowColor("Glow Contour (RGB) / Strength (A)", Color) = (1, 1, 1, 0)
 
         [HideInInspector] _Cutoff("Alpha Cutoff", Range(0, 1)) = 0.5
         [HideInInspector] _Surface("__surface", Float) = 0

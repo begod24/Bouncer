@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50309940dfed04334a2f92cb8ec191f3, type: 3}
+  m_Name: Ability_CapGun
+  m_EditorClassIdentifier: Bouncer.Player::Bouncer.Player.CapGunAbility
+  cooldown: 8
+  hudIcon: {fileID: 21300000, guid: 5a152c2cfa84d4a5fba340c6666c9644, type: 3}
+  range: 4.5
+  halfAngle: 38
+  stun: 0.7
+  knockback: 6
+  gun: {fileID: 1981878388783258758, guid: 9643ace6552954a5081c1eba76200e8b, type: 3}
+  smoke: {fileID: 4046701716659538671, guid: 5db02ec7ad29948838769403cf39260f, type: 3}
+  bang: {fileID: 4544907742851278528, guid: 0d528bc4af3004fcdbe32dfd35d30e8a, type: 3}
+  cone: {fileID: 5893299805964134197, guid: 7ba9d1ca488724998833090de7d66053, type: 3}

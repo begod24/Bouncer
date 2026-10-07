@@ -72,6 +72,12 @@ namespace Bouncer.Enemies
         [Header("Прочее")]
         [SerializeField] GameObject debrisPrefab;
         [SerializeField] HitFlash hitFlash;
+        [Header("Удар об пол")]
+        [Tooltip("Пыль и трещины в асфальте там, куда пришёлся удар (уходят гостю как эффекты)")]
+        [SerializeField] ParticleBurst smashDust;
+        [SerializeField] ParticleBurst smashCracks;
+        [Tooltip("Насколько впереди Физрука, м, бьёт кулак")]
+        [SerializeField] float smashReach = 1.3f;
 
         readonly List<Rule> _bag = new();
         NavMeshAgent _agent;
@@ -401,6 +407,12 @@ namespace Bouncer.Enemies
         {
             GameEvents.PlaySound(SoundCue.AreaThud, transform.position);
             GameFeel.Shake(0.35f);
+            Vector3 impact = transform.position + Flat(transform.forward).normalized * smashReach;
+            impact.y = transform.position.y + 0.05f;
+            if (smashCracks)
+                PoolService.Spawn(smashCracks, impact, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f)).Play(1f);
+            if (smashDust)
+                PoolService.Spawn(smashDust, impact + Vector3.up * 0.05f, Quaternion.identity).Play(1.3f);
             if (_target == null || !_target.IsAlive)
                 return;
             Vector3 toTarget = Flat(_target.Position - transform.position);
@@ -540,7 +552,6 @@ namespace Bouncer.Enemies
                 return false;
             bool open = IsOpen;
             bool strong = hit.Has(HitFlags.Charged);
-            GameFeel.Shake(strong ? 0.3f : 0.12f);
             BossArmor.Flash(hitFlash, open);
             GameEvents.PlaySound(strong || open ? SoundCue.EnemyHitStrong : SoundCue.EnemyHit, hit.Point);
             var counted = hit;

@@ -1223,6 +1223,14 @@ MonoBehaviour:
     m_Key: net.back.title
     m_Metadata:
       m_Items: []
+  - m_Id: 4788930380554240
+    m_Key: pockets.tag.swap
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4788930380554241
+    m_Key: card.category.ability
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

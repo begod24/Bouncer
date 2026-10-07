@@ -11,6 +11,8 @@ CBUFFER_START(UnityPerMaterial)
     half4 _BaseColor;
     half4 _TintColor;
     half4 _FlashColor;
+    half4 _GlowColor;
+    half _FrostAmount;
     half _EmissionStrength;
     half _Cutoff;
     half _Surface;
@@ -52,5 +54,13 @@ half3 MixRadialFog(half3 color, float3 positionWS)
     float fog = smoothstep(_Bouncer_FogParams.x, _Bouncer_FogParams.y, distance) * _Bouncer_FogParams.z;
     return lerp(color, _Bouncer_FogColor.rgb, (half)fog);
 }
+
+// Контровой свет: только у тех, чей Renderer в слое отрисовки Rim (бит 7) — дети, враги, мячи.
+// Сила и цвет — глобальные, их ставит TimeOfDayController (Core/FxGlobals — значения по умолчанию).
+#define BOUNCER_RIM_LAYER (1u << 7)
+float _Bouncer_RimStrength;
+half4 _Bouncer_RimColor;
+// Мокрый асфальт в дождь: 0..1, ставит TimeOfDayController
+float _Bouncer_Wet;
 
 #endif

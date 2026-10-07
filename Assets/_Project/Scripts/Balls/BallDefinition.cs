@@ -77,6 +77,11 @@ namespace Bouncer.Balls
         [Tooltip("Сдутый мяч: какая доля отброса достаётся задетым врагам")]
         [Range(0f, 1f)] public float grazeKnockbackScale = 0.5f;
 
+        [Tooltip("Футбольный: насколько быстро гаснет скорость катящегося мяча, м/с²")]
+        [Min(0f)] public float rollDrag;
+        [Tooltip("Баскетбольный: пыль, когда мяч падает на асфальт, из пула")]
+        public GameObject landEffect;
+
         [Header("Лежащий мяч")]
         [Range(0f, 1f)] public float floorBounceKeep = 0.5f;
         public float looseDamping = 0.6f;

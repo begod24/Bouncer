@@ -399,13 +399,29 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 4410996695916796550, guid: 40262ffe4226542cbb9b3c648fc0568d, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
+    - target: {fileID: 4668712548762284043, guid: 40262ffe4226542cbb9b3c648fc0568d, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
     - target: {fileID: 4675671640920071461, guid: 40262ffe4226542cbb9b3c648fc0568d, type: 3}
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 6380308679901791438, guid: 40262ffe4226542cbb9b3c648fc0568d, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
+      objectReference: {fileID: 0}
     - target: {fileID: 6748018404344794380, guid: 40262ffe4226542cbb9b3c648fc0568d, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7561430679844794007, guid: 40262ffe4226542cbb9b3c648fc0568d, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 129
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

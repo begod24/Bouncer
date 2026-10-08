@@ -1,0 +1,32 @@
+- [User commits themselves](user-commits-himself.md) — never git commit/push; leave changes for the user to commit
+- [User does playtests](user-does-playtests.md) — never enter Play Mode to test; finish with a summary of what was done
+- [Art pipeline (Blender)](art-pipeline-blender.md) — Bouncer.blend outside repo, palette shader, FBX export quirks (no Apply Transform, CLI Blender), roly-poly kerchief menu to rerun after FBX re-export
+- [Stage 2 status & decisions](stage2-status-decisions.md) — what stage 2 has, user decisions (44×30 arena, SFX/music, fonts, product name; player was a capsule until 2026-09-25)
+- [Unity MCP quirks](unity-mcp-quirks.md) — RunCommand namespace clashes, reconnect after compile, no DeleteAsset, NavMesh GUID-safe rebake, edit-mode animation previews (AnimationMode)
+- [Card icons pipeline](card-icons-pipeline.md) — doodles from ui_art.py (check old PNGs unchanged), 3D ball icon render recipe, card preview render
+- [Kids concept sheet](kids-concept-sheet.md) — 4 kids: decisions (look-only, names, select screen) + where the rig, clips, AC_Kid, PlayerKid and KidSelectScreen live (built 2026-09-25)
+- [Game design decisions](game-design-decisions.md) — 2026-09-24 Q&A: run, meta, no XP (coins + loot cards), co-op revive, PvP modes/1×1 rules, timing-based catch; concept doc synced
+- [Propose before changing design](propose-before-changing-design.md) — for gameplay/design problems offer options first, code only after the user picks
+- [Docx editing setup](docx-editing-setup.md) — concept doc edits: py3.9 venv + validator workaround, no LibreOffice, qlmanage preview
+- [Inscriptions as textures](inscriptions-as-textures.md) — text/graffiti/numerals on models = decal atlas quads (M_Decals), never font geometry
+- [Assets status](assets-status.md) — what 3D/UI assets exist for the solo plan (2026-09-24) and what still needs prefabs/code/scenes
+- [Solo run decisions](solo-run-decisions.md) — 2026-09-24 Q&A #2 (kiosk, coins, elites, enemy rules, bosses per arena, phases A–Д) + what A+Б implemented and where it lives
+- [Phases В/Г decisions](phases-v-g-decisions.md) — Fizruk rules, dusk elites, shadow, 13 new cards, weather; implemented 2026-09-25 (Rink/Site scenes, where the code lives)
+- [Phase Д decisions](phase-d-decisions.md) — 2026-09-25 final «Мама зовёт домой»: boss-only duel, 8 boss abilities, Бабай look, windows+clock, run to the подъезд; implemented same day (where the code lives, how to test)
+- [itch.io release & feedback](itch-release-feedback.md) — v1.0.0 on itch (2026-09-26), player feedback, balance diagnosis numbers, 35 questions answered 2026-09-27
+- [1.0.1/balance/content decisions](feedback-update-decisions.md) — 2026-09-27 answers: 6 pockets, 1 gold, combo cap, economy, only player balls stay, hedgehog/wet balls, bosses, new enemies/arenas, pupsik hitbox finding + follow-up answers (flashlight, caps, bosses, danger table); phases 1+2 implemented 2026-09-27
+- [Spawn on arenas 2–3](spawn-balance-arenas-2-3.md) — 2026-09-28 diagnosis (×1.8–2.7 the Yard's hits) + answers: budget+phases ×1.5/×1.8, elites half multiplier, lull/elite event/pauses; next = onboarding + run save
+- [Stage 3 content decisions](stage3-content-decisions.md) — 2026-09-27 form (Барахолка/Детсад, Трансформер = police Жигули, plush hare, 8 new enemies) + implemented same day: fork code (RunDefinition.forks), scenes, bosses, SFX — where it lives
+- [Arena balls & pockets UI](arena-balls-pockets-ui.md) — 2026-09-28: 7 enemy balls stay, Babai sack/crows take only foreign balls, discard only when full/at kiosk (Tab = view); implemented same day (where the code lives)
+- [Bestiary, tutorial, menu](bestiary-tutorial-decisions.md) — 2026-09-28: bestiary (bosses open after a win), training level, main menu = Играть/Тетрадка/Настройки/Выход with «новое!» marks — decisions + where the code lives
+- [Marketing screenshots](marketing-screenshots.md) — devlog 1.1 shots folder + recipe: preview scene, arena lighting, posed kid/enemies, flashlight for dark arenas
+- [Day arenas, dusk only Site/KG/final](day-arenas-dusk-only-site-final.md) — 2026-09-28: Rink/Bazaar daytime, KG night returned, shadows only on Site/final, KG shadows → scarecrows
+- [Music setup](music-setup.md) — random arena track from SFX_Music2/3/4 (not the previous one), final keeps SFX_InGame; MusicPlayer in 5 scenes, measured loop lengths
+- [Co-op & PvP decisions](coop-pvp-decisions.md) — 2026-10-06: co-op FIRST, NGO+Relay by code, PvP court on run arenas (1×1 to 7, 2×2 best of 5, no dash), co-op shares/pockets/team gold/enemy scaling, unique kids; stages 0, 1a, 1b, К1 «Двор вместе», К2 (cards/backpack R·Y/kiosk/fork by feet/victory) and К3 (all arenas, bosses, hazards, weather), К4 final + smoothness rework (sender-clock jitter buffer) done; 2026-10-07 player motion 19 B @30/s + teammate edge arrows; carousel phase, remote ball type, 60 s rejoin done; next PvP
+- [Next steps 2026-10-07](next-steps-2026-10-07.md) — company Neon Yurt, К1–К4 docs done, rejoin wanted, new card «Стенка» + brainstorm
+- [Cards 2026-10](cards-2026-10.md) — 9 abilities on Q/LB (one per kid, takes a pocket), new passives/combos/balls, flashlight removed → camera «Смена», hedgehog ball VFX, old medicine ball kept; built by Bouncer → Cards → Build Card Content
+- [VFX pass 2026-10](vfx-pass-2026-10.md) — cartoon look decisions + built: particle atlas/shader, impact frames, filling telegraphs, stepped trail, rain/puddles, rim layer 7; menu Bouncer → Art → Apply VFX Pass; hedgehog untouched; follow-up: no shake on throw loop, breathing puddles
+- [Trailer 2026-10](trailer-2026-10.md) — «Мама зовёт домой» ad: decisions + pipeline (Assets/_Trailer puppet/recorder, sound-event logs, Blender kids/end card, edit.py beat grid); Play Mode only for recording
+- [Enemy FX 2026-10](enemy-fx-2026-10.md) — picks: cartoon fire horse, frost on body, elite glow by affix, volumetric waves, ram/landing dust, Dendy beam, boss extras
+- [Social content 2026-10](social-content-2026-10.md) — Instagram/TikTok batch 1: asphalt+chalk look (wrappers, notebook, film photos), RU+EN photos/reels in ~/Desktop/projects/ItsOurField_Social, tools to rebuild
+- [Save Blender content files](save-blender-marketing-files.md) — always save content setups as split .blend files (Bouncer_Marketing/, per series, scene per shot, assets linked from Bouncer.blend)

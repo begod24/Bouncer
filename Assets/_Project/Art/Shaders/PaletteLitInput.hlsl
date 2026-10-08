@@ -42,17 +42,17 @@ half3 SamplePaletteEmission(float2 uv)
     return SAMPLE_TEXTURE2D(_EmissionMap, sampler_PointClamp, uv).rgb * (half)(_EmissionStrength + _Bouncer_EmissionStrength);
 }
 
-float4 _Bouncer_FogCenter;
-float4 _Bouncer_FogParams;
-half4 _Bouncer_FogColor;
+#include "BouncerFogCore.hlsl"
+
+// Туман погоды. resist — насколько он не берёт объект: у ребят, врагов и мячей (слой Rim) выше, чтобы они читались
+half3 MixRadialFog(half3 color, float3 positionWS, half resist)
+{
+    return BouncerFogMix(color, positionWS, resist);
+}
 
 half3 MixRadialFog(half3 color, float3 positionWS)
 {
-    if (_Bouncer_FogParams.z <= 0.0)
-        return color;
-    float distance = length(positionWS.xz - _Bouncer_FogCenter.xz);
-    float fog = smoothstep(_Bouncer_FogParams.x, _Bouncer_FogParams.y, distance) * _Bouncer_FogParams.z;
-    return lerp(color, _Bouncer_FogColor.rgb, (half)fog);
+    return BouncerFogMix(color, positionWS, 0.0h);
 }
 
 // Контровой свет: только у тех, чей Renderer в слое отрисовки Rim (бит 7) — дети, враги, мячи.

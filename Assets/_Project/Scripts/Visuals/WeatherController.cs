@@ -12,6 +12,12 @@ namespace Bouncer.Visuals
         static readonly int FogCenterId = Shader.PropertyToID("_Bouncer_FogCenter");
         static readonly int FogParamsId = Shader.PropertyToID("_Bouncer_FogParams");
         static readonly int FogColorId = Shader.PropertyToID("_Bouncer_FogColor");
+        static readonly int FogShapeId = Shader.PropertyToID("_Bouncer_FogShape");
+        static readonly int FogWindId = Shader.PropertyToID("_Bouncer_FogWind");
+        static readonly int FogLampsId = Shader.PropertyToID("_Bouncer_FogLamps");
+        static readonly int FogLampColorsId = Shader.PropertyToID("_Bouncer_FogLampColors");
+        static readonly int FogLampCountId = Shader.PropertyToID("_Bouncer_FogLampCount");
+        const int FogLampSlots = 6;
 
         [SerializeField] TimeOfDayController timeOfDay;
 
@@ -39,15 +45,28 @@ namespace Bouncer.Visuals
         [SerializeField] Vector2 thunderDelay = new(0.3f, 1.4f);
 
         [Header("Туман")]
-        [Tooltip("Туман вокруг игрока: где начинается и где уже ничего не видно, м")]
-        [SerializeField] float fogStart = 6f;
-        [SerializeField] float fogEnd = 13f;
-        [Tooltip("Клочья тумана у земли")]
-        [SerializeField] ParticleSystem mist;
+        [Tooltip("Чистый пузырь вокруг игрока: где туман ещё еле заметен и где набирает полную силу, м")]
+        [SerializeField] float fogStart = 7f;
+        [SerializeField] float fogEnd = 20f;
+        [Tooltip("Потолок густоты: даже в самом густом клубе туман не закрывает землю целиком")]
+        [SerializeField, Range(0.2f, 1f)] float fogDensity = 0.62f;
+        [Tooltip("Как быстро туман редеет с высотой, 1/м. Больше — тоньше слой у земли, выше видно чище")]
+        [SerializeField, Range(0.2f, 3f)] float fogHeightFalloff = 0.8f;
+        [Tooltip("Размер клубов — масштаб шума, 1/м. Меньше — клубы крупнее")]
+        [SerializeField, Range(0.03f, 0.3f)] float fogNoiseScale = 0.075f;
+        [Tooltip("Насколько туман не берёт ребят, врагов и мячи: 1 — они его совсем не видят")]
+        [SerializeField, Range(0f, 1f)] float fogActorResist = 0.75f;
+        [Tooltip("Куда и как быстро плывут клубы, м/с (малый слой плывёт в другую сторону быстрее)")]
+        [SerializeField] Vector2 fogWind = new(0.9f, 0.35f);
+        [Tooltip("Ореол в тумане вокруг горящих фонарей: 0 — нет")]
+        [SerializeField, Range(0f, 1f)] float fogLampHalo = 0.6f;
 
         readonly List<Puddle> _puddles = new();
         float _wet;
         float _fog;
+        Vector4 _fogWind;
+        readonly Vector4[] _lampPositions = new Vector4[FogLampSlots];
+        readonly Vector4[] _lampColors = new Vector4[FogLampSlots];
         float _nextStrike = float.PositiveInfinity;
         float _strikeStart = float.NegativeInfinity;
         float _thunderAt = float.PositiveInfinity;
@@ -63,8 +82,6 @@ namespace Bouncer.Visuals
                 timeOfDay = FindFirstObjectByType<TimeOfDayController>();
             if (rain)
                 rain.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            if (mist)
-                mist.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             if (lightning)
                 lightning.enabled = false;
             if (wetVolume)
@@ -74,6 +91,7 @@ namespace Bouncer.Visuals
         void OnDisable()
         {
             Shader.SetGlobalVector(FogParamsId, Vector4.zero);
+            Shader.SetGlobalFloat(FogLampCountId, 0f);
             if (timeOfDay)
                 timeOfDay.SetWeather(0f, 0f, 0f);
         }
@@ -88,13 +106,6 @@ namespace Bouncer.Visuals
                     rain.Play(true);
                 else
                     rain.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            }
-            if (mist)
-            {
-                if (kind == WeatherKind.Fog)
-                    mist.Play(true);
-                else
-                    mist.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             }
             if (rainLoop)
             {
@@ -118,7 +129,7 @@ namespace Bouncer.Visuals
         {
             float dt = Time.deltaTime;
             _wet = Mathf.MoveTowards(_wet, Rainy ? 1f : 0f, dt * 0.5f);
-            _fog = Mathf.MoveTowards(_fog, Kind == WeatherKind.Fog ? 1f : 0f, dt * 0.4f);
+            _fog = Mathf.MoveTowards(_fog, Kind == WeatherKind.Fog ? 1f : 0f, dt * 0.25f);
 
             if (Time.time >= _nextStrike)
                 Strike();
@@ -141,15 +152,73 @@ namespace Bouncer.Visuals
 
             var player = Targetable.LocalPlayer ? Targetable.LocalPlayer : Targetable.FindNearest(Vector3.zero, Team.Player);
             Vector3 center = player ? player.Position : Vector3.zero;
-            Shader.SetGlobalVector(FogCenterId, center);
-            Shader.SetGlobalVector(FogParamsId, new Vector4(fogStart, fogEnd, _fog, 0f));
-            Shader.SetGlobalColor(FogColorId, timeOfDay ? timeOfDay.FogColor : Color.grey);
+            UpdateFog(center, dt);
             if (rain)
                 rain.transform.position = center + Vector3.up * rainHeight;
-            if (mist)
-                mist.transform.position = new Vector3(center.x, 0f, center.z);
             if (rainLoop)
                 rainLoop.volume = rainVolume * _wet * GameSettings.SfxGain * (GameFeel.Paused ? 0.3f : 1f);
+        }
+
+        // Туман: ставит глобальные переменные шейдеров (BouncerFogCore.hlsl), клубы плывут по двум слоям, фонари дают ореол
+        void UpdateFog(Vector3 center, float dt)
+        {
+            Shader.SetGlobalVector(FogCenterId, center);
+            // чуть дышит: то гуще, то реже, раз в ~20 с
+            float breath = 1f + 0.08f * Mathf.Sin(Time.time * 0.31f) + 0.04f * Mathf.Sin(Time.time * 0.83f + 1.7f);
+            Shader.SetGlobalVector(FogParamsId, new Vector4(fogStart, fogEnd, _fog * breath, 0f));
+            Shader.SetGlobalColor(FogColorId, timeOfDay ? timeOfDay.FogColor : Color.grey);
+            Shader.SetGlobalVector(FogShapeId, new Vector4(fogHeightFalloff, fogNoiseScale, fogDensity, fogActorResist));
+            if (_fog <= 0.001f)
+            {
+                Shader.SetGlobalFloat(FogLampCountId, 0f);
+                return;
+            }
+
+            // большой слой плывёт по ветру, малый — повёрнутый и быстрее, поэтому клубы всё время перестраиваются
+            Vector2 slow = fogWind * (fogNoiseScale * dt);
+            Vector2 fast = new Vector2(-fogWind.y * 1.2f - fogWind.x * 0.4f, fogWind.x * 1.2f - fogWind.y * 0.4f) * (fogNoiseScale * 1.6f * dt);
+            _fogWind += new Vector4(slow.x, slow.y, fast.x, fast.y);
+            // шум в шейдере держится в окне float: не даём смещению уйти в миллионы
+            _fogWind = new Vector4(Mathf.Repeat(_fogWind.x, 4096f), Mathf.Repeat(_fogWind.y, 4096f), Mathf.Repeat(_fogWind.z, 4096f), Mathf.Repeat(_fogWind.w, 4096f));
+            Shader.SetGlobalVector(FogWindId, _fogWind);
+
+            int count = 0;
+            if (fogLampHalo > 0f)
+            {
+                foreach (var lamp in LampLight.All)
+                {
+                    if (!lamp || lamp.Level < 0.02f)
+                        continue;
+                    Vector3 head = lamp.HeadPosition;
+                    float sqr = (head.x - center.x) * (head.x - center.x) + (head.z - center.z) * (head.z - center.z);
+                    // держим FogLampSlots ближайших к игроку: на место дальнего садится ближний
+                    int slot = count < FogLampSlots ? count : -1;
+                    if (slot < 0)
+                    {
+                        float worst = 0f;
+                        for (int i = 0; i < FogLampSlots; i++)
+                        {
+                            float other = (_lampPositions[i].x - center.x) * (_lampPositions[i].x - center.x) + (_lampPositions[i].z - center.z) * (_lampPositions[i].z - center.z);
+                            if (other > worst)
+                            {
+                                worst = other;
+                                slot = i;
+                            }
+                        }
+                        if (sqr >= worst)
+                            continue;
+                    }
+                    else
+                        count++;
+                    Color glow = lamp.GlowColor;
+                    float level = lamp.Level * fogLampHalo;
+                    _lampPositions[slot] = new Vector4(head.x, head.y, head.z, lamp.GlowRadius);
+                    _lampColors[slot] = new Vector4(glow.r * level, glow.g * level, glow.b * level, level * 0.5f);
+                }
+            }
+            Shader.SetGlobalVectorArray(FogLampsId, _lampPositions);
+            Shader.SetGlobalVectorArray(FogLampColorsId, _lampColors);
+            Shader.SetGlobalFloat(FogLampCountId, count);
         }
 
         void Strike()

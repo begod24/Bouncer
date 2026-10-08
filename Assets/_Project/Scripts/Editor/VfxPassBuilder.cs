@@ -82,7 +82,6 @@ namespace Bouncer.EditorTools
             ["StrawBurst/Dust"] = Puff(),
             ["StrawBurst/Straw"] = new(RowStraw, 0, 7, false, Mat.Alpha, 2.2f, 300f),
             ["StuffingBurst/StuffingBurst"] = new(RowFluff, 0, 7, false, Mat.Alpha, 1.1f, 120f),
-            ["Weather/Mist"] = new(RowMisc, 6, 6, false, Mat.Ground, 1f, 0f, keepRotation: true),
         };
 
         static Material s_alpha, s_glow, s_add, s_ground, s_impact, s_trail, s_telegraph;
@@ -607,10 +606,6 @@ namespace Bouncer.EditorTools
             rRenderer.pivot = Vector3.zero;
             ripple.transform.localPosition = Vector3.zero;
             SetSubEmitter(rain, ripple, 0.35f);
-
-            var mist = root.transform.Find("Mist")?.GetComponent<ParticleSystem>();
-            if (mist)
-                Apply(mist, Styles["Weather/Mist"]);
 
             PrefabUtility.SaveAsPrefabAsset(root, path);
             PrefabUtility.UnloadPrefabContents(root);

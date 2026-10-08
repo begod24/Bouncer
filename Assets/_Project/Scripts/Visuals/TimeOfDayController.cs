@@ -136,20 +136,22 @@ namespace Bouncer.Visuals
             ApplyFx(RenderSettings.ambientSkyColor, sun ? sun.color * sun.intensity : Color.white);
 
             Color fogColor = Color.Lerp(a.fogColor, b.fogColor, t);
+            // дождь серит краски, а туман остаётся цветом арены (молочный утром, тёплый вечером, тёмно-синий ночью)
             float grey = fogColor.grayscale;
-            fogColor = Color.Lerp(fogColor, new Color(grey, grey, grey * 1.05f), 0.5f * Mathf.Max(_wet, _fog));
+            fogColor = Color.Lerp(fogColor, new Color(grey, grey, grey * 1.05f), Mathf.Max(0.5f * _wet, 0.2f * _fog));
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.Linear;
             RenderSettings.fogColor = fogColor;
-            RenderSettings.fogStartDistance = Mathf.Lerp(Mathf.Lerp(a.fogStart, b.fogStart, t), 22f, _fog);
-            RenderSettings.fogEndDistance = Mathf.Lerp(Mathf.Lerp(a.fogEnd, b.fogEnd, t), 45f, _fog);
+            // стеной далёкий туман больше не работает: его роль у шейдерного тумана у земли, а этот остаётся лёгкой дымкой вдали
+            RenderSettings.fogStartDistance = Mathf.Lerp(Mathf.Lerp(a.fogStart, b.fogStart, t), 50f, _fog);
+            RenderSettings.fogEndDistance = Mathf.Lerp(Mathf.Lerp(a.fogEnd, b.fogEnd, t), 130f, _fog);
             FogColor = fogColor;
 
             if (targetCamera)
             {
                 targetCamera.clearFlags = CameraClearFlags.SolidColor;
                 Color sky = Color.Lerp(a.skyColor, b.skyColor, t) * ((1f - 0.3f * _wet) * (1f - 0.6f * dark));
-                targetCamera.backgroundColor = Color.Lerp(sky, fogColor, _fog) + flash * 0.5f;
+                targetCamera.backgroundColor = Color.Lerp(sky, fogColor * 0.9f, _fog * 0.7f) + flash * 0.5f;
             }
 
             if (volumeA)

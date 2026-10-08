@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Bouncer.Core;
 using UnityEngine;
 
@@ -25,10 +26,61 @@ namespace Bouncer.Visuals
         [Tooltip("Сколько секунд лампа помигивает, когда загорается")]
         [SerializeField] float warmUpTime = 1.2f;
 
+        static readonly List<LampLight> s_all = new();
+
         float[] _intensity;
         float _seed;
         bool _lit;
         float _litAt = float.NegativeInfinity;
+
+        public static IReadOnlyList<LampLight> All => s_all;
+
+        // Насколько фонарь горит сейчас, 0..1 (гаснет от тьмы, мигает при включении и когда его гасят)
+        public float Level { get; private set; }
+
+        // Где голова фонаря, цвет её света и радиус ореола в тумане
+        public Vector3 HeadPosition
+        {
+            get
+            {
+                foreach (var light in lights)
+                    if (light)
+                        return light.transform.position;
+                return transform.position + Vector3.up * 4f;
+            }
+        }
+
+        public Color GlowColor
+        {
+            get
+            {
+                foreach (var light in lights)
+                    if (light)
+                        return light.color;
+                return new Color(1f, 0.85f, 0.55f);
+            }
+        }
+
+        public float GlowRadius
+        {
+            get
+            {
+                if (zone)
+                    return zone.Radius * 1.5f;
+                float range = 0f;
+                foreach (var light in lights)
+                    if (light)
+                        range = Mathf.Max(range, light.range);
+                return Mathf.Clamp(range, 6f, 14f);
+            }
+        }
+
+        void OnEnable() => s_all.Add(this);
+
+        void OnDisable() => s_all.Remove(this);
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() => s_all.Clear();
 
         void Awake()
         {
@@ -61,6 +113,7 @@ namespace Bouncer.Visuals
                     level *= out01 >= 1f ? 0f : blink ? 1f - out01 : 0.1f;
                 }
             }
+            Level = Mathf.Clamp01(level);
             for (int i = 0; i < lights.Length; i++)
             {
                 var light = lights[i];

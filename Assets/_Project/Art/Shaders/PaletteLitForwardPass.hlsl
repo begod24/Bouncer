@@ -227,8 +227,11 @@ void PaletteLitFragment(
     half4 color = UniversalFragmentBlinnPhong(inputData, surfaceData);
     half3 n = inputData.normalWS;
     half ndv = saturate(dot(n, inputData.viewDirectionWS));
+    // ребята, враги и мячи (слой Rim) в тумане остаются читаемыми
+    half fogResist = 0.0h;
     if ((GetMeshRenderingLayer() & BOUNCER_RIM_LAYER) != 0u)
     {
+        fogResist = (half)_Bouncer_FogShape.w;
         // мультяшный ободок по краю силуэта, чуть сильнее сверху
         half rim = smoothstep(0.6h, 0.85h, 1.0h - ndv) * saturate(n.y * 0.5h + 0.75h);
         color.rgb += _Bouncer_RimColor.rgb * (rim * (half)_Bouncer_RimStrength);
@@ -255,7 +258,7 @@ void PaletteLitFragment(
     }
     color.rgb = lerp(color.rgb, _FlashColor.rgb, _FlashColor.a);
     color.rgb = MixFog(color.rgb, inputData.fogCoord);
-    color.rgb = MixRadialFog(color.rgb, input.positionWS);
+    color.rgb = MixRadialFog(color.rgb, input.positionWS, fogResist);
     color.a = 1.0h;
     outColor = color;
 

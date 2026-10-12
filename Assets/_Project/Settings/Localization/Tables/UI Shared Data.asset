@@ -1267,6 +1267,18 @@ MonoBehaviour:
     m_Key: card.blocked.ball
     m_Metadata:
       m_Items: []
+  - m_Id: 6587152157630464
+    m_Key: settings.framelimit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6587152207962112
+    m_Key: settings.framelimit.monitor
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6587152207962113
+    m_Key: settings.framelimit.none
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

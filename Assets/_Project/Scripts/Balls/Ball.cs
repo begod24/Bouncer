@@ -106,6 +106,7 @@ namespace Bouncer.Balls
         float _nextReachCheck;
         float _unreachableSince = -1f;
         bool _rolling;
+        bool _retired;
         float _rollTime;
         Vector3 _rollFrom;
         Vector3 _rollTo;
@@ -193,6 +194,7 @@ namespace Bouncer.Balls
             IsYoyoString = false;
             _vanishAt = 0f;
             _rolling = false;
+            _retired = false;
             _unreachableSince = -1f;
             ResetMeshScale();
             IsComingBack = false;
@@ -342,6 +344,24 @@ namespace Bouncer.Balls
         {
             if (IsPuppet)
                 Network?.Carry(this, center, turn);
+        }
+
+        /// <summary>
+        /// Свой мяч стал лишним (у игрока стало меньше мячей): он больше ничей, не вернётся в руки
+        /// и тает — сразу, если лежит, или как только упадёт.
+        /// </summary>
+        public bool Retire()
+        {
+            if (IsPuppet || _owner == null || IsPhantom || State == BallState.Idle)
+                return false;
+            _owner = null;
+            _summoned = false;
+            _receiver = null;
+            if (State == BallState.Loose)
+                Vanish();
+            else
+                _retired = true;
+            return true;
         }
 
         public bool Adopt(GameObject owner)
@@ -881,6 +901,12 @@ namespace Bouncer.Balls
 
             s_loose.Remove(this);
             s_loose.Add(this);
+            if (_retired)
+            {
+                _retired = false;
+                Vanish();
+                return;
+            }
             if (!IsOwn)
                 TrimForeign(definition.maxForeignLoose);
             while (s_loose.Count > definition.maxLooseBalls)
@@ -1092,7 +1118,8 @@ namespace Bouncer.Balls
 
             var stats = Stats.WithoutBonus();
             stats.Speed = Mathf.Max(Flat(_velocity).magnitude * definition.splitSpeedKeep, definition.minLiveSpeed + 2f);
-            stats.UpVelocity = 1f;
+            // Без гравитации (футбольный катится) подскок двойника ничто не гасит — он бы улетал вверх.
+            stats.UpVelocity = stats.Gravity > 0.05f ? 1f : 0f;
             for (int side = -1; side <= 1; side += 2)
             {
                 var twin = PoolService.Spawn(tag.Prefab, position, Quaternion.identity).GetComponent<Ball>();

@@ -37,6 +37,8 @@ namespace Bouncer.UI
         [SerializeField] ChalkStepper displayMode;
         [SerializeField] ChalkStepper resolution;
         [SerializeField] ChalkStepper vSync;
+        [Tooltip("Лимит кадров, когда VSync выключен")]
+        [SerializeField] ChalkStepper frameLimit;
 
         [Header("Звук")]
         [SerializeField] UnityEngine.UI.Slider masterVolume;
@@ -56,6 +58,24 @@ namespace Bouncer.UI
         float _applyScreenAt = -1f;
 
         static string[] OnOff => new[] { Loc.Get("settings.off"), Loc.Get("settings.on") };
+
+        static IEnumerable<string> FrameLimitOptions
+        {
+            get
+            {
+                foreach (int limit in GameSettings.FrameLimits)
+                    yield return limit == 0 ? Loc.Get("settings.framelimit.monitor")
+                        : limit < 0 ? Loc.Get("settings.framelimit.none")
+                        : limit.ToString();
+            }
+        }
+
+        /// <summary>С VSync кадры идут по монитору — лимит не действует и показан серым.</summary>
+        void LockFrameLimit()
+        {
+            if (frameLimit && frameLimit.TryGetComponent(out UnityEngine.UI.Selectable selectable))
+                selectable.interactable = !GameSettings.VSync;
+        }
         static string[] DisplayModes => new[] { Loc.Get("settings.windowed"), Loc.Get("settings.fullscreen") };
 
         void Awake()
@@ -74,7 +94,14 @@ namespace Bouncer.UI
             {
                 GameSettings.VSync = index == 1;
                 GameSettings.Apply();
+                LockFrameLimit();
             };
+            if (frameLimit)
+                frameLimit.Changed += index =>
+                {
+                    GameSettings.FrameLimit = index;
+                    GameSettings.Apply();
+                };
 
             masterVolume.onValueChanged.AddListener(value => GameSettings.MasterVolume = value);
             musicVolume.onValueChanged.AddListener(value => GameSettings.MusicVolume = value);
@@ -100,6 +127,9 @@ namespace Bouncer.UI
             displayMode.SetOptions(DisplayModes, Screen.fullScreenMode == FullScreenMode.Windowed ? 0 : 1);
             RefreshResolutions();
             vSync.SetOptions(onOff, GameSettings.VSync ? 1 : 0);
+            if (frameLimit)
+                frameLimit.SetOptions(FrameLimitOptions, GameSettings.FrameLimit);
+            LockFrameLimit();
 
             masterVolume.SetValueWithoutNotify(GameSettings.MasterVolume);
             musicVolume.SetValueWithoutNotify(GameSettings.MusicVolume);
@@ -136,6 +166,8 @@ namespace Bouncer.UI
             aimLine.SetOptions(onOff);
             hints.SetOptions(onOff);
             vSync.SetOptions(onOff);
+            if (frameLimit)
+                frameLimit.SetOptions(FrameLimitOptions);
             displayMode.SetOptions(DisplayModes);
             RefreshLanguages();
         }
@@ -180,7 +212,9 @@ namespace Bouncer.UI
         void RefreshLanguages()
         {
             _locales.Clear();
-            _locales.AddRange(LocalizationSettings.AvailableLocales.Locales);
+            foreach (var locale in LocalizationSettings.AvailableLocales.Locales)
+                if (!LocaleVisibility.IsHidden(locale))
+                    _locales.Add(locale);
             var names = new List<string>(_locales.Count);
             foreach (var locale in _locales)
                 names.Add(NativeName(locale));

@@ -69,6 +69,7 @@ namespace Bouncer.Upgrades
                 return;
             _initialized = true;
             UpgradeCard.Replaying = true;
+            _player.Balls.BeginBatch();
             try
             {
                 foreach (var card in RunCards.Taken(Slot))
@@ -77,6 +78,7 @@ namespace Bouncer.Upgrades
             finally
             {
                 UpgradeCard.Replaying = false;
+                _player.Balls.EndBatch();
             }
             bool resumed = RunState.TakeResume(Slot, out int hands, out bool down);
             int lives = RunState.LivesOf(Slot);
@@ -305,6 +307,9 @@ namespace Bouncer.Upgrades
         void Rebuild()
         {
             var mods = _player.Modifiers;
+            // Пачка: пока бонусы сбрасываются и накладываются заново, мяч на миг становится обычным —
+            // без пачки на этом шаге в руки выдавались лишние мячи. Число мячей сверяется один раз в конце.
+            _player.Balls.BeginBatch();
             mods.Reset();
             _stacks.Clear();
             _player.Balls.ResetBallPrefab();
@@ -319,8 +324,8 @@ namespace Bouncer.Upgrades
             {
                 UpgradeCard.Replaying = false;
                 UpgradeCard.Rebuilding = false;
+                _player.Balls.EndBatch();
             }
-            _player.Balls.ClampToMax();
             mods.NotifyChanged();
         }
 

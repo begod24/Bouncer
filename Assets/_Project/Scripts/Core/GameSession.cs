@@ -97,12 +97,39 @@ namespace Bouncer.Core
         {
             GameEvents.EnemyKilled += OnEnemyKilled;
             GameEvents.PlayerDied += OnPlayerDied;
+            InputSystem.onDeviceChange += OnDeviceChange;
         }
 
         void OnDisable()
         {
             GameEvents.EnemyKilled -= OnEnemyKilled;
             GameEvents.PlayerDied -= OnPlayerDied;
+            InputSystem.onDeviceChange -= OnDeviceChange;
+        }
+
+        void OnApplicationFocus(bool hasFocus)
+        {
+            // В редакторе фокус теряется от клика по инспектору — там паузу не ставим, только в сборке.
+            if (!hasFocus && !Application.isEditor)
+                PauseWhileAway();
+        }
+
+        void OnDeviceChange(InputDevice device, InputDeviceChange change)
+        {
+            if (device is Gamepad && change is InputDeviceChange.Disconnected or InputDeviceChange.Removed)
+                PauseWhileAway();
+        }
+
+        /// <summary>
+        /// Игрок отвлёкся: окно потеряло фокус, отключился геймпад (сюда же — оверлей Steam).
+        /// В одиночной игре ставим паузу, меню паузы откроется само. Онлайн паузы нет, как и по Esc.
+        /// </summary>
+        public void PauseWhileAway()
+        {
+            if (Online.Active || GameFeel.Paused || OverlayOpen || Menu != LocalMenu.None || ScreenFade.IsBusy)
+                return;
+            if (State is SessionState.Playing or SessionState.Cleared)
+                GameFeel.Paused = true;
         }
 
         void OnDestroy()

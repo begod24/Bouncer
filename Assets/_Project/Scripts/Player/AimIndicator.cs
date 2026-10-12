@@ -102,14 +102,15 @@ namespace Bouncer.Player
         void ShowLobLine(Vector3 landing, PlayerBallHandler balls)
         {
             Vector3 from = player.transform.position;
-            Color color = balls.CandleReady ? candleColor : Color.Lerp(normalColor, chargedColor, balls.Charge01);
+            float charge = balls.AimCharge01;
+            Color color = balls.CandleReady ? candleColor : Color.Lerp(normalColor, chargedColor, charge);
             _line.enabled = true;
             _line.positionCount = 2;
             _line.SetPosition(0, new Vector3(from.x, groundHeight, from.z));
             _line.SetPosition(1, new Vector3(landing.x, groundHeight, landing.z));
             _line.startColor = color;
             _line.endColor = new Color(color.r, color.g, color.b, color.a * 0.3f);
-            _line.widthMultiplier = Mathf.Lerp(0.06f, 0.14f, balls.Charge01);
+            _line.widthMultiplier = Mathf.Lerp(0.06f, 0.14f, charge);
         }
 
         void UpdateLandingMarkers()
@@ -123,7 +124,8 @@ namespace Bouncer.Player
             {
                 if (_aimMarker == null || !_aimMarker.isActiveAndEnabled)
                     _aimMarker = Spawn();
-                _aimMarker.ShowSteady(point, radius, balls.Charge01, Mathf.Lerp(0.45f, 0.9f, balls.Charge01));
+                float charge = balls.AimCharge01;
+                _aimMarker.ShowSteady(point, radius, charge, Mathf.Lerp(0.45f, 0.9f, charge));
             }
             else
             {

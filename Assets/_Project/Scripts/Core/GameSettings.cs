@@ -14,10 +14,15 @@ namespace Bouncer.Core
         public static float SfxVolume = 1f;
         public static float ScreenShake = 1f;
         public static bool VSync = true;
+        /// <summary>Номер в <see cref="FrameLimits"/>: лимит кадров, когда VSync выключен.</summary>
+        public static int FrameLimit;
         public static int Kid;
         public static string PlayerName = "";
 
         public const int PlayerNameLength = 16;
+
+        /// <summary>Лимит кадров без VSync: 0 — как частота монитора, −1 — без лимита.</summary>
+        public static readonly int[] FrameLimits = { 0, 30, 60, 120, 144, -1 };
 
         public static bool AutoAimFor(bool gamepad) => gamepad ? AutoAimGamepad : AutoAimMouse;
 
@@ -40,6 +45,7 @@ namespace Bouncer.Core
             SfxVolume = GetFloat(nameof(SfxVolume), 1f);
             ScreenShake = GetFloat(nameof(ScreenShake), 1f);
             VSync = GetBool(nameof(VSync), true);
+            FrameLimit = Mathf.Clamp(PlayerPrefs.GetInt(Prefix + nameof(FrameLimit), 0), 0, FrameLimits.Length - 1);
             Kid = Mathf.Max(0, PlayerPrefs.GetInt(Prefix + nameof(Kid), 0));
             PlayerName = PlayerPrefs.GetString(Prefix + nameof(PlayerName), "");
             Apply();
@@ -49,6 +55,16 @@ namespace Bouncer.Core
         {
             if (!Application.isEditor)
                 QualitySettings.vSyncCount = VSync ? 1 : 0;
+            // С VSync кадры и так идут по монитору; без него лимит не даёт видеокарте крутить сотни кадров.
+            Application.targetFrameRate = VSync ? -1 : TargetFrameRate(FrameLimits[Mathf.Clamp(FrameLimit, 0, FrameLimits.Length - 1)]);
+        }
+
+        static int TargetFrameRate(int limit)
+        {
+            if (limit != 0)
+                return limit;
+            double hz = Screen.currentResolution.refreshRateRatio.value;
+            return hz >= 1d ? Mathf.RoundToInt((float)hz) : 60;
         }
 
         public static void Save()
@@ -62,6 +78,7 @@ namespace Bouncer.Core
             PlayerPrefs.SetFloat(Prefix + nameof(SfxVolume), SfxVolume);
             PlayerPrefs.SetFloat(Prefix + nameof(ScreenShake), ScreenShake);
             SetBool(nameof(VSync), VSync);
+            PlayerPrefs.SetInt(Prefix + nameof(FrameLimit), FrameLimit);
             PlayerPrefs.SetInt(Prefix + nameof(Kid), Kid);
             PlayerPrefs.SetString(Prefix + nameof(PlayerName), PlayerName ?? "");
             PlayerPrefs.Save();

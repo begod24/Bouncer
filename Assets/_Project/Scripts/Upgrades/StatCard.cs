@@ -75,6 +75,23 @@ namespace Bouncer.Upgrades
 
         public override void Apply(PlayerController player)
         {
+            // Число мячей в руках подстраивается в EndBatch: +мяч сразу в руки, −мяч — тает лишний свой.
+            player.Balls.BeginBatch();
+            try
+            {
+                ApplyStats(player);
+            }
+            finally
+            {
+                player.Balls.EndBatch();
+            }
+            if (heal > 0 && !Replaying)
+                player.Health.Heal(heal);
+            player.Modifiers.NotifyChanged();
+        }
+
+        void ApplyStats(PlayerController player)
+        {
             var mods = player.Modifiers;
             mods.MoveSpeed += moveSpeed;
             mods.DashDistance += dashDistance;
@@ -110,18 +127,6 @@ namespace Bouncer.Upgrades
                 mods.GumBubbleCooldown = mods.GumBubbleCooldown > 0f ? Mathf.Min(mods.GumBubbleCooldown, gumBubbleCooldown) : gumBubbleCooldown;
             mods.Tamagotchi |= tamagotchi;
             mods.CircleGuard |= circleGuard;
-            if (extraBalls > 0 && !Rebuilding && !player.Balls.FixedHands)
-                player.Balls.GiveBall(extraBalls);
-            else if (extraBalls < 0)
-            {
-                if (Replaying)
-                    player.Balls.ClampToMax();
-                else
-                    player.Balls.DropExcess();
-            }
-            if (heal > 0 && !Replaying)
-                player.Health.Heal(heal);
-            mods.NotifyChanged();
         }
     }
 }

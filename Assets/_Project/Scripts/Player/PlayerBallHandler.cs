@@ -42,6 +42,8 @@ namespace Bouncer.Player
         bool _autoFiring;
         float _aimDistance = -1f;
         Vector3 _aimDirection = Vector3.forward;
+        int _batch;
+        int _batchMaxBalls;
 
         public Ball BallPrefab => ballPrefab;
         public BallDefinition BallDefinition => ballPrefab ? ballPrefab.Definition : null;
@@ -67,6 +69,10 @@ namespace Bouncer.Player
         public bool CatchPerksReady { get; private set; }
         public bool PassReady { get; private set; }
         public int CountStep => _mods.CountEvery > 0 ? _throwCount % _mods.CountEvery : 0;
+        /// <summary>Следующий бросок сам станет полным: последний счёт «Считалочки» или мяч, пойманный пасом.</summary>
+        public bool NextThrowForced => PassReady || (_mods.CountEvery > 0 && _throwCount % _mods.CountEvery == _mods.CountEvery - 1);
+        /// <summary>Заряд, с которым полетит следующий бросок: прицел и метка навеса показывают его.</summary>
+        public float AimCharge01 => CandleReady || NextThrowForced ? 1f : Charge01;
         public bool IsCharging { get; private set; }
         public float Charge01 { get; private set; }
         public bool IsCatching => _catchWindowOpen && Time.time < _catchUntil;
@@ -114,12 +120,91 @@ namespace Bouncer.Player
                 return;
             int before = MaxBalls;
             ballPrefab = prefab;
+            if (_batch == 0)
+                ApplyMaxBallsChange(before);
+            BallTypeChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// Пачка правок карточек (пересборка после замены/продажи, повтор взятых в начале арены): мячи в руках
+        /// не выдаются и не отбираются на каждом шаге, а один раз в конце — по тому, как изменилось число своих мячей.
+        /// </summary>
+        public void BeginBatch()
+        {
+            if (_batch++ == 0)
+                _batchMaxBalls = MaxBalls;
+        }
+
+        public void EndBatch()
+        {
+            if (_batch <= 0)
+                return;
+            if (--_batch == 0)
+                ApplyMaxBallsChange(_batchMaxBalls);
+        }
+
+        void ApplyMaxBallsChange(int before)
+        {
+            if (_stats == null || (_player != null && !_player.IsLocal))
+                return;
             int after = MaxBalls;
             if (after > before)
-                GiveBall(after - before);
+                AddOwnBalls(after - before);
             else if (after < before)
-                DropExcess();
-            BallTypeChanged?.Invoke();
+                RemoveOwnBalls(before - after);
+            DropExcess();
+        }
+
+        void AddOwnBalls(int count)
+        {
+            int now = Mathf.Min(count, Mathf.Max(0, MaxBalls - Balls));
+            Balls += now;
+            if (count > now)
+            {
+                _lostBalls += count - now;
+                _lostReturnAt = Time.time;
+            }
+        }
+
+        /// <summary>
+        /// Своих мячей стало меньше: сначала не возвращаются потерянные, потом тают лишние свои мячи на поле
+        /// (сначала лежащие), и только потом убираются из рук.
+        /// </summary>
+        void RemoveOwnBalls(int count)
+        {
+            int cut = Mathf.Min(count, _lostBalls);
+            _lostBalls -= cut;
+            count -= cut;
+            if (_lostBalls == 0 && _lostYoyo)
+            {
+                _lostYoyo = false;
+                _yoyoOut = false;
+            }
+            if (count > 0)
+                count -= RetireOwnBalls(count, loose: true);
+            if (count > 0)
+                count -= RetireOwnBalls(count, loose: false);
+            if (count > 0)
+            {
+                cut = Mathf.Min(count, Mathf.Max(0, Balls - _borrowed.Count));
+                Balls -= cut;
+            }
+        }
+
+        int RetireOwnBalls(int count, bool loose)
+        {
+            int retired = 0;
+            var balls = Ball.Active;
+            for (int i = 0; i < balls.Count && retired < count; i++)
+            {
+                var ball = balls[i];
+                if (ball.Owner != gameObject || ball.IsPhantom || ball.IsYoyoString || ball.State == BallState.Idle
+                    || (ball.State == BallState.Loose) != loose)
+                    continue;
+                if (ball.Retire())
+                    retired++;
+            }
+            return retired;
         }
 
         public void ResetBallPrefab()
@@ -313,7 +398,7 @@ namespace Bouncer.Player
             var definition = BallDefinition;
             if (definition == null || !definition.perks.lob)
                 return false;
-            float charge = CandleReady ? 1f : Charge01;
+            float charge = AimCharge01;
             point = transform.position + Flat(_aimDirection).normalized * LobDistance(definition, charge);
             point.y = 0f;
             radius = definition.lobMarkerRadius;
@@ -611,18 +696,17 @@ namespace Bouncer.Player
             if (_lostBalls <= 0 || Time.time < _lostReturnAt)
                 return;
             int returned = Mathf.Min(_lostBalls, Mathf.Max(0, MaxBalls - Balls));
+            if (returned <= 0)
+                return;
             Balls += returned;
-            _lostBalls = 0;
+            _lostBalls -= returned;
             if (_lostYoyo)
             {
                 _lostYoyo = false;
                 _yoyoOut = false;
             }
-            if (returned > 0)
-            {
-                GameEvents.PlaySound(SoundCue.Pickup, transform.position);
-                Returned?.Invoke();
-            }
+            GameEvents.PlaySound(SoundCue.Pickup, transform.position);
+            Returned?.Invoke();
         }
 
         public void ThrowAround(float startAngle)

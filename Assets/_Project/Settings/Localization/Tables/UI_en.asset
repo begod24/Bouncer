@@ -1318,6 +1318,18 @@ MonoBehaviour:
     m_Localized: Not with the {0}
     m_Metadata:
       m_Items: []
+  - m_Id: 6587152157630464
+    m_Localized: Frame limit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6587152207962112
+    m_Localized: Match monitor
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6587152207962113
+    m_Localized: Unlimited
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

@@ -9987,7 +9987,8 @@ MonoBehaviour:
   mesh: {fileID: 3747260312848730107}
   gumSpot: {fileID: 8005354577828288026, guid: a6cd4f7c25de342519607012c9e33f8b, type: 3}
   blastRing: {fileID: 4322836193269252346, guid: b96959c9369214f7a92b749c5b87c4b3, type: 3}
-  chalkMark: {fileID: 9148688477704011579, guid: e263eec0523d44580b09e0aa2403882a, type: 3}
+  smashSpark: {fileID: 2143658155122866917, guid: f132b22a5be4f4167b4163d0edfef8c9, type: 3}
+  iceShards: {fileID: 3883281104995889989, guid: 0319fd74001e34cb09bddb2e72318b9a, type: 3}
 --- !u!114 &8329245546095107209
 MonoBehaviour:
   m_ObjectHideFlags: 0

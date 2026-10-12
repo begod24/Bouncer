@@ -44,6 +44,7 @@ namespace Bouncer.UI
         readonly List<PocketCardMini> _minis = new();
         readonly List<UpgradeCard> _shown = new();
         readonly List<int> _shownStacks = new();
+        readonly List<bool> _shownAsleep = new();
         readonly List<UpgradeCard> _previous = new();
         PlayerCards _cards;
         int _shownMax = -1;
@@ -134,7 +135,8 @@ namespace Bouncer.UI
             if (pockets.Count != _shown.Count || _cards.MaxPockets != _shownMax)
                 return true;
             for (int i = 0; i < pockets.Count; i++)
-                if (pockets[i] != _shown[i] || _cards.StacksOf(pockets[i]) != _shownStacks[i])
+                if (pockets[i] != _shown[i] || _cards.StacksOf(pockets[i]) != _shownStacks[i]
+                    || _cards.IsAsleep(pockets[i]) != _shownAsleep[i])
                     return true;
             return false;
         }
@@ -146,10 +148,12 @@ namespace Bouncer.UI
             _previous.AddRange(_shown);
             _shown.Clear();
             _shownStacks.Clear();
+            _shownAsleep.Clear();
             for (int i = 0; i < pockets.Count; i++)
             {
                 _shown.Add(pockets[i]);
                 _shownStacks.Add(stacksOf(pockets[i]));
+                _shownAsleep.Add(_cards != null && _cards.IsAsleep(pockets[i]));
             }
             _shownMax = max;
 
@@ -172,6 +176,7 @@ namespace Bouncer.UI
                 {
                     var card = _shown[i];
                     mini.Show(card, _shownStacks[i]);
+                    mini.SetAsleep(_shownAsleep[i]);
                     if (showNames)
                     {
                         mini.SetLabelStyle(nameSize / scale, nameWidth / scale, wrap: false);

@@ -32,7 +32,7 @@ namespace Bouncer.Net
     public sealed class NetSession : MonoBehaviour, IOnlineSession
     {
         const ushort LanPort = 7777;
-        const int ProtocolVersion = 1;
+        const int ProtocolVersion = 2;
         static readonly string s_profile = "p" + Guid.NewGuid().ToString("N").Substring(0, 12);
 
         [SerializeField] NetRoom roomPrefab;
@@ -111,7 +111,7 @@ namespace Bouncer.Net
                 if (_network.SceneManager != null)
                     _network.SceneManager.OnSynchronize -= OnSynchronize;
             }
-            if (Online.Session == this)
+            if (ReferenceEquals(Online.Session, this))
             {
                 Online.Session = null;
                 Online.Active = false;

@@ -33,7 +33,6 @@ namespace Bouncer.EditorTools
             // кольца
             Ring("CapGunCone", new Color(1f, 0.92f, 0.7f, 0.9f), 0.3f, 0.25f, 0.05f, arc: 76f);
             Ring("MagnetPull", new Color(0.95f, 0.45f, 0.45f, 0.9f), 0.45f, 0.08f, 0.3f, inward: true);
-            Ring("PassRing", Color.white, 0.4f, 0.18f, 0.04f);
             Ring("HandRing", Color.white, 0.6f, 0.6f, 0.4f, material: s_hands);
             Ring("SeaRing", new Color(0.6f, 0.85f, 1f, 0.95f), 0.7f, 0.3f, 0.05f);
 
@@ -50,7 +49,6 @@ namespace Bouncer.EditorTools
             BuildProps();
             BuildCameraFx();
             BuildMarkAndBand();
-            BuildChalkMark();
         }
 
         static void BuildFence()
@@ -178,16 +176,6 @@ namespace Bouncer.EditorTools
             band.alignment = LineAlignment.View;
             bandGo.AddComponent<ElasticBand>();
             SavePrefab(bandGo, "ElasticBand");
-        }
-
-        static void BuildChalkMark()
-        {
-            var root = new GameObject("ChalkMark");
-            var mark = root.AddComponent<ChalkMark>();
-            Quad("Cross", root.transform, s_chalkCross, Vector3.zero, new Vector3(90f, 0f, 0f), Vector3.one);
-            var dust = Particles("Dust", root.transform, new Color(1f, 1f, 1f, 0.7f), new Color(0.9f, 0.9f, 0.88f, 0.5f), 8, 0.8f, 0.6f, 0.25f, -0.05f, 0.3f);
-            Set(mark, "dust", dust);
-            SavePrefab(root, "ChalkMark");
         }
     }
 }

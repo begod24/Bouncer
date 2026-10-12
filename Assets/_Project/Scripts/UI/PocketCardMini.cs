@@ -69,6 +69,7 @@ namespace Bouncer.UI
             border.enabled = card.rarity != CardRarity.Common;
             border.color = card.rarity == CardRarity.Gold ? goldColor : rareColor;
             stacks.text = card.maxStacks > 1 && card.category != UpgradeCategory.Treat ? $"{Mathf.Max(1, taken)}/{card.maxStacks}" : string.Empty;
+            SetAsleep(false);
             SetMarked(false);
             SetHotkey(0);
             SetLabel(null);
@@ -77,6 +78,7 @@ namespace Bouncer.UI
         public void ShowItem(Sprite sprite, Color color, string count)
         {
             Card = null;
+            icon.color = Color.white;
             slot.enabled = false;
             wrapper.gameObject.SetActive(true);
             wrapper.color = color;
@@ -125,6 +127,15 @@ namespace Bouncer.UI
         {
             if (hotkey)
                 hotkey.text = number > 0 ? number.ToString() : string.Empty;
+        }
+
+        /// <summary>Спящая карточка (не подходит к мячу в руках): серая обёртка и бледная картинка.</summary>
+        public void SetAsleep(bool asleep)
+        {
+            if (Card == null)
+                return;
+            wrapper.color = asleep ? Color.Lerp(Card.wrapperColor, new Color(0.55f, 0.55f, 0.55f), 0.75f) : Card.wrapperColor;
+            icon.color = asleep ? new Color(1f, 1f, 1f, 0.45f) : Color.white;
         }
 
         public void SetMarked(bool marked)

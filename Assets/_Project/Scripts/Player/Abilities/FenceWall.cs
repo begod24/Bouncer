@@ -120,12 +120,37 @@ namespace Bouncer.Player
             Struck(hit.point);
             if (_redirect && _caster != null && !ball.IsPuppet)
             {
+                // «Штаб»: мяч отлетает обратно заряженным — в ближайшего врага по эту сторону забора
                 float speed = Mathf.Max(redirectSpeed, Flat(ball.Velocity).magnitude * 1.1f);
-                ball.TurnAround(_caster.gameObject, transform.forward * speed + Vector3.up * 0.8f);
+                Vector3 direction = AimAway(hit.point);
+                ball.TurnAround(_caster.gameObject, direction * speed + Vector3.up * 0.8f);
+                ball.MakeCharged(RedirectDamage);
                 GameEvents.PlaySound(SoundCue.ShieldBlock, hit.point);
                 return BallContactResult.Redirected;
             }
             return BallContactResult.Bounce;
+        }
+
+        const int RedirectDamage = 2;
+        const float RedirectRange = 25f;
+
+        Vector3 AimAway(Vector3 from)
+        {
+            Vector3 outward = transform.forward;
+            Targetable best = null;
+            float bestSqr = RedirectRange * RedirectRange;
+            foreach (var target in Targetable.All)
+            {
+                if (target == null || target.Team != Team.Enemy || !target.IsAlive)
+                    continue;
+                Vector3 to = Flat(target.AimPoint - from);
+                float sqr = to.sqrMagnitude;
+                if (sqr < 0.25f || sqr > bestSqr || Vector3.Dot(to, outward) <= 0f)
+                    continue;
+                bestSqr = sqr;
+                best = target;
+            }
+            return best != null ? Flat(best.AimPoint - from).normalized : outward;
         }
 
         public bool Blocks(Ball ball) => Standing && ball != null && ball.State == BallState.Live && ball.Team.IsHostileTo(Team.Player);

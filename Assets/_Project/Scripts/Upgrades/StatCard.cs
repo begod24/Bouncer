@@ -25,8 +25,6 @@ namespace Bouncer.Upgrades
         [Min(0)] public int bonusDamage;
         [Tooltip("Подкат: больше 0 — рывок сбивает задетых врагов с ног и оглушает (урона нет)")]
         [Min(0)] public int tackleDamage;
-        [Tooltip("«Замри!»: на сколько секунд удачная ловля замедляет всё вокруг")]
-        [Min(0f)] public float catchFreeze;
 
         [Header("Особые")]
         [Tooltip("«Домино»: выбитый враг сбивает соседей с таким уроном")]
@@ -35,43 +33,30 @@ namespace Bouncer.Upgrades
         [Min(0)] public int coinInterest;
         [Tooltip("«Крышка от кастрюли»: раз в столько секунд блокирует один удар. 0 — нет")]
         [Min(0f)] public float lidCooldown;
-        [Tooltip("«Зеркальце»: манекены замирают и в секторе за спиной — половина угла, градусы")]
-        [Min(0f)] public float mirrorAngle;
         [Tooltip("«Фонарик»: радиус света вокруг игрока, м — в нём тень твёрдая")]
         [Min(0f)] public float lanternRadius;
-        [Tooltip("«Свисток»: идеальная ловля замораживает врагов вокруг на столько секунд")]
+        [Tooltip("«Замри!»: идеальная ловля замораживает врагов вокруг на столько секунд; " +
+                 "каждая следующая карточка — дальше и дольше (PlayerStats.whistleStack*)")]
         [Min(0f)] public float whistleFreeze;
-        [Tooltip("«Второе дыхание»: раз за прогулку удар, который выбил бы, оставляет с одним сердцем")]
+        [Tooltip("«Второе дыхание»: раз за прогулку выбитый игрок сам встаёт с одним сердцем")]
         public bool secondWind;
-        [Tooltip("«Бабушкины пирожки»: столько сердец в начале каждой следующей арены")]
-        [Min(0)] public int arenaHeal;
-        [Tooltip("«Резиновые сапоги»: песок и лужи не замедляют")]
-        public bool ignoreGround;
-        [Tooltip("«Кувырок»: мяч или удар, прошедший рядом во время рывка, — уворот в последний момент " +
-                 "(замедление и бросок с силой «свечки»)")]
-        public bool dashCatch;
-        [Tooltip("«Шпаргалка»: столько переборов витрины в каждом ларьке бесплатно")]
-        [Min(0)] public int freeRerolls;
+        [Tooltip("«Бабушкины пирожки»: +столько сердец к максимуму (всего не больше PlayerStats.maxLivesCap)")]
+        [Min(0)] public int maxLives;
+        [Tooltip("«Чехарда»: рывок во врага — прыжок через него, приземление сбивает всех вокруг")]
+        public bool leapfrog;
         [Tooltip("«Счастливый фантик»: на столько карточек больше на выбор в портфеле и за босса")]
         [Min(0)] public int extraChoices;
         [Tooltip("«Считалочка»: каждый такой по счёту бросок сам заряжен. 0 — нет")]
         [Min(0)] public int countEvery;
         [Tooltip("«Считалочка»: и бьёт на столько сильнее")]
         [Min(0)] public int countBonus;
-        [Tooltip("«Пас»: мяч, пойманный у товарища, сразу заряжен")]
-        public bool passCharge;
-        [Tooltip("«Жвачный пузырь»: раз в столько секунд пузырь принимает чужой мяч. 0 — нет")]
-        [Min(0f)] public float gumBubbleCooldown;
         [Tooltip("«Тамагочи»: сытый питомец спасает от выбивания")]
         public bool tamagotchi;
-        [Tooltip("«Круговая порука»: подняв товарища, замораживаешь врагов вокруг")]
+        [Tooltip("«Своих не бросаем»: подняв товарища, замораживаешь врагов вокруг")]
         public bool circleGuard;
 
         public override bool CanOffer(PlayerController player, int stacks) =>
             base.CanOffer(player, stacks) && player.Balls.MaxBalls + extraBalls >= 1;
-
-        public override string BlockReason(PlayerController player) =>
-            extraBalls > 0 && player.Balls.FixedHands ? "card.blocked.ball" : null;
 
         public override void Apply(PlayerController player)
         {
@@ -85,6 +70,9 @@ namespace Bouncer.Upgrades
             {
                 player.Balls.EndBatch();
             }
+            // при пересборке максимум сверяется один раз в конце, иначе сердце сверх 3 пропало бы на полпути
+            if (maxLives != 0 && !Rebuilding)
+                player.RefreshMaxLives();
             if (heal > 0 && !Replaying)
                 player.Health.Heal(heal);
             player.Modifiers.NotifyChanged();
@@ -105,26 +93,21 @@ namespace Bouncer.Upgrades
                 mods.FewerBalls -= extraBalls;
             mods.BonusDamage += bonusDamage;
             mods.TackleDamage += tackleDamage;
-            mods.CatchFreeze += catchFreeze;
             mods.DominoDamage += dominoDamage;
             mods.CoinInterest += coinInterest;
             if (lidCooldown > 0f)
                 mods.LidCooldown = mods.LidCooldown > 0f ? Mathf.Min(mods.LidCooldown, lidCooldown) : lidCooldown;
-            mods.MirrorAngle = Mathf.Max(mods.MirrorAngle, mirrorAngle);
             mods.LanternRadius = Mathf.Max(mods.LanternRadius, lanternRadius);
             mods.WhistleFreeze = Mathf.Max(mods.WhistleFreeze, whistleFreeze);
+            if (whistleFreeze > 0f)
+                mods.WhistleStacks++;
+            mods.ExtraLives += maxLives;
             mods.SecondWind |= secondWind;
-            mods.ArenaHeal += arenaHeal;
-            mods.IgnoreGround |= ignoreGround;
-            mods.DashCatch |= dashCatch;
-            mods.FreeRerolls += freeRerolls;
+            mods.Leapfrog |= leapfrog;
             mods.ExtraChoices += extraChoices;
             if (countEvery > 0)
                 mods.CountEvery = mods.CountEvery > 0 ? Mathf.Min(mods.CountEvery, countEvery) : countEvery;
             mods.CountBonus += countBonus;
-            mods.PassCharge |= passCharge;
-            if (gumBubbleCooldown > 0f)
-                mods.GumBubbleCooldown = mods.GumBubbleCooldown > 0f ? Mathf.Min(mods.GumBubbleCooldown, gumBubbleCooldown) : gumBubbleCooldown;
             mods.Tamagotchi |= tamagotchi;
             mods.CircleGuard |= circleGuard;
         }

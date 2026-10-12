@@ -44,12 +44,38 @@ namespace Bouncer.Upgrades
         public bool freePocket;
         [Tooltip("Выпадает только в игре вдвоём и больше")]
         public bool coopOnly;
+        [Tooltip("С этими мячами карточка спит: не выпадает, в кармане серая и ничего не делает, " +
+                 "пока в руках такой мяч (Попрыгунчик и футбольный, Стеночка и набивной…)")]
+        public Bouncer.Balls.BallDefinition[] sleepsWith = System.Array.Empty<Bouncer.Balls.BallDefinition>();
 
         public static bool Replaying { get; internal set; }
 
         public static bool Rebuilding { get; internal set; }
 
         public bool IsCombo => requires != null && requires.Length > 0;
+
+        /// <summary>Комбо мяча: среди частей есть карточка мяча — комбо работает, только пока этот мяч в руках.</summary>
+        public BallTypeCard BallPart
+        {
+            get
+            {
+                if (requires != null)
+                    foreach (var part in requires)
+                        if (part is BallTypeCard ball)
+                            return ball;
+                return null;
+            }
+        }
+
+        /// <summary>Спит ли карточка, когда в руках мяч <paramref name="ball"/>.</summary>
+        public bool SleepsWith(Bouncer.Balls.Ball ball)
+        {
+            if (IsCombo)
+                return BallPart is { } part && part.ballPrefab != ball;
+            if (ball == null || sleepsWith == null)
+                return false;
+            return System.Array.IndexOf(sleepsWith, ball.Definition) >= 0;
+        }
 
         public bool TakesPocket => category != UpgradeCategory.Ball && category != UpgradeCategory.Treat && !freePocket;
 

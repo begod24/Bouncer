@@ -328,13 +328,21 @@ namespace Bouncer.Core
         {
             if (Online.Active || State is not (SessionState.Playing or SessionState.Cleared))
                 return;
-            if (Targetable.CountAlive(Team.Player) > 0)
+            if (Targetable.CountAlive(Team.Player) > 0 || AnyPlayerGettingUp())
                 return;
             State = SessionState.GameOver;
             _gameOverTime = Time.unscaledTime;
             GameFeel.SlowMotion(0.25f, 1.2f);
             GameEvents.PlaySound(SoundCue.GameOver, Vector3.zero);
             GameEvents.RaiseRunFinished(false);
+        }
+
+        static bool AnyPlayerGettingUp()
+        {
+            foreach (var target in Targetable.All)
+                if (target && target.Team == Team.Player && target.TryGetComponent(out Health health) && health.GettingUp)
+                    return true;
+            return false;
         }
 
         public void LoseOnline()

@@ -32,7 +32,6 @@ namespace Bouncer.Net
         const byte EffectGiantBall = 9;
         const byte EffectMine = 10;
         const byte EffectCarrot = 11;
-        const byte EffectChalk = 12;
 
         [Tooltip("Эффекты, которые хозяин показывает гостям: кольца, взрывы, обломки, жвачка")]
         [SerializeField] GameObject[] effects;
@@ -86,7 +85,6 @@ namespace Bouncer.Net
                 ParticleBurst.Played += OnBurst;
                 Debris.Scattered += OnDebris;
                 GumSpot.Dropped += OnGum;
-                ChalkMark.Dropped += OnChalk;
                 GroundMarker.Shown += OnMarkerShown;
                 GroundMarker.Hidden += OnMarkerHidden;
                 WaveSpawner.GroupQueued += OnGroupQueued;
@@ -139,7 +137,6 @@ namespace Bouncer.Net
             ParticleBurst.Played -= OnBurst;
             Debris.Scattered -= OnDebris;
             GumSpot.Dropped -= OnGum;
-            ChalkMark.Dropped -= OnChalk;
             GroundMarker.Shown -= OnMarkerShown;
             GroundMarker.Hidden -= OnMarkerHidden;
             WaveSpawner.GroupQueued -= OnGroupQueued;
@@ -330,13 +327,6 @@ namespace Bouncer.Net
             int index = IndexOf(prefab != null ? prefab.gameObject : null);
             if (index >= 0)
                 _effects.Add(new NetEffect { Kind = EffectGum, Prefab = (ushort)index, Position = above, Rotation = Quaternion.identity });
-        }
-
-        void OnChalk(ChalkMark prefab, Vector3 above)
-        {
-            int index = IndexOf(prefab != null ? prefab.gameObject : null);
-            if (index >= 0)
-                _effects.Add(new NetEffect { Kind = EffectChalk, Prefab = (ushort)index, Position = above, Rotation = Quaternion.identity });
         }
 
         void OnMarkerShown(GroundMarker marker, bool circle, Vector3 a, Vector3 b, float seconds)
@@ -670,10 +660,6 @@ namespace Bouncer.Net
                 case EffectGum:
                     if (prefab.TryGetComponent(out GumSpot gum))
                         GumSpot.Drop(gum, effect.Position);
-                    break;
-                case EffectChalk:
-                    if (prefab.TryGetComponent(out ChalkMark chalk))
-                        ChalkMark.Drop(chalk, effect.Position, quiet: true);
                     break;
                 case EffectSpawn:
                     PoolService.Spawn(prefab, effect.Position, effect.Rotation);

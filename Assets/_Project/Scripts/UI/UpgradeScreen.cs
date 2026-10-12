@@ -92,10 +92,14 @@ namespace Bouncer.UI
                 {
                     cards[i].Show(offer[i], _cards.StacksOf(offer[i]), i + 1, i * cardStagger);
                     string blocked = _cards.BlockReason(offer[i]);
+                    string sleeping = _cards.SleepingWith(offer[i]);
                     if (blocked != null)
                         cards[i].ShowBlocked(blocked, _cards.BallTitle());
+                    else if (sleeping != null)
+                        cards[i].ShowWarning(Loc.Format("card.sleep.warning", sleeping));
                     else
                         cards[i].ShowPocketNeed(_cards.NeedFor(offer[i]), _cards.PocketsUsed, _cards.MaxPockets);
+                    cards[i].ShowComboHint(_cards);
                 }
                 else
                 {

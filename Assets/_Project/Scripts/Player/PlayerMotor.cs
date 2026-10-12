@@ -25,15 +25,19 @@ namespace Bouncer.Player
         float _slowUntil;
         float _slowMultiplier = 1f;
         float _downUntil;
-        float _boostUntil;
-        float _boostMultiplier = 1f;
         Vector3 _lastSafe;
         bool _hasSafe;
+        Vector3 _leapFrom;
+        Vector3 _leapTo;
+        float _leapStart;
+        float _leapEnd = float.NegativeInfinity;
+        float _leapHeight;
 
         public bool IsDashing => Time.time < _dashEnd;
+        /// <summary>«Чехарда»: летит над врагом по дуге, сквозь всех.</summary>
+        public bool IsLeaping => _leapEnd > 0f;
         public bool IsDown => Time.time < _downUntil;
         public bool IsSlowed => Time.time < _slowUntil;
-        public bool IsBoosted => Time.time < _boostUntil;
         public bool IsDashInvulnerable => Time.time < _dashStart + _stats.dashInvulnerability;
         public bool DashReady => Time.time >= _dashReadyAt;
         public float DashStartTime => _dashStart;
@@ -74,7 +78,7 @@ namespace Bouncer.Player
 
         public bool TryDash(Vector3 direction)
         {
-            if (!DashReady || IsDashing || IsDown)
+            if (!DashReady || IsDashing || IsDown || IsLeaping)
                 return false;
             direction.y = 0f;
             if (direction.sqrMagnitude < 0.01f)
@@ -89,13 +93,50 @@ namespace Bouncer.Player
             return true;
         }
 
+        /// <summary>Прыжок по дуге в точку: контроллер выключен, враги не мешают.</summary>
+        public void Leap(Vector3 to, float duration, float height)
+        {
+            _leapFrom = transform.position;
+            _leapTo = to;
+            _leapStart = Time.time;
+            _leapEnd = Time.time + Mathf.Max(0.1f, duration);
+            _leapHeight = height;
+            _dashEnd = float.NegativeInfinity;
+            _velocity = Vector3.zero;
+            _knockback = Vector3.zero;
+            _controller.enabled = false;
+        }
+
+        /// <summary>Приземлился ли в этом кадре: прыжок закончен, контроллер включён обратно.</summary>
+        bool TickLeap()
+        {
+            if (_leapEnd <= 0f)
+                return false;
+            float t = Mathf.Clamp01((Time.time - _leapStart) / (_leapEnd - _leapStart));
+            Vector3 position = Vector3.Lerp(_leapFrom, _leapTo, t) + Vector3.up * (Mathf.Sin(t * Mathf.PI) * _leapHeight);
+            transform.position = position;
+            if (t < 1f)
+                return true;
+            _leapEnd = float.NegativeInfinity;
+            transform.position = _leapTo;
+            _controller.enabled = true;
+            _verticalSpeed = 0f;
+            Landed?.Invoke();
+            KeepOnArena();
+            return true;
+        }
+
+        public event System.Action Landed;
+
         public void Tick(Vector3 move, float speedMultiplier, float dt)
         {
             if (dt <= 0f)
                 return;
+            if (TickLeap())
+                return;
 
-            float ground = _mods.IgnoreGround ? 1f : GroundZone.MoveMultiplierAt(transform.position);
-            float slow = (IsSlowed ? _slowMultiplier : 1f) * (IsBoosted ? _boostMultiplier : 1f);
+            float ground = GroundZone.MoveMultiplierAt(transform.position);
+            float slow = IsSlowed ? _slowMultiplier : 1f;
             if (IsDown)
                 move = Vector3.zero;
             Vector3 target = move * (_stats.moveSpeed * _mods.MoveSpeed * speedMultiplier * ground * slow);
@@ -166,14 +207,6 @@ namespace Bouncer.Player
             _slowUntil = Mathf.Max(_slowUntil, Time.time + seconds);
         }
 
-        public void Boost(float multiplier, float seconds)
-        {
-            if (!IsBoosted)
-                _boostMultiplier = 1f;
-            _boostMultiplier = Mathf.Max(_boostMultiplier, multiplier);
-            _boostUntil = Mathf.Max(_boostUntil, Time.time + seconds);
-        }
-
         public void KnockDown(float seconds)
         {
             _downUntil = Mathf.Max(_downUntil, Time.time + seconds);
@@ -190,6 +223,11 @@ namespace Bouncer.Player
 
         public void SetScripted(bool scripted)
         {
+            if (IsLeaping)
+            {
+                _leapEnd = float.NegativeInfinity;
+                transform.position = _leapTo;
+            }
             Stop();
             _verticalSpeed = 0f;
             _controller.enabled = !scripted;

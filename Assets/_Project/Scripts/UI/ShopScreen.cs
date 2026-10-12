@@ -221,10 +221,15 @@ namespace Bouncer.UI
                     view.Shown = slot.Card;
                     view.card.Show(slot.Card, _kiosk.Customer.StacksOf(slot.Card), i + 1, i * cardStagger);
                 }
+                if (has)
+                    view.card.ShowComboHint(customer);
                 string blocked = has && !slot.Sold ? customer.BlockReason(slot.Card) : null;
                 bool available = has && !slot.Sold && blocked == null;
+                string sleeping = available ? customer.SleepingWith(slot.Card) : null;
                 if (blocked != null)
                     view.card.ShowBlocked(blocked, customer.BallTitle());
+                else if (sleeping != null)
+                    view.card.ShowWarning(Loc.Format("card.sleep.warning", sleeping));
                 else if (available)
                     view.card.ShowPocketNeed(customer.NeedFor(slot.Card), customer.PocketsUsed, customer.MaxPockets);
                 else if (has)

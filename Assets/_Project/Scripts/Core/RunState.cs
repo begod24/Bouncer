@@ -56,6 +56,9 @@ namespace Bouncer.Core
 
         public static void UseSecondWind(int slot) => Of(slot).SecondWindUsed = true;
 
+        /// <summary>Товарищ поднял раньше, чем «Второе дыхание» сработало, — оно остаётся на потом.</summary>
+        public static void RefundSecondWind(int slot) => Of(slot).SecondWindUsed = false;
+
         public static void RestorePlayer(int slot, int coins, float coinCarry, bool secondWindUsed, int lives, int hands, bool down)
         {
             var player = Of(slot);

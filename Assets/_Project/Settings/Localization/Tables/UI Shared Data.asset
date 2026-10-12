@@ -1279,6 +1279,34 @@ MonoBehaviour:
     m_Key: settings.framelimit.none
     m_Metadata:
       m_Items: []
+  - m_Id: 6621552031293440
+    m_Key: secondwind.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6621552035487744
+    m_Key: secondwind.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6627795672227840
+    m_Key: card.sleep.warning
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6627795672227841
+    m_Key: pockets.asleep
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6628139177336832
+    m_Key: pockets.tag.combo_same
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6648190118912000
+    m_Key: notebook.tab.combos
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6648190123106304
+    m_Key: notebook.combo.locked
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

@@ -68,16 +68,22 @@ namespace Bouncer.Balls
         public bool groundRoll;
         [Tooltip("Задетые мячом (сдутый, футбольный) сбиты с ног на столько секунд. 0 — нет")]
         [Min(0f)] public float grazeStun;
-        [Tooltip("Мел: коснувшись асфальта, мяч оставляет меловой крестик — наступил, и бежишь быстрее")]
-        public bool chalk;
-        [Tooltip("Морская фигура: по замершему врагу этот мяч бьёт на столько сильнее")]
-        [Min(0)] public int frozenBonus;
         [Tooltip("Пинг-понг: отскочив от стены, доворачивает к врагу в пределах стольких градусов. 0 — нет")]
         [Min(0f)] public float bounceAssist;
         [Tooltip("Пинг-понг: от врагов отскакивает как от стены, пока есть рикошеты; последним попаданием подлетает свечкой")]
         public bool bounceOffTargets;
         [Tooltip("Баскетбольный, набивной: щит солдата не отбивает этот мяч")]
         public bool ignoreShields;
+        [Tooltip("«Подача»: цепочка ищет следующего врага на столько метров дальше")]
+        [Min(0f)] public float chainRange;
+        [Tooltip("«Данк»: упав, мяч подпрыгивает к ближайшему врагу в таком радиусе, м, и бьёт по площади ещё раз. 0 — нет")]
+        [Min(0f)] public float dunkRange;
+        [Tooltip("«Смэш»: каждый отскок прибавляет 1 урона и 10% скорости — не больше стольких раз. 0 — нет")]
+        [Min(0)] public int smash;
+        [Tooltip("«Пенальти»: пинок в рывке — удар в полную силу, быстрее и сбивает надолго")]
+        public bool penalty;
+        [Tooltip("«Морская фигура»: замершего врага мяч разбивает — двойной урон, осколки бьют замерших рядом")]
+        public bool shatter;
 
         public BallPerks ForTwin() => new()
         {
@@ -92,10 +98,12 @@ namespace Bouncer.Balls
             chargedPierce = chargedPierce,
             areaStun = areaStun,
             grazeStun = grazeStun,
-            frozenBonus = frozenBonus,
             bounceAssist = bounceAssist,
             bounceOffTargets = bounceOffTargets,
             ignoreShields = ignoreShields,
+            chainRange = chainRange,
+            smash = smash,
+            shatter = shatter,
         };
 
         public static BallPerks Combine(in BallPerks a, in BallPerks b) => new()
@@ -125,11 +133,14 @@ namespace Bouncer.Balls
             lob = a.lob || b.lob,
             groundRoll = a.groundRoll || b.groundRoll,
             grazeStun = Mathf.Max(a.grazeStun, b.grazeStun),
-            chalk = a.chalk || b.chalk,
-            frozenBonus = a.frozenBonus + b.frozenBonus,
             bounceAssist = Mathf.Max(a.bounceAssist, b.bounceAssist),
             bounceOffTargets = a.bounceOffTargets || b.bounceOffTargets,
             ignoreShields = a.ignoreShields || b.ignoreShields,
+            chainRange = Mathf.Max(a.chainRange, b.chainRange),
+            dunkRange = Mathf.Max(a.dunkRange, b.dunkRange),
+            smash = Mathf.Max(a.smash, b.smash),
+            penalty = a.penalty || b.penalty,
+            shatter = a.shatter || b.shatter,
         };
     }
 

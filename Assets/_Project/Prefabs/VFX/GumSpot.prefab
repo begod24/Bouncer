@@ -67,7 +67,9 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 1f7d024680a4b4908af74085b50d058a, type: 2}
+  - {fileID: 2100000, guid: 97101676f86e34bccb909e0ce521ee4a, type: 2}
+  - {fileID: 2100000, guid: c04fc9668766d42ccb1bced4270ea238, type: 2}
+  - {fileID: 2100000, guid: ed3479136a58b47c1b695a93e5a03bbe, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -107,6 +109,15 @@ MonoBehaviour:
   sizeJitter: 0.15
   enemyMoveMultiplier: 0.45
   lifetime: 4
-  shrinkTime: 0.6
+  popTime: 0.3
   maxSpots: 80
-  color: {r: 0.95, g: 0.42, b: 0.7, a: 1}
+  bubbleMaterial: {fileID: 2100000, guid: 58fe37cb84d8941d1be69b5ecc678002, type: 2}
+  bubbleInflate: {x: 0.5, y: 0.8}
+  bubblePause: {x: 0.4, y: 2.2}
+  bubbleSize: {x: 0.26, y: 0.4}
+  maxBubbles: 10
+  popBurst: {fileID: 2170354924383273112, guid: 9d92424bc00c849a4b1a18312277ff58, type: 3}
+  popFxInterval: 0.08
+  strandMaterial: {fileID: 2100000, guid: 6f9976e235ef143c48a58f0862906611, type: 2}
+  strandLength: 1.6
+  strandWidth: 0.1

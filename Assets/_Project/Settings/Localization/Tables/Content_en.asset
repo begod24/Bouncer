@@ -23,20 +23,19 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 153552412672
-    m_Localized: Medicine ball
+    m_Localized: Medicine Ball
     m_Metadata:
       m_Items: []
   - m_Id: 153552412673
-    m_Localized: "Hits for 2\u20134 and splashes around. Ignores shields. Only 2
-      balls."
+    m_Localized: 'Heavy: hits everyone nearby. Only 2 balls.'
     m_Metadata:
       m_Items: []
   - m_Id: 153552412674
-    m_Localized: Tennis balls
+    m_Localized: Tennis Balls
     m_Metadata:
       m_Items: []
   - m_Id: 153552412675
-    m_Localized: 5 balls in hand. Hold throw to fire a burst.
+    m_Localized: 5 balls. Hold throw to fire a burst.
     m_Metadata:
       m_Items: []
   - m_Id: 153552412676
@@ -44,7 +43,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 153552412677
-    m_Localized: After a hit, bounces on to 2 more enemies in a row.
+    m_Localized: After a hit it hops to 2 more enemies.
     m_Metadata:
       m_Items: []
   - m_Id: 153552412678
@@ -52,24 +51,23 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 153552412679
-    m_Localized: After 0.35 s in flight the ball turns back to you, hitting everyone
-      on the way.
+    m_Localized: The ball flies back to you, hitting everyone.
     m_Metadata:
       m_Items: []
   - m_Id: 153552412680
-    m_Localized: On a rubber band
+    m_Localized: On a String
     m_Metadata:
       m_Items: []
   - m_Id: 153552412681
-    m_Localized: Your fallen ball jumps back into your hands.
+    m_Localized: A dropped ball jumps back into your hands.
     m_Metadata:
       m_Items: []
   - m_Id: 153556606976
-    m_Localized: One more ball
+    m_Localized: One More Ball
     m_Metadata:
       m_Items: []
   - m_Id: 153556606977
-    m_Localized: +1 ball of your own, in hand and in stock.
+    m_Localized: +1 ball in your hands.
     m_Metadata:
       m_Items: []
   - m_Id: 153556606978
@@ -77,32 +75,31 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 153556606979
-    m_Localized: On the first hit the ball splits into two twins.
+    m_Localized: On a hit the ball splits in two.
     m_Metadata:
       m_Items: []
   - m_Id: 153556606980
-    m_Localized: Sticky hands
+    m_Localized: Sticky Hands
     m_Metadata:
       m_Items: []
   - m_Id: 153556606981
-    m_Localized: Catch window 35% longer, catch reach a bit further. The perfect
-      moment stays the same.
+    m_Localized: Catching is easier.
     m_Metadata:
       m_Items: []
   - m_Id: 153556606982
-    m_Localized: Long arms
+    m_Localized: Long Arms
     m_Metadata:
       m_Items: []
   - m_Id: 153556606983
-    m_Localized: Pick up balls and coins 50% further away.
+    m_Localized: Pick up balls and coins from farther away.
     m_Metadata:
       m_Items: []
   - m_Id: 153556606984
-    m_Localized: New sneakers
+    m_Localized: New Sneakers
     m_Metadata:
       m_Items: []
   - m_Id: 153556606985
-    m_Localized: Run 12% faster.
+    m_Localized: Run 10% faster.
     m_Metadata:
       m_Items: []
   - m_Id: 153556606986
@@ -110,49 +107,47 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 153556606987
-    m_Localized: +1 life. Grandma sent it.
+    m_Localized: +1 heart. From grandma.
     m_Metadata:
       m_Items: []
   - m_Id: 23928708784128
-    m_Localized: Bouncy ball
+    m_Localized: Bouncy Ball
     m_Metadata:
       m_Items: []
   - m_Id: 23928712978432
-    m_Localized: When it touches the ground, the ball bounces 1 m up and stays dangerous.
-      +1 bounce per card.
+    m_Localized: The ball bounces off the ground and hits again.
     m_Metadata:
       m_Items: []
   - m_Id: 23928712978433
-    m_Localized: Hot potato
+    m_Localized: Hot Potato
     m_Metadata:
       m_Items: []
   - m_Id: 23928712978434
-    m_Localized: 'After a catch, your next throw explodes: 2 damage within 3 m.'
+    m_Localized: Catch a ball and your next throw explodes.
     m_Metadata:
       m_Items: []
   - m_Id: 23928712978435
-    m_Localized: Bubble gum
+    m_Localized: Bubble Gum
     m_Metadata:
       m_Items: []
   - m_Id: 23928712978436
-    m_Localized: The ball leaves a sticky pink trail that slows enemies.
+    m_Localized: The ball leaves a sticky trail. Enemies get stuck.
     m_Metadata:
       m_Items: []
   - m_Id: 23928712978437
-    m_Localized: Slide tackle
+    m_Localized: Slide Tackle
     m_Metadata:
       m_Items: []
   - m_Id: 23928712978438
-    m_Localized: Your dash knocks enemies down and stuns them for 0.8 s. No damage,
-      at most once per 0.8 s.
+    m_Localized: Your dash knocks enemies down.
     m_Metadata:
       m_Items: []
   - m_Id: 23928712978439
-    m_Localized: Hooliganism
+    m_Localized: Hooligan
     m_Metadata:
       m_Items: []
   - m_Id: 23928712978440
-    m_Localized: +1 damage per throw (not for twins), but one ball fewer.
+    m_Localized: Throws hit 1 harder, but you get fewer balls.
     m_Metadata:
       m_Items: []
   - m_Id: 23928712978441
@@ -160,15 +155,15 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 23928712978442
-    m_Localized: Every successful catch slows everything around for 1 s.
+    m_Localized: "Perfect catch \u2014 enemies around you freeze."
     m_Metadata:
       m_Items: []
   - m_Id: 133956933509120
-    m_Localized: Off the wall
+    m_Localized: Off the Wall
     m_Metadata:
       m_Items: []
   - m_Id: 133956933509121
-    m_Localized: 'Every wall ricochet: +1 damage for this throw.'
+    m_Localized: 'Each wall bounce: +1 damage.'
     m_Metadata:
       m_Items: []
   - m_Id: 133956933509122
@@ -176,16 +171,15 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 133956933509123
-    m_Localized: A charged throw pierces every enemy in its way.
+    m_Localized: A charged throw goes through enemies.
     m_Metadata:
       m_Items: []
   - m_Id: 133956933509124
-    m_Localized: Eagle eye
+    m_Localized: Eagle Eye
     m_Metadata:
       m_Items: []
   - m_Id: 133956933509125
-    m_Localized: The ball curves toward the nearest enemy ahead (up to 14 m). Twins
-      don't.
+    m_Localized: The ball curves into the nearest enemy.
     m_Metadata:
       m_Items: []
   - m_Id: 133956933509126
@@ -193,108 +187,71 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 133956933509127
-    m_Localized: 'A knocked-out enemy falls on neighbours within 2.3 m: 1 damage,
-      and down the chain it goes.'
+    m_Localized: A knocked-out enemy falls on its neighbours.
     m_Metadata:
       m_Items: []
   - m_Id: 133956933509128
-    m_Localized: Piggy bank
+    m_Localized: Piggy Bank
     m_Metadata:
       m_Items: []
   - m_Id: 133956933509129
-    m_Localized: 'At the newsstand: +1 coin for every 10 you hold. Takes no pocket.'
+    m_Localized: 'At the kiosk: +1 coin for every 10.'
     m_Metadata:
       m_Items: []
   - m_Id: 133956933509130
-    m_Localized: Pot lid
+    m_Localized: Pot Lid
     m_Metadata:
       m_Items: []
   - m_Id: 133956933509131
-    m_Localized: Blocks one hit or ball every 20 s.
+    m_Localized: Blocks one ball every 20 s.
     m_Metadata:
       m_Items: []
   - m_Id: 133956933509132
-    m_Localized: Yo-yo
+    m_Localized: Around the World
     m_Metadata:
       m_Items: []
   - m_Id: 133956933509133
-    m_Localized: 'Boomerang + On a rubber band. One ball on a string: after a hit
-      it flies back to you, hitting everyone on the way.'
+    m_Localized: A ball on a string circles around you.
     m_Metadata:
       m_Items: []
   - m_Id: 194562260721664
-    m_Localized: Jump rope
+    m_Localized: Jump Rope
     m_Metadata:
       m_Items: []
   - m_Id: 194562264915968
-    m_Localized: Dash 30% further, recharging 20% faster.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 194562264915969
-    m_Localized: Pocket mirror
-    m_Metadata:
-      m_Items: []
-  - m_Id: 194562264915970
-    m_Localized: Mannequins freeze behind your back too.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 194562264915971
-    m_Localized: Flashlight
-    m_Metadata:
-      m_Items: []
-  - m_Id: 194562264915972
-    m_Localized: Your light (5 m) makes shadows solid. The flashlight beam reaches
-      3 m further and lasts 2 s longer.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 194562264915973
-    m_Localized: Whistle
-    m_Metadata:
-      m_Items: []
-  - m_Id: 194562264915974
-    m_Localized: A perfect catch freezes enemies within 6 m for 1.5 s.
+    m_Localized: Dash farther and more often.
     m_Metadata:
       m_Items: []
   - m_Id: 194562264915975
-    m_Localized: Second wind
+    m_Localized: Second Wind
     m_Metadata:
       m_Items: []
   - m_Id: 194562264915976
-    m_Localized: Once per walk, a hit that would knock you out leaves you with one
-      heart.
+    m_Localized: 'Once per run: knocked out? Get back up.'
     m_Metadata:
       m_Items: []
   - m_Id: 194562264915977
-    m_Localized: Grandma's pies
+    m_Localized: Grandma's Pies
     m_Metadata:
       m_Items: []
   - m_Id: 194562264915978
-    m_Localized: +1 heart at the start of each next arena.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 194562264915979
-    m_Localized: Rubber boots
-    m_Metadata:
-      m_Items: []
-  - m_Id: 194562264915980
-    m_Localized: Sand, gum and puddles don't slow you down.
+    m_Localized: +1 heart.
     m_Metadata:
       m_Items: []
   - m_Id: 194562264915981
-    m_Localized: Bouncing bomb
+    m_Localized: Firecracker
     m_Metadata:
       m_Items: []
   - m_Id: 194562264915982
-    m_Localized: 'Hot potato + Bouncy ball. Every bounce off the ground explodes:
-      1 damage within 2.2 m.'
+    m_Localized: "Catch a ball \u2014 your next one explodes on every bounce."
     m_Metadata:
       m_Items: []
   - m_Id: 194562264915983
-    m_Localized: Hailstorm
+    m_Localized: Hail
     m_Metadata:
       m_Items: []
   - m_Id: 194562264915984
-    m_Localized: "Tennis balls + Split. Fan balls and twins split too \u2014 once."
+    m_Localized: Every burst ball splits twice.
     m_Metadata:
       m_Items: []
   - m_Id: 194562264915985
@@ -302,32 +259,23 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 194562264915986
-    m_Localized: Medicine ball + Hooliganism. Area hits stun everyone hit for 1 s.
+    m_Localized: The area hit stuns everyone.
     m_Metadata:
       m_Items: []
   - m_Id: 194562264915987
-    m_Localized: Roll
+    m_Localized: Leapfrog
     m_Metadata:
       m_Items: []
   - m_Id: 194562264915988
-    m_Localized: Slide tackle + Jump rope. A ball or hit passing close during a dash
-      slows time for 0.5 s and powers up your next throw.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 194562264915989
-    m_Localized: Cheat sheet
-    m_Metadata:
-      m_Items: []
-  - m_Id: 194562264915990
-    m_Localized: The first reroll at every newsstand is free. Takes no pocket.
+    m_Localized: Dash into an enemy to leap over it.
     m_Metadata:
       m_Items: []
   - m_Id: 194562264915991
-    m_Localized: Lucky wrapper
+    m_Localized: Lucky Wrapper
     m_Metadata:
       m_Items: []
   - m_Id: 194562264915992
-    m_Localized: School bags and bosses offer 4 cards instead of 3. Takes no pocket.
+    m_Localized: Pick from 4 cards instead of 3.
     m_Metadata:
       m_Items: []
   - m_Id: 194562264915993
@@ -836,8 +784,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207936
-    m_Localized: 'Q: a picket fence rises in front of you for 4 s. Enemy balls bounce
-      off, yours fly through.'
+    m_Localized: 'Q: put up a fence. Enemy balls bounce off.'
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207937
@@ -845,8 +792,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207938
-    m_Localized: 'Q: blow a fan of bubbles. An enemy ball gets stuck inside and drops
-      harmless.'
+    m_Localized: 'Q: bubbles catch enemy balls.'
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207939
@@ -854,8 +800,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207940
-    m_Localized: 'Q: a cap bang. Enemies within 4.5 m in front flinch, balls flying
-      at you drop.'
+    m_Localized: 'Q: bang! Balls flying at you drop.'
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207941
@@ -863,8 +808,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207942
-    m_Localized: 'Q: flash! Enemies in frame freeze for 1.3 s, shadows turn solid
-      and take damage.'
+    m_Localized: 'Q: flash! Enemies in the frame freeze.'
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207943
@@ -872,7 +816,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207944
-    m_Localized: 'Q: loose balls within 9 m fly into your hands.'
+    m_Localized: 'Q: balls around fly into your hands.'
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207945
@@ -880,8 +824,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207946
-    m_Localized: 'Q: rewind yourself 3 seconds back. Nothing can hit you while the
-      tape spins.'
+    m_Localized: 'Q: rewind yourself 3 s back.'
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207947
@@ -889,8 +832,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207948
-    m_Localized: 'Q: spin for 1.4 s. Your balls fly out in a charged ring, enemy
-      balls nearby are caught.'
+    m_Localized: 'Q: spin and throw all your balls in a ring.'
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207949
@@ -898,8 +840,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207950
-    m_Localized: 'Q: stretch an elastic to a teammate for 5 s. Enemies crossing it
-      trip. Co-op only.'
+    m_Localized: 'Q: an elastic to a friend. Enemies trip on it.'
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207951
@@ -907,8 +848,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207952
-    m_Localized: 'Q: mark an enemy for 6 s. Everyone''s balls curve toward it and
-      hit 1 harder.'
+    m_Localized: "Q: mark an enemy \u2014 all balls fly at it."
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207953
@@ -916,25 +856,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207954
-    m_Localized: One, two, three! Every third throw is charged and hits 1 harder.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 4788928279207955
-    m_Localized: Chalk
-    m_Metadata:
-      m_Items: []
-  - m_Id: 4788928279207956
-    m_Localized: Your ball draws a chalk cross where it lands. Step on it to run
-      30% faster.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 4788928279207957
-    m_Localized: Bubble Gum
-    m_Metadata:
-      m_Items: []
-  - m_Id: 4788928279207958
-    m_Localized: 'Every 15 s a gum bubble takes an enemy ball: it drops at your feet,
-      enemies nearby get stuck.'
+    m_Localized: Every 3rd throw is charged.
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207959
@@ -942,34 +864,23 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207960
-    m_Localized: 'Feed your pet by catching: after 5 catches a full tamagotchi saves
-      you from being knocked out.'
-    m_Metadata:
-      m_Items: []
-  - m_Id: 4788928279207961
-    m_Localized: Pass
-    m_Metadata:
-      m_Items: []
-  - m_Id: 4788928279207962
-    m_Localized: A ball caught from a teammate is charged right away. Co-op only.
+    m_Localized: Catch 5 balls and your pet saves you once.
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207963
-    m_Localized: All for One
+    m_Localized: No One Left Behind
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207964
-    m_Localized: Reviving a teammate freezes enemies around for 1.5 s and makes you
-      untouchable for a second. Co-op only.
+    m_Localized: "Pick up a friend \u2014 enemies around freeze."
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207965
-    m_Localized: Barricade
+    m_Localized: Fort
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207966
-    m_Localized: 'Q: a fence with a pot lid. Blocked balls fly forward as your own
-      throws.'
+    m_Localized: 'Q: a plank fort. Enemy balls fly back.'
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207967
@@ -977,8 +888,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207968
-    m_Localized: "Whistle and Freeze! hold enemies 1.5\xD7 longer, and your balls
-      hit frozen enemies 1 harder."
+    m_Localized: Hitting a frozen enemy shatters it.
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207969
@@ -986,7 +896,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207970
-    m_Localized: Arcs to where you aim. Shields don't help.
+    m_Localized: Arcs to your aim and hits everyone around.
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207971
@@ -994,7 +904,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207972
-    m_Localized: Bounces off walls and enemies up to 6 times.
+    m_Localized: Fast. Bounces off anything up to 6 times.
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207973
@@ -1002,7 +912,39 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207974
-    m_Localized: Rolls and knocks enemies down. Dash into it to kick it.
+    m_Localized: Rolls and knocks everyone down. Dash into it to kick.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6627793570881536
+    m_Localized: Serve
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6627793570881537
+    m_Localized: The ball hops to 4 enemies, not 2.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6627793570881538
+    m_Localized: Dunk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6627793570881539
+    m_Localized: After landing the ball hops to an enemy and hits again.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6627793570881540
+    m_Localized: Smash
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6627793570881541
+    m_Localized: Every bounce hits harder and faster.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6627793570881542
+    m_Localized: Penalty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6627793570881543
+    m_Localized: A dash kick goes full power.
     m_Metadata:
       m_Items: []
   references:

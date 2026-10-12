@@ -40,7 +40,7 @@ namespace Bouncer.Net
         const byte StatusShop = 1 << 1;
         const byte StatusStart = 1 << 2;
         const byte StatusHome = 1 << 3;
-        const byte StatusBubble = 1 << 4;
+        const byte StatusGettingUp = 1 << 5;
         float _hitSentAt = float.NegativeInfinity;
         float _reviveShown;
         float _reviveShownUntil;
@@ -180,7 +180,8 @@ namespace Bouncer.Net
                 if (!IsServer)
                     UpdateSave();
                 UpdateRevive();
-                if (health.IsDead && !_wasDown)
+                // со «Вторым дыханием» своё объявление: встанешь сам, звать товарища не нужно
+                if (health.IsDead && !_wasDown && !health.GettingUp)
                     GameEvents.AnnounceLocal(new Announcement { Title = "net.downed.title", Hint = "net.downed.hint", Seconds = 4f });
                 _wasDown = health.IsDead;
             }
@@ -188,7 +189,7 @@ namespace Bouncer.Net
             {
                 _player.Balls.SetRemoteBalls(_balls.Value);
                 _player.IsHome = (_status.Value & StatusHome) != 0;
-                _player.RemoteGumBubble = (_status.Value & StatusBubble) != 0;
+                _player.Health.GettingUp = (_status.Value & StatusGettingUp) != 0;
                 if (_maxLives.Value > 0)
                     _player.Health.Mirror(_lives.Value, _maxLives.Value, _lives.Value == 0);
                 ShowStatus();
@@ -217,8 +218,8 @@ namespace Bouncer.Net
                 status |= StatusStart;
             if (_player.IsHome)
                 status |= StatusHome;
-            if (_player.GumBubbleReady)
-                status |= StatusBubble;
+            if (_player.GettingUp)
+                status |= StatusGettingUp;
             return status;
         }
 
@@ -267,7 +268,6 @@ namespace Bouncer.Net
         {
             var modifiers = _player.Modifiers;
             modifiers.PickupRadius = mods.PickupRadius;
-            modifiers.MirrorAngle = mods.MirrorAngle;
             modifiers.LanternRadius = mods.LanternRadius;
             modifiers.NotifyChanged();
         }
@@ -546,31 +546,27 @@ namespace Bouncer.Net
     public struct NetPlayerMods : INetworkSerializable, System.IEquatable<NetPlayerMods>
     {
         byte _pickup;
-        byte _mirror;
         byte _lantern;
 
         public float PickupRadius => _pickup > 0 ? _pickup / 20f : 1f;
-        public float MirrorAngle => _mirror;
         public float LanternRadius => _lantern / 10f;
 
         public static NetPlayerMods From(PlayerModifiers modifiers) => new()
         {
             _pickup = (byte)Mathf.Clamp(Mathf.RoundToInt(modifiers.PickupRadius * 20f), 1, 255),
-            _mirror = (byte)Mathf.Clamp(Mathf.RoundToInt(modifiers.MirrorAngle), 0, 255),
             _lantern = (byte)Mathf.Clamp(Mathf.RoundToInt(modifiers.LanternRadius * 10f), 0, 255),
         };
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
             serializer.SerializeValue(ref _pickup);
-            serializer.SerializeValue(ref _mirror);
             serializer.SerializeValue(ref _lantern);
         }
 
-        public bool Equals(NetPlayerMods other) => _pickup == other._pickup && _mirror == other._mirror && _lantern == other._lantern;
+        public bool Equals(NetPlayerMods other) => _pickup == other._pickup && _lantern == other._lantern;
 
         public override bool Equals(object obj) => obj is NetPlayerMods other && Equals(other);
 
-        public override int GetHashCode() => _pickup | (_mirror << 8) | (_lantern << 16);
+        public override int GetHashCode() => _pickup | (_lantern << 8);
     }
 }

@@ -37,6 +37,11 @@ MonoBehaviour:
   maxStacks: 2
   weight: 1
   requires: []
+  freePocket: 0
+  coopOnly: 0
+  sleepsWith:
+  - {fileID: 11400000, guid: 5e018047528be4242b4f606f2dfbc8c3, type: 2}
+  - {fileID: 11400000, guid: 54983d7862d7f4ac5ba89a23ec2183b8, type: 2}
   perks:
     extraShots: 0
     spreadAngle: 0
@@ -50,12 +55,29 @@ MonoBehaviour:
     gumTrail: 0
     blastRadius: 0
     blastDamage: 0
-    snakeAmplitude: 0
     grazeRadius: 0
     wallDamage: 1
     chargedPierce: 0
     homing: 0
     yoyo: 0
+    bounceBlastRadius: 0
+    bounceBlastDamage: 0
+    twinSplit: 0
+    areaStun: 0
+    curve: 0
+    lob: 0
+    groundRoll: 0
+    grazeStun: 0
+    chalk: 0
+    frozenBonus: 0
+    bounceAssist: 0
+    bounceOffTargets: 0
+    ignoreShields: 0
+    chainRange: 0
+    dunkRange: 0
+    smash: 0
+    penalty: 0
+    shatter: 0
   nextThrowAfterCatch: 0
   references:
     version: 2

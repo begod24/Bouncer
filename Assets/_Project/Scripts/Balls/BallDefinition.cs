@@ -50,6 +50,8 @@ namespace Bouncer.Balls
         [Min(0)] public int hands;
         [Tooltip("Карточки «+мяч» с этим мячом не берутся и не действуют (набивной, баскетбольный)")]
         public bool fixedHands;
+        [Tooltip("«Хулиганство» и другие «на мяч меньше» забирают столько мячей за карточку (теннисных — 2)")]
+        [Min(1)] public int fewerBallsScale = 1;
         [Tooltip("Во сколько раз дольше заряжается бросок")]
         [Min(0.1f)] public float chargeTimeMultiplier = 1f;
         [Tooltip("Очередь: зажал бросок — мячи летят один за другим через столько секунд, без заряда. 0 — обычный заряд")]

@@ -43,6 +43,7 @@ namespace Bouncer.EditorTools
             Ball("Ball_Tennis", d =>
             {
                 Hands(d, 5, false, 1f, 0.14f);
+                d.fewerBallsScale = 2;
                 d.speed = 26f;
                 d.chargedSpeed = 36f;
                 d.damage = 1;
@@ -167,19 +168,7 @@ namespace Bouncer.EditorTools
         // ------------------------------------------------------------------ texts
         static void WriteTexts()
         {
-            var content = LocalizationEditorSettings.GetStringTableCollection("Content");
-            Entry(content, "card.ball_tennis.title", "Теннисные мячи", "Tennis balls");
-            Entry(content, "card.ball_tennis.description", "5 мячей в руках. Зажми бросок — очередь.",
-                "5 balls in hand. Hold throw to fire a burst.");
-            Entry(content, "card.ball_basketball.description", "Летит дугой в точку прицела. Щит не спасает.",
-                "Arcs to where you aim. Shields don't help.");
-            Entry(content, "card.ball_football.description", "Катится и сбивает с ног. Рывок в лежащий мяч — пинок.",
-                "Rolls and knocks enemies down. Dash into it to kick it.");
-            Entry(content, "card.ball_pingpong.description", "Отскакивает от стен и врагов до 6 раз.",
-                "Bounces off walls and enemies up to 6 times.");
-            Entry(content, "card.ball_medicine.description", "Бьёт 2–4 и задевает всех рядом. Щит не спасает. Всего 2 мяча.",
-                "Hits for 2–4 and splashes around. Ignores shields. Only 2 balls.");
-
+            // тексты карточек мячей — в CardDeckBuilder
             var ui = LocalizationEditorSettings.GetStringTableCollection("UI");
             Entry(ui, "card.stat.damage", "Урон", "Damage");
             Entry(ui, "card.stat.speed", "Скорость", "Speed");
@@ -188,12 +177,9 @@ namespace Bouncer.EditorTools
             Entry(ui, "card.stat.control", "Контроль", "Control");
             Entry(ui, "card.blocked.ball", "Нельзя: мешает {0}", "Not with the {0}");
 
-            foreach (var collection in new[] { content, ui })
-            {
-                EditorUtility.SetDirty(collection.SharedData);
-                foreach (var table in collection.StringTables)
-                    EditorUtility.SetDirty(table);
-            }
+            EditorUtility.SetDirty(ui.SharedData);
+            foreach (var table in ui.StringTables)
+                EditorUtility.SetDirty(table);
         }
 
         static void Entry(StringTableCollection collection, string key, string ru, string en)

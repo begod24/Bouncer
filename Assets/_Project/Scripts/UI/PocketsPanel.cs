@@ -66,7 +66,6 @@ namespace Bouncer.UI
 
         [Header("Вид")]
         [SerializeField] Color takeColor = new(1f, 0.82f, 0.25f);
-        [SerializeField] Color giveColor = new(1f, 0.45f, 0.38f);
         [SerializeField] Color sellColor = new(0.58f, 0.86f, 0.42f);
         [SerializeField] Color labelColor = new(0.96f, 0.95f, 0.92f);
         [SerializeField] Color mutedColor = new(0.96f, 0.95f, 0.92f, 0.5f);
@@ -238,6 +237,7 @@ namespace Bouncer.UI
                 {
                     var card = _free[i - slots];
                     mini.Show(card, _cards.StacksOf(card));
+                    mini.SetAsleep(_cards.IsAsleep(card));
                     mini.SetLabel(card.title.GetLocalizedString(), mutedColor);
                     mini.SetInteractable(true);
                     if (i == slots)
@@ -248,7 +248,10 @@ namespace Bouncer.UI
                 {
                     var card = _pockets[i];
                     mini.Show(card, _cards.StacksOf(card));
-                    mini.SetLabel(card.title.GetLocalizedString());
+                    bool asleep = _cards.IsAsleep(card);
+                    mini.SetAsleep(asleep);
+                    mini.SetLabel(asleep ? Loc.Format("pockets.asleep", card.title.GetLocalizedString()) : card.title.GetLocalizedString(),
+                        asleep ? mutedColor : (Color?)null);
                     mini.SetHotkey(_mode == Mode.View ? 0 : i + 1);
                     mini.SetMarked(card == _chosen);
                     mini.SetInteractable(true);
@@ -318,6 +321,7 @@ namespace Bouncer.UI
                 takeSide.anchoredPosition = new Vector2(sideOffset, takeSide.anchoredPosition.y);
                 var card = _mode == Mode.Replace ? _cards.PendingCard : buyCard;
                 takeCard.Show(card, _cards.StacksOf(card), 0, -1f);
+                takeCard.ShowComboHint(_cards);
                 takeLabel.text = _mode == Mode.Replace ? Loc.Get("pockets.replace.new")
                     : Loc.Format("pockets.sell.buy", _stock.Slots[_buySlot].Price);
                 takeLabel.color = takeColor;
@@ -399,13 +403,14 @@ namespace Bouncer.UI
             {
                 giveStamp.gameObject.SetActive(marked);
                 giveStamp.text = Loc.Get(_mode == Mode.Replace ? "pockets.replace.stamp" : "pockets.sell.stamp");
-                giveStamp.color = _mode == Mode.Replace ? giveColor : sellColor;
+                giveStamp.color = sellColor;
             }
             giveLabel.gameObject.SetActive(has && _mode != Mode.View);
-            if (_mode == Mode.Replace)
+            if (_mode == Mode.Replace && has)
             {
-                giveLabel.text = Loc.Get("pockets.replace.drop");
-                giveLabel.color = giveColor;
+                // замена — та же продажа за полцены
+                giveLabel.text = Loc.Format("pockets.replace.drop", _cards.SellPrice(card));
+                giveLabel.color = sellColor;
             }
             else if (_mode == Mode.Sell && has)
             {

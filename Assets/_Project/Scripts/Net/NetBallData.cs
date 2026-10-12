@@ -160,11 +160,14 @@ namespace Bouncer.Net
             s.SerializeValue(ref p.lob);
             s.SerializeValue(ref p.groundRoll);
             s.SerializeValue(ref p.grazeStun);
-            s.SerializeValue(ref p.chalk);
-            s.SerializeValue(ref p.frozenBonus);
             s.SerializeValue(ref p.bounceAssist);
             s.SerializeValue(ref p.bounceOffTargets);
             s.SerializeValue(ref p.ignoreShields);
+            s.SerializeValue(ref p.chainRange);
+            s.SerializeValue(ref p.dunkRange);
+            s.SerializeValue(ref p.smash);
+            s.SerializeValue(ref p.penalty);
+            s.SerializeValue(ref p.shatter);
         }
     }
 

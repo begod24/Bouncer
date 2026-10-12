@@ -38,6 +38,7 @@ MonoBehaviour:
   poppedWallKeep: 0.5
   hands: 5
   fixedHands: 0
+  fewerBallsScale: 2
   chargeTimeMultiplier: 1
   autoFireInterval: 0.14
   lobDistance: {x: 3, y: 20}
@@ -81,6 +82,11 @@ MonoBehaviour:
     bounceAssist: 0
     bounceOffTargets: 0
     ignoreShields: 0
+    chainRange: 0
+    dunkRange: 0
+    smash: 0
+    penalty: 0
+    shatter: 0
   areaEffect: {fileID: 0}
   chainRange: 9
   chainSpeedKeep: 0.9

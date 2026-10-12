@@ -37,10 +37,13 @@ MonoBehaviour:
   maxStacks: 3
   weight: 1
   requires: []
+  freePocket: 0
+  coopOnly: 0
+  sleepsWith: []
   moveSpeed: 0
   dashDistance: 0
   dashCooldown: 0
-  catchWindow: 0.35
+  catchWindow: 0.11666667
   catchRadius: 0.1
   pickupRadius: 0
   extraBalls: 0
@@ -51,6 +54,23 @@ MonoBehaviour:
   dominoDamage: 0
   coinInterest: 0
   lidCooldown: 0
+  mirrorAngle: 0
+  lanternRadius: 0
+  whistleFreeze: 0
+  secondWind: 0
+  maxLives: 0
+  arenaHeal: 0
+  ignoreGround: 0
+  dashCatch: 0
+  leapfrog: 0
+  freeRerolls: 0
+  extraChoices: 0
+  countEvery: 0
+  countBonus: 0
+  passCharge: 0
+  gumBubbleCooldown: 0
+  tamagotchi: 0
+  circleGuard: 0
   references:
     version: 2
     RefIds: []

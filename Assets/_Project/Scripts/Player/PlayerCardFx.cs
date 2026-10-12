@@ -1,3 +1,4 @@
+using Bouncer.Balls;
 using Bouncer.Core;
 using UnityEngine;
 
@@ -13,18 +14,6 @@ namespace Bouncer.Player
 
         static readonly int BaseMapId = Shader.PropertyToID("_BaseMap");
 
-        [Tooltip("Цвета игроков по номерам: кольцо паса — цветом того, кто бросил")]
-        [SerializeField] Color[] slotColors =
-        {
-            new(0.95f, 0.85f, 0.3f), new(0.4f, 0.75f, 1f), new(0.95f, 0.45f, 0.6f), new(0.5f, 0.9f, 0.45f),
-        };
-
-        [Header("Жвачный пузырь")]
-        [Tooltip("Розовый пузырь перед лицом: виден, пока заряжен")]
-        [SerializeField] Transform gumBubble;
-        [SerializeField] ParticleBurst gumPop;
-        [SerializeField] GumSpot gumSpot;
-
         [Header("Тамагочи")]
         [Tooltip("Яйцо тамагочи над головой (только у себя)")]
         [SerializeField] Transform tamagotchi;
@@ -35,25 +24,46 @@ namespace Bouncer.Player
 
         [Header("Кольца и надписи")]
         [SerializeField] BillboardPopup chalkPopup;
-        [SerializeField] ExpandingRing passRing;
         [SerializeField] ExpandingRing handRing;
         [SerializeField] ExpandingRing seaRing;
-        [Tooltip("Ускорение от мелового крестика: след за ногами")]
-        [SerializeField] TrailRenderer chalkTrail;
+
+        [Header("Комбо")]
+        [Tooltip("«Чехарда»: пыль при отрыве и приземлении")]
+        [SerializeField] ParticleBurst leapDust;
+        [Tooltip("«Пенальти»: вспышка от удара по мячу")]
+        [SerializeField] ParticleBurst kickFlash;
+        [Tooltip("«Солнышко»: нитка от руки к мячу — меловая линия")]
+        [SerializeField] Material stringMaterial;
+        [SerializeField] Color stringColor = new(1f, 1f, 1f, 0.85f);
+        [SerializeField, Min(0.005f)] float stringWidth = 0.035f;
 
         PlayerController _player;
         MaterialPropertyBlock _block;
         int _face = -1;
-        float _bubbleScale;
-        Vector3 _bubbleRest;
         float _tamagotchiScale;
+        // «Второе дыхание»: меловой счёт «три, два, раз» над выбитым игроком
+        float _countStart = -1f;
+        float _countLength;
+        int _countShown;
+        LineRenderer _string;
 
         void Awake()
         {
             _player = GetComponent<PlayerController>();
             _block = new MaterialPropertyBlock();
-            if (gumBubble)
-                _bubbleRest = gumBubble.localScale;
+            if (stringMaterial)
+            {
+                var go = new GameObject("YoyoString", typeof(LineRenderer));
+                go.transform.SetParent(transform, false);
+                _string = go.GetComponent<LineRenderer>();
+                _string.sharedMaterial = stringMaterial;
+                _string.useWorldSpace = true;
+                _string.positionCount = 2;
+                _string.widthMultiplier = stringWidth;
+                _string.startColor = _string.endColor = stringColor;
+                _string.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                _string.enabled = false;
+            }
         }
 
         void OnEnable() => PlayerFx.Played += OnPlayed;
@@ -63,19 +73,6 @@ namespace Bouncer.Player
         void LateUpdate()
         {
             float dt = Time.deltaTime;
-            if (gumBubble)
-            {
-                float want = _player.ShowsGumBubble ? 1f : 0f;
-                _bubbleScale = Mathf.MoveTowards(_bubbleScale, want, dt * (want > _bubbleScale ? 2f : 8f));
-                bool on = _bubbleScale > 0.01f;
-                if (gumBubble.gameObject.activeSelf != on)
-                    gumBubble.gameObject.SetActive(on);
-                if (on)
-                {
-                    float breath = 1f + 0.08f * Mathf.Sin(Time.time * 3.1f);
-                    gumBubble.localScale = _bubbleRest * (_bubbleScale * breath);
-                }
-            }
             if (tamagotchi)
             {
                 float want = _player.IsLocal && _player.HasTamagotchi && !_player.IsDead ? 1f : 0f;
@@ -101,8 +98,57 @@ namespace Bouncer.Player
                     }
                 }
             }
-            if (chalkTrail)
-                chalkTrail.emitting = _player.Motor.IsBoosted && !_player.IsDead;
+            UpdateCountdown();
+            UpdateString();
+        }
+
+        /// <summary>«Солнышко» (йо-йо): пока мяч на нитке летит, от руки к нему тянется нитка.</summary>
+        void UpdateString()
+        {
+            if (_string == null)
+                return;
+            Ball yoyo = null;
+            if (!_player.IsDead)
+            {
+                var balls = Ball.Active;
+                for (int i = 0; i < balls.Count; i++)
+                {
+                    var ball = balls[i];
+                    if (ball.IsYoyoString && ball.Owner == gameObject && ball.State is BallState.Live or BallState.Returning)
+                    {
+                        yoyo = ball;
+                        break;
+                    }
+                }
+            }
+            _string.enabled = yoyo != null;
+            if (yoyo == null)
+                return;
+            _string.SetPosition(0, transform.position + Vector3.up * 1.1f + transform.forward * 0.25f);
+            _string.SetPosition(1, yoyo.Position + yoyo.VisualOffset);
+        }
+
+        void UpdateCountdown()
+        {
+            if (_countStart < 0f)
+                return;
+            if (!_player.IsDead)
+            {
+                _countStart = -1f;
+                return;
+            }
+            // три шага на всё время: «три!», «два», «раз»
+            int step = Mathf.FloorToInt((Time.time - _countStart) / Mathf.Max(0.1f, _countLength / 3f));
+            if (step >= 3)
+            {
+                _countStart = -1f;
+                return;
+            }
+            if (step < _countShown)
+                return;
+            _countShown = step + 1;
+            BillboardPopup.Show(chalkPopup, transform.position + Vector3.up * 1.6f, PopupThree - step,
+                step == 2 ? new Color(1f, 0.85f, 0.3f) : Color.white);
         }
 
         void OnPlayed(PlayerController player, PlayerFxKind kind, Vector3 a, Vector3 b)
@@ -111,19 +157,10 @@ namespace Bouncer.Player
                 return;
             switch (kind)
             {
-                case PlayerFxKind.GumBubblePop:
-                    if (gumPop)
-                        PoolService.Spawn(gumPop, a + Vector3.up * 1.2f, Quaternion.identity);
-                    if (Online.IsHost && gumSpot)
-                        GumSpot.Drop(gumSpot, a + Vector3.up * 0.5f);
-                    break;
                 case PlayerFxKind.TamagotchiSave:
                     if (pixelBurst)
                         PoolService.Spawn(pixelBurst, a + Vector3.up * 2.2f, Quaternion.identity);
                     BillboardPopup.Show(chalkPopup, a + Vector3.up * 2.4f, PopupHeart, new Color(1f, 0.45f, 0.5f));
-                    break;
-                case PlayerFxKind.PassCatch:
-                    Ring(passRing, a, 1.6f, SlotColor((int)b.x));
                     break;
                 case PlayerFxKind.CountThree:
                     int step = Mathf.Max(1, (int)b.x);
@@ -135,13 +172,41 @@ namespace Bouncer.Player
                     Ring(handRing, a, 4f, Color.white);
                     break;
                 case PlayerFxKind.SeaFigure:
-                    Ring(seaRing, a, 6f, new Color(0.55f, 0.85f, 1f));
+                    Ring(seaRing, a, b.y > 0f ? b.y : 6f, new Color(0.55f, 0.85f, 1f));
                     BillboardPopup.Show(chalkPopup, a + Vector3.up * 2.4f, PopupFreeze, new Color(0.7f, 0.9f, 1f));
+                    break;
+                case PlayerFxKind.Whistle:
+                    Ring(seaRing, a, b.y > 0f ? b.y : 6f, new Color(0.85f, 0.95f, 1f));
+                    BillboardPopup.Show(chalkPopup, a + Vector3.up * 2.4f, PopupFreeze, Color.white);
+                    break;
+                case PlayerFxKind.SecondWind:
+                    _countStart = Time.time;
+                    _countLength = b.x > 0f ? b.x : 3f;
+                    _countShown = 0;
+                    break;
+                case PlayerFxKind.Penalty:
+                    if (kickFlash)
+                        PoolService.Spawn(kickFlash, a + Vector3.up * 0.2f, Quaternion.identity);
+                    BillboardPopup.Show(chalkPopup, a + Vector3.up * 1.6f, PopupBang, new Color(1f, 0.85f, 0.3f));
+                    break;
+                case PlayerFxKind.LeapStart:
+                    if (leapDust)
+                        PoolService.Spawn(leapDust, a + Vector3.up * 0.1f, Quaternion.identity).Play(0.7f);
+                    break;
+                case PlayerFxKind.LeapLand:
+                    if (leapDust)
+                        PoolService.Spawn(leapDust, a + Vector3.up * 0.1f, Quaternion.identity).Play(1.2f);
+                    Ring(handRing, a, b.x > 0f ? b.x : 2f, new Color(1f, 0.85f, 0.3f));
+                    BillboardPopup.Show(chalkPopup, a + Vector3.up * 2.2f, PopupBang, Color.white);
+                    break;
+                case PlayerFxKind.SecondWindUp:
+                    _countStart = -1f;
+                    Ring(handRing, a, 2.5f, new Color(1f, 0.85f, 0.3f));
+                    BillboardPopup.Show(chalkPopup, a + Vector3.up * 2.4f, PopupHeart, new Color(1f, 0.45f, 0.5f));
                     break;
             }
         }
 
-        Color SlotColor(int slot) => slotColors != null && slotColors.Length > 0 ? slotColors[Mathf.Clamp(slot, 0, slotColors.Length - 1)] : Color.white;
 
         static void Ring(ExpandingRing prefab, Vector3 at, float radius, Color color)
         {

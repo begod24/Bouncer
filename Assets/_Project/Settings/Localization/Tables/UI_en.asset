@@ -120,11 +120,11 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 155645370393
-    m_Localized: TRICK
+    m_Localized: THROW
     m_Metadata:
       m_Items: []
   - m_Id: 155645370394
-    m_Localized: SKILL
+    m_Localized: PERK
     m_Metadata:
       m_Items: []
   - m_Id: 155645370395
@@ -297,9 +297,9 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 133958221160462
-    m_Localized: "Click or Enter \u2014 buy    L \u2014 hold    R \u2014 reroll   
+    m_Localized: "Click or Enter \u2014 buy    L \u2014 hold one    R \u2014 reroll   
       P / Tab \u2014 pockets    Esc \u2014 leave\nGamepad: A \u2014 buy    X \u2014
-      hold    Y \u2014 reroll    LB / Select \u2014 pockets    B \u2014 leave"
+      hold one    Y \u2014 reroll    LB / Select \u2014 pockets    B \u2014 leave"
     m_Metadata:
       m_Items: []
   - m_Id: 133958221160463
@@ -671,8 +671,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1427114170507272
-    m_Localized: "To take \u201C{0}\u201D, drop one of yours \u2014 it goes back
-      to the deck"
+    m_Localized: "To take \u201C{0}\u201D, sell one of yours for half price"
     m_Metadata:
       m_Items: []
   - m_Id: 1427114170507273
@@ -680,19 +679,19 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1427114170507274
-    m_Localized: DROPPING
+    m_Localized: "SELLING \xB7 +{0}"
     m_Metadata:
       m_Items: []
   - m_Id: 1427114170507275
-    m_Localized: DROP
+    m_Localized: SELL
     m_Metadata:
       m_Items: []
   - m_Id: 1427114170507276
-    m_Localized: Pick above which one to drop
+    m_Localized: Pick above which one to sell
     m_Metadata:
       m_Items: []
   - m_Id: 1427114170507277
-    m_Localized: Drop and take
+    m_Localized: Sell and take
     m_Metadata:
       m_Items: []
   - m_Id: 1427114170507278
@@ -771,7 +770,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 1427114170507296
-    m_Localized: "pockets full \xB7 drop one"
+    m_Localized: "pockets full \xB7 sell one"
     m_Metadata:
       m_Items: []
   - m_Id: 1427114170507297
@@ -1275,11 +1274,11 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4788930380554240
-    m_Localized: replaces ability
+    m_Localized: "replaces ability \xB7 old one sells for half"
     m_Metadata:
       m_Items: []
   - m_Id: 4788930380554241
-    m_Localized: ability
+    m_Localized: "ABILITY \xB7 Q"
     m_Metadata:
       m_Items: []
   - m_Id: 6539651459309568
@@ -1328,6 +1327,34 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 6587152207962113
     m_Localized: Unlimited
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6621552031293440
+    m_Localized: Second wind!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6621552035487744
+    m_Localized: You'll get back up in 3 seconds
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6627795672227840
+    m_Localized: 'will sleep: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6627795672227841
+    m_Localized: "{0} \xB7 asleep"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6628139177336832
+    m_Localized: "combo \xB7 same pocket"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6648190118912000
+    m_Localized: Combos
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6648190123106304
+    m_Localized: Collect these two cards to find out.
     m_Metadata:
       m_Items: []
   references:

@@ -25,6 +25,8 @@ namespace Bouncer.Player
 
         [Header("Жизни")]
         [Min(1)] public int maxLives = 3;
+        [Tooltip("Больше стольких сердец не бывает, сколько бы карточек ни прибавляли («Бабушкины пирожки»)")]
+        [Min(1)] public int maxLivesCap = 4;
         public float hurtInvulnerability = 1.2f;
         [Tooltip("Как быстро гаснет отброс после удара")]
         public float knockbackDamping = 10f;
@@ -94,8 +96,18 @@ namespace Bouncer.Player
         public float tackleStun = 0.8f;
         [Tooltip("Подкат срабатывает не чаще раза в столько секунд")]
         public float tackleCooldown = 0.8f;
-        [Tooltip("«Замри!»: скорость времени вокруг после удачной ловли")]
-        [Range(0.05f, 1f)] public float freezeTimeScale = 0.3f;
+        [Tooltip("«Чехарда»: прыжок через врага длится столько секунд…")]
+        public float leapTime = 0.45f;
+        [Tooltip("…на такой высоте, м")]
+        public float leapHeight = 1.8f;
+        [Tooltip("…и приземляется за врагом на таком расстоянии от него, м")]
+        public float leapBeyond = 1.6f;
+        [Tooltip("«Чехарда»: того, через кого прыгнул, оглушает на столько секунд")]
+        public float leapStun = 1.5f;
+        [Tooltip("«Чехарда»: приземление сбивает с ног всех в таком радиусе, м…")]
+        public float leapLandRadius = 2f;
+        [Tooltip("…на столько секунд")]
+        public float leapLandStun = 0.8f;
         [Tooltip("«Домино»: на каком расстоянии выбитый враг сбивает соседей, м")]
         public float dominoRadius = 2.3f;
         [Tooltip("«Домино»: через сколько секунд падает следующая костяшка")]
@@ -106,42 +118,32 @@ namespace Bouncer.Player
         [Header("Сумерки")]
         [Tooltip("Взгляд: манекены замирают в секторе с такой половиной угла от направления взгляда, градусы")]
         [Range(0f, 180f)] public float gazeHalfAngle = 35f;
-        [Tooltip("«Свисток»: радиус, в котором идеальная ловля замораживает врагов, м")]
+        [Tooltip("«Замри!»: радиус, в котором идеальная ловля замораживает врагов, м")]
         public float whistleRadius = 6f;
-        [Tooltip("«Второе дыхание»: сколько секунд игрок неуязвим после спасения")]
+        [Tooltip("«Замри!»: каждая следующая карточка прибавляет к радиусу, м…")]
+        public float whistleStackRadius = 3f;
+        [Tooltip("…и к заморозке, с")]
+        public float whistleStackTime = 0.5f;
+        [Tooltip("«Второе дыхание»: выбитый игрок встаёт сам через столько секунд")]
+        public float secondWindDelay = 3f;
+        [Tooltip("«Второе дыхание»: сколько секунд игрок неуязвим, когда встал")]
         public float secondWindInvulnerability = 2f;
-        [Tooltip("«Кувырок»: мяч врага ближе этого (м) во время рывка — уворот в последний момент")]
-        public float dashCatchRadius = 1.3f;
-        [Tooltip("«Кувырок»: скорость времени после уворота")]
-        [Range(0.05f, 1f)] public float dodgeTimeScale = 0.3f;
-        [Tooltip("«Кувырок»: сколько секунд длится замедление после уворота")]
-        public float dodgeSlowTime = 0.5f;
         [Tooltip("Тёмный мяч Бабая: попадание замедляет на столько секунд…")]
         public float darkSlowTime = 2f;
         [Tooltip("…до такой доли скорости")]
         [Range(0.1f, 1f)] public float darkSlowMultiplier = 0.55f;
 
         [Header("Новые карточки")]
-        [Tooltip("«Жвачный пузырь»: враги ближе этого (м) вязнут, когда пузырь лопается…")]
-        public float gumBubbleRadius = 2.5f;
-        [Tooltip("…на столько секунд")]
-        public float gumBubbleStick = 0.9f;
         [Tooltip("«Тамагочи»: столько пойманных мячей, чтобы питомец наелся")]
         [Min(1)] public int tamagotchiFood = 5;
         [Tooltip("«Тамагочи»: сколько секунд игрок неуязвим после спасения")]
         public float tamagotchiInvulnerability = 1.5f;
-        [Tooltip("«Мел»: наступил на крестик — бежишь быстрее во столько раз…")]
-        public float chalkBoost = 1.3f;
-        [Tooltip("…столько секунд")]
-        public float chalkBoostTime = 1.2f;
         [Tooltip("«Круговая порука»: радиус волны «замри», м")]
         public float circleGuardRadius = 4f;
         [Tooltip("«Круговая порука»: враги в волне замирают на столько секунд")]
         public float circleGuardFreeze = 1.5f;
         [Tooltip("«Круговая порука»: неуязвимость того, кто поднял, с")]
         public float circleGuardInvulnerability = 1f;
-        [Tooltip("«Морская фигура»: замершие от «Свистка» и «Замри!» стоят дольше во столько раз")]
-        public float seaFigureFreeze = 1.5f;
 
         [Header("Прицел")]
         [Tooltip("Высота плоскости, на которую проецируется курсор (уровень груди врагов)")]

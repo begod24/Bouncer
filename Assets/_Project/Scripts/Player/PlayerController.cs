@@ -21,10 +21,9 @@ namespace Bouncer.Player
         float _tackleDashStart = float.NegativeInfinity;
         bool _tackleThisDash;
         float _nextTackleAt;
-        float _dodgedDashStart = float.NegativeInfinity;
         float _nextCatchHealAt;
         float _lidReadyAt;
-        float _gumReadyAt;
+        float _getUpAt;
         int _food;
         PlayerRewind _rewind;
         PlayerSpin _spin;
@@ -68,7 +67,6 @@ namespace Bouncer.Player
         public event Action Froze;
         public event Action LidBlocked;
         public event Action SecondWindUsed;
-        public event Action Dodged;
         public event Action KnockedDown;
         public event Action Revived;
 
@@ -77,14 +75,13 @@ namespace Bouncer.Player
         public float CatchHeal01 => stats.catchHealCooldown <= 0f ? 1f
             : Mathf.Clamp01(1f - (_nextCatchHealAt - Time.time) / stats.catchHealCooldown);
 
-        public bool HasGumBubble => Modifiers.GumBubbleCooldown > 0f;
-        public bool GumBubbleReady => HasGumBubble && Time.time >= _gumReadyAt && !IsDead;
-        public bool RemoteGumBubble { get; set; }
-        public bool ShowsGumBubble => IsLocal ? GumBubbleReady : RemoteGumBubble && !IsDead;
         public bool HasTamagotchi => Modifiers.Tamagotchi;
         public float TamagotchiFood01 => Mathf.Clamp01(_food / (float)Mathf.Max(1, stats.tamagotchiFood));
         public bool IsSpinning => _spin != null && _spin.Active;
         public bool IsRewinding => _rewind != null && _rewind.Active;
+
+        /// <summary>«Второе дыхание»: выбит, но сам встанет — у гостя приходит из статуса владельца.</summary>
+        public bool GettingUp => Health.GettingUp;
 
         public bool HasLid => Modifiers.LidCooldown > 0f;
         public bool LidReady => HasLid && Time.time >= _lidReadyAt;
@@ -114,11 +111,15 @@ namespace Bouncer.Player
             Health.Died += OnDied;
             Balls.Caught += OnCaught;
             Modifiers.Changed += OnModifiersChanged;
+            Motor.Landed += OnLeapLanded;
         }
+
+        /// <summary>Максимум сердец: обычный плюс «Бабушкины пирожки», но не больше потолка.</summary>
+        public void RefreshMaxLives() =>
+            Health.SetMax(Mathf.Min(stats.maxLives + Modifiers.ExtraLives, Mathf.Max(stats.maxLives, stats.maxLivesCap)));
 
         void OnModifiersChanged()
         {
-            Targetable.BackGazeHalfAngle = Modifiers.MirrorAngle;
             Targetable.LightRadius = Modifiers.LanternRadius;
         }
 
@@ -160,9 +161,8 @@ namespace Bouncer.Player
                 return;
 
             float dt = Time.deltaTime;
+            UpdateGettingUp();
             UpdateDominoes();
-            if (!IsDead && ChalkMark.At(transform.position))
-                Motor.Boost(stats.chalkBoost, stats.chalkBoostTime);
             bool canAct = !IsDead && GameSession.IsPlayerActive && !Motor.IsDown;
             if (!canAct)
             {
@@ -192,39 +192,6 @@ namespace Bouncer.Player
             Motor.Face(Aim.Direction, dt);
             if (Modifiers.TackleDamage > 0 && Motor.IsDashing)
                 Tackle();
-            if (Modifiers.DashCatch && Motor.IsDashing)
-                WatchDodge();
-        }
-
-        void WatchDodge()
-        {
-            if (_dodgedDashStart == Motor.DashStartTime)
-                return;
-            Vector3 chest = transform.position + Vector3.up * stats.throwHeight;
-            float radiusSqr = stats.dashCatchRadius * stats.dashCatchRadius;
-            var balls = Ball.Active;
-            for (int i = balls.Count - 1; i >= 0; i--)
-            {
-                var ball = balls[i];
-                if (ball.State != BallState.Live || ball.IsPhantom || !ball.Team.IsHostileTo(Team.Player))
-                    continue;
-                if ((ball.Position - chest).sqrMagnitude <= radiusSqr)
-                {
-                    PerfectDodge();
-                    return;
-                }
-            }
-        }
-
-        void PerfectDodge()
-        {
-            if (!Modifiers.DashCatch || _dodgedDashStart == Motor.DashStartTime)
-                return;
-            _dodgedDashStart = Motor.DashStartTime;
-            GameFeel.BulletTime(stats.dodgeTimeScale, stats.dodgeSlowTime);
-            Balls.ArmCandle();
-            GameEvents.PlaySound(SoundCue.CatchCandle, transform.position);
-            Dodged?.Invoke();
         }
 
         void Tackle()
@@ -250,6 +217,12 @@ namespace Bouncer.Player
                 var target = other.GetComponentInParent<IDamageable>();
                 if (target == null || _tackled.Contains(target))
                     continue;
+                // «Чехарда»: вместо подката — прыжок через первого врага на пути
+                if (Modifiers.Leapfrog && !Motor.IsLeaping && other.GetComponentInParent<Targetable>() is { IsAlive: true } over)
+                {
+                    StartLeap(over);
+                    return;
+                }
                 _tackled.Add(target);
                 Vector3 away = other.transform.position - transform.position;
                 away.y = 0f;
@@ -269,6 +242,54 @@ namespace Bouncer.Player
             }
         }
 
+        void StartLeap(Targetable over)
+        {
+            Vector3 direction = Motor.DashDirection;
+            Vector3 to = over.Position + direction * stats.leapBeyond;
+            to.y = transform.position.y;
+            if (UnityEngine.AI.NavMesh.SamplePosition(to, out var hit, 1.5f, UnityEngine.AI.NavMesh.AllAreas))
+                to = new Vector3(hit.position.x, transform.position.y, hit.position.z);
+            over.Freeze(stats.leapStun);
+            Health.SetInvulnerable(stats.leapTime + 0.15f);
+            Motor.Leap(to, stats.leapTime, stats.leapHeight);
+            GameEvents.PlaySound(SoundCue.SpinWhoosh, transform.position);
+            PlayerFx.Play(this, PlayerFxKind.LeapStart, transform.position);
+        }
+
+        void OnLeapLanded()
+        {
+            if (!IsLocal)
+                return;
+            Vector3 center = transform.position + Vector3.up * 0.6f;
+            int count = Physics.OverlapSphereNonAlloc(center, stats.leapLandRadius, s_tackleHits, Layers.EnemyMask,
+                QueryTriggerInteraction.Ignore);
+            _tackled.Clear();
+            for (int i = 0; i < count; i++)
+            {
+                var other = s_tackleHits[i];
+                var target = other.GetComponentInParent<IDamageable>();
+                if (target == null || _tackled.Contains(target))
+                    continue;
+                _tackled.Add(target);
+                Vector3 away = other.transform.position - transform.position;
+                away.y = 0f;
+                NetHooks.ApplyHit(target, new HitInfo
+                {
+                    Damage = 0,
+                    Point = other.ClosestPoint(center),
+                    Direction = away.sqrMagnitude > 1e-4f ? away.normalized : transform.forward,
+                    Force = stats.tackleKnockback * 0.7f,
+                    SourceTeam = Team.Player,
+                    Source = gameObject,
+                    Flags = HitFlags.Tackle | HitFlags.Charged,
+                });
+                if (other.GetComponentInParent<Targetable>() is { } stunned)
+                    stunned.Freeze(stats.leapLandStun);
+            }
+            GameEvents.PlaySound(SoundCue.AreaThud, transform.position);
+            PlayerFx.Play(this, PlayerFxKind.LeapLand, transform.position, new Vector3(stats.leapLandRadius, 0f, 0f));
+        }
+
         public void BeginScripted()
         {
             if (IsScripted)
@@ -284,11 +305,7 @@ namespace Bouncer.Player
             if (!IsLocal || IsDead || IsScripted || !ball.Team.IsHostileTo(Team.Player))
                 return BallContactResult.PassThrough;
 
-            if (Modifiers.DashCatch && Motor.IsDashInvulnerable)
-                PerfectDodge();
             if (Balls.TryCatch(ball))
-                return BallContactResult.Caught;
-            if (!Motor.IsDashInvulnerable && !Health.IsInvulnerable && TryGumBubble(ball))
                 return BallContactResult.Caught;
             if (!Motor.IsDashInvulnerable && !Health.IsInvulnerable && TryLidBlock(hit.point))
                 return BallContactResult.Bounce;
@@ -315,18 +332,12 @@ namespace Bouncer.Player
             if (IsDead || IsScripted)
                 return false;
             if (Motor.IsDashInvulnerable)
-            {
-                if (Modifiers.DashCatch)
-                    PerfectDodge();
                 return false;
-            }
             if (Health.IsInvulnerable)
                 return false;
             if (TryLidBlock(hit.Point))
                 return false;
             if (TryTamagotchi(hit))
-                return true;
-            if (TrySecondWind(hit))
                 return true;
 
             if (!Health.TryDamage(hit))
@@ -350,11 +361,7 @@ namespace Bouncer.Player
             if (!IsLocal || IsDead || IsScripted)
                 return false;
             if (Motor.WasDashInvulnerable(NetworkDodgeGrace))
-            {
-                if (Modifiers.DashCatch)
-                    PerfectDodge();
                 return false;
-            }
             return ApplyHit(hit);
         }
 
@@ -362,6 +369,14 @@ namespace Bouncer.Player
         {
             if (!IsDead)
                 return;
+            // товарищ поднял раньше «Второго дыхания» — оно остаётся на потом
+            if (Health.GettingUp)
+                RunState.RefundSecondWind(Slot);
+            StandUp(lives);
+        }
+
+        void StandUp(int lives)
+        {
             Health.Restore();
             Health.SetCurrent(Mathf.Max(1, lives));
             Health.SetInvulnerable(stats.hurtInvulnerability * 2f);
@@ -378,38 +393,35 @@ namespace Bouncer.Player
             return Ball.Network != null && Ball.Network.GiveToRemote(ball, gameObject);
         }
 
-        bool TrySecondWind(in HitInfo hit)
+        /// <summary>«Второе дыхание»: раз за прогулку выбитый игрок сам встаёт с одним сердцем через пару секунд.</summary>
+        bool TryStartSecondWind()
         {
-            if (!Modifiers.SecondWind || RunState.SecondWindUsed(Slot) || hit.Damage < Health.Current)
+            if (!IsLocal || !Modifiers.SecondWind || RunState.SecondWindUsed(Slot))
                 return false;
             RunState.UseSecondWind(Slot);
-            var saved = hit;
-            saved.Damage = Health.Current - 1;
-            if (saved.Damage > 0)
-                Health.TryDamage(saved);
-            Health.SetInvulnerable(stats.secondWindInvulnerability);
-            Motor.AddKnockback(hit.Direction * hit.Force);
-            Balls.CancelCharge();
-            GameFeel.HitStop(0.12f);
-            GameFeel.Shake(1f);
-            GameEvents.PlaySound(SoundCue.SecondWind, transform.position);
-            Hurt?.Invoke(saved);
+            Health.GettingUp = true;
+            _getUpAt = Time.time + stats.secondWindDelay;
+            PlayerFx.Play(this, PlayerFxKind.SecondWind, transform.position, new Vector3(stats.secondWindDelay, 0f, 0f));
+            GameEvents.AnnounceLocal(new Announcement
+                { Title = "secondwind.title", Hint = "secondwind.hint", Seconds = stats.secondWindDelay });
             SecondWindUsed?.Invoke();
             return true;
         }
 
-        bool TryGumBubble(Ball ball)
+        void UpdateGettingUp()
         {
-            if (!GumBubbleReady)
-                return false;
-            _gumReadyAt = Time.time + Modifiers.GumBubbleCooldown;
-            Vector3 feet = transform.position;
-            ball.Drop(feet + transform.forward * 0.6f + Vector3.up * 0.4f, Vector3.zero);
-            Health.SetInvulnerable(0.3f);
-            Targetable.FreezeAround(feet, stats.gumBubbleRadius, Team.Enemy, stats.gumBubbleStick);
-            GameEvents.PlaySound(SoundCue.BubblePop, feet);
-            PlayerFx.Play(this, PlayerFxKind.GumBubblePop, feet + transform.forward * 0.5f);
-            return true;
+            if (!Health.GettingUp)
+                return;
+            if (!IsDead)
+            {
+                Health.GettingUp = false;
+                return;
+            }
+            if (Time.time < _getUpAt)
+                return;
+            StandUp(1);
+            Health.SetInvulnerable(stats.secondWindInvulnerability);
+            PlayerFx.Play(this, PlayerFxKind.SecondWindUp, transform.position);
         }
 
         bool TryTamagotchi(in HitInfo hit)
@@ -532,27 +544,26 @@ namespace Bouncer.Player
                 if (_food >= stats.tamagotchiFood)
                     GameEvents.PlaySound(SoundCue.TamagotchiBeep, transform.position);
             }
-            bool sea = Modifiers.Perks.frozenBonus > 0;
-            float seaScale = sea ? stats.seaFigureFreeze : 1f;
-            if (Modifiers.CatchFreeze > 0f)
-            {
-                GameFeel.BulletTime(stats.freezeTimeScale, Modifiers.CatchFreeze * seaScale);
-                Froze?.Invoke();
-                if (sea)
-                    PlayerFx.Play(this, PlayerFxKind.SeaFigure, transform.position, new Vector3(Modifiers.CatchFreeze * seaScale, 0f, 0f));
-            }
+            // «Морская фигура»: замершие от «Замри!» — фигуры (их разбивает мяч), свисток показан голубым кольцом
+            bool sea = Modifiers.Perks.shatter;
             if (info.Perfect && Modifiers.WhistleFreeze > 0f)
             {
-                Targetable.FreezeAround(transform.position, stats.whistleRadius, Team.Enemy, Modifiers.WhistleFreeze * seaScale);
+                // «Замри!»: вторая карточка — дальше и дольше
+                int extra = Mathf.Max(0, Modifiers.WhistleStacks - 1);
+                float radius = stats.whistleRadius + extra * stats.whistleStackRadius;
+                float seconds = Modifiers.WhistleFreeze + extra * stats.whistleStackTime;
+                Targetable.FreezeAround(transform.position, radius, Team.Enemy, seconds);
                 GameEvents.PlaySound(SoundCue.Whistle, transform.position);
                 Froze?.Invoke();
-                if (sea)
-                    PlayerFx.Play(this, PlayerFxKind.SeaFigure, transform.position, new Vector3(Modifiers.WhistleFreeze * seaScale, 0f, 0f));
+                PlayerFx.Play(this, sea ? PlayerFxKind.SeaFigure : PlayerFxKind.Whistle, transform.position,
+                    new Vector3(seconds, radius, 0f));
             }
         }
 
         void OnDied(HitInfo hit)
         {
+            // до объявления о выбывании: сессия и комната видят, что игрок ещё встанет, и не заканчивают игру
+            TryStartSecondWind();
             Balls.CancelCharge();
             Balls.CancelCatch();
             Motor.Stop();

@@ -31,7 +31,7 @@ MonoBehaviour:
     m_WaitForCompletion: 0
     m_LocalVariables: []
   category: 2
-  icon: {fileID: 21300000, guid: 6c666748d0183466da704b7884e492f4, type: 3}
+  icon: {fileID: 21300000, guid: 9e10377871b55401da15c32c506f0f70, type: 3}
   wrapperColor: {r: 0.75, g: 0.62, b: 0.5, a: 1}
   rarity: 2
   maxStacks: 1
@@ -41,6 +41,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3502d283c7a4749a28aec710b16a19b8, type: 2}
   freePocket: 0
   coopOnly: 0
+  sleepsWith: []
   ability: {fileID: 11400000, guid: cdcf70ac142a1421f8accd06ff823a0b, type: 2}
   references:
     version: 2

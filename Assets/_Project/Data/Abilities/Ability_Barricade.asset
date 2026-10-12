@@ -13,8 +13,10 @@ MonoBehaviour:
   m_Name: Ability_Barricade
   m_EditorClassIdentifier: Bouncer.Player::Bouncer.Player.FenceAbility
   cooldown: 12
-  hudIcon: {fileID: 21300000, guid: 1b312ee99fcee4b5daf51099c59fbf7e, type: 3}
+  hudIcon: {fileID: 21300000, guid: 14cb63787871e480190209a501877ab3, type: 3}
   fence: {fileID: 2268499164409199465, guid: 31a2831b6eb95489fa78494a3e3dc680, type: 3}
   duration: 4
   distance: 1.6
   redirect: 1
+  fort: 1
+  sideDistance: 1.75

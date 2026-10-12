@@ -34,9 +34,12 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: f484f18818c4345b8bfcb8e28eacc2ae, type: 3}
   wrapperColor: {r: 0.9, g: 0.68, b: 0.42, a: 1}
   rarity: 1
-  maxStacks: 2
+  maxStacks: 1
   weight: 1
   requires: []
+  freePocket: 0
+  coopOnly: 0
+  sleepsWith: []
   moveSpeed: 0
   dashDistance: 0
   dashCooldown: 0
@@ -44,7 +47,7 @@ MonoBehaviour:
   catchRadius: 0
   pickupRadius: 0
   extraBalls: 0
-  heal: 0
+  heal: 1
   bonusDamage: 0
   tackleDamage: 0
   catchFreeze: 0
@@ -55,11 +58,19 @@ MonoBehaviour:
   lanternRadius: 0
   whistleFreeze: 0
   secondWind: 0
-  arenaHeal: 1
+  maxLives: 1
+  arenaHeal: 0
   ignoreGround: 0
   dashCatch: 0
+  leapfrog: 0
   freeRerolls: 0
   extraChoices: 0
+  countEvery: 0
+  countBonus: 0
+  passCharge: 0
+  gumBubbleCooldown: 0
+  tamagotchi: 0
+  circleGuard: 0
   references:
     version: 2
     RefIds: []

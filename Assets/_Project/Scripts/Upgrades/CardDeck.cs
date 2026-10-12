@@ -36,6 +36,9 @@ namespace Bouncer.Upgrades
         [Tooltip("Сколько карточек на выбор")]
         [Min(1)] public int choices = 3;
         public List<UpgradeCard> deck = new();
+
+        /// <summary>Колода этой игры — для подсказок на карточках (комбо, мячи) и страницы «Комбо» в Тетрадке.</summary>
+        public static CardDeck Active { get; set; }
         [Tooltip("Выпадает, когда подходящих карточек меньше, чем мест на выбор")]
         public UpgradeCard filler;
         [Tooltip("Пауза перед показом выбора, с (реального времени)")]
@@ -59,6 +62,8 @@ namespace Bouncer.Upgrades
         [Min(1)] public int pockets = 6;
         [Tooltip("Сколько золотых (не комбо) можно взять за прогулку: после них золотые больше не выпадают")]
         [Min(0)] public int maxGolds = 1;
+        [Tooltip("То же в коопе — на всю команду; у одного ребёнка всё равно не больше одной золотой")]
+        [Min(0)] public int maxGoldsCoop = 2;
         [Tooltip("Сколько комбо можно собрать за прогулку")]
         [Min(0)] public int maxCombos = 2;
 
@@ -83,6 +88,8 @@ namespace Bouncer.Upgrades
         [Min(0)] public int sandwichPrice = 25;
         [Tooltip("«Копилка»: +1 монетка за каждые столько монеток в кармане, когда открывается ларёк")]
         [Min(1)] public int interestPer = 10;
+
+        public int MaxGoldsFor(int players) => players <= 1 ? maxGolds : maxGoldsCoop;
 
         public int PocketsFor(int players) => Mathf.Max(1, players <= 1 ? pockets : players <= 3 ? pockets - 1 : pockets - 2);
 

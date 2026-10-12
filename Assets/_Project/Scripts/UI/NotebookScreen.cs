@@ -27,11 +27,14 @@ namespace Bouncer.UI
 
         const int BestiaryPage = 0;
         const int RecordsPage = 1;
+        const int CombosPage = 3;
 
         [Tooltip("Вкладки по порядку страниц: бестиарий, рекорды, как играть")]
         [SerializeField] ChalkTabs tabs;
         [SerializeField] Page[] pages;
         [SerializeField] BestiaryScreen bestiary;
+        [Tooltip("Страница «Комбо»")]
+        [SerializeField] NotebookCombos combos;
         [SerializeField] TMP_Text recordsText;
         [Tooltip("Дети — чтобы подписать рекорд именем ребёнка")]
         [SerializeField] KidRoster roster;
@@ -42,7 +45,7 @@ namespace Bouncer.UI
         int _page = -1;
         bool _open;
 
-        public bool HasNew => (bestiary != null && bestiary.HasNew) || RunRecords.HasUnseen;
+        public bool HasNew => (bestiary != null && bestiary.HasNew) || RunRecords.HasUnseen || (combos != null && combos.HasNew);
 
         void Awake()
         {
@@ -103,6 +106,8 @@ namespace Bouncer.UI
             {
                 if (bestiary != null)
                     bestiary.Close();
+                if (index == CombosPage && combos != null)
+                    first = combos.Open();
                 if (first != null)
                 {
                     var navigation = first.navigation;
@@ -139,6 +144,7 @@ namespace Bouncer.UI
                 {
                     BestiaryPage => bestiary != null && bestiary.HasNew,
                     RecordsPage => RunRecords.HasUnseen,
+                    CombosPage => combos != null && combos.HasNew,
                     _ => false,
                 };
                 pages[i].newMark.SetActive(isNew);

@@ -39,6 +39,15 @@ namespace Bouncer.Balls
         const float HomingRange = 14f;
         const float HomingCone = 75f;
         const float RicochetAssistRange = 30f;
+        // «Солнышко»: после попадания мяч на нитке облетает ребёнка по кругу такого радиуса
+        const float OrbitRadius = 3f;
+        const float OrbitSpeed = 560f;
+        // «Данк»: перелёт к следующему врагу длится столько
+        const float DunkHopTime = 0.5f;
+        // «Петарда» у футбольного: взрыв каждые столько метров качения
+        const float RollBlastSpacing = 3f;
+        // «Морская фигура»: осколки разбитой фигуры бьют замерших в таком радиусе
+        const float ShatterRadius = 2f;
 
         static readonly List<Ball> s_active = new();
         static readonly List<Ball> s_loose = new();
@@ -76,8 +85,10 @@ namespace Bouncer.Balls
         [SerializeField] GumSpot gumSpot;
         [Tooltip("Кольцо взрыва («Горячая картошка»), из пула")]
         [SerializeField] ExpandingRing blastRing;
-        [Tooltip("Меловой крестик («Мел»), из пула")]
-        [SerializeField] ChalkMark chalkMark;
+        [Tooltip("«Смэш»: искры на каждом отскоке, растут с каждым разом")]
+        [SerializeField] ParticleBurst smashSpark;
+        [Tooltip("«Морская фигура»: ледяные осколки разбитой фигуры")]
+        [SerializeField] ParticleBurst iceShards;
 
         readonly RaycastHit[] _hits = new RaycastHit[16];
         readonly RaycastHit[] _columnHits = new RaycastHit[16];
@@ -114,6 +125,16 @@ namespace Bouncer.Balls
         bool _puppetHot;
         bool _lobLanded;
         Collider _bonusFor;
+        bool _chainHop;
+        bool _lobBack;
+        bool _outOfBounces;
+        bool _dunkDone;
+        int _smashes;
+        float _rollBlast;
+        bool _orbiting;
+        bool _orbitDone;
+        float _orbitAngle;
+        float _orbitStart;
         Vector3 _visualOffset;
         float _visualBlend = 0.1f;
 
@@ -139,6 +160,13 @@ namespace Bouncer.Balls
         public bool IsDangerous => State == BallState.Live;
         public bool BlastPending => State == BallState.Live && (IsPuppet ? _puppetHot : Perks.blastRadius > 0f && !_blastDone);
         bool Grazes => Perks.grazeRadius > 0f;
+
+        /// <summary>
+        /// Когда «Бумеранг» разворачивает мяч: баскетбольный — после падения и удара по площади,
+        /// пинг-понг — когда кончились отскоки, остальные — через короткую паузу полёта.
+        /// </summary>
+        bool BoomerangTurns => Perks.boomerang && !Perks.yoyo
+                               && (Perks.lob ? _lobBack : Perks.bounceOffTargets ? _outOfBounces : _stateTime >= definition.boomerangDelay);
 
         public event Action<Ball> StateChanged;
         public event Action<Ball, Vector3, Vector3> Ricocheted;
@@ -208,6 +236,7 @@ namespace Bouncer.Balls
             _yoyoBack = false;
             _lobLanded = false;
             _bonusFor = null;
+            ResetCardState();
             MakeKinematicAt(transform.position);
             SetState(BallState.Idle);
         }
@@ -270,6 +299,7 @@ namespace Bouncer.Balls
             _yoyoBack = false;
             _lobLanded = false;
             _bonusFor = null;
+            ResetCardState();
             _gumDistance = definition.gumSpacing * 0.5f;
 
             Vector3 direction = Flat(t.Direction);
@@ -282,6 +312,19 @@ namespace Bouncer.Balls
             s_loose.Remove(this);
             MakeKinematicAt(t.Origin);
             SetState(BallState.Live);
+        }
+
+        void ResetCardState()
+        {
+            _chainHop = false;
+            _lobBack = false;
+            _outOfBounces = false;
+            _dunkDone = false;
+            _smashes = 0;
+            _rollBlast = 0f;
+            _orbiting = false;
+            _orbitDone = false;
+            _orbitAngle = 0f;
         }
 
         public void Redirect(Vector3 velocity, in ThrowStats stats)
@@ -609,18 +652,19 @@ namespace Bouncer.Balls
                 return;
             }
             _stateTime += dt;
-            if (live && Perks.boomerang && !Perks.yoyo && _stateTime >= definition.boomerangDelay && CanReturn())
+            if (live && BoomerangTurns && CanReturn())
             {
                 SteerBack(dt);
             }
             else
             {
                 _velocity.y -= _gravity * dt;
-                if (live && Perks.homing > 0f && !IsComingBack)
+                // у баскетбольного «Глаз-алмаз» выбирает точку падения при броске; в перелётах цепочки мяч не сворачивает
+                if (live && Perks.homing > 0f && !IsComingBack && !Perks.lob && !_chainHop)
                     Home(dt);
                 if (live && Perks.curve != 0f && !IsComingBack)
                     Curve(dt);
-                if (live && Team == Team.Player && !IsComingBack && TargetMark.Active)
+                if (live && Team == Team.Player && !IsComingBack && !_chainHop && TargetMark.Active)
                     HomeToMark(dt);
                 if (live && definition.rollDrag > 0f)
                     Drag(dt);
@@ -628,14 +672,15 @@ namespace Bouncer.Balls
 
             Vector3 position = _rb.position;
             float remaining = _velocity.magnitude * dt;
-            bool overhead = live && Perks.lob && (_velocity.y > 0f || position.y > LobStrikeHeight);
+            bool lobbing = Perks.lob && !_lobBack;
+            bool overhead = live && lobbing && (_velocity.y > 0f || position.y > LobStrikeHeight);
             int mask = live && !Grazes && !overhead ? Layers.LiveBallMask(Team) : Layers.BallSolidMask;
             _ignored.Clear();
 
             for (int i = 0; i < MaxSweepIterations && remaining > 1e-5f; i++)
             {
                 Vector3 direction = _velocity.normalized;
-                if (!Sweep(position, direction, remaining, mask, out RaycastHit hit, column: live && !Grazes && !Perks.lob))
+                if (!Sweep(position, direction, remaining, mask, out RaycastHit hit, column: live && !Grazes && !lobbing))
                 {
                     Advance(ref position, direction * remaining, live);
                     break;
@@ -679,15 +724,16 @@ namespace Bouncer.Balls
                         if (result == BallContactResult.Hit)
                         {
                             OnTargetHit(hit.point, hit.normal, hit.collider, position);
+                            // сначала свойство мяча (цепочка волейбольного, отскоки пинг-понга), потом «Рогатка»
+                            if (_chainsLeft > 0 && TryChain(hit, position))
+                                continue;
+                            if (Perks.bounceOffTargets && TryBounceOffTarget(hit, direction, position, ref remaining))
+                                continue;
                             if (Perks.chargedPierce && Stats.Has(HitFlags.Charged))
                             {
                                 _ignored.Add(hit.collider);
                                 continue;
                             }
-                            if (_chainsLeft > 0 && TryChain(hit, position))
-                                continue;
-                            if (Perks.bounceOffTargets && TryBounceOffTarget(hit, direction, position, ref remaining))
-                                continue;
                             if (Perks.yoyo && TryStartYoyo(hit.collider, position))
                                 return;
                             Pop(position, hit.normal);
@@ -698,12 +744,26 @@ namespace Bouncer.Balls
 
                 if (hit.normal.y > 0.6f)
                 {
-                    if (live && Perks.chalk && !IsPhantom)
-                        DropChalk(hit.point);
-                    if (live && Perks.lob && !_lobLanded)
+                    if (live && lobbing && !_lobLanded)
                         LobLand(hit.point);
                     if (BlastPending)
                         Blast(hit.point, null);
+                    // «Данк»: подпрыгивает к ближайшему врагу и бьёт по площади ещё раз
+                    if (live && lobbing && Perks.dunkRange > 0f && !_dunkDone && !IsPhantom && TryDunk(hit.point, ref position))
+                    {
+                        remaining *= 0.5f;
+                        continue;
+                    }
+                    // «Бумеранг» с баскетбольным: сначала удар по площади, потом мяч летит обратно в руки
+                    if (live && lobbing && Perks.boomerang && !Perks.yoyo && CanReturn())
+                    {
+                        _lobBack = true;
+                        _stateTime = 0f;
+                        _velocity = Flat(_velocity) * 0.3f + Vector3.up * 5f;
+                        position.y = Mathf.Max(position.y, hit.point.y + definition.radius + 0.05f);
+                        remaining = 0f;
+                        continue;
+                    }
                     if (live && _floorBouncesLeft > 0 && TryFloorBounce(hit.point, ref remaining))
                         continue;
                     if (live && Perks.yoyo && TryStartYoyo(null, position))
@@ -736,6 +796,7 @@ namespace Bouncer.Balls
                 {
                     if (Perks.wallDamage > 0)
                         AddDamage(Perks.wallDamage);
+                    Smash(hit.point);
                     if (Perks.bounceAssist > 0f && Team == Team.Player)
                         AssistAim(position, Perks.bounceAssist);
                     if (Perks.yoyo && TryStartYoyo(null, position))
@@ -744,8 +805,19 @@ namespace Bouncer.Balls
                         Ricochets++;
                     if (Ricochets > definition.maxRicochets || Flat(_velocity).magnitude < definition.minLiveSpeed)
                     {
-                        BecomeLoose(position, _velocity * 0.5f);
-                        return;
+                        // «Бумеранг» с пинг-понгом: сначала все отскоки, потом домой
+                        if (Perks.boomerang && Perks.bounceOffTargets && !_outOfBounces && CanReturn())
+                        {
+                            _outOfBounces = true;
+                            _stateTime = 0f;
+                            if (Flat(_velocity).magnitude < definition.minLiveSpeed + 1f)
+                                _velocity = Flat(_velocity).normalized * (definition.minLiveSpeed + 1f) + Vector3.up * _velocity.y;
+                        }
+                        else
+                        {
+                            BecomeLoose(position, _velocity * 0.5f);
+                            return;
+                        }
                     }
                 }
             }
@@ -1054,7 +1126,9 @@ namespace Bouncer.Balls
 
         void DamageArea(Vector3 point, IDamageable direct)
         {
-            HitAround(point, Perks.areaRadius, Perks.areaDamage, direct, Stats.Knockback * 0.7f, HitFlags.Area, Perks.areaStun);
+            // прибавки к урону (Хулиганство, Считалочка) действуют и на удар по площади; «Рация» — по отмеченному
+            HitAround(point, Perks.areaRadius, Perks.areaDamage + Stats.BonusDamage, direct, Stats.Knockback * 0.7f, HitFlags.Area,
+                Perks.areaStun, markBonus: Team == Team.Player);
             if (Perks.areaStun > 0f && direct is Component struck && struck && struck.TryGetComponent(out Targetable target))
                 target.Freeze(Perks.areaStun);
             if (definition.areaEffect)
@@ -1076,7 +1150,8 @@ namespace Bouncer.Balls
             GameEvents.PlaySound(SoundCue.AreaThud, point);
         }
 
-        void HitAround(Vector3 center, float radius, int damage, IDamageable exclude, float force, HitFlags flags, float stun = 0f)
+        void HitAround(Vector3 center, float radius, int damage, IDamageable exclude, float force, HitFlags flags, float stun = 0f,
+            bool markBonus = false, bool frozenOnly = false)
         {
             int mask = Layers.LiveBallMask(Team) & ~Layers.BallSolidMask;
             int count = Physics.OverlapSphereNonAlloc(center, radius, s_area, mask, QueryTriggerInteraction.Ignore);
@@ -1087,11 +1162,15 @@ namespace Bouncer.Balls
                 var target = other.GetComponentInParent<IDamageable>();
                 if (target == null || target == exclude || s_areaDamaged.Contains(target))
                     continue;
+                var targetable = other.GetComponentInParent<Targetable>();
+                if (frozenOnly && (targetable == null || !targetable.IsFrozen))
+                    continue;
                 s_areaDamaged.Add(target);
                 Vector3 away = Flat(other.transform.position - center);
+                int bonus = markBonus && targetable != null && TargetMark.Active && TargetMark.Target == targetable ? TargetMark.Bonus : 0;
                 target.ApplyHit(new HitInfo
                 {
-                    Damage = damage,
+                    Damage = damage + bonus,
                     Point = other.ClosestPoint(center),
                     Direction = away.sqrMagnitude > 1e-4f ? away.normalized : Flat(_velocity).normalized,
                     Force = force,
@@ -1099,8 +1178,8 @@ namespace Bouncer.Balls
                     Source = Thrower,
                     Flags = flags,
                 });
-                if (stun > 0f && target is Component component && component && component.TryGetComponent(out Targetable targetable))
-                    targetable.Freeze(stun);
+                if (stun > 0f && target is Component component && component && component.TryGetComponent(out Targetable stunned))
+                    stunned.Freeze(stun);
             }
         }
 
@@ -1144,6 +1223,17 @@ namespace Bouncer.Balls
             if (!live)
                 return;
             _travel += Flat(step).magnitude;
+            // «Петарда» у футбольного: он не прыгает, поэтому взрывается каждые 3 м качения
+            if (Perks.groundRoll && Perks.bounceBlastRadius > 0f && _floorBouncesLeft > 0 && !IsPhantom)
+            {
+                _rollBlast += Flat(step).magnitude;
+                if (_rollBlast >= RollBlastSpacing)
+                {
+                    _rollBlast -= RollBlastSpacing;
+                    _floorBouncesLeft--;
+                    BounceBlast(new Vector3(position.x, 0f, position.z));
+                }
+            }
             if (Grazes)
                 Graze(from, position, Perks.grazeRadius);
             if (Perks.gumTrail)
@@ -1279,9 +1369,55 @@ namespace Bouncer.Balls
             Ricochets++;
             _stateTime = 0f;
             IgnoreFor(hit.collider, 0.3f);
+            Smash(hit.point);
             if (Perks.bounceAssist > 0f && Team == Team.Player)
                 AssistAim(position, Perks.bounceAssist);
             Ricocheted?.Invoke(this, hit.point, normal);
+            return true;
+        }
+
+        /// <summary>«Смэш»: каждый отскок — +1 урона и на 10% быстрее, не больше Perks.smash раз.</summary>
+        void Smash(Vector3 point)
+        {
+            if (Perks.smash <= 0 || _smashes >= Perks.smash || IsPhantom)
+                return;
+            _smashes++;
+            AddDamage(1);
+            _velocity = new Vector3(_velocity.x * 1.1f, _velocity.y, _velocity.z * 1.1f);
+            if (smashSpark)
+                PoolService.Spawn(smashSpark, point, Quaternion.identity).Play(0.6f + 0.15f * _smashes);
+            GameEvents.PlaySound(SoundCue.ThrowCharged, point);
+        }
+
+        /// <summary>«Данк»: упав, мяч подпрыгивает к ближайшему врагу и бьёт по площади ещё раз.</summary>
+        bool TryDunk(Vector3 point, ref Vector3 position)
+        {
+            Targetable best = null;
+            float bestSqr = Perks.dunkRange * Perks.dunkRange;
+            foreach (var target in Targetable.All)
+            {
+                if (target == null || !target.IsAlive || !Team.IsHostileTo(target.Team))
+                    continue;
+                float sqr = Flat(target.Position - point).sqrMagnitude;
+                if (sqr > 0.36f && sqr < bestSqr)
+                {
+                    bestSqr = sqr;
+                    best = target;
+                }
+            }
+            if (best == null)
+                return false;
+            _dunkDone = true;
+            _lobLanded = false;
+            position.y = Mathf.Max(position.y, point.y + definition.radius + 0.05f);
+            Vector3 flat = Flat(best.Position - position);
+            float gravity = Mathf.Max(1f, _gravity);
+            float up = (definition.radius - position.y + 0.5f * gravity * DunkHopTime * DunkHopTime) / DunkHopTime;
+            _velocity = flat / DunkHopTime + Vector3.up * up;
+            _stateTime = 0f;
+            if (definition.landEffect)
+                PoolService.Spawn(definition.landEffect, new Vector3(point.x, 0.05f, point.z), Quaternion.identity);
+            GameEvents.PlaySound(SoundCue.BallWall, point);
             return true;
         }
 
@@ -1289,7 +1425,8 @@ namespace Bouncer.Balls
         {
             var struck = hit.collider.GetComponentInParent<Targetable>();
             Targetable next = null;
-            float bestSqr = definition.chainRange * definition.chainRange;
+            float range = definition.chainRange + Perks.chainRange;
+            float bestSqr = range * range;
             foreach (var target in Targetable.All)
             {
                 if (target == struck || !target.IsAlive || !Team.IsHostileTo(target.Team))
@@ -1305,6 +1442,7 @@ namespace Bouncer.Balls
                 return false;
 
             _chainsLeft--;
+            _chainHop = true;
             Vector3 to = next.AimPoint - position;
             Vector3 flat = Flat(to);
             float speed = Mathf.Max(Flat(_velocity).magnitude * definition.chainSpeedKeep, definition.minLiveSpeed + 2f);
@@ -1328,8 +1466,17 @@ namespace Bouncer.Balls
             if (target == null)
                 return;
             int bonus = 0;
-            if (Perks.frozenBonus > 0 && target.IsFrozen)
-                bonus += Perks.frozenBonus;
+            // «Морская фигура»: замерший — фигура; удар разбивает её вдвое сильнее, осколки бьют фигуры рядом
+            if (Perks.shatter && target.IsFrozen && !IsPhantom)
+            {
+                bonus += Stats.Damage;
+                target.Thaw();
+                HitAround(target.Position + Vector3.up * 0.8f, ShatterRadius, 1, struck.GetComponentInParent<IDamageable>(),
+                    definition.blastKnockback * 0.4f, HitFlags.Area, frozenOnly: true);
+                if (iceShards)
+                    PoolService.Spawn(iceShards, target.Position + Vector3.up * 0.9f, Quaternion.identity);
+                GameEvents.PlaySound(SoundCue.Explosion, target.Position);
+            }
             if (TargetMark.Active && TargetMark.Target == target)
                 bonus += TargetMark.Bonus;
             if (bonus <= 0)
@@ -1363,11 +1510,6 @@ namespace Bouncer.Balls
             _velocity = horizontal * (slower / speed) + Vector3.up * _velocity.y;
         }
 
-        void DropChalk(Vector3 point)
-        {
-            if (chalkMark)
-                ChalkMark.Drop(chalkMark, point + Vector3.up * 0.3f);
-        }
 
         void LobLand(Vector3 point)
         {
@@ -1389,6 +1531,18 @@ namespace Bouncer.Balls
             _stateTime = 0f;
             Ricochets = 0;
             _grazed.Clear();
+            StateChanged?.Invoke(this);
+        }
+
+        /// <summary>«Штаб»: отбитый мяч летит заряженным и бьёт не слабее стольких.</summary>
+        public void MakeCharged(int minDamage)
+        {
+            if (IsPuppet)
+                return;
+            var stats = Stats;
+            stats.Flags |= HitFlags.Charged;
+            stats.Damage = Mathf.Max(stats.Damage, minDamage);
+            Stats = stats;
             StateChanged?.Invoke(this);
         }
 
@@ -1450,6 +1604,9 @@ namespace Bouncer.Balls
             IsComingBack = true;
             _stateTime = 0f;
             _grazed.Clear();
+            // «Солнышко»: круг вокруг ребёнка — только после попадания; конец нитки, стена, асфальт — сразу в руки
+            _orbiting = false;
+            _orbitDone = struck == null;
             var direct = struck ? struck.GetComponentInParent<IDamageable>() : null;
             if (direct != null)
                 _grazed.Add(direct);
@@ -1470,7 +1627,13 @@ namespace Bouncer.Balls
                 return;
             }
 
-            Vector3 delta = Thrower.transform.position + Vector3.up * ReturnHeight - position;
+            Vector3 center = Thrower.transform.position + Vector3.up * ReturnHeight;
+            if (_orbiting)
+            {
+                TickOrbit(dt, center, position);
+                return;
+            }
+            Vector3 delta = center - position;
             float distance = delta.magnitude;
             float speed = Mathf.Max(Flat(_velocity).magnitude, definition.elasticReturnSpeed, definition.minLiveSpeed + 4f);
             Vector3 direction = distance > 1e-4f ? delta / distance : Vector3.zero;
@@ -1478,11 +1641,38 @@ namespace Bouncer.Balls
             Vector3 from = position;
             position += direction * Mathf.Min(distance, speed * dt);
             Graze(from, position, definition.radius + YoyoGrazeExtra);
+            if (!_orbitDone && Flat(center - position).magnitude <= OrbitRadius)
+            {
+                // долетел до круга: дальше облетает ребёнка, задевая всех заново
+                _orbiting = true;
+                _orbitAngle = 0f;
+                Vector3 around = Flat(position - center);
+                _orbitStart = Mathf.Atan2(around.z, around.x) * Mathf.Rad2Deg;
+                _grazed.Clear();
+            }
             if (State != BallState.Live)
                 return;
             if (TryHandBack(position))
                 return;
             MoveTo(position);
+        }
+
+        void TickOrbit(float dt, Vector3 center, Vector3 position)
+        {
+            _orbitAngle += OrbitSpeed * dt;
+            if (_orbitAngle >= 360f)
+            {
+                _orbiting = false;
+                _orbitDone = true;
+                _stateTime = 0f;
+            }
+            float angle = (_orbitStart + Mathf.Min(_orbitAngle, 360f)) * Mathf.Deg2Rad;
+            Vector3 next = center + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * OrbitRadius;
+            _velocity = (next - position) / Mathf.Max(dt, 1e-4f);
+            Graze(position, next, definition.radius + YoyoGrazeExtra);
+            if (State != BallState.Live)
+                return;
+            MoveTo(next);
         }
 
         bool CanReturn() => !IsPhantom && (IsOwn || _summoned) && _receiver != null && Thrower != null

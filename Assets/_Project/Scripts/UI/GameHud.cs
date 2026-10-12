@@ -34,8 +34,6 @@ namespace Bouncer.UI
         [SerializeField] Color candleColor = new(0.96f, 0.82f, 0.24f);
         [Tooltip("Горячая картошка: следующий бросок взорвётся")]
         [SerializeField] Color hotColor = new(0.93f, 0.33f, 0.16f);
-        [Tooltip("Чужой пойманный мяч в руках — одноразовый")]
-        [SerializeField] Color borrowedColor = new(0.72f, 0.45f, 1f);
         [Tooltip("Последнее сердце мигает: столько раз в секунду")]
         [SerializeField] float lastHeartPulse = 2.5f;
         [SerializeField] TMP_Text candleLabel;
@@ -188,9 +186,8 @@ namespace Bouncer.UI
             Color full = balls.CandleReady ? Color.Lerp(candleColor, Color.white, pulse)
                 : balls.CatchPerksReady ? Color.Lerp(hotColor, ballColor, pulse)
                 : ballColor;
-            int own = balls.Balls - balls.BorrowedBalls;
             for (int i = 0; i < _balls.Count; i++)
-                SetIcon(_balls[i], i < balls.Balls, ballFull, ballEmpty, i < own ? full : borrowedColor);
+                SetIcon(_balls[i], i < balls.Balls, ballFull, ballEmpty, full);
             if (candleLabel)
                 candleLabel.gameObject.SetActive(balls.CandleReady && !player.IsDead);
         }

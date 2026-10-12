@@ -20,6 +20,8 @@ namespace Bouncer.Core
             set => resetAfterSeconds = Mathf.Max(0f, value);
         }
         public int Floor { get; set; }
+        /// <summary>«Второе дыхание»: выбит, но сам встанет через пару секунд — команда ещё не проиграла.</summary>
+        public bool GettingUp { get; set; }
 
         public event Action<HitInfo> Damaged;
         public event Action<HitInfo> Died;
@@ -45,6 +47,7 @@ namespace Bouncer.Core
         {
             Current = max;
             IsDead = false;
+            GettingUp = false;
             _invulnerableUntil = 0f;
             Restored?.Invoke();
         }
@@ -81,6 +84,14 @@ namespace Bouncer.Core
                 return;
             Current = Mathf.Min(max, Current + amount);
             Healed?.Invoke(amount);
+        }
+
+        /// <summary>Меняет максимум, не леча: лишние сердца сверх нового максимума пропадают.</summary>
+        public void SetMax(int value)
+        {
+            max = Mathf.Max(1, value);
+            if (Current > max)
+                Current = max;
         }
 
         public void SetCurrent(int value)

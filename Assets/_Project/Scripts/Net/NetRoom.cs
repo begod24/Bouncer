@@ -368,7 +368,7 @@ namespace Bouncer.Net
             if (players.Count == 0)
                 return;
             foreach (var player in players)
-                if (!player.IsDead)
+                if (!player.IsDead || player.GettingUp)
                     return;
             _finished = true;
             LoseRpc();

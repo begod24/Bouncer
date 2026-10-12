@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Bouncer.Balls;
 using Bouncer.Core;
 using Bouncer.Player;
 using UnityEngine;
@@ -15,6 +16,7 @@ namespace Bouncer.Upgrades
         Combo,
         Full,
         Swap,
+        ComboSame,
     }
 
     public enum OfferKind
@@ -59,7 +61,12 @@ namespace Bouncer.Upgrades
         public event Action DiscardChanged;
         public event Action BackpackChanged;
 
-        void Awake() => _player = GetComponent<PlayerController>();
+        void Awake()
+        {
+            _player = GetComponent<PlayerController>();
+            if (deck)
+                CardDeck.Active = deck;
+        }
 
         void Start() => InitFromRun();
 
@@ -84,8 +91,6 @@ namespace Bouncer.Upgrades
             int lives = RunState.LivesOf(Slot);
             if (lives > 0)
                 _player.Health.SetCurrent(lives);
-            if (!resumed && RunState.ArenaIndex > 0 && _player.Modifiers.ArenaHeal > 0)
-                _player.Health.Heal(_player.Modifiers.ArenaHeal);
             var carried = RunCards.Carried(Slot);
             foreach (var kind in carried)
                 QueueOffer(kind);
@@ -151,25 +156,90 @@ namespace Bouncer.Upgrades
 
         public bool Owns(UpgradeCard card) => StacksOf(card) > 0;
 
+        /// <summary>Под этим ключом собранное комбо открывается в Тетрадке.</summary>
+        public static string ComboId(UpgradeCard combo) => combo ? "combo." + combo.name : null;
+
+        /// <summary>Какой мяч в руках после всех взятых карточек: последняя карточка мяча, иначе обычный.</summary>
+        public Ball CurrentBall
+        {
+            get
+            {
+                Ball ball = _player.Balls.DefaultBallPrefab;
+                foreach (var taken in RunCards.Taken(Slot))
+                    if (taken is BallTypeCard type && type.ballPrefab)
+                        ball = type.ballPrefab;
+                return ball;
+            }
+        }
+
+        /// <summary>
+        /// Спит ли карточка с нынешним мячом: такая лежит в кармане серой и ничего не делает
+        /// (Попрыгунчик с футбольным, комбо мяча после смены мяча).
+        /// </summary>
+        public bool IsAsleep(UpgradeCard card) => card && card.SleepsWith(CurrentBall);
+
+        /// <summary>
+        /// Для предупреждения на карточке мяча: названия своих карточек, которые с ним уснут, через запятую.
+        /// null — ничего не уснёт.
+        /// </summary>
+        public string SleepingWith(UpgradeCard card)
+        {
+            if (card is not BallTypeCard type || !type.ballPrefab)
+                return null;
+            var names = new List<string>();
+            foreach (var pocket in PocketCards)
+                if (!IsAsleep(pocket) && pocket.SleepsWith(type.ballPrefab))
+                    names.Add(pocket.title.GetLocalizedString());
+            return names.Count == 0 ? null : string.Join(", ", names);
+        }
+
         public bool CanOffer(UpgradeCard card)
         {
             if (!card || !card.CanOffer(_player, StacksOf(card)))
                 return false;
             if (card is AbilityCard && !card.IsCombo && OwnedAbility(card) is { IsCombo: true })
                 return false;
+            // спящая с нынешним мячом карточка не выпадает
+            if (IsAsleep(card))
+                return false;
             if (card.IsCombo)
             {
                 if (deck && RunCards.CombosTaken(Slot) >= deck.maxCombos)
                     return false;
+                // мяч — часть комбо, когда он в руках (IsAsleep выше), остальные части — в карманах
                 foreach (var part in card.requires)
-                    if (!Owns(part))
+                    if (part is not BallTypeCard && !Owns(part))
                         return false;
             }
-            else if (card.rarity == CardRarity.Gold && deck && RunCards.GoldsTaken >= deck.maxGolds && !Owns(card))
+            else if (card.rarity == CardRarity.Gold && deck && !Owns(card)
+                     && (OwnsGold() || RunCards.GoldsTaken >= deck.MaxGoldsFor(RunState.Active ? RunState.PlayerCount : 1)))
             {
                 return false;
             }
             return true;
+        }
+
+        /// <summary>Своя золотая (не комбо) уже в карманах: вторая этому ребёнку не выпадает.</summary>
+        bool OwnsGold()
+        {
+            foreach (var taken in RunCards.Taken(Slot))
+                if (taken && !taken.IsCombo && taken.rarity == CardRarity.Gold)
+                    return true;
+            return false;
+        }
+
+        /// <summary>Сколько монеток дадут за карточку, если её продать или заменить другой.</summary>
+        public int SellPrice(UpgradeCard card) => deck && card ? deck.SellPrice(card, RunState.ArenaIndex) : 0;
+
+        /// <summary>Замена при полных карманах и смена умения: старая карточка уходит за полцены, как в ларьке.</summary>
+        void SellAway(UpgradeCard card)
+        {
+            int price = SellPrice(card);
+            Discard(card);
+            if (price <= 0)
+                return;
+            RunState.AddCoins(Slot, price);
+            GameEvents.PlaySound(SoundCue.Coin, transform.position);
         }
 
         public IReadOnlyList<UpgradeCard> PocketCards
@@ -214,7 +284,8 @@ namespace Bouncer.Upgrades
             if (!card || !card.TakesPocket)
                 return PocketNeed.Free;
             if (card.IsCombo)
-                return PocketNeed.Combo;
+                // комбо мяча занимает карман своей карточки (мяч кармана не занимает) — не освобождает
+                return card.BallPart != null ? PocketNeed.ComboSame : PocketNeed.Combo;
             if (Owns(card))
                 return PocketNeed.Stack;
             if (card is AbilityCard && OwnedAbility(card) != null)
@@ -244,9 +315,11 @@ namespace Bouncer.Upgrades
             if (!card || !Owns(card))
                 return;
             RunCards.Remove(Slot, card);
+            // комбо продаётся целиком, но мяч остаётся в руках
             if (card.IsCombo)
                 foreach (var part in card.requires)
-                    RunCards.Remove(Slot, part);
+                    if (part is not BallTypeCard)
+                        RunCards.Remove(Slot, part);
             RunCards.Locked(Slot).Remove(card);
             Rebuild();
             Discarded?.Invoke(card);
@@ -261,7 +334,7 @@ namespace Bouncer.Upgrades
             _offer.Clear();
             if (victim != null && victim != card)
             {
-                Discard(victim);
+                SellAway(victim);
                 Take(card);
                 GameEvents.PlaySound(SoundCue.CardPick, transform.position);
             }
@@ -326,6 +399,7 @@ namespace Bouncer.Upgrades
                 UpgradeCard.Rebuilding = false;
                 _player.Balls.EndBatch();
             }
+            _player.RefreshMaxLives();
             mods.NotifyChanged();
         }
 
@@ -356,9 +430,14 @@ namespace Bouncer.Upgrades
             if (!card)
                 return;
             if (card is AbilityCard && !card.IsCombo && OwnedAbility(card) is { } old)
-                Discard(old);
+                SellAway(old);
             ApplyCard(card);
             RunCards.Record(Slot, card);
+            if (card.IsCombo)
+                BestiaryProgress.Open(ComboId(card));
+            // новый мяч будит одни карточки и усыпляет другие — пересобираем бонусы под него
+            if (card is BallTypeCard)
+                Rebuild();
             Picked?.Invoke(card);
         }
 
@@ -366,7 +445,9 @@ namespace Bouncer.Upgrades
         {
             if (!card)
                 return;
-            card.Apply(_player);
+            // спящая карточка лежит в кармане, но не действует; мяч берётся по последней карточке мяча
+            if (!IsAsleep(card))
+                card.Apply(_player);
             _stacks[card] = StacksOf(card) + 1;
         }
 

@@ -57,7 +57,6 @@ namespace Bouncer.EditorTools
             ["CapGunSmoke/Caps"] = new(RowPaper, 0, 5, false, Mat.Alpha, 1.6f, 540f),
             ["CapGunSmoke/Flash"] = new(RowStar, 6, 6, false, Mat.Add, 1.1f, 90f),
             ["BubblePopBurst/Drops"] = new(RowSplinterDrop, 5, 7, false, Mat.Alpha, 1.5f),
-            ["ChalkMark/Dust"] = Puff(),
             ["Dazzle/Stars"] = new(RowStar, 0, 3, false, Mat.Add, 1.5f, 180f),
             ["FenceDust/Dust"] = Puff(),
             ["FenceWall/RiseDust"] = Puff(),

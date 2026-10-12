@@ -44,11 +44,21 @@ namespace Bouncer.Player
         Vector3 _aimDirection = Vector3.forward;
         int _batch;
         int _batchMaxBalls;
+        int _burstShots;
+
+        // «Рогатка» с теннисными: каждый такой мяч очереди летит заряженным и пробивает насквозь
+        const int BurstPierceEvery = 4;
+        // «Глаз-алмаз» с баскетбольным: точка падения прилипает к врагу не дальше стольких метров от прицела
+        const float LobSnapRadius = 3.5f;
+        // «Пенальти»: пинок быстрее во столько раз и сбивает врагов на столько секунд
+        const float PenaltySpeed = 1.5f;
+        const float PenaltyStun = 1.4f;
 
         public Ball BallPrefab => ballPrefab;
+        /// <summary>Мяч, с которым ребёнок начинает прогулку (обычный).</summary>
+        public Ball DefaultBallPrefab => _defaultBallPrefab ? _defaultBallPrefab : ballPrefab;
         public BallDefinition BallDefinition => ballPrefab ? ballPrefab.Definition : null;
         public int Balls { get; private set; }
-        public int BorrowedBalls => _borrowed.Count;
         public bool FixedHands => BallDefinition != null && BallDefinition.fixedHands;
         public int MaxBalls
         {
@@ -56,7 +66,8 @@ namespace Bouncer.Player
             {
                 var definition = BallDefinition;
                 int hands = definition != null && definition.hands > 0 ? definition.hands : _stats.maxBalls;
-                return Mathf.Max(1, hands + (FixedHands ? 0 : _mods.ExtraBalls) - _mods.FewerBalls);
+                int fewer = _mods.FewerBalls * (definition != null ? definition.fewerBallsScale : 1);
+                return Mathf.Max(1, hands + (FixedHands ? 0 : _mods.ExtraBalls) - fewer);
             }
         }
         float ChargeTime => _stats.chargeTime * (BallDefinition != null ? BallDefinition.chargeTimeMultiplier : 1f);
@@ -67,10 +78,9 @@ namespace Bouncer.Player
         float PickupRadius => _stats.pickupRadius * _mods.PickupRadius;
         public bool CandleReady { get; private set; }
         public bool CatchPerksReady { get; private set; }
-        public bool PassReady { get; private set; }
         public int CountStep => _mods.CountEvery > 0 ? _throwCount % _mods.CountEvery : 0;
-        /// <summary>Следующий бросок сам станет полным: последний счёт «Считалочки» или мяч, пойманный пасом.</summary>
-        public bool NextThrowForced => PassReady || (_mods.CountEvery > 0 && _throwCount % _mods.CountEvery == _mods.CountEvery - 1);
+        /// <summary>Следующий бросок сам станет полным: последний счёт «Считалочки».</summary>
+        public bool NextThrowForced => _mods.CountEvery > 0 && _throwCount % _mods.CountEvery == _mods.CountEvery - 1;
         /// <summary>Заряд, с которым полетит следующий бросок: прицел и метка навеса показывают его.</summary>
         public float AimCharge01 => CandleReady || NextThrowForced ? 1f : Charge01;
         public bool IsCharging { get; private set; }
@@ -374,11 +384,18 @@ namespace Bouncer.Player
         {
             var definition = BallDefinition;
             AddToHands(ball);
-            var stats = definition.GetThrowStats(0f, false);
-            stats.Damage += _mods.BonusDamage;
-            stats.BonusDamage = _mods.BonusDamage;
             var perks = BallPerks.Combine(definition.perks, _mods.Perks);
             perks.yoyo = false;
+            // «Пенальти»: пинок в полную силу, быстрее, сбитые лежат дольше
+            var stats = definition.GetThrowStats(perks.penalty ? 1f : 0f, false);
+            if (perks.penalty)
+            {
+                stats.Speed *= PenaltySpeed;
+                perks.grazeStun = Mathf.Max(perks.grazeStun, PenaltyStun);
+                PlayerFx.Play(_player, PlayerFxKind.Penalty, ball.Position, direction);
+            }
+            stats.Damage += _mods.BonusDamage;
+            stats.BonusDamage = _mods.BonusDamage;
             GameObject owner = gameObject;
             if (_borrowed.Count > 0)
             {
@@ -399,10 +416,44 @@ namespace Bouncer.Player
             if (definition == null || !definition.perks.lob)
                 return false;
             float charge = AimCharge01;
-            point = transform.position + Flat(_aimDirection).normalized * LobDistance(definition, charge);
+            Vector3 direction = Flat(_aimDirection).normalized;
+            float distance = LobDistance(definition, charge);
+            SnapLob(definition, charge, ref direction, ref distance);
+            point = transform.position + direction * distance;
             point.y = 0f;
             radius = definition.lobMarkerRadius;
             return true;
+        }
+
+        /// <summary>«Глаз-алмаз» с баскетбольным: мяч не доворачивает в полёте, а падает прямо на врага у точки прицела.</summary>
+        void SnapLob(BallDefinition definition, float charge, ref Vector3 direction, ref float distance)
+        {
+            if (_mods.Perks.homing <= 0f)
+                return;
+            Vector3 from = transform.position;
+            Vector3 aim = from + direction * distance;
+            Targetable best = null;
+            float bestSqr = LobSnapRadius * LobSnapRadius;
+            foreach (var target in Targetable.All)
+            {
+                if (target == null || target.Team != Team.Enemy || !target.IsAlive)
+                    continue;
+                Vector3 delta = target.Position - aim;
+                delta.y = 0f;
+                if (delta.sqrMagnitude < bestSqr)
+                {
+                    bestSqr = delta.sqrMagnitude;
+                    best = target;
+                }
+            }
+            if (best == null)
+                return;
+            Vector3 to = best.Position - from;
+            to.y = 0f;
+            if (to.sqrMagnitude < 0.25f)
+                return;
+            direction = to.normalized;
+            distance = definition.ClampLobDistance(to.magnitude, charge);
         }
 
         float LobDistance(BallDefinition definition, float charge)
@@ -524,12 +575,6 @@ namespace Bouncer.Player
                 CandleReady = true;
             if (_mods.HasCatchPerks)
                 CatchPerksReady = true;
-            if (_mods.PassCharge && live && ball.Team == Team.Player && ball.Thrower != null && ball.Thrower != gameObject)
-            {
-                PassReady = true;
-                int slot = ball.Thrower.TryGetComponent(out PlayerController passer) ? passer.Slot : 0;
-                PlayerFx.Play(_player, PlayerFxKind.PassCatch, transform.position, new Vector3(slot, 0f, 0f));
-            }
 
             StartCatchCooldown(_stats.catchSuccessCooldown);
             GameEvents.PlaySound(info.Candle || info.Perfect ? SoundCue.CatchCandle : SoundCue.Catch, info.Position);
@@ -746,15 +791,15 @@ namespace Bouncer.Player
                 }
                 PlayerFx.Play(_player, PlayerFxKind.CountThree, transform.position, new Vector3(step, _mods.CountEvery, 0f), relay: false);
             }
-            if (PassReady)
-            {
+            // «Рогатка» с теннисными: очередь не заряжается, поэтому заряжен и пробивает каждый 4-й мяч
+            if (definition.autoFireInterval > 0f && _mods.Perks.chargedPierce && ++_burstShots % BurstPierceEvery == 0)
                 charge = 1f;
-                PassReady = false;
-            }
             var stats = definition.GetThrowStats(charge, candle);
             if (definition.perks.lob)
             {
                 float distance = LobDistance(definition, candle ? 1f : charge);
+                direction = Flat(direction).normalized;
+                SnapLob(definition, candle ? 1f : charge, ref direction, ref distance);
                 Vector3 origin = SafeOrigin(direction, definition.radius);
                 Vector3 offset = origin - transform.position;
                 offset.y = 0f;
@@ -768,6 +813,9 @@ namespace Bouncer.Player
                 perks = BallPerks.Combine(perks, _mods.CatchPerks);
                 CatchPerksReady = false;
             }
+            // «Ещё мяч» с набивным и баскетбольным: рук не прибавить — бьёт по площади сильнее
+            if (FixedHands && _mods.ExtraBalls > 0 && perks.areaRadius > 0f)
+                perks.areaDamage += _mods.ExtraBalls;
 
             bool yoyo = YoyoInHand;
             GameObject owner = gameObject;

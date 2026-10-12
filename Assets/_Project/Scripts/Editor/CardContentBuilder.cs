@@ -38,6 +38,7 @@ namespace Bouncer.EditorTools
             BuildHedgehog();
             BuildAbilities();
             BuildCards();
+            CardDeckBuilder.Apply();
             WirePlayer();
             WireNetwork();
             WireHud();
@@ -115,19 +116,13 @@ namespace Bouncer.EditorTools
             return SaveMaterial(material, name);
         }
 
-        static Material s_bubble, s_gumBubble, s_chalkCross, s_spiral, s_popup, s_photo, s_screen, s_elastic, s_hands, s_waves,
+        static Material s_bubble, s_spiral, s_popup, s_photo, s_screen, s_elastic, s_hands, s_waves,
             s_tape, s_chalkLine;
 
         static void BuildMaterials()
         {
             var bubbleShader = Shader.Find("Bouncer/Bubble");
             s_bubble = SaveMaterial(new Material(bubbleShader), "M_Bubble");
-            var gum = new Material(bubbleShader);
-            gum.SetColor("_BaseColor", new Color(1f, 0.55f, 0.78f, 1f));
-            gum.SetFloat("_Iridescence", 0.15f);
-            gum.SetFloat("_CoreAlpha", 0.35f);
-            s_gumBubble = SaveMaterial(gum, "M_GumBubble");
-            s_chalkCross = Unlit("M_ChalkCross", Tex("T_ChalkCross"), Chalk);
             s_spiral = Unlit("M_ChalkSpiral", Tex("T_ChalkSpiral"), new Color(1f, 1f, 1f, 0.85f));
             s_popup = Unlit("M_ChalkPopup", Tex("T_Popup_0"), Chalk);
             s_photo = Unlit("M_Photo", Tex("T_Photo"), Color.white);

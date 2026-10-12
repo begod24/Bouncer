@@ -34,14 +34,7 @@ namespace Bouncer.Run
         int _purchases;
 
         public IReadOnlyList<Slot> Slots => _slots;
-        public int RerollPrice
-        {
-            get
-            {
-                int free = _cards.Player.Modifiers.FreeRerolls;
-                return _rerolls < free ? 0 : _deck.rerollPrice + _deck.rerollStep * (_rerolls - free);
-            }
-        }
+        public int RerollPrice => _deck.rerollPrice + _deck.rerollStep * _rerolls;
         public int LemonadePrice => _deck.HealPrice(_deck.lemonadePrice, _arenaIndex);
         public int SandwichPrice => _deck.HealPrice(_deck.sandwichPrice, _arenaIndex);
         public PlayerCards Customer => _cards;
@@ -139,14 +132,15 @@ namespace Bouncer.Run
             if (slot.Card == null || slot.Sold)
                 return;
             slot.Locked = !slot.Locked;
+            // отложить можно только одну: новая отложенная снимает отметку с прежней
+            var locked = RunCards.Locked(_cards.Slot);
+            locked.Clear();
             if (slot.Locked)
             {
-                if (!RunCards.Locked(_cards.Slot).Contains(slot.Card))
-                    RunCards.Locked(_cards.Slot).Add(slot.Card);
-            }
-            else
-            {
-                RunCards.Locked(_cards.Slot).Remove(slot.Card);
+                foreach (var other in _slots)
+                    if (other != slot)
+                        other.Locked = false;
+                locked.Add(slot.Card);
             }
             GameEvents.PlaySound(SoundCue.UiMove, Vector3.zero);
             Changed?.Invoke();
@@ -174,7 +168,11 @@ namespace Bouncer.Run
             s_rolled.Clear();
             if (keepLocked)
             {
-                RunCards.Locked(_cards.Slot).RemoveAll(card => card == null || !_cards.CanOffer(card));
+                var locked = RunCards.Locked(_cards.Slot);
+                locked.RemoveAll(card => card == null || !_cards.CanOffer(card));
+                // со старых сохранений могло остаться несколько — теперь откладывается одна
+                if (locked.Count > 1)
+                    locked.RemoveRange(1, locked.Count - 1);
                 for (int i = 0; i < _slots.Count; i++)
                 {
                     var slot = _slots[i];

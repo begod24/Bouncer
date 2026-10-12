@@ -5,13 +5,17 @@ namespace Bouncer.Player
 {
     public enum PlayerFxKind : byte
     {
-        GumBubblePop,
         TamagotchiSave,
-        PassCatch,
         CountThree,
         CircleGuard,
         SeaFigure,
         PerfectCatch,
+        Whistle,
+        SecondWind,
+        SecondWindUp,
+        Penalty,
+        LeapStart,
+        LeapLand,
     }
 
     public static class PlayerFx

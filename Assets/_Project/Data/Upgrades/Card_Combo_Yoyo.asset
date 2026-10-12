@@ -31,14 +31,17 @@ MonoBehaviour:
     m_WaitForCompletion: 0
     m_LocalVariables: []
   category: 1
-  icon: {fileID: 21300000, guid: b4345eada0adb4cf0b513e5559476bd1, type: 3}
-  wrapperColor: {r: 0.64, g: 0.48, b: 0.82, a: 1}
+  icon: {fileID: 21300000, guid: 2d800a86519234945b548771d670f4c4, type: 3}
+  wrapperColor: {r: 0.98, g: 0.75, b: 0.3, a: 1}
   rarity: 2
   maxStacks: 1
   weight: 1
   requires:
   - {fileID: 11400000, guid: 9ea39b7c7b8784a9c83111dce2d17a7b, type: 2}
   - {fileID: 11400000, guid: 54939464faea141c694ee1ec5680a7f6, type: 2}
+  freePocket: 0
+  coopOnly: 0
+  sleepsWith: []
   perks:
     extraShots: 0
     spreadAngle: 0
@@ -52,12 +55,29 @@ MonoBehaviour:
     gumTrail: 0
     blastRadius: 0
     blastDamage: 0
-    snakeAmplitude: 0
     grazeRadius: 0
     wallDamage: 0
     chargedPierce: 0
     homing: 0
     yoyo: 1
+    bounceBlastRadius: 0
+    bounceBlastDamage: 0
+    twinSplit: 0
+    areaStun: 0
+    curve: 0
+    lob: 0
+    groundRoll: 0
+    grazeStun: 0
+    chalk: 0
+    frozenBonus: 0
+    bounceAssist: 0
+    bounceOffTargets: 0
+    ignoreShields: 0
+    chainRange: 0
+    dunkRange: 0
+    smash: 0
+    penalty: 0
+    shatter: 0
   nextThrowAfterCatch: 0
   references:
     version: 2

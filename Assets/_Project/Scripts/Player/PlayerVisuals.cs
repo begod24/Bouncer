@@ -97,7 +97,7 @@ namespace Bouncer.Player
                 Color glow = balls.CatchPerksReady
                     ? Color.Lerp(hotColor, candleColor, 0.5f + 0.5f * Mathf.Sin(Time.time * 9f))
                     : Color.Lerp(candleColor, Color.white, 0.3f + 0.3f * Mathf.Sin(Time.time * 12f));
-                bool glowing = balls.CandleReady || balls.CatchPerksReady || balls.PassReady;
+                bool glowing = balls.CandleReady || balls.CatchPerksReady;
                 handBall.GetPropertyBlock(_block);
                 if (_handBallPalette)
                 {

@@ -31,12 +31,15 @@ MonoBehaviour:
     m_WaitForCompletion: 0
     m_LocalVariables: []
   category: 2
-  icon: {fileID: 21300000, guid: 13847ad743bf54ec7a73e5cd199afc3d, type: 3}
+  icon: {fileID: 21300000, guid: cfed3e2ab442f497ea6f9407e8e54800, type: 3}
   wrapperColor: {r: 0.45, g: 0.72, b: 0.9, a: 1}
-  rarity: 2
-  maxStacks: 1
+  rarity: 1
+  maxStacks: 2
   weight: 1
   requires: []
+  freePocket: 0
+  coopOnly: 0
+  sleepsWith: []
   moveSpeed: 0
   dashDistance: 0
   dashCooldown: 0
@@ -47,10 +50,27 @@ MonoBehaviour:
   heal: 0
   bonusDamage: 0
   tackleDamage: 0
-  catchFreeze: 1
+  catchFreeze: 0
   dominoDamage: 0
   coinInterest: 0
   lidCooldown: 0
+  mirrorAngle: 0
+  lanternRadius: 0
+  whistleFreeze: 1.5
+  secondWind: 0
+  maxLives: 0
+  arenaHeal: 0
+  ignoreGround: 0
+  dashCatch: 0
+  leapfrog: 0
+  freeRerolls: 0
+  extraChoices: 0
+  countEvery: 0
+  countBonus: 0
+  passCharge: 0
+  gumBubbleCooldown: 0
+  tamagotchi: 0
+  circleGuard: 0
   references:
     version: 2
     RefIds: []

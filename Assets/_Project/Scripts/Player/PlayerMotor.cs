@@ -7,6 +7,10 @@ namespace Bouncer.Player
     public sealed class PlayerMotor : MonoBehaviour
     {
         const float Gravity = 25f;
+        // Стены арены низкие (1.2 м), а нокбэк, подкат и толпа могут вынести за край. Все арены 44×30 с центром в нуле.
+        const float ArenaHalfX = 21.4f;
+        const float ArenaHalfZ = 14.4f;
+        const float FallBelow = -2.5f;
 
         CharacterController _controller;
         PlayerStats _stats;
@@ -23,6 +27,8 @@ namespace Bouncer.Player
         float _downUntil;
         float _boostUntil;
         float _boostMultiplier = 1f;
+        Vector3 _lastSafe;
+        bool _hasSafe;
 
         public bool IsDashing => Time.time < _dashEnd;
         public bool IsDown => Time.time < _downUntil;
@@ -104,6 +110,37 @@ namespace Bouncer.Player
 
             Vector3 horizontal = IsDashing ? DashVelocity : _velocity;
             _controller.Move((horizontal + _knockback + Vector3.up * _verticalSpeed) * dt);
+            KeepOnArena();
+        }
+
+        /// <summary>Невидимая стена по краю арены: за край не выйти, упавшего возвращаем на последнюю твёрдую точку.</summary>
+        void KeepOnArena()
+        {
+            if (!_controller.enabled)
+                return;
+            Vector3 p = transform.position;
+            bool fell = p.y < FallBelow;
+            bool inside = Mathf.Abs(p.x) <= ArenaHalfX && Mathf.Abs(p.z) <= ArenaHalfZ;
+            if (!fell && inside)
+            {
+                if (_controller.isGrounded && p.y > -0.5f)
+                {
+                    _lastSafe = p;
+                    _hasSafe = true;
+                }
+                return;
+            }
+            Vector3 target = fell && _hasSafe ? _lastSafe : new Vector3(
+                Mathf.Clamp(p.x, -ArenaHalfX, ArenaHalfX), 0.1f, Mathf.Clamp(p.z, -ArenaHalfZ, ArenaHalfZ));
+            if (fell && UnityEngine.AI.NavMesh.SamplePosition(target, out var hit, 6f, UnityEngine.AI.NavMesh.AllAreas))
+                target = hit.position;
+            _controller.enabled = false;
+            transform.position = target;
+            _controller.enabled = true;
+            _verticalSpeed = 0f;
+            _knockback = Vector3.zero;
+            if (fell)
+                _velocity = Vector3.zero;
         }
 
         public void Face(Vector3 direction, float dt)

@@ -482,6 +482,7 @@ namespace Bouncer.Net
 
         void ShowName()
         {
+            _player.DisplayName = _name.Value.ToString();
             if (namePlate != null)
                 namePlate.Show(IsOwner ? null : _name.Value.ToString(), _slot.Value);
         }

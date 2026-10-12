@@ -1231,6 +1231,18 @@ MonoBehaviour:
     m_Key: card.category.ability
     m_Metadata:
       m_Items: []
+  - m_Id: 6539651459309568
+    m_Key: choice.postpone
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6540299437334528
+    m_Key: net.spectate.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6540299437334529
+    m_Key: net.spectate.hint
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

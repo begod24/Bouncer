@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.UI;
 
 namespace Bouncer.UI
 {
@@ -12,6 +13,8 @@ namespace Bouncer.UI
         [SerializeField] CanvasGroup group;
         [SerializeField] UpgradeCardView[] cards;
         [SerializeField] TMP_Text title;
+        [Tooltip("«Отложить»: закрыть выбор, портфель останется в рюкзаке")]
+        [SerializeField] UnityEngine.UI.Button postponeButton;
         [Tooltip("Сколько секунд после открытия выбор не принимается")]
         [SerializeField] float inputDelay = 0.45f;
         [Tooltip("Пауза между появлением соседних карточек, с")]
@@ -29,6 +32,8 @@ namespace Bouncer.UI
         {
             foreach (var card in cards)
                 card.Clicked += OnCardClicked;
+            if (postponeButton)
+                postponeButton.onClick.AddListener(Postpone);
             SetVisible(false);
         }
 
@@ -76,6 +81,8 @@ namespace Bouncer.UI
                 _ => "choice.title.boss",
             });
 
+            if (postponeButton)
+                postponeButton.gameObject.SetActive(_cards.CanPostpone);
             var offer = _cards.Offer;
             if (cards.Length > 0 && cards[0].transform.parent)
                 cards[0].transform.parent.localScale = Vector3.one * (offer.Count > 3 ? fourCardsScale : threeCardsScale);
@@ -122,6 +129,11 @@ namespace Bouncer.UI
 
             if (!AcceptsInput)
                 return;
+            if (CancelPressed())
+            {
+                Postpone();
+                return;
+            }
             var keyboard = Keyboard.current;
             if (keyboard == null)
                 return;
@@ -141,6 +153,19 @@ namespace Bouncer.UI
         {
             if (_open && AcceptsInput && !PocketsOpen)
                 Pick(System.Array.IndexOf(cards, card));
+        }
+
+        void Postpone()
+        {
+            if (_open && AcceptsInput && !PocketsOpen && _cards != null && _cards.CanPostpone)
+                _cards.Postpone();
+        }
+
+        static bool CancelPressed()
+        {
+            var module = EventSystem.current != null ? EventSystem.current.currentInputModule as InputSystemUIInputModule : null;
+            var cancel = module != null && module.cancel != null ? module.cancel.action : null;
+            return cancel != null && cancel.WasPressedThisFrame();
         }
 
         void Pick(int index)

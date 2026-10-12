@@ -42,6 +42,8 @@ namespace Bouncer.Player
         public PlayerIntent LastIntent { get; private set; }
         public bool IsScripted { get; private set; }
         public int Slot { get; private set; }
+        /// <summary>Имя игрока из комнаты (кооп) — для надписи «Наблюдаешь за…».</summary>
+        public string DisplayName { get; set; }
         public bool IsLocal { get; private set; } = !Online.Active;
         public PlayerActionState RemoteAction { get; set; }
         public Vector3 RemoteVelocity { get; set; }

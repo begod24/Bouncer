@@ -1215,7 +1215,8 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4410446453923842
-    m_Localized: 'A friend can pick you up: they walk over and hold F (X on a gamepad)'
+    m_Localized: "A friend can pick you up: they walk over and hold F (X on a gamepad).
+      \u2190 \u2192 watch a teammate"
     m_Metadata:
       m_Items: []
   - m_Id: 4410446453923843
@@ -1279,6 +1280,18 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 4788930380554241
     m_Localized: ability
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6539651459309568
+    m_Localized: Later (Esc)
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6540299437334528
+    m_Localized: 'Watching: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6540299437334529
+    m_Localized: "\u2190 \u2192 watch another teammate"
     m_Metadata:
       m_Items: []
   references:

@@ -42,6 +42,7 @@ namespace Bouncer.Enemies
         float _progress = 1f;
         float _walkPhase;
         float _wheelAngle;
+        Vector3[] _wheelAxes;
 
         public float CarAmount { get; private set; }
         public float Walk { get; set; }
@@ -113,11 +114,34 @@ namespace Bouncer.Enemies
             if (pelvis)
                 pelvis.localPosition += Vector3.up * (Mathf.Abs(Mathf.Sin(_walkPhase)) * 0.06f * Walk * robot);
 
-            _wheelAngle += DriveSpeed / Mathf.Max(0.05f, WheelRadius) * Mathf.Rad2Deg * dt;
-            if (wheels != null)
-                foreach (var w in wheels)
-                    if (w)
-                        w.localRotation *= Quaternion.Euler(_wheelAngle, 0f, 0f);
+            _wheelAngle = (_wheelAngle + DriveSpeed / Mathf.Max(0.05f, WheelRadius) * Mathf.Rad2Deg * dt) % 360f;
+            if (wheels == null || CarAmount <= 0.5f)
+                return;
+            _wheelAxes ??= FindWheelAxes();
+            for (int i = 0; i < wheels.Length; i++)
+                if (wheels[i])
+                    wheels[i].localRotation *= Quaternion.AngleAxis(_wheelAngle, _wheelAxes[i]);
+        }
+
+        /// <summary>
+        /// Ось колеса — самое тонкое измерение его меша: у передних это X, у задних Z (они сидят на повёрнутых ногах).
+        /// Раньше крутили всё вокруг X, и задние колёса вертелись, как блюдца, вокруг вертикали.
+        /// </summary>
+        Vector3[] FindWheelAxes()
+        {
+            var axes = new Vector3[wheels.Length];
+            for (int i = 0; i < wheels.Length; i++)
+            {
+                axes[i] = Vector3.right;
+                if (!wheels[i] || !wheels[i].TryGetComponent(out MeshFilter filter) || !filter.sharedMesh)
+                    continue;
+                Vector3 e = filter.sharedMesh.bounds.extents;
+                if (e.z <= e.x && e.z <= e.y)
+                    axes[i] = Vector3.forward;
+                else if (e.y <= e.x && e.y <= e.z)
+                    axes[i] = Vector3.up;
+            }
+            return axes;
         }
 
         void Apply()

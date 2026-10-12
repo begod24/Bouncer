@@ -265,6 +265,32 @@ namespace Bouncer.Upgrades
             OfferChanged?.Invoke();
         }
 
+        /// <summary>Выбор из портфеля можно закрыть и вернуться к нему позже (стартовый вкладыш — нет).</summary>
+        public bool CanPostpone => IsChoosing && OfferKind != OfferKind.Start;
+
+        /// <summary>
+        /// «Отложить»: портфель возвращается в рюкзак (откроется по клавише рюкзака, как и найденные в коопе),
+        /// трофей за босса уходит в «перенесённые» и снова предложится в начале следующей арены.
+        /// </summary>
+        public void Postpone()
+        {
+            if (!CanPostpone)
+                return;
+            var kind = OfferKind;
+            _offer.Clear();
+            if (kind == OfferKind.Boss)
+            {
+                RunCards.Carried(Slot).Add(kind);
+            }
+            else
+            {
+                RunCards.SetBackpack(Slot, Backpack + 1);
+                BackpackChanged?.Invoke();
+            }
+            GameEvents.PlaySound(SoundCue.Portfolio, transform.position);
+            ContinueChoices();
+        }
+
         void Rebuild()
         {
             var mods = _player.Modifiers;

@@ -242,3 +242,6 @@ Content,kid.melkaya.name,Мелкая,Shorty,
 Content,kid.melkaya.tagline,"Быстрая, смелая, всегда в движении","Fast, fearless, never sits still",
 Content,kid.huligan.name,Хулиган,Hooligan,
 Content,kid.huligan.tagline,"Крутой драчун, главный во дворе","Tough scrapper, boss of the yard",
+UI,choice.postpone,Отложить (Esc),Later (Esc),Кейінге қалдыру (Esc)
+UI,net.spectate.title,Наблюдаешь: {0},Watching: {0},Бақылайсың: {0}
+UI,net.spectate.hint,← → смотреть за другим напарником,← → watch another teammate,← → басқа серіктесті көру

@@ -65,6 +65,11 @@ namespace Bouncer.Core
                 RunState.BeginTutorial();
                 State = SessionState.Playing;
             }
+            else if (BallLab.Begin())
+            {
+                RunState.BeginTutorial();
+                State = SessionState.Playing;
+            }
             else if (Online.Joining)
             {
                 RunState.Clear();
@@ -115,6 +120,8 @@ namespace Bouncer.Core
                 RunState.RunClock += Time.unscaledDeltaTime;
             if (CanRestart && RestartPressed())
                 Restart();
+            if (State == SessionState.Title && BallLab.Available && Keyboard.current != null && Keyboard.current.f8Key.wasPressedThisFrame)
+                StartBallLab();
         }
 
         public static bool IsGameplayActive => Instance == null || Instance.IsPlaying;
@@ -150,6 +157,14 @@ namespace Bouncer.Core
                 return;
             if (Tutorial.Active)
                 Tutorial.Request();
+            if (BallLab.Active)
+                BallLab.Request();
+            Reload(skipTitle: true);
+        }
+
+        public void StartBallLab()
+        {
+            BallLab.Request();
             Reload(skipTitle: true);
         }
 

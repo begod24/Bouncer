@@ -31,6 +31,10 @@ namespace Bouncer.Core
         bool _isLine;
         float _size;
         float _length;
+        bool _steady;
+        float _steadyProgress;
+        float _steadyAlpha = 1f;
+        Color _defaultColor;
 
         public bool IsPuppet { get; set; }
 
@@ -42,18 +46,42 @@ namespace Bouncer.Core
             _line = GetComponent<LineRenderer>();
             TryGetComponent(out _circle);
             _block = new MaterialPropertyBlock();
+            _defaultColor = color;
         }
 
         public void OnSpawned()
         {
             IsPuppet = false;
+            _steady = false;
+            color = _defaultColor;
             _start = Time.time;
             _until = _start + 1f;
         }
 
         public void OnDespawned() { }
 
+        public void SetColor(Color value) => color = value;
+
+        // Метка без мигания и без срока: держится, пока её двигают каждый кадр и не спрятали (точка падения своего мяча).
+        public void ShowSteady(Vector3 center, float radius, float progress, float alpha)
+        {
+            _steady = true;
+            _steadyProgress = Mathf.Clamp01(progress);
+            _steadyAlpha = Mathf.Clamp01(alpha);
+            PlaceCircle(center, radius);
+            Update();
+        }
+
         public void ShowCircle(Vector3 center, float radius, float seconds)
+        {
+            _steady = false;
+            PlaceCircle(center, radius);
+            Begin(seconds);
+            if (!IsPuppet)
+                Shown?.Invoke(this, true, center, new Vector3(radius, 0f, 0f), seconds);
+        }
+
+        void PlaceCircle(Vector3 center, float radius)
         {
             transform.SetPositionAndRotation(new Vector3(center.x, height, center.z), Quaternion.identity);
             if (_circle)
@@ -65,13 +93,11 @@ namespace Bouncer.Core
                 fill.transform.SetPositionAndRotation(new Vector3(center.x, height - 0.01f, center.z), Quaternion.Euler(90f, 0f, 0f));
                 fill.transform.localScale = new Vector3(radius * 2f, radius * 2f, 1f);
             }
-            Begin(seconds);
-            if (!IsPuppet)
-                Shown?.Invoke(this, true, center, new Vector3(radius, 0f, 0f), seconds);
         }
 
         public void ShowLine(Vector3 from, Vector3 to, float seconds)
         {
+            _steady = false;
             transform.SetPositionAndRotation(new Vector3(from.x, height, from.z), Quaternion.identity);
             _line.useWorldSpace = true;
             _line.loop = false;
@@ -110,6 +136,14 @@ namespace Bouncer.Core
 
         void Update()
         {
+            if (_steady)
+            {
+                var steady = new Color(color.r, color.g, color.b, color.a * _steadyAlpha);
+                _line.startColor = _line.endColor = steady;
+                _line.widthMultiplier = width;
+                SetFill(_steadyProgress);
+                return;
+            }
             float total = Mathf.Max(0.01f, _until - _start);
             float t = (Time.time - _start) / total;
             if (t >= 1f)
@@ -122,10 +156,15 @@ namespace Bouncer.Core
             var c = new Color(color.r, color.g, color.b, color.a * Mathf.Lerp(0.45f, 1f, t) * blink);
             _line.startColor = _line.endColor = c;
             _line.widthMultiplier = width * Mathf.Lerp(0.7f, 1.3f, t);
+            SetFill(t);
+        }
+
+        void SetFill(float progress)
+        {
             if (fill)
             {
                 fill.GetPropertyBlock(_block);
-                _block.SetFloat(ProgressId, t);
+                _block.SetFloat(ProgressId, progress);
                 _block.SetFloat(ModeId, _isLine ? 1f : 0f);
                 _block.SetFloat(SizeId, _size);
                 _block.SetFloat(LengthId, _length);

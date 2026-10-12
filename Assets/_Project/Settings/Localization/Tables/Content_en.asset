@@ -27,8 +27,8 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 153552412673
-    m_Localized: 'Heavy: 2 damage (3 charged) and 1 damage to everyone within 2.6
-      m.'
+    m_Localized: "Hits for 2\u20134 and splashes around. Ignores shields. Only 2
+      balls."
     m_Metadata:
       m_Items: []
   - m_Id: 153552412674
@@ -36,7 +36,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 153552412675
-    m_Localized: Fly in a fan of three. The two extras vanish on the ground.
+    m_Localized: 5 balls in hand. Hold throw to fire a burst.
     m_Metadata:
       m_Items: []
   - m_Id: 153552412676
@@ -161,15 +161,6 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 23928712978442
     m_Localized: Every successful catch slows everything around for 1 s.
-    m_Metadata:
-      m_Items: []
-  - m_Id: 23928712978443
-    m_Localized: Deflated ball
-    m_Metadata:
-      m_Items: []
-  - m_Id: 23928712978444
-    m_Localized: Flies in a snake line and grazes every enemy within 0.8 m of its
-      path. Never pops up.
     m_Metadata:
       m_Items: []
   - m_Id: 133956933509120
@@ -995,8 +986,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207970
-    m_Localized: Lobbed over heads and shields; hits on the way down and splashes
-      where it lands.
+    m_Localized: Arcs to where you aim. Shields don't help.
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207971
@@ -1004,8 +994,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207972
-    m_Localized: 'Tiny and fast: 1 damage, but bounces up to 6 times and curves toward
-      enemies off walls.'
+    m_Localized: Bounces off walls and enemies up to 6 times.
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207973
@@ -1013,8 +1002,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 4788928279207974
-    m_Localized: 'A kick along the ground: the ball rolls and knocks down everyone
-      in its path.'
+    m_Localized: Rolls and knocks enemies down. Dash into it to kick it.
     m_Metadata:
       m_Items: []
   references:

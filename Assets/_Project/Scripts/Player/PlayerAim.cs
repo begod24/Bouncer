@@ -10,6 +10,7 @@ namespace Bouncer.Player
         public Vector3 Direction { get; private set; } = Vector3.forward;
         public Targetable Target { get; private set; }
         public bool HasInput { get; private set; }
+        public float Distance { get; private set; } = -1f;
 
         public void Init(PlayerStats stats)
         {
@@ -29,6 +30,16 @@ namespace Bouncer.Player
 
             Target = GameSettings.AutoAimFor(intent.UsingGamepad) ? FindTarget(origin, baseDirection) : null;
             Direction = Target != null ? LeadDirection(origin, Target, projectileSpeed) : baseDirection;
+            if (Target != null)
+            {
+                Vector3 to = Target.Position - transform.position;
+                to.y = 0f;
+                Distance = to.magnitude;
+            }
+            else
+            {
+                Distance = intent.AimFromPointer ? intent.AimDistance : -1f;
+            }
         }
 
         Targetable FindTarget(Vector3 origin, Vector3 direction)

@@ -21,8 +21,8 @@ MonoBehaviour:
   liveGravity: 4
   chargedLiveGravity: 2.5
   damage: 2
-  chargedDamage: 3
-  candleDamage: 4
+  chargedDamage: 4
+  candleDamage: 5
   knockback: 10
   chargedKnockback: 16
   candleKnockback: 22
@@ -36,6 +36,20 @@ MonoBehaviour:
   popHorizontalKeep: 0.15
   popGravity: 14
   poppedWallKeep: 0.5
+  hands: 2
+  fixedHands: 1
+  chargeTimeMultiplier: 1.6
+  autoFireInterval: 0
+  lobDistance: {x: 3, y: 20}
+  lobTapDistance: 13
+  lobFlightTime: {x: 0.55, y: 1.05}
+  lobMarkerRadius: 0.9
+  ratings:
+    damage: 5
+    speed: 2
+    ricochets: 1
+    area: 4
+    control: 3
   perks:
     extraShots: 0
     spreadAngle: 0
@@ -45,6 +59,28 @@ MonoBehaviour:
     splitOnHit: 0
     boomerang: 0
     elastic: 0
+    floorBounces: 0
+    gumTrail: 0
+    blastRadius: 0
+    blastDamage: 0
+    grazeRadius: 0
+    wallDamage: 0
+    chargedPierce: 0
+    homing: 0
+    yoyo: 0
+    bounceBlastRadius: 0
+    bounceBlastDamage: 0
+    twinSplit: 0
+    areaStun: 0
+    curve: 0
+    lob: 0
+    groundRoll: 0
+    grazeStun: 0
+    chalk: 0
+    frozenBonus: 0
+    bounceAssist: 0
+    bounceOffTargets: 0
+    ignoreShields: 1
   areaEffect: {fileID: 5376990858673508986, guid: 3c2ae0d44c24e466da724e9dc70a299c, type: 3}
   chainRange: 9
   chainSpeedKeep: 0.9
@@ -53,6 +89,14 @@ MonoBehaviour:
   boomerangDelay: 0.35
   boomerangTurnRate: 540
   elasticReturnSpeed: 18
+  floorBounceHeight: 1
+  floorBounceSpeedKeep: 0.85
+  gumSpacing: 1.2
+  blastKnockback: 10
+  grazeKnockbackScale: 0.5
+  rollDrag: 0
+  landEffect: {fileID: 0}
   floorBounceKeep: 0.2
   looseDamping: 2
   maxLooseBalls: 14
+  maxForeignLoose: 7

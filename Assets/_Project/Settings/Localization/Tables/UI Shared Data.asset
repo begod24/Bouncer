@@ -1243,6 +1243,30 @@ MonoBehaviour:
     m_Key: net.spectate.hint
     m_Metadata:
       m_Items: []
+  - m_Id: 6554698524909568
+    m_Key: card.stat.damage
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6554698529103872
+    m_Key: card.stat.speed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6554698529103873
+    m_Key: card.stat.ricochets
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6554698529103874
+    m_Key: card.stat.area
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6554698529103875
+    m_Key: card.stat.control
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6554698529103876
+    m_Key: card.blocked.ball
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

@@ -12,6 +12,7 @@ namespace Bouncer.Player
         public float CatchRadius = 1f;
         public float PickupRadius = 1f;
         public int ExtraBalls;
+        public int FewerBalls;
         public int BonusDamage;
         public int TackleDamage;
         public float CatchFreeze;
@@ -51,6 +52,7 @@ namespace Bouncer.Player
             CatchRadius = 1f;
             PickupRadius = 1f;
             ExtraBalls = 0;
+            FewerBalls = 0;
             BonusDamage = 0;
             TackleDamage = 0;
             CatchFreeze = 0f;

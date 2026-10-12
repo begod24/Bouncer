@@ -27,7 +27,7 @@ namespace Bouncer.EditorTools
         static readonly string[] AllBalls =
         {
             Root + "Prefabs/Ball.prefab", BallPrefabDir + "Ball_Tennis.prefab", BallPrefabDir + "Ball_Volleyball.prefab",
-            BallPrefabDir + "Ball_Medicine.prefab", BallPrefabDir + "Ball_Deflated.prefab", BallPrefabDir + "Ball_Basketball.prefab",
+            BallPrefabDir + "Ball_Medicine.prefab", BallPrefabDir + "Ball_Basketball.prefab",
             BallPrefabDir + "Ball_PingPong.prefab", BallPrefabDir + "Ball_Football.prefab",
         };
 
@@ -79,35 +79,12 @@ namespace Bouncer.EditorTools
             var landing = Load<GameObject>(Root + "Prefabs/VFX/LandingDust.prefab");
             var basket = BallData("Ball_Basketball", so =>
             {
-                F(so, "radius", 0.26f); F(so, "mass", 0.6f);
-                F(so, "speed", 13f); F(so, "chargedSpeed", 17f);
-                F(so, "upVelocity", 7f); F(so, "chargedUpVelocity", 7.5f);
-                F(so, "liveGravity", 15f); F(so, "chargedLiveGravity", 13f);
-                F(so, "damage", 1); F(so, "chargedDamage", 2);
-                F(so, "maxLiveTime", 3f);
-                F(so, "perks.lob", 1); F(so, "perks.areaRadius", 1.8f); F(so, "perks.areaDamage", 1);
                 so.FindProperty("areaEffect").objectReferenceValue = area;
                 so.FindProperty("landEffect").objectReferenceValue = landing;
             });
-            var ping = BallData("Ball_PingPong", so =>
-            {
-                F(so, "radius", 0.11f); F(so, "mass", 0.05f);
-                F(so, "speed", 26f); F(so, "chargedSpeed", 36f);
-                F(so, "damage", 1); F(so, "chargedDamage", 2);
-                F(so, "liveGravity", 1.2f); F(so, "chargedLiveGravity", 0.6f);
-                F(so, "maxRicochets", 6); F(so, "wallSpeedKeep", 1f); F(so, "minLiveSpeed", 6f); F(so, "maxLiveTime", 3.5f);
-                F(so, "perks.bounceAssist", 35f);
-            });
-            var foot = BallData("Ball_Football", so =>
-            {
-                F(so, "radius", 0.22f); F(so, "mass", 0.45f);
-                F(so, "speed", 17f); F(so, "chargedSpeed", 24f);
-                F(so, "upVelocity", 0f); F(so, "chargedUpVelocity", 0f);
-                F(so, "liveGravity", 0f); F(so, "chargedLiveGravity", 0f);
-                F(so, "damage", 1); F(so, "chargedDamage", 2);
-                F(so, "rollDrag", 6f); F(so, "maxLiveTime", 2.2f); F(so, "minLiveSpeed", 5f); F(so, "maxRicochets", 4);
-                F(so, "perks.groundRoll", 1); F(so, "perks.grazeRadius", 0.55f); F(so, "perks.grazeStun", 0.7f);
-            });
+            var ping = BallData("Ball_PingPong", _ => { });
+            var foot = BallData("Ball_Football", _ => { });
+            BallRosterBuilder.ApplyNumbers();
             BallPrefab("Ball_Basketball", basket, "Ball_Basketball");
             BallPrefab("Ball_PingPong", ping, "Ball_PingPong");
             BallPrefab("Ball_Football", foot, "Ball_Football");
@@ -294,16 +271,16 @@ namespace Bouncer.EditorTools
             sea.perks = new BallPerks { frozenBonus = 1 };
 
             Card<BallTypeCard>("Card_Ball_Basketball", "ball_basketball", "Ball_Basketball", UpgradeCategory.Ball, CardRarity.Rare, new Color(0.95f, 0.55f, 0.2f),
-                T("Баскетбольный мяч", "Летит навесом над головами и щитами, бьёт на излёте и по площади, когда падает.",
-                  "Basketball", "Lobbed over heads and shields; hits on the way down and splashes where it lands.")).ballPrefab =
+                T("Баскетбольный мяч", "Летит дугой в точку прицела. Щит не спасает.",
+                  "Basketball", "Arcs to where you aim. Shields don't help.")).ballPrefab =
                 Load<GameObject>(BallPrefabDir + "Ball_Basketball.prefab").GetComponent<Ball>();
             Card<BallTypeCard>("Card_Ball_PingPong", "ball_pingpong", "Ball_PingPong", UpgradeCategory.Ball, CardRarity.Common, new Color(0.98f, 0.92f, 0.8f),
-                T("Пинг-понг", "Крошечный и быстрый: урон 1, но отскакивает до 6 раз и после стены доворачивает к врагу.",
-                  "Ping-Pong Ball", "Tiny and fast: 1 damage, but bounces up to 6 times and curves toward enemies off walls.")).ballPrefab =
+                T("Пинг-понг", "Отскакивает от стен и врагов до 6 раз.",
+                  "Ping-Pong Ball", "Bounces off walls and enemies up to 6 times.")).ballPrefab =
                 Load<GameObject>(BallPrefabDir + "Ball_PingPong.prefab").GetComponent<Ball>();
             Card<BallTypeCard>("Card_Ball_Football", "ball_football", "Ball_Football", UpgradeCategory.Ball, CardRarity.Rare, new Color(0.85f, 0.88f, 0.9f),
-                T("Футбольный мяч", "Пинок по асфальту: мяч катится и сбивает с ног всех на пути.",
-                  "Football", "A kick along the ground: the ball rolls and knocks down everyone in its path.")).ballPrefab =
+                T("Футбольный мяч", "Катится и сбивает с ног. Рывок в лежащий мяч — пинок.",
+                  "Football", "Rolls and knocks enemies down. Dash into it to kick it.")).ballPrefab =
                 Load<GameObject>(BallPrefabDir + "Ball_Football.prefab").GetComponent<Ball>();
 
             var deck = Load<CardDeck>(CardDir + "CardDeck_Default.asset");

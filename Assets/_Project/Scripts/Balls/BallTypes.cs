@@ -5,6 +5,16 @@ using UnityEngine;
 namespace Bouncer.Balls
 {
     [Serializable]
+    public struct BallRatings
+    {
+        [Range(1, 5)] public int damage;
+        [Range(1, 5)] public int speed;
+        [Range(1, 5)] public int ricochets;
+        [Range(1, 5)] public int area;
+        [Range(1, 5)] public int control;
+    }
+
+    [Serializable]
     public struct BallPerks
     {
         [Tooltip("Сколько лишних мячей летит веером при броске (теннисный). Лишние исчезают, коснувшись пола")]
@@ -31,9 +41,7 @@ namespace Bouncer.Balls
         [Min(0f)] public float blastRadius;
         [Tooltip("Урон взрыва всем вокруг")]
         [Min(0)] public int blastDamage;
-        [Tooltip("Сдутый мяч: летит змейкой, уходя в стороны на столько метров. 0 — прямо")]
-        [Min(0f)] public float snakeAmplitude;
-        [Tooltip("Сдутый мяч: задевает всех врагов на таком расстоянии от себя и летит дальше, «свечкой» не отскакивает. " +
+        [Tooltip("Футбольный: задевает всех врагов на таком расстоянии от себя и летит дальше, «свечкой» не отскакивает. " +
                  "0 — обычное попадание")]
         [Min(0f)] public float grazeRadius;
         [Tooltip("Стеночка: каждый рикошет от стены прибавляет этому броску столько урона")]
@@ -66,6 +74,10 @@ namespace Bouncer.Balls
         [Min(0)] public int frozenBonus;
         [Tooltip("Пинг-понг: отскочив от стены, доворачивает к врагу в пределах стольких градусов. 0 — нет")]
         [Min(0f)] public float bounceAssist;
+        [Tooltip("Пинг-понг: от врагов отскакивает как от стены, пока есть рикошеты; последним попаданием подлетает свечкой")]
+        public bool bounceOffTargets;
+        [Tooltip("Баскетбольный, набивной: щит солдата не отбивает этот мяч")]
+        public bool ignoreShields;
 
         public BallPerks ForTwin() => new()
         {
@@ -75,7 +87,6 @@ namespace Bouncer.Balls
             splitOnHit = twinSplit,
             floorBounces = floorBounces,
             gumTrail = gumTrail,
-            snakeAmplitude = snakeAmplitude,
             grazeRadius = grazeRadius,
             wallDamage = wallDamage,
             chargedPierce = chargedPierce,
@@ -83,6 +94,8 @@ namespace Bouncer.Balls
             grazeStun = grazeStun,
             frozenBonus = frozenBonus,
             bounceAssist = bounceAssist,
+            bounceOffTargets = bounceOffTargets,
+            ignoreShields = ignoreShields,
         };
 
         public static BallPerks Combine(in BallPerks a, in BallPerks b) => new()
@@ -99,7 +112,6 @@ namespace Bouncer.Balls
             gumTrail = a.gumTrail || b.gumTrail,
             blastRadius = Mathf.Max(a.blastRadius, b.blastRadius),
             blastDamage = Mathf.Max(a.blastDamage, b.blastDamage),
-            snakeAmplitude = Mathf.Max(a.snakeAmplitude, b.snakeAmplitude),
             grazeRadius = Mathf.Max(a.grazeRadius, b.grazeRadius),
             wallDamage = a.wallDamage + b.wallDamage,
             chargedPierce = a.chargedPierce || b.chargedPierce,
@@ -116,6 +128,8 @@ namespace Bouncer.Balls
             chalk = a.chalk || b.chalk,
             frozenBonus = a.frozenBonus + b.frozenBonus,
             bounceAssist = Mathf.Max(a.bounceAssist, b.bounceAssist),
+            bounceOffTargets = a.bounceOffTargets || b.bounceOffTargets,
+            ignoreShields = a.ignoreShields || b.ignoreShields,
         };
     }
 

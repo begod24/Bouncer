@@ -70,6 +70,9 @@ namespace Bouncer.Upgrades
         public override bool CanOffer(PlayerController player, int stacks) =>
             base.CanOffer(player, stacks) && player.Balls.MaxBalls + extraBalls >= 1;
 
+        public override string BlockReason(PlayerController player) =>
+            extraBalls > 0 && player.Balls.FixedHands ? "card.blocked.ball" : null;
+
         public override void Apply(PlayerController player)
         {
             var mods = player.Modifiers;
@@ -79,7 +82,10 @@ namespace Bouncer.Upgrades
             mods.CatchWindow += catchWindow;
             mods.CatchRadius += catchRadius;
             mods.PickupRadius += pickupRadius;
-            mods.ExtraBalls += extraBalls;
+            if (extraBalls > 0)
+                mods.ExtraBalls += extraBalls;
+            else
+                mods.FewerBalls -= extraBalls;
             mods.BonusDamage += bonusDamage;
             mods.TackleDamage += tackleDamage;
             mods.CatchFreeze += catchFreeze;
@@ -104,7 +110,7 @@ namespace Bouncer.Upgrades
                 mods.GumBubbleCooldown = mods.GumBubbleCooldown > 0f ? Mathf.Min(mods.GumBubbleCooldown, gumBubbleCooldown) : gumBubbleCooldown;
             mods.Tamagotchi |= tamagotchi;
             mods.CircleGuard |= circleGuard;
-            if (extraBalls > 0 && !Rebuilding)
+            if (extraBalls > 0 && !Rebuilding && !player.Balls.FixedHands)
                 player.Balls.GiveBall(extraBalls);
             else if (extraBalls < 0)
             {

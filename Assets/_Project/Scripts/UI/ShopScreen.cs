@@ -221,13 +221,16 @@ namespace Bouncer.UI
                     view.Shown = slot.Card;
                     view.card.Show(slot.Card, _kiosk.Customer.StacksOf(slot.Card), i + 1, i * cardStagger);
                 }
-                bool available = has && !slot.Sold;
-                if (available)
+                string blocked = has && !slot.Sold ? customer.BlockReason(slot.Card) : null;
+                bool available = has && !slot.Sold && blocked == null;
+                if (blocked != null)
+                    view.card.ShowBlocked(blocked, customer.BallTitle());
+                else if (available)
                     view.card.ShowPocketNeed(customer.NeedFor(slot.Card), customer.PocketsUsed, customer.MaxPockets);
                 else if (has)
                     view.card.HidePocketTag();
                 if (view.cardGroup)
-                    view.cardGroup.alpha = available ? 1f : soldAlpha;
+                    view.cardGroup.alpha = available || blocked != null ? 1f : soldAlpha;
                 view.card.Button.interactable = available;
                 if (view.sold)
                     view.sold.SetActive(has && slot.Sold);

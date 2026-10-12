@@ -118,13 +118,15 @@ namespace Bouncer.Run
             if (forkExit)
                 forkExit.Hide();
             _portfolioTimes.Clear();
-            if (Tutorial.Active || NetHooks.IsGuest)
+            if (Tutorial.Active || BallLab.Active || NetHooks.IsGuest)
             {
                 if (spawner)
                     spawner.Spawning = false;
                 if (weather)
                     weather.Begin(WeatherKind.Clear);
-                WeatherKnown = Tutorial.Active;
+                if (loot && BallLab.Active)
+                    loot.ElitePortfolioLimit = 0;
+                WeatherKnown = Tutorial.Active || BallLab.Active;
                 _weatherWaitUntil = Time.unscaledTime + 2.5f;
                 return;
             }
@@ -202,7 +204,7 @@ namespace Bouncer.Run
 
         void OpenBossPages()
         {
-            if (Arena == null || Arena.wave == null || Tutorial.Active)
+            if (Arena == null || Arena.wave == null || Tutorial.Active || BallLab.Active)
                 return;
             foreach (var burst in Arena.wave.bursts)
             {

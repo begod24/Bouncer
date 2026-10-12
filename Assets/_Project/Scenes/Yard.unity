@@ -39953,6 +39953,53 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2052208396}
   m_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &2059324930
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2059324932}
+  - component: {fileID: 2059324931}
+  m_Layer: 0
+  m_Name: BallLabDirector
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2059324931
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2059324930}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96cb315c3ce7c4bf281b03e74ddbb92a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Bouncer.Run::Bouncer.Run.BallLabDirector
+  spawner: {fileID: 317722729}
+  bestiary: {fileID: 11400000, guid: d58efa52a85cc4477b4fc3b7a1a7b1f3, type: 2}
+  respawnDelay: 1.2
+--- !u!4 &2059324932
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2059324930}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2059823316
 GameObject:
   m_ObjectHideFlags: 0
@@ -41821,5 +41868,6 @@ SceneRoots:
   - {fileID: 2005619131}
   - {fileID: 1596687395}
   - {fileID: 1508474452}
+  - {fileID: 2059324932}
   - {fileID: 1441389604}
   - {fileID: 195096970}

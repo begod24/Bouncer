@@ -1294,6 +1294,30 @@ MonoBehaviour:
     m_Localized: "\u2190 \u2192 watch another teammate"
     m_Metadata:
       m_Items: []
+  - m_Id: 6554698524909568
+    m_Localized: Damage
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6554698529103872
+    m_Localized: Speed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6554698529103873
+    m_Localized: Bounces
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6554698529103874
+    m_Localized: Area
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6554698529103875
+    m_Localized: Control
+    m_Metadata:
+      m_Items: []
+  - m_Id: 6554698529103876
+    m_Localized: Not with the {0}
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

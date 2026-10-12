@@ -56,6 +56,8 @@ namespace Bouncer.Upgrades
         public virtual bool CanOffer(PlayerController player, int stacks) =>
             stacks < maxStacks && (!coopOnly || (RunState.Active && RunState.PlayerCount > 1));
 
+        public virtual string BlockReason(PlayerController player) => null;
+
         public abstract void Apply(PlayerController player);
     }
 }

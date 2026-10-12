@@ -45,6 +45,29 @@ namespace Bouncer.Balls
         public float popGravity = 14f;
         [Range(0f, 1f)] public float poppedWallKeep = 0.5f;
 
+        [Header("Руки и заряд")]
+        [Tooltip("Сколько таких мячей держишь в руках. 0 — как у ребёнка (PlayerStats.maxBalls)")]
+        [Min(0)] public int hands;
+        [Tooltip("Карточки «+мяч» с этим мячом не берутся и не действуют (набивной, баскетбольный)")]
+        public bool fixedHands;
+        [Tooltip("Во сколько раз дольше заряжается бросок")]
+        [Min(0.1f)] public float chargeTimeMultiplier = 1f;
+        [Tooltip("Очередь: зажал бросок — мячи летят один за другим через столько секунд, без заряда. 0 — обычный заряд")]
+        [Min(0f)] public float autoFireInterval;
+
+        [Header("Навес (баскетбольный): мяч падает в точку прицела")]
+        [Tooltip("Ближе и дальше этого мяч не падает, м. Дальность заряженного — до lobMaxDistance, обычного — до lobTapDistance")]
+        public Vector2 lobDistance = new(3f, 20f);
+        [Tooltip("Без заряда мяч падает не дальше, м")]
+        public float lobTapDistance = 13f;
+        [Tooltip("Время полёта на ближнюю и дальнюю точку, с")]
+        public Vector2 lobFlightTime = new(0.55f, 1.05f);
+        [Tooltip("Радиус метки точки падения, м")]
+        public float lobMarkerRadius = 0.9f;
+
+        [Header("Шкалы на карточке мяча, 1–5")]
+        public BallRatings ratings = new() { damage = 2, speed = 3, ricochets = 2, area = 1, control = 1 };
+
         [Header("Свойства этого типа мяча")]
         public BallPerks perks;
         [Tooltip("Эффект урона по площади (кольцо на земле), из пула")]
@@ -72,9 +95,7 @@ namespace Bouncer.Balls
         [Min(0.2f)] public float gumSpacing = 1.2f;
         [Tooltip("Горячая картошка: сила отброса от взрыва")]
         public float blastKnockback = 10f;
-        [Tooltip("Сдутый мяч: длина одной волны «змейки», м")]
-        [Min(0.5f)] public float snakeWavelength = 4.5f;
-        [Tooltip("Сдутый мяч: какая доля отброса достаётся задетым врагам")]
+        [Tooltip("Футбольный: какая доля отброса достаётся задетым врагам")]
         [Range(0f, 1f)] public float grazeKnockbackScale = 0.5f;
 
         [Tooltip("Футбольный: насколько быстро гаснет скорость катящегося мяча, м/с²")]
@@ -118,6 +139,22 @@ namespace Bouncer.Balls
                 Flags = full ? HitFlags.Charged : HitFlags.None,
             };
         }
+
+        public ThrowStats GetLobStats(in ThrowStats stats, float distance, float launchHeight)
+        {
+            distance = Mathf.Max(0.5f, distance);
+            float t01 = Mathf.InverseLerp(lobDistance.x, lobDistance.y, distance);
+            float time = Mathf.Lerp(lobFlightTime.x, lobFlightTime.y, t01);
+            float gravity = Mathf.Max(1f, stats.Gravity);
+            var lob = stats;
+            lob.Speed = distance / time;
+            lob.UpVelocity = (radius - launchHeight + 0.5f * gravity * time * time) / time;
+            lob.Gravity = gravity;
+            return lob;
+        }
+
+        public float ClampLobDistance(float wanted, float charge01) =>
+            Mathf.Clamp(wanted, lobDistance.x, Mathf.Lerp(lobTapDistance, lobDistance.y, Mathf.Clamp01(charge01)));
 
         public float EstimateRange(in ThrowStats stats, float launchHeight)
         {

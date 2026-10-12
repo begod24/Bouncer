@@ -33,10 +33,10 @@ namespace Bouncer.Core
 
         public static int ExtraElites => Level >= 2 ? 1 : 0;
         public static bool EliteAffixAlways => Level >= 2;
-        public static float EliteAffixChance => Tutorial.Active ? 0f : EliteAffixAlways ? 1f : 0.5f;
+        public static float EliteAffixChance => Tutorial.Active || BallLab.Active ? 0f : EliteAffixAlways ? 1f : 0.5f;
 
         public static float EnemySpeed => Level >= 3 ? 1.1f : 1f;
-        public static float HedgehogChance => Tutorial.Active ? 0f : Level >= 3 ? 0.35f : 0.2f;
+        public static float HedgehogChance => Tutorial.Active || BallLab.Active ? 0f : Level >= 3 ? 0.35f : 0.2f;
 
         public static float CoinMultiplier => Level >= 4 ? 0.75f : 1f;
         public static float HealPriceMultiplier => Level >= 4 ? 1.5f : 1f;

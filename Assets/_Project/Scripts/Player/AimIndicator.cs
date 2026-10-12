@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Bouncer.Balls;
 using Bouncer.Core;
 using UnityEngine;
 
@@ -14,8 +16,15 @@ namespace Bouncer.Player
         [SerializeField] Color candleColor = new(1f, 0.8f, 0.2f, 0.9f);
         [SerializeField] Color autoAimColor = new(0.5f, 0.9f, 1f, 0.6f);
 
+        [Header("Навес (баскетбольный): кружок, куда упадёт мяч")]
+        [SerializeField] GroundMarker landingMarkerPrefab;
+        [SerializeField] Color landingColor = new(1f, 0.62f, 0.2f, 0.9f);
+
         LineRenderer _line;
         readonly Vector3[] _points = new Vector3[3];
+        GroundMarker _aimMarker;
+        readonly Dictionary<Ball, (GroundMarker marker, int life, float total)> _flying = new();
+        readonly List<Ball> _gone = new();
 
         void Awake()
         {
@@ -23,14 +32,29 @@ namespace Bouncer.Player
             _line.useWorldSpace = true;
         }
 
+        void OnDisable()
+        {
+            HideAimMarker();
+            foreach (var pair in _flying)
+                Despawn(pair.Value.marker);
+            _flying.Clear();
+        }
+
         void LateUpdate()
         {
+            UpdateLandingMarkers();
             var balls = player.Balls;
             var definition = balls.BallDefinition;
             if (!GameSettings.ShowAimPreview || !player.IsLocal || player.IsDead || balls.Balls == 0 || definition == null
                 || !GameSession.IsGameplayActive)
             {
                 _line.enabled = false;
+                return;
+            }
+
+            if (definition.perks.lob && balls.TryGetLobLanding(out Vector3 landing, out _))
+            {
+                ShowLobLine(landing, balls);
                 return;
             }
 
@@ -73,6 +97,96 @@ namespace Bouncer.Player
             _line.startColor = color;
             _line.endColor = new Color(color.r, color.g, color.b, color.a * 0.3f);
             _line.widthMultiplier = Mathf.Lerp(0.06f, 0.14f, balls.Charge01);
+        }
+
+        void ShowLobLine(Vector3 landing, PlayerBallHandler balls)
+        {
+            Vector3 from = player.transform.position;
+            Color color = balls.CandleReady ? candleColor : Color.Lerp(normalColor, chargedColor, balls.Charge01);
+            _line.enabled = true;
+            _line.positionCount = 2;
+            _line.SetPosition(0, new Vector3(from.x, groundHeight, from.z));
+            _line.SetPosition(1, new Vector3(landing.x, groundHeight, landing.z));
+            _line.startColor = color;
+            _line.endColor = new Color(color.r, color.g, color.b, color.a * 0.3f);
+            _line.widthMultiplier = Mathf.Lerp(0.06f, 0.14f, balls.Charge01);
+        }
+
+        void UpdateLandingMarkers()
+        {
+            if (landingMarkerPrefab == null)
+                return;
+            var balls = player.Balls;
+            bool aiming = player.IsLocal && !player.IsDead && balls.Balls > 0 && GameSession.IsPlayerActive
+                          && balls.TryGetLobLanding(out _, out _);
+            if (aiming && balls.TryGetLobLanding(out Vector3 point, out float radius))
+            {
+                if (_aimMarker == null || !_aimMarker.isActiveAndEnabled)
+                    _aimMarker = Spawn();
+                _aimMarker.ShowSteady(point, radius, balls.Charge01, Mathf.Lerp(0.45f, 0.9f, balls.Charge01));
+            }
+            else
+            {
+                HideAimMarker();
+            }
+
+            var active = Ball.Active;
+            for (int i = 0; i < active.Count; i++)
+            {
+                var ball = active[i];
+                if (ball.State != BallState.Live || ball.Thrower != player.gameObject || ball.Definition == null
+                    || !ball.Definition.perks.lob || !player.IsLocal)
+                    continue;
+                float left = TimeToLand(ball);
+                if (!_flying.TryGetValue(ball, out var entry) || entry.life != ball.Life || entry.marker == null
+                    || !entry.marker.isActiveAndEnabled)
+                {
+                    if (entry.marker != null && entry.marker.isActiveAndEnabled)
+                        Despawn(entry.marker);
+                    entry = (Spawn(), ball.Life, Mathf.Max(0.05f, left));
+                    _flying[ball] = entry;
+                }
+                if (ball.TryPredictLanding(out Vector3 landing))
+                    entry.marker.ShowSteady(landing, ball.Definition.lobMarkerRadius, 1f - left / entry.total, 0.9f);
+            }
+
+            _gone.Clear();
+            foreach (var pair in _flying)
+                if (pair.Key == null || !pair.Key.isActiveAndEnabled || pair.Key.State != BallState.Live || pair.Key.Life != pair.Value.life)
+                    _gone.Add(pair.Key);
+            foreach (var ball in _gone)
+            {
+                Despawn(_flying[ball].marker);
+                _flying.Remove(ball);
+            }
+        }
+
+        static float TimeToLand(Ball ball)
+        {
+            float height = Mathf.Max(0f, ball.Position.y - ball.Radius);
+            float gravity = Mathf.Max(0.01f, ball.Gravity);
+            float vy = ball.Velocity.y;
+            return (vy + Mathf.Sqrt(vy * vy + 2f * gravity * height)) / gravity;
+        }
+
+        GroundMarker Spawn()
+        {
+            var marker = PoolService.Spawn(landingMarkerPrefab, transform.position, Quaternion.identity);
+            marker.IsPuppet = true;
+            marker.SetColor(landingColor);
+            return marker;
+        }
+
+        void HideAimMarker()
+        {
+            Despawn(_aimMarker);
+            _aimMarker = null;
+        }
+
+        static void Despawn(GroundMarker marker)
+        {
+            if (marker != null && marker.isActiveAndEnabled)
+                PoolService.Despawn(marker.gameObject);
         }
     }
 }

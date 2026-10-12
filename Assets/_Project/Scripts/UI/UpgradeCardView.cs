@@ -1,4 +1,5 @@
 using System;
+using Bouncer.Balls;
 using Bouncer.Core;
 using Bouncer.Upgrades;
 using TMPro;
@@ -43,9 +44,28 @@ namespace Bouncer.UI
         [SerializeField] float maxTilt = 4f;
         [SerializeField] float selectedScale = 1.07f;
 
+        [Header("Карточка мяча: шкалы вместо части текста")]
+        [SerializeField] BallStatBars ballStats;
+        [SerializeField] float ballIconSize = 128f;
+        [SerializeField] float ballTitleY = -146f;
+        [SerializeField] float ballDescriptionY = -194f;
+        [SerializeField] float ballDescriptionHeight = 76f;
+
+        [Header("Нельзя взять (мешает мяч)")]
+        [SerializeField] Color blockedColor = new(1f, 0.45f, 0.38f);
+        [SerializeField, Range(0f, 1f)] float blockedAlpha = 0.55f;
+
         float _appearAt;
         float _tilt;
         float _scale = 1f;
+        bool _blocked;
+        Color _paperColor = Color.white;
+        bool _layoutSaved;
+        Vector2 _iconSize;
+        Vector2 _iconPosition;
+        Vector2 _titlePosition;
+        Vector2 _descriptionPosition;
+        Vector2 _descriptionSize;
 
         public event Action<UpgradeCardView> Clicked;
         public bool IsSelected { get; private set; }
@@ -55,6 +75,7 @@ namespace Bouncer.UI
 
         public void Show(UpgradeCard card, int taken, int number, float delay)
         {
+            _paperColor = card.wrapperColor;
             paper.color = card.wrapperColor;
             icon.sprite = card.icon;
             icon.enabled = card.icon != null;
@@ -71,6 +92,8 @@ namespace Bouncer.UI
             stacks.text = card.maxStacks > 1 && card.category != UpgradeCategory.Treat ? $"{taken + 1}/{card.maxStacks}" : string.Empty;
             hotkey.text = number > 0 ? number.ToString() : string.Empty;
             HidePocketTag();
+            SetBlocked(false);
+            ShowBallStats(card);
 
             _appearAt = Time.unscaledTime + delay;
             _tilt = UnityEngine.Random.Range(-maxTilt, maxTilt);
@@ -82,6 +105,8 @@ namespace Bouncer.UI
 
         public void ShowPocketNeed(PocketNeed need, int used, int max)
         {
+            if (_blocked)
+                SetBlocked(false);
             if (!pocketTag)
                 return;
             pocketTag.SetActive(true);
@@ -104,6 +129,57 @@ namespace Bouncer.UI
             };
         }
 
+        void ShowBallStats(UpgradeCard card)
+        {
+            if (!ballStats)
+                return;
+            SaveLayout();
+            var definition = card is BallTypeCard type && type.ballPrefab ? type.ballPrefab.Definition : null;
+            bool ball = definition != null;
+            var iconRect = icon.rectTransform;
+            iconRect.sizeDelta = ball ? new Vector2(ballIconSize, ballIconSize) : _iconSize;
+            iconRect.anchoredPosition = _iconPosition;
+            title.rectTransform.anchoredPosition = ball ? new Vector2(_titlePosition.x, ballTitleY) : _titlePosition;
+            description.rectTransform.anchoredPosition = ball ? new Vector2(_descriptionPosition.x, ballDescriptionY) : _descriptionPosition;
+            description.rectTransform.sizeDelta = ball ? new Vector2(_descriptionSize.x, ballDescriptionHeight) : _descriptionSize;
+            if (ball)
+                ballStats.Show(definition.ratings);
+            else
+                ballStats.Hide();
+        }
+
+        void SaveLayout()
+        {
+            if (_layoutSaved)
+                return;
+            _layoutSaved = true;
+            _iconSize = icon.rectTransform.sizeDelta;
+            _iconPosition = icon.rectTransform.anchoredPosition;
+            _titlePosition = title.rectTransform.anchoredPosition;
+            _descriptionPosition = description.rectTransform.anchoredPosition;
+            _descriptionSize = description.rectTransform.sizeDelta;
+        }
+
+        // Серая карточка с плашкой-причиной: например, «Ещё мяч» при набивном.
+        public void ShowBlocked(string reasonKey, string ballTitle)
+        {
+            SetBlocked(true);
+            if (!pocketTag)
+                return;
+            pocketTag.SetActive(true);
+            string ball = string.IsNullOrEmpty(ballTitle) ? ballTitle : char.ToLowerInvariant(ballTitle[0]) + ballTitle.Substring(1);
+            pocketTagText.text = Loc.Format(reasonKey, ball);
+            pocketTagText.color = blockedColor;
+        }
+
+        void SetBlocked(bool blocked)
+        {
+            _blocked = blocked;
+            icon.color = blocked ? new Color(0.55f, 0.55f, 0.55f) : Color.white;
+            if (paper)
+                paper.color = blocked ? Color.Lerp(_paperColor, new Color(0.6f, 0.6f, 0.6f), 0.7f) : _paperColor;
+        }
+
         public void HidePocketTag()
         {
             if (pocketTag)
@@ -118,7 +194,7 @@ namespace Bouncer.UI
             _scale = Mathf.MoveTowards(_scale, IsSelected ? selectedScale : 1f, Time.unscaledDeltaTime * 1.2f);
             body.localScale = Vector3.one * (EaseOutBack(t) * _scale);
             body.localRotation = Quaternion.Euler(0f, 0f, IsSelected ? 0f : _tilt);
-            group.alpha = t;
+            group.alpha = t * (_blocked ? blockedAlpha : 1f);
             if (glow)
             {
                 glow.enabled = IsSelected;

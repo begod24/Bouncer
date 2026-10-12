@@ -148,6 +148,11 @@ namespace Bouncer.Player
                 return;
 
             var intent = _intentSource.ReadIntent();
+            if (BallLab.PointerOverPanel)
+            {
+                intent.ThrowPressed = false;
+                intent.CatchPressed = false;
+            }
             LastIntent = intent;
             if (intent.PausePressed && GameSession.Instance != null)
                 GameSession.Instance.TogglePause();
@@ -172,6 +177,8 @@ namespace Bouncer.Player
 
             if (intent.DashPressed && !Balls.IsCatching)
                 Motor.TryDash(intent.Move);
+            if (Motor.IsDashing)
+                Balls.KickWhileDashing(Motor.DashDirection);
 
             bool spinning = IsSpinning;
             Balls.Tick(intent, Aim, canAct: !spinning, canCatch: !Motor.IsDashing && !spinning);

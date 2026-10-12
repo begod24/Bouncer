@@ -70,6 +70,7 @@ namespace Bouncer.Player
                     {
                         intent.Aim = delta.normalized;
                         intent.AimFromPointer = true;
+                        intent.AimDistance = delta.magnitude;
                     }
                 }
             }

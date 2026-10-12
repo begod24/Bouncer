@@ -224,7 +224,7 @@ namespace Bouncer.Enemies
             if (GuardUp && Vector3.Angle(transform.forward, -incoming) <= definition.guardHalfAngle)
             {
                 GameEvents.PlaySound(SoundCue.ShieldBlock, hit.point);
-                if (!ball.Stats.Has(HitFlags.Charged))
+                if (!ball.Stats.Has(HitFlags.Charged) && !ball.Perks.ignoreShields)
                 {
                     BlockKick = 1f;
                     if (hitFlash)

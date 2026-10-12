@@ -91,7 +91,11 @@ namespace Bouncer.UI
                 if (i < offer.Count)
                 {
                     cards[i].Show(offer[i], _cards.StacksOf(offer[i]), i + 1, i * cardStagger);
-                    cards[i].ShowPocketNeed(_cards.NeedFor(offer[i]), _cards.PocketsUsed, _cards.MaxPockets);
+                    string blocked = _cards.BlockReason(offer[i]);
+                    if (blocked != null)
+                        cards[i].ShowBlocked(blocked, _cards.BallTitle());
+                    else
+                        cards[i].ShowPocketNeed(_cards.NeedFor(offer[i]), _cards.PocketsUsed, _cards.MaxPockets);
                 }
                 else
                 {

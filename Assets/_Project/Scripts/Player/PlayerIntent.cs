@@ -7,6 +7,7 @@ namespace Bouncer.Player
         public Vector3 Move;
         public Vector3 Aim;
         public bool AimFromPointer;
+        public float AimDistance;
         public bool UsingGamepad;
 
         public bool ThrowHeld;

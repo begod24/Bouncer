@@ -36,6 +36,20 @@ MonoBehaviour:
   popHorizontalKeep: 0.15
   popGravity: 14
   poppedWallKeep: 0.5
+  hands: 0
+  fixedHands: 0
+  chargeTimeMultiplier: 1
+  autoFireInterval: 0
+  lobDistance: {x: 3, y: 20}
+  lobTapDistance: 13
+  lobFlightTime: {x: 0.55, y: 1.05}
+  lobMarkerRadius: 0.9
+  ratings:
+    damage: 2
+    speed: 3
+    ricochets: 4
+    area: 3
+    control: 4
   perks:
     extraShots: 0
     spreadAngle: 0
@@ -49,7 +63,6 @@ MonoBehaviour:
     gumTrail: 0
     blastRadius: 0
     blastDamage: 0
-    snakeAmplitude: 0
     grazeRadius: 0.55
     wallDamage: 0
     chargedPierce: 0
@@ -66,6 +79,8 @@ MonoBehaviour:
     chalk: 0
     frozenBonus: 0
     bounceAssist: 0
+    bounceOffTargets: 0
+    ignoreShields: 0
   areaEffect: {fileID: 0}
   chainRange: 9
   chainSpeedKeep: 0.9
@@ -78,7 +93,6 @@ MonoBehaviour:
   floorBounceSpeedKeep: 0.85
   gumSpacing: 1.2
   blastKnockback: 10
-  snakeWavelength: 4.5
   grazeKnockbackScale: 0.5
   rollDrag: 6
   landEffect: {fileID: 0}

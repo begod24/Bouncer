@@ -173,6 +173,8 @@ namespace Bouncer.Core
 
         public float FrozenLeft => Mathf.Max(0f, _frozenUntil - Time.time);
 
+        public void Thaw() => _frozenUntil = 0f;
+
         public bool Sees(Vector3 point)
         {
             if (GazeHalfAngle <= 0f && BackGazeHalfAngle <= 0f)

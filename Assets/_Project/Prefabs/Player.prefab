@@ -430,6 +430,8 @@ MonoBehaviour:
   chargedColor: {r: 1, g: 1, b: 1, a: 0.85}
   candleColor: {r: 1, g: 0.8, b: 0.2, a: 0.9}
   autoAimColor: {r: 0.5, g: 0.9, b: 1, a: 0.6}
+  landingMarkerPrefab: {fileID: 8557048589744460489, guid: d298813be095c4d45a5ab1ab8a1cf216, type: 3}
+  landingColor: {r: 1, g: 0.62, b: 0.2, a: 0.9}
 --- !u!1 &1871924461635013731
 GameObject:
   m_ObjectHideFlags: 0

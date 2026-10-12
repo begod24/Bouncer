@@ -147,7 +147,6 @@ namespace Bouncer.Net
             s.SerializeValue(ref p.gumTrail);
             s.SerializeValue(ref p.blastRadius);
             s.SerializeValue(ref p.blastDamage);
-            s.SerializeValue(ref p.snakeAmplitude);
             s.SerializeValue(ref p.grazeRadius);
             s.SerializeValue(ref p.wallDamage);
             s.SerializeValue(ref p.chargedPierce);
@@ -164,6 +163,8 @@ namespace Bouncer.Net
             s.SerializeValue(ref p.chalk);
             s.SerializeValue(ref p.frozenBonus);
             s.SerializeValue(ref p.bounceAssist);
+            s.SerializeValue(ref p.bounceOffTargets);
+            s.SerializeValue(ref p.ignoreShields);
         }
     }
 

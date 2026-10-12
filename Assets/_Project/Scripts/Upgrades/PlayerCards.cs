@@ -194,6 +194,17 @@ namespace Bouncer.Upgrades
             return false;
         }
 
+        public string BlockReason(UpgradeCard card) => card && _player ? card.BlockReason(_player) : null;
+
+        public string BallTitle()
+        {
+            if (deck != null)
+                foreach (var card in deck.deck)
+                    if (card is BallTypeCard type && type.ballPrefab == _player.Balls.BallPrefab && !card.title.IsEmpty)
+                        return card.title.GetLocalizedString();
+            return string.Empty;
+        }
+
         public bool PocketsFullFor(UpgradeCard card) => card && NeedFor(card) == PocketNeed.Full;
 
         public PocketNeed NeedFor(UpgradeCard card)
@@ -383,6 +394,11 @@ namespace Bouncer.Upgrades
                 return;
 
             var card = _offer[index];
+            if (BlockReason(card) != null)
+            {
+                GameEvents.PlaySound(SoundCue.NotEnoughCoins, transform.position);
+                return;
+            }
             if (PocketsFullFor(card))
             {
                 PendingCard = card;

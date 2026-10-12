@@ -39,12 +39,25 @@ namespace Bouncer.Player
         bool _lostYoyo;
         float _lostReturnAt;
         int _throwCount;
+        bool _autoFiring;
+        float _aimDistance = -1f;
+        Vector3 _aimDirection = Vector3.forward;
 
         public Ball BallPrefab => ballPrefab;
         public BallDefinition BallDefinition => ballPrefab ? ballPrefab.Definition : null;
         public int Balls { get; private set; }
         public int BorrowedBalls => _borrowed.Count;
-        public int MaxBalls => _stats.maxBalls + _mods.ExtraBalls;
+        public bool FixedHands => BallDefinition != null && BallDefinition.fixedHands;
+        public int MaxBalls
+        {
+            get
+            {
+                var definition = BallDefinition;
+                int hands = definition != null && definition.hands > 0 ? definition.hands : _stats.maxBalls;
+                return Mathf.Max(1, hands + (FixedHands ? 0 : _mods.ExtraBalls) - _mods.FewerBalls);
+            }
+        }
+        float ChargeTime => _stats.chargeTime * (BallDefinition != null ? BallDefinition.chargeTimeMultiplier : 1f);
         public float CatchRadius => _stats.catchRadius * _mods.CatchRadius;
         float CatchWindow => _stats.catchWindow * _mods.CatchWindow;
         float PerfectCatchWindow => _stats.perfectCatchWindow;
@@ -80,6 +93,7 @@ namespace Bouncer.Player
         public event Action Returned;
         public event Action Grabbed;
         public event Action BallTypeChanged;
+        public event Action Kicked;
 
         public void Init(PlayerStats stats, PlayerModifiers mods)
         {
@@ -98,7 +112,13 @@ namespace Bouncer.Player
         {
             if (prefab == null || prefab == ballPrefab)
                 return;
+            int before = MaxBalls;
             ballPrefab = prefab;
+            int after = MaxBalls;
+            if (after > before)
+                GiveBall(after - before);
+            else if (after < before)
+                DropExcess();
             BallTypeChanged?.Invoke();
         }
 
@@ -176,10 +196,13 @@ namespace Bouncer.Player
         public void Tick(in PlayerIntent intent, PlayerAim aim, bool canAct, bool canCatch)
         {
             ReturnLostBalls();
+            _aimDirection = aim.Direction;
+            _aimDistance = aim.Distance;
             if (!canAct)
             {
                 CancelCharge();
                 CancelCatch();
+                _autoFiring = false;
                 return;
             }
 
@@ -193,23 +216,120 @@ namespace Bouncer.Player
             else if (_catchWindowOpen)
                 MissCatch();
 
-            if (!IsCharging && intent.ThrowPressed && Balls > 0 && !IsCatching && Time.time >= _nextThrowAt)
+            float autoFire = BallDefinition != null ? BallDefinition.autoFireInterval : 0f;
+            if (autoFire > 0f)
             {
-                IsCharging = true;
-                _chargeStart = Time.time;
+                CancelCharge();
+                TickAutoFire(intent, aim, autoFire);
             }
-            if (IsCharging)
+            else
             {
-                float held = Time.time - _chargeStart;
-                Charge01 = held <= _stats.tapThreshold
-                    ? 0f
-                    : Mathf.Clamp01((held - _stats.tapThreshold) / Mathf.Max(0.01f, _stats.chargeTime));
-                if (!intent.ThrowHeld || intent.ThrowReleased)
-                    Throw(aim.Direction);
+                if (!IsCharging && intent.ThrowPressed && Balls > 0 && !IsCatching && Time.time >= _nextThrowAt)
+                {
+                    IsCharging = true;
+                    _chargeStart = Time.time;
+                }
+                if (IsCharging)
+                {
+                    float held = Time.time - _chargeStart;
+                    Charge01 = held <= _stats.tapThreshold
+                        ? 0f
+                        : Mathf.Clamp01((held - _stats.tapThreshold) / Mathf.Max(0.01f, ChargeTime));
+                    if (!intent.ThrowHeld || intent.ThrowReleased)
+                        Throw(aim.Direction);
+                }
             }
 
             if (Balls < MaxBalls)
                 TryPickup();
+        }
+
+        void TickAutoFire(in PlayerIntent intent, PlayerAim aim, float interval)
+        {
+            if (!intent.ThrowHeld)
+                _autoFiring = false;
+            bool wants = intent.ThrowPressed || (_autoFiring && intent.ThrowHeld);
+            if (!wants || Balls <= 0 || IsCatching || Time.time < _nextThrowAt)
+                return;
+            Throw(aim.Direction);
+            _nextThrowAt = Time.time + Mathf.Max(_stats.throwCooldown, interval);
+            _autoFiring = true;
+        }
+
+        public void KickWhileDashing(Vector3 direction)
+        {
+            var definition = BallDefinition;
+            if (definition == null || !definition.perks.groundRoll)
+                return;
+            direction.y = 0f;
+            if (direction.sqrMagnitude < 1e-4f)
+                direction = transform.forward;
+            direction.Normalize();
+            float radius = PickupRadius + 0.3f;
+            Vector3 feet = transform.position;
+            var balls = Ball.Active;
+            for (int i = balls.Count - 1; i >= 0; i--)
+            {
+                if (i >= balls.Count)
+                    continue;
+                var ball = balls[i];
+                if (ball.State != BallState.Loose || ball.Definition != definition)
+                    continue;
+                Vector3 delta = ball.Position - feet;
+                if (delta.y > 1.2f)
+                    continue;
+                delta.y = 0f;
+                if (delta.sqrMagnitude > radius * radius)
+                    continue;
+                Kick(ball, direction);
+            }
+        }
+
+        void Kick(Ball ball, Vector3 direction)
+        {
+            var definition = BallDefinition;
+            AddToHands(ball);
+            var stats = definition.GetThrowStats(0f, false);
+            stats.Damage += _mods.BonusDamage;
+            stats.BonusDamage = _mods.BonusDamage;
+            var perks = BallPerks.Combine(definition.perks, _mods.Perks);
+            perks.yoyo = false;
+            GameObject owner = gameObject;
+            if (_borrowed.Count > 0)
+            {
+                owner = _borrowed[^1];
+                _borrowed.RemoveAt(_borrowed.Count - 1);
+            }
+            Launch(direction, definition.radius, stats, perks, phantom: false, owner, false);
+            Balls--;
+            GameEvents.PlaySound(SoundCue.Throw, transform.position);
+            Kicked?.Invoke();
+        }
+
+        public bool TryGetLobLanding(out Vector3 point, out float radius)
+        {
+            point = default;
+            radius = 0f;
+            var definition = BallDefinition;
+            if (definition == null || !definition.perks.lob)
+                return false;
+            float charge = CandleReady ? 1f : Charge01;
+            point = transform.position + Flat(_aimDirection).normalized * LobDistance(definition, charge);
+            point.y = 0f;
+            radius = definition.lobMarkerRadius;
+            return true;
+        }
+
+        float LobDistance(BallDefinition definition, float charge)
+        {
+            float wanted = _aimDistance >= 0f ? _aimDistance : Mathf.Lerp(8f, definition.lobDistance.y, charge);
+            return definition.ClampLobDistance(wanted, charge);
+        }
+
+        static Vector3 Flat(Vector3 v)
+        {
+            v.y = 0f;
+            return v.sqrMagnitude > 1e-6f ? v : Vector3.forward;
         }
 
         public void CancelCharge()
@@ -548,6 +668,14 @@ namespace Bouncer.Player
                 PassReady = false;
             }
             var stats = definition.GetThrowStats(charge, candle);
+            if (definition.perks.lob)
+            {
+                float distance = LobDistance(definition, candle ? 1f : charge);
+                Vector3 origin = SafeOrigin(direction, definition.radius);
+                Vector3 offset = origin - transform.position;
+                offset.y = 0f;
+                stats = definition.GetLobStats(stats, distance - Vector3.Dot(offset, Flat(direction).normalized), origin.y);
+            }
             stats.Damage += _mods.BonusDamage + countBonus;
             stats.BonusDamage = _mods.BonusDamage + countBonus;
             var perks = BallPerks.Combine(definition.perks, _mods.Perks);

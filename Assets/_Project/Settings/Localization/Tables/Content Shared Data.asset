@@ -155,14 +155,6 @@ MonoBehaviour:
     m_Key: card.pas_freeze.description
     m_Metadata:
       m_Items: []
-  - m_Id: 23928712978443
-    m_Key: card.ball_deflated.title
-    m_Metadata:
-      m_Items: []
-  - m_Id: 23928712978444
-    m_Key: card.ball_deflated.description
-    m_Metadata:
-      m_Items: []
   - m_Id: 133956933509120
     m_Key: card.mod_wall.title
     m_Metadata:

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Bouncer.Balls::Bouncer.Balls.BallDefinition
   radius: 0.13
   mass: 0.06
-  speed: 24
+  speed: 26
   chargedSpeed: 36
   upVelocity: 1.2
   chargedUpVelocity: 0.6
@@ -36,15 +36,52 @@ MonoBehaviour:
   popHorizontalKeep: 0.15
   popGravity: 14
   poppedWallKeep: 0.5
+  hands: 5
+  fixedHands: 0
+  chargeTimeMultiplier: 1
+  autoFireInterval: 0.14
+  lobDistance: {x: 3, y: 20}
+  lobTapDistance: 13
+  lobFlightTime: {x: 0.55, y: 1.05}
+  lobMarkerRadius: 0.9
+  ratings:
+    damage: 1
+    speed: 4
+    ricochets: 3
+    area: 1
+    control: 1
   perks:
-    extraShots: 2
-    spreadAngle: 12
+    extraShots: 0
+    spreadAngle: 0
     chainBounces: 0
     areaRadius: 0
     areaDamage: 0
     splitOnHit: 0
     boomerang: 0
     elastic: 0
+    floorBounces: 0
+    gumTrail: 0
+    blastRadius: 0
+    blastDamage: 0
+    grazeRadius: 0
+    wallDamage: 0
+    chargedPierce: 0
+    homing: 0
+    yoyo: 0
+    bounceBlastRadius: 0
+    bounceBlastDamage: 0
+    twinSplit: 0
+    areaStun: 0
+    curve: 0
+    lob: 0
+    groundRoll: 0
+    grazeStun: 0
+    chalk: 0
+    frozenBonus: 0
+    bounceAssist: 0
+    bounceOffTargets: 0
+    ignoreShields: 0
+  areaEffect: {fileID: 0}
   chainRange: 9
   chainSpeedKeep: 0.9
   splitAngle: 35
@@ -52,6 +89,14 @@ MonoBehaviour:
   boomerangDelay: 0.35
   boomerangTurnRate: 540
   elasticReturnSpeed: 18
+  floorBounceHeight: 1
+  floorBounceSpeedKeep: 0.85
+  gumSpacing: 1.2
+  blastKnockback: 10
+  grazeKnockbackScale: 0.5
+  rollDrag: 0
+  landEffect: {fileID: 0}
   floorBounceKeep: 0.5
   looseDamping: 0.6
   maxLooseBalls: 14
+  maxForeignLoose: 7

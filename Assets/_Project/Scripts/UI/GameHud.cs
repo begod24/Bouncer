@@ -131,7 +131,7 @@ namespace Bouncer.UI
             }
             var session = GameSession.Instance;
             if (help)
-                help.SetActive(GameSettings.ShowHints && GameSession.IsGameplayActive && !Tutorial.Active
+                help.SetActive(GameSettings.ShowHints && GameSession.IsGameplayActive && !Tutorial.Active && !BallLab.Active
                                && (session == null || session.Menu == LocalMenu.None));
             if (hudGroup)
             {

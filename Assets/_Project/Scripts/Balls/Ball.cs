@@ -96,9 +96,6 @@ namespace Bouncer.Balls
         int _floorBouncesLeft;
         bool _blastDone;
         float _gumDistance;
-        Vector3 _snakeHeading;
-        float _snakeDistance;
-        float _snakeSide = 1f;
         float _travel;
         bool _yoyoBack;
         GameObject _owner;
@@ -278,9 +275,6 @@ namespace Bouncer.Balls
                 direction = Flat(transform.forward);
             direction.Normalize();
 
-            _snakeHeading = direction;
-            _snakeDistance = 0f;
-            _snakeSide = UnityEngine.Random.value < 0.5f ? -1f : 1f;
             _velocity = direction * t.Stats.Speed + Vector3.up * t.Stats.UpVelocity;
             _gravity = t.Stats.Gravity;
             s_loose.Remove(this);
@@ -295,10 +289,6 @@ namespace Bouncer.Balls
             Stats = stats;
             _velocity = velocity;
             _gravity = stats.Gravity;
-            Vector3 heading = Flat(velocity);
-            if (heading.sqrMagnitude > 1e-4f)
-                _snakeHeading = heading.normalized;
-            _snakeDistance = 0f;
             _grazed.Clear();
             SetState(BallState.Live);
         }
@@ -610,8 +600,6 @@ namespace Bouncer.Balls
                     Home(dt);
                 if (live && Perks.curve != 0f && !IsComingBack)
                     Curve(dt);
-                if (live && Perks.snakeAmplitude > 0f)
-                    Snake(dt);
                 if (live && Team == Team.Player && !IsComingBack && TargetMark.Active)
                     HomeToMark(dt);
                 if (live && definition.rollDrag > 0f)
@@ -678,6 +666,8 @@ namespace Bouncer.Balls
                             }
                             if (_chainsLeft > 0 && TryChain(hit, position))
                                 continue;
+                            if (Perks.bounceOffTargets && TryBounceOffTarget(hit, direction, position, ref remaining))
+                                continue;
                             if (Perks.yoyo && TryStartYoyo(hit.collider, position))
                                 return;
                             Pop(position, hit.normal);
@@ -711,7 +701,6 @@ namespace Bouncer.Balls
                 float keep = !live ? definition.poppedWallKeep : surface ? surface.SpeedKeep : definition.wallSpeedKeep;
                 Vector3 reflected = Vector3.Reflect(_velocity, normal);
                 _velocity = new Vector3(reflected.x * keep, reflected.y, reflected.z * keep);
-                _snakeHeading = Vector3.Reflect(_snakeHeading, normal);
                 remaining *= keep;
                 if (surface)
                 {
@@ -1174,23 +1163,6 @@ namespace Bouncer.Balls
             }
         }
 
-        void Snake(float dt)
-        {
-            Vector3 horizontal = Flat(_velocity);
-            float speed = horizontal.magnitude;
-            if (speed < 1e-3f)
-                return;
-            float k = 2f * Mathf.PI / definition.snakeWavelength;
-            float rampLength = definition.snakeWavelength * 0.5f;
-            float ramp = Mathf.Clamp01(_snakeDistance / rampLength);
-            float rampSlope = ramp < 1f ? 1f / rampLength : 0f;
-            float phase = _snakeDistance * k;
-            float angle = Mathf.Atan(Perks.snakeAmplitude * (rampSlope * Mathf.Sin(phase) + ramp * k * Mathf.Cos(phase)));
-            _snakeDistance += speed * Mathf.Cos(angle) * dt;
-            Vector3 direction = Quaternion.AngleAxis(angle * Mathf.Rad2Deg * _snakeSide, Vector3.up) * _snakeHeading;
-            _velocity = direction * speed + Vector3.up * _velocity.y;
-        }
-
         void TrailGum(Vector3 from, Vector3 to)
         {
             if (gumSpot == null)
@@ -1259,7 +1231,31 @@ namespace Bouncer.Balls
                 return;
             Vector3 want = Flat(best.AimPoint - position).normalized;
             _velocity = want * speed + Vector3.up * _velocity.y;
-            _snakeHeading = want;
+        }
+
+        bool TryBounceOffTarget(in RaycastHit hit, Vector3 direction, Vector3 position, ref float remaining)
+        {
+            if (Ricochets >= definition.maxRicochets)
+                return false;
+            Vector3 normal = Flat(hit.normal);
+            if (normal.sqrMagnitude < 1e-4f || Vector3.Dot(normal, Flat(direction)) > -0.1f)
+            {
+                normal = Flat(position - hit.collider.bounds.center);
+                if (normal.sqrMagnitude < 1e-4f)
+                    normal = -Flat(direction);
+            }
+            normal.Normalize();
+            Vector3 reflected = Vector3.Reflect(_velocity, normal);
+            float keep = definition.wallSpeedKeep;
+            _velocity = new Vector3(reflected.x * keep, Mathf.Max(0f, reflected.y), reflected.z * keep);
+            remaining *= keep;
+            Ricochets++;
+            _stateTime = 0f;
+            IgnoreFor(hit.collider, 0.3f);
+            if (Perks.bounceAssist > 0f && Team == Team.Player)
+                AssistAim(position, Perks.bounceAssist);
+            Ricocheted?.Invoke(this, hit.point, normal);
+            return true;
         }
 
         bool TryChain(in RaycastHit hit, Vector3 position)
@@ -1323,14 +1319,11 @@ namespace Bouncer.Balls
                 return;
             Vector3 to = Flat(TargetMark.Target.AimPoint - _rb.position);
             float sqr = to.sqrMagnitude;
-            Vector3 heading = Perks.snakeAmplitude > 0f ? _snakeHeading : horizontal / speed;
+            Vector3 heading = horizontal / speed;
             if (sqr < 0.09f || sqr > MarkRange * MarkRange || Vector3.Angle(heading, to) > HomingCone)
                 return;
             Vector3 turned = Vector3.RotateTowards(heading, to.normalized, MarkTurnRate * Mathf.Deg2Rad * dt, 0f);
-            if (Perks.snakeAmplitude > 0f)
-                _snakeHeading = turned;
-            else
-                _velocity = turned * speed + Vector3.up * _velocity.y;
+            _velocity = turned * speed + Vector3.up * _velocity.y;
         }
 
         void Drag(float dt)
@@ -1369,9 +1362,6 @@ namespace Bouncer.Balls
             _stateTime = 0f;
             Ricochets = 0;
             _grazed.Clear();
-            Vector3 heading = Flat(velocity);
-            if (heading.sqrMagnitude > 1e-4f)
-                _snakeHeading = heading.normalized;
             StateChanged?.Invoke(this);
         }
 
@@ -1394,10 +1384,7 @@ namespace Bouncer.Balls
             if (horizontal.sqrMagnitude < 1e-6f)
                 return;
             var turn = Quaternion.AngleAxis(Perks.curve * dt, Vector3.up);
-            if (Perks.snakeAmplitude > 0f)
-                _snakeHeading = turn * _snakeHeading;
-            else
-                _velocity = turn * horizontal + Vector3.up * _velocity.y;
+            _velocity = turn * horizontal + Vector3.up * _velocity.y;
         }
 
         void Home(float dt)
@@ -1406,7 +1393,7 @@ namespace Bouncer.Balls
             float speed = horizontal.magnitude;
             if (speed < 1e-3f)
                 return;
-            Vector3 heading = Perks.snakeAmplitude > 0f ? _snakeHeading : horizontal / speed;
+            Vector3 heading = horizontal / speed;
             Vector3 position = _rb.position;
             Targetable best = null;
             float bestSqr = HomingRange * HomingRange;
@@ -1425,10 +1412,7 @@ namespace Bouncer.Balls
                 return;
             Vector3 want = Flat(best.AimPoint - position).normalized;
             Vector3 turned = Vector3.RotateTowards(heading, want, Perks.homing * Mathf.Deg2Rad * dt, 0f);
-            if (Perks.snakeAmplitude > 0f)
-                _snakeHeading = turned;
-            else
-                _velocity = turned * speed + Vector3.up * _velocity.y;
+            _velocity = turned * speed + Vector3.up * _velocity.y;
         }
 
         bool TryStartYoyo(Collider struck, Vector3 position)

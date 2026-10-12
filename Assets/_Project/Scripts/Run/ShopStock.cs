@@ -62,7 +62,7 @@ namespace Bouncer.Run
 
         public bool CanBuy(int index) =>
             index >= 0 && index < _slots.Count && _slots[index].Card != null && !_slots[index].Sold
-            && _cards.CanOffer(_slots[index].Card);
+            && _cards.CanOffer(_slots[index].Card) && _cards.BlockReason(_slots[index].Card) == null;
 
         public PurchaseResult Buy(int index)
         {

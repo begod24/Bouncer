@@ -17,6 +17,7 @@ namespace Bouncer.Visuals
         static readonly int FogLampsId = Shader.PropertyToID("_Bouncer_FogLamps");
         static readonly int FogLampColorsId = Shader.PropertyToID("_Bouncer_FogLampColors");
         static readonly int FogLampCountId = Shader.PropertyToID("_Bouncer_FogLampCount");
+        static readonly int VolFogId = Shader.PropertyToID("_Bouncer_VolFog");
         const int FogLampSlots = 6;
 
         [SerializeField] TimeOfDayController timeOfDay;
@@ -162,6 +163,8 @@ namespace Bouncer.Visuals
         // Туман: ставит глобальные переменные шейдеров (BouncerFogCore.hlsl), клубы плывут по двум слоям, фонари дают ореол
         void UpdateFog(Vector3 center, float dt)
         {
+            // туман рисует объёмный проход URP_Renderer → VolumetricFog (вариант B), шейдеры окружения свой не добавляют
+            Shader.SetGlobalFloat(VolFogId, 1f);
             Shader.SetGlobalVector(FogCenterId, center);
             // чуть дышит: то гуще, то реже, раз в ~20 с
             float breath = 1f + 0.08f * Mathf.Sin(Time.time * 0.31f) + 0.04f * Mathf.Sin(Time.time * 0.83f + 1.7f);

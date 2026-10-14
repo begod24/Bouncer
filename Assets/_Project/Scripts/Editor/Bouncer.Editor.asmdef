@@ -5,6 +5,7 @@
         "Unity.Localization",
         "Unity.Localization.Editor",
         "Unity.TextMeshPro",
+        "Unity.RenderPipelines.Universal.Runtime",
         "UnityEngine.UI",
         "Bouncer.Core",
         "Bouncer.Balls",

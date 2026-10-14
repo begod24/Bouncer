@@ -259,7 +259,7 @@ void PaletteLitFragment(
     color.rgb = lerp(color.rgb, _FlashColor.rgb, _FlashColor.a);
     color.rgb = MixFog(color.rgb, inputData.fogCoord);
     color.rgb = MixRadialFog(color.rgb, input.positionWS, fogResist);
-    color.a = 1.0h;
+    color.a = _BaseColor.a;
     outColor = color;
 
 #ifdef _WRITE_RENDERING_LAYERS

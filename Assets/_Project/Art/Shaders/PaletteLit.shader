@@ -15,6 +15,10 @@ Shader "Bouncer/PaletteLit"
         [HideInInspector] _Cutoff("Alpha Cutoff", Range(0, 1)) = 0.5
         [HideInInspector] _Surface("__surface", Float) = 0
         [HideInInspector] _Cull("__cull", Float) = 2
+        // прозрачный режим (жвачка): Blend SrcAlpha OneMinusSrcAlpha, ZWrite 0, альфа = _BaseColor.a; по умолчанию непрозрачный
+        [HideInInspector] _SrcBlend("__src", Float) = 1
+        [HideInInspector] _DstBlend("__dst", Float) = 0
+        [HideInInspector] _ZWrite("__zw", Float) = 1
     }
 
     SubShader
@@ -33,8 +37,8 @@ Shader "Bouncer/PaletteLit"
             Name "ForwardLit"
             Tags { "LightMode" = "UniversalForward" }
 
-            Blend One Zero
-            ZWrite On
+            Blend [_SrcBlend] [_DstBlend]
+            ZWrite [_ZWrite]
             Cull [_Cull]
 
             HLSLPROGRAM

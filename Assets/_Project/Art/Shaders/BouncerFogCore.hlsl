@@ -14,6 +14,8 @@ float4 _Bouncer_FogWind;     // xy — дрейф большого слоя, zw 
 float4 _Bouncer_FogLamps[BOUNCER_FOG_LAMPS];     // xyz — голова фонаря, w — радиус ореола, м
 half4 _Bouncer_FogLampColors[BOUNCER_FOG_LAMPS]; // rgb — цвет ореола с учётом яркости фонаря, a — насколько ореол сгущает туман
 float _Bouncer_FogLampCount;
+// 1 — туман рисует полноэкранный проход «Bouncer/VolumetricFog» (вариант B): шейдеры окружения свой туман тогда не добавляют
+float _Bouncer_VolFog;
 
 // Процедурный шум: хэш и сглаженный шум по сетке (огонь, угли, волны, туман)
 float BouncerHash21(float2 p)
@@ -49,7 +51,7 @@ float BouncerFogBanks(float2 xz)
 
 // rgb — цвет тумана в этой точке (со светом фонарей), a — сколько тумана между камерой и точкой (0 — чисто).
 // resist: 0 — окружение (тонет полностью), 0..1 — актёры и эффекты (туман берёт их на столько слабее)
-half4 BouncerFogSample(float3 positionWS, half resist)
+half4 BouncerFogSampleRaw(float3 positionWS, half resist)
 {
     half4 fog = half4(_Bouncer_FogColor.rgb, 0.0h);
     if (_Bouncer_FogParams.z <= 0.001)
@@ -80,6 +82,14 @@ half4 BouncerFogSample(float3 positionWS, half resist)
 
     fog.rgb = color;
     fog.a = (half)(amount * _Bouncer_FogShape.z * _Bouncer_FogParams.z * (1.0h - resist));
+    return fog;
+}
+
+half4 BouncerFogSample(float3 positionWS, half resist)
+{
+    half4 fog = BouncerFogSampleRaw(positionWS, resist);
+    if (_Bouncer_VolFog > 0.5)
+        fog.a = 0.0h;
     return fog;
 }
 

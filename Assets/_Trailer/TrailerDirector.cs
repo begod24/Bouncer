@@ -14,6 +14,9 @@ namespace Bouncer.Trailer
         public static bool Busy { get; private set; }
         public static string Last { get; private set; }
         public static string Errors { get; private set; } = "";
+        static bool CardShot;
+        // Другой дубль того же кадра: прибавка к зерну случайности (колючие мячи, ходы ботов)
+        public static int SeedOffset;
 
         public static void Run(string shots)
         {
@@ -44,9 +47,10 @@ namespace Bouncer.Trailer
         {
             if (Busy && UnityEditor.EditorApplication.isPlaying && UnityEditor.EditorApplication.isPaused)
                 UnityEditor.EditorApplication.isPaused = false;
-            // выбор карточки посреди кадра (заработали в бою) замораживает время — в ролике его не бывает
+            // выбор карточки посреди кадра (заработали в бою) замораживает время — в ролике его не бывает,
+            // кроме кадра, где выбор карточки и снимается
             var session = GameSession.Instance;
-            if (Busy && session != null && session.State == Bouncer.Core.SessionState.Upgrade)
+            if (Busy && !CardShot && session != null && session.State == Bouncer.Core.SessionState.Upgrade)
                 session.EndUpgradeChoice();
         }
 
@@ -66,10 +70,11 @@ namespace Bouncer.Trailer
                 Last = log + shot + ": started";
                 s_runner.StopAllCoroutines();
                 Time.timeScale = 1f;
+                CardShot = false;
                 int seed = 17;
                 foreach (char c in shot)
                     seed = seed * 31 + c;
-                Random.InitState(seed);   // повторная съёмка кадра повторяет поведение ботов
+                Random.InitState(seed + SeedOffset);   // повторная съёмка кадра повторяет поведение ботов
                 var feel = FindFirstObjectByType<GameFeel>();
                 if (feel)
                     feel.enabled = true;
@@ -87,6 +92,7 @@ namespace Bouncer.Trailer
             s_runner.StopAllCoroutines();
             Time.timeScale = 1f;
             Time.captureFramerate = 0;
+            RestoreLocale();
             Last = log + "ALL DONE";
             Busy = false;
         }
@@ -120,7 +126,8 @@ namespace Bouncer.Trailer
             "babai" => BossBabai(),
             "slowcatch" => SlowCatch(),
             "finale" => Finale(),
-            _ => null,
+            _ => GameplayScene(shot),
         };
+
     }
 }

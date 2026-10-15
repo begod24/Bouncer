@@ -36,6 +36,30 @@ namespace Bouncer.Trailer
             ClearOffers();
             MuteMusic();
             RemoveKids();
+            UseLocale();
+            // «Двор · Утро» при загрузке арены: в коротких склейках только мешает
+            foreach (var banner in Object.FindObjectsByType<Bouncer.UI.ArenaBanner>(FindObjectsSortMode.None))
+                banner.gameObject.SetActive(false);
+        }
+
+        // Язык интерфейса в ролике (ролик на английском). Прежний язык возвращает RestoreLocale после съёмки.
+        public static string Locale = "en";
+        static UnityEngine.Localization.Locale s_savedLocale;
+
+        static void UseLocale()
+        {
+            var locale = UnityEngine.Localization.Settings.LocalizationSettings.AvailableLocales.GetLocale(Locale);
+            if (locale == null || UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocale == locale)
+                return;
+            s_savedLocale ??= UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocale;
+            UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocale = locale;
+        }
+
+        public static void RestoreLocale()
+        {
+            if (s_savedLocale != null)
+                UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocale = s_savedLocale;
+            s_savedLocale = null;
         }
 
         // Предложения карточек, заработанные в прошлом кадре, переезжают в следующий (RunCards.Carried) и
@@ -136,7 +160,11 @@ namespace Bouncer.Trailer
                 Debug.LogError("[Trailer] no card " + cardName);
                 return;
             }
-            card.Apply(kid.Player);
+            // через карманы, как в игре: карточка видна в интерфейсе
+            if (kid.TryGetComponent(out Bouncer.Upgrades.PlayerCards cards))
+                cards.Take(card);
+            else
+                card.Apply(kid.Player);
         }
 
         public static Ball RollBall(Vector3 position, Vector3 velocity, string prefab = "Assets/_Project/Prefabs/Ball.prefab")

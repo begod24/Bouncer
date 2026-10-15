@@ -15,19 +15,25 @@ namespace Bouncer.Trailer
     // Только для съёмки рекламного ролика, в билд не попадает (asmdef с UNITY_EDITOR).
     public sealed class TrailerRecorder : MonoBehaviour
     {
-        public static string Ffmpeg = "/private/tmp/claude-501/-Users-bekbolataldiyarov-Desktop-projects-Game-Projects-Bouncer/f820830a-a4f1-413d-9c37-928eb1812c7d/scratchpad/venv/lib/python3.9/site-packages/imageio_ffmpeg/binaries/ffmpeg-macos-aarch64-v7.1";
-        public static string OutDir = "/private/tmp/claude-501/-Users-bekbolataldiyarov-Desktop-projects-Game-Projects-Bouncer/f820830a-a4f1-413d-9c37-928eb1812c7d/scratchpad/trailer/clips";
+        public static string Ffmpeg = "/private/tmp/claude-501/-Users-bekbolataldiyarov-Desktop-projects-Game-Projects-Bouncer/b8b81bcd-f3d6-4e07-9f55-2d70d94bc953/scratchpad/venv/lib/python3.9/site-packages/imageio_ffmpeg/binaries/ffmpeg-macos-aarch64-v7.1";
+        public static string OutDir = "/Users/bekbolataldiyarov/Desktop/projects/It's our field main/ItsOurField_Gameplay/clips";
         public static int Fps = 60;
         public static int Width = 1920;
         public static int Height = 1080;
         public static float Supersample = 1.5f;
+        // С интерфейсом: пишем весь Game view (3D + HUD), как его видит игрок. Game view должен быть 1920×1080.
+        public static bool Hud;
 
         public static bool IsRecording => s_instance != null && s_instance._recording;
         public static int Frames => s_instance != null ? s_instance._frames : 0;
 
         static TrailerRecorder s_instance;
 
+        // ScreenCapture на Metal отдаёт кадр уже перевёрнутым или нет — проверено по первому клипу
+        public static bool FlipHud;
+
         bool _recording;
+        bool _hud;
         int _frames;
         Process _ff;
         Stream _video;
@@ -58,18 +64,22 @@ namespace Bouncer.Trailer
         void StartRecording(string name)
         {
             Directory.CreateDirectory(OutDir);
-            int w = Mathf.RoundToInt(Width * Supersample / 2f) * 2;
-            int h = Mathf.RoundToInt(Height * Supersample / 2f) * 2;
+            _hud = Hud;
+            if (_hud)
+                name += "_hud";
+            int w = _hud ? Screen.width : Mathf.RoundToInt(Width * Supersample / 2f) * 2;
+            int h = _hud ? Screen.height : Mathf.RoundToInt(Height * Supersample / 2f) * 2;
             _camera = Camera.main;
-            _rt = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB) { antiAliasing = 1 };
+            _rt = new RenderTexture(w, h, _hud ? 0 : 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB) { antiAliasing = 1 };
             _rt.Create();
-            _camera.targetTexture = _rt;
+            if (!_hud)
+                _camera.targetTexture = _rt;
             _pixels = new byte[w * h * 4];
 
             string mp4 = Path.Combine(OutDir, name + ".mp4");
             var info = new ProcessStartInfo(Ffmpeg,
                 $"-y -loglevel error -f rawvideo -pix_fmt rgba -s {w}x{h} -r {Fps} -i - " +
-                $"-vf vflip,scale={Width}:{Height}:flags=lanczos -c:v libx264 -preset medium -crf 12 -pix_fmt yuv420p \"{mp4}\"")
+                $"-vf {(_hud && !FlipHud ? "" : "vflip,")}scale={Width}:{Height}:flags=lanczos -c:v libx264 -preset medium -crf 12 -pix_fmt yuv420p \"{mp4}\"")
             {
                 UseShellExecute = false,
                 RedirectStandardInput = true,
@@ -110,6 +120,8 @@ namespace Bouncer.Trailer
                 yield return endOfFrame;
                 if (!_recording)
                     yield break;
+                if (_hud)
+                    ScreenCapture.CaptureScreenshotIntoRenderTexture(_rt);
                 var request = AsyncGPUReadback.Request(_rt, 0, TextureFormat.RGBA32);
                 request.WaitForCompletion();
                 if (!request.hasError)
@@ -127,7 +139,7 @@ namespace Bouncer.Trailer
                 return;
             _recording = false;
             GameEvents.SoundRequested -= OnSound;
-            if (_camera)
+            if (_camera && !_hud)
                 _camera.targetTexture = null;
             if (_rt)
             {

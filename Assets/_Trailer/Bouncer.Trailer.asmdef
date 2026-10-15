@@ -12,7 +12,9 @@
         "Bouncer.Run",
         "Bouncer.Audio",
         "Bouncer.Arena",
-        "Unity.Cinemachine"
+        "Unity.Cinemachine",
+        "Unity.Localization",
+        "Bouncer.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

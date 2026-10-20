@@ -2,6 +2,7 @@ using System;
 using Bouncer.Core;
 using Bouncer.Net;
 using Bouncer.Player;
+using Bouncer.Run;
 using Bouncer.Upgrades;
 using TMPro;
 using UnityEngine;
@@ -64,6 +65,9 @@ namespace Bouncer.UI
 
         [Header("Кнопки")]
         [SerializeField] UnityEngine.UI.Button[] playButtons;
+        [Tooltip("«Продолжить» на заставке, когда есть сохранённая прогулка")]
+        [SerializeField] UnityEngine.UI.Button[] continueButtons;
+        [SerializeField] TitleMenuLayout titleLayout;
         [SerializeField] UnityEngine.UI.Button[] resumeButtons;
         [SerializeField] UnityEngine.UI.Button[] restartButtons;
         [SerializeField] UnityEngine.UI.Button[] menuButtons;
@@ -96,6 +100,7 @@ namespace Bouncer.UI
         void Awake()
         {
             Bind(playButtons, Play);
+            Bind(continueButtons, ContinueRun);
             if (kidSelectScreen != null)
                 kidSelectScreen.Chosen += OnKidChosen;
             Bind(resumeButtons, () => Session(s => s.TogglePause()));
@@ -189,6 +194,8 @@ namespace Bouncer.UI
             if (_overlay != Overlay.None && !titleOrPause)
                 CloseOverlay();
             bool noOverlay = _overlay == Overlay.None;
+            if (titleLayout != null)
+                title.first = titleLayout.Primary;
             Show(title, state == SessionState.Title && noOverlay && !Online.Joining, true);
             Show(pause, paused && noOverlay, true);
             Show(settings, _overlay == Overlay.Settings, true);
@@ -387,6 +394,20 @@ namespace Bouncer.UI
                 Open(Overlay.Mode);
             else
                 PlaySolo();
+        }
+
+        void ContinueRun()
+        {
+            if (GameSession.Instance == null || GameSession.Instance.State != SessionState.Title || ScreenFade.IsBusy)
+                return;
+            string scene = RunSave.Resume();
+            if (string.IsNullOrEmpty(scene) || !Application.CanStreamedLevelBeLoaded(scene))
+            {
+                RunSave.Delete();
+                return;
+            }
+            CloseOverlay();
+            ScreenFade.LoadScene(scene);
         }
 
         void PlaySolo()

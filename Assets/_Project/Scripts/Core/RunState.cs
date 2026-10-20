@@ -128,6 +128,14 @@ namespace Bouncer.Core
             RunClock = runClock;
         }
 
+        /// <summary>«Продолжить» из сохранения: следующая арена начнётся как после обычного выхода с предыдущей.</summary>
+        public static void ResumeSolo(int danger, int arenaIndex, int variant, float pastTime, int pastKills, int coinsEarned,
+            float runClock)
+        {
+            ResumeOnline(1, danger, arenaIndex, variant, pastTime, pastKills, coinsEarned, runClock);
+            ContinuesRun = true;
+        }
+
         public static void BeginTutorial()
         {
             BeginNew();

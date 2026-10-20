@@ -1052,6 +1052,22 @@ def pockets():
     c.save("Pocket_Slot.png")
 
 
+def cursor():
+    """Курсор мышью: мелом нарисованная стрелка (остриё — (20, 14)) и тёмная подложка под неё."""
+    tip = [(20, 14), (21, 98), (43, 77), (58, 114), (77, 105), (62, 70), (93, 70)]
+    shape = wobble(tip, 0.9, 80)
+    c = Canvas(128, 128, 80)
+    c.fill(shape, opacity=0.8, hatch=(35, 6))
+    c.stroke(shape, 8, closed=True)
+    c.save("Cursor_Chalk.png", grain=0.3, pits=0.04)
+
+    c = Canvas(128, 128, 81)
+    c.fill(shape, opacity=1.0, soft=3.0)
+    c.stroke(shape, 18, closed=True, rough=0.4)
+    c.alpha = blur(c.alpha, 1.6)
+    c.save("Cursor_Shadow.png", chalky=False, color=(14, 18, 26))
+
+
 if __name__ == "__main__":
     hud()
     card_frames()
@@ -1060,3 +1076,4 @@ if __name__ == "__main__":
     icons_deck_2026_10_12()
     icons_combos_2026_10_12()
     pockets()
+    cursor()

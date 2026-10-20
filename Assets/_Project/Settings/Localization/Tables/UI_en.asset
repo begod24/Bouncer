@@ -1357,6 +1357,14 @@ MonoBehaviour:
     m_Localized: Collect these two cards to find out.
     m_Metadata:
       m_Items: []
+  - m_Id: 9418500480163840
+    m_Localized: "Continue \xB7 arena {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 9418500488552448
+    m_Localized: New walk
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

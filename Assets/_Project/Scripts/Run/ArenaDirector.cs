@@ -329,7 +329,10 @@ namespace Bouncer.Run
             foreach (var player in Players.All)
                 RunState.SetLives(player.Slot, Mathf.Max(1, player.Health.Current));
             RunState.NextVariant = variant;
+            int arenaBefore = RunState.ArenaIndex;
             session.LeaveArena(next.sceneName);
+            if (RunState.ArenaIndex != arenaBefore)
+                RunSave.Write(next.sceneName);
             return true;
         }
 

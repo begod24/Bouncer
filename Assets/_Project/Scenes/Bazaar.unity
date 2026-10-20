@@ -3542,7 +3542,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Bouncer.Visuals::Bouncer.Visuals.TimeOfDayController
   keys:
-  - {fileID: 11400000, guid: a6ade025717bc4861ab8e5069e8ccd25, type: 2}
+  - {fileID: 11400000, guid: 2b9cd486f59314604b346d7e4f9dd3e8, type: 2}
+  - {fileID: 11400000, guid: cd4069f6b5eac4375aca27b8f0ff61a2, type: 2}
   progress: 0
   runDuration: 300
   sun: {fileID: 410087040}
@@ -8875,6 +8876,7 @@ MonoBehaviour:
   label: {fileID: 726303624}
   pulse: {fileID: 885910712}
   radius: 1.6
+  gatherTime: 0.6
 --- !u!4 &2005619131
 Transform:
   m_ObjectHideFlags: 0

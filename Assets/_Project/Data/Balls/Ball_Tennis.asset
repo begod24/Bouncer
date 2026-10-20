@@ -97,7 +97,7 @@ MonoBehaviour:
   elasticReturnSpeed: 18
   floorBounceHeight: 1
   floorBounceSpeedKeep: 0.85
-  gumSpacing: 1.2
+  gumSpacing: 2.5
   blastKnockback: 10
   grazeKnockbackScale: 0.5
   rollDrag: 0

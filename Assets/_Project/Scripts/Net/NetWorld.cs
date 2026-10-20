@@ -322,11 +322,14 @@ namespace Bouncer.Net
         void OnDebris(Debris debris, Vector3 direction, float force, Vector3 inherited) =>
             QueueEffect(EffectDebris, debris.gameObject, debris.transform.position, debris.transform.rotation, force, direction, inherited);
 
-        void OnGum(GumSpot prefab, Vector3 above)
+        void OnGum(GumSpot prefab, Vector3 above, bool puddle)
         {
             int index = IndexOf(prefab != null ? prefab.gameObject : null);
             if (index >= 0)
-                _effects.Add(new NetEffect { Kind = EffectGum, Prefab = (ushort)index, Position = above, Rotation = Quaternion.identity });
+                _effects.Add(new NetEffect
+                {
+                    Kind = EffectGum, Prefab = (ushort)index, Position = above, Rotation = Quaternion.identity, Value = puddle ? 1f : 0f,
+                });
         }
 
         void OnMarkerShown(GroundMarker marker, bool circle, Vector3 a, Vector3 b, float seconds)
@@ -659,7 +662,7 @@ namespace Bouncer.Net
                     break;
                 case EffectGum:
                     if (prefab.TryGetComponent(out GumSpot gum))
-                        GumSpot.Drop(gum, effect.Position);
+                        GumSpot.Drop(gum, effect.Position, effect.Value > 0.5f);
                     break;
                 case EffectSpawn:
                     PoolService.Spawn(prefab, effect.Position, effect.Rotation);

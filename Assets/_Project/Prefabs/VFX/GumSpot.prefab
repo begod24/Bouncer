@@ -107,8 +107,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Bouncer.Core::Bouncer.Core.GumSpot
   radius: 0.9
   sizeJitter: 0.15
-  enemyMoveMultiplier: 0.45
+  enemyMoveMultiplier: 0.35
   lifetime: 4
+  puddleLifetime: 5
+  dropScale: {x: 0.4, y: 0.6}
+  puddleScale: 1.65
   popTime: 0.3
   maxSpots: 80
   bubbleMaterial: {fileID: 2100000, guid: 58fe37cb84d8941d1be69b5ecc678002, type: 2}

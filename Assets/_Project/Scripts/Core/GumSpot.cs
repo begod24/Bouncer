@@ -6,6 +6,8 @@ namespace Bouncer.Core
     /// <summary>
     /// Жвачка на асфальте: глянцевое пятно с толстым краем и бликом, на нём надуваются и лопаются пузыри.
     /// Враг, ушедший с пятна, тянет за ногами розовые нитки, пока они не порвутся. В конце пятно лопается — «чпок».
+    /// Бывает двух видов: мелкая капля (только красота, падает в полёте через несколько метров) и лужа
+    /// (остаётся там, где мяч попал, отскочил или лёг; только она замедляет врагов, надувает пузыри и тянет нитки).
     /// Материалы (тело, край, блик) — три подсетки, ставит Bouncer → Art → Build Gum VFX.
     /// </summary>
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
@@ -46,9 +48,16 @@ namespace Bouncer.Core
         [SerializeField, Min(0.1f)] float radius = 0.9f;
         [Tooltip("Разброс размера: пятна от (1 − разброс) до (1 + разброс)")]
         [SerializeField, Range(0f, 0.5f)] float sizeJitter = 0.15f;
-        [Tooltip("Множитель скорости врага, который идёт по пятну")]
+        [Tooltip("Множитель скорости врага, который идёт по луже")]
         [SerializeField, Range(0.1f, 1f)] float enemyMoveMultiplier = 0.45f;
+        [Tooltip("Сколько живёт капля, с")]
         [SerializeField, Min(0.1f)] float lifetime = 4f;
+        [Tooltip("Сколько живёт лужа, с")]
+        [SerializeField, Min(0.1f)] float puddleLifetime = 5f;
+        [Tooltip("Размер капли — доля обычного радиуса (от и до)")]
+        [SerializeField] Vector2 dropScale = new(0.4f, 0.6f);
+        [Tooltip("Размер лужи — во сколько раз она больше обычного пятна")]
+        [SerializeField, Min(0.5f)] float puddleScale = 1.65f;
         [Tooltip("Последние секунды жизни пятно вздувается и лопается")]
         [SerializeField, Min(0.05f)] float popTime = 0.3f;
         [Tooltip("Больше пятен на арене не бывает: лишние исчезают, начиная со старых")]
@@ -78,6 +87,9 @@ namespace Bouncer.Core
         MeshFilter _filter;
         Transform _bubble;
         float _age;
+        float _life;
+        float _scaleMultiplier = 1f;
+        bool _puddle;
         float _size = 1f;
         bool _bubbleOn;
         float _bubbleStart;
@@ -86,6 +98,8 @@ namespace Bouncer.Core
         float _nextBubble;
 
         public float CurrentRadius => transform.localScale.x;
+
+        public bool IsPuddle => _puddle;
 
         void Awake()
         {
@@ -115,6 +129,9 @@ namespace Bouncer.Core
         public void OnSpawned()
         {
             _age = 0f;
+            _puddle = false;
+            _life = lifetime;
+            _scaleMultiplier = Random.Range(dropScale.x, dropScale.y);
             _size = Random.Range(1f - sizeJitter, 1f + sizeJitter);
             _filter.sharedMesh = Meshes()[Random.Range(0, MeshVariants)];
             _nextBubble = Random.Range(0.1f, bubblePause.y);
@@ -125,6 +142,15 @@ namespace Bouncer.Core
 
         public void OnDespawned() => StopBubble();
 
+        void MakePuddle()
+        {
+            _puddle = true;
+            _life = puddleLifetime;
+            _scaleMultiplier = puddleScale;
+            UpdateScale();
+            PopFx(transform.position + Vector3.up * 0.1f, 0.5f);
+        }
+
         void Update()
         {
             if (s_frame != Time.frameCount)
@@ -133,7 +159,7 @@ namespace Bouncer.Core
                 UpdateStrands();
             }
             _age += Time.deltaTime;
-            if (_age >= lifetime)
+            if (_age >= _life)
             {
                 PopFx(transform.position + Vector3.up * 0.1f, 0.55f);
                 PoolService.Despawn(gameObject);
@@ -146,7 +172,7 @@ namespace Bouncer.Core
         void UpdateScale()
         {
             float k;
-            float left = lifetime - _age;
+            float left = _life - _age;
             if (_age < AppearTime)
             {
                 // шлёп: пятно растекается с небольшим перехлёстом
@@ -163,18 +189,18 @@ namespace Bouncer.Core
             {
                 k = 1f + 0.02f * Mathf.Sin((_age + _size * 10f) * 3f);
             }
-            transform.localScale = Vector3.one * (radius * _size * Mathf.Max(0f, k));
+            transform.localScale = Vector3.one * (radius * _size * _scaleMultiplier * Mathf.Max(0f, k));
         }
 
         // ------------------------------------------------------------------ bubbles
         void UpdateBubble()
         {
-            if (_bubble == null)
+            if (_bubble == null || !_puddle)
                 return;
             if (!_bubbleOn)
             {
                 _nextBubble -= Time.deltaTime;
-                if (_nextBubble > 0f || s_bubbles >= maxBubbles || lifetime - _age < popTime + bubbleInflate.y)
+                if (_nextBubble > 0f || s_bubbles >= maxBubbles || _life - _age < popTime + bubbleInflate.y)
                     return;
                 _bubbleOn = true;
                 s_bubbles++;
@@ -270,6 +296,8 @@ namespace Bouncer.Core
         {
             foreach (var spot in s_all)
             {
+                if (!spot._puddle)
+                    continue;
                 Vector3 delta = position - spot.transform.position;
                 float r = spot.CurrentRadius;
                 if (delta.x * delta.x + delta.z * delta.z <= r * r && Mathf.Abs(delta.y) < 1.5f)
@@ -351,7 +379,7 @@ namespace Bouncer.Core
         }
 
         // ------------------------------------------------------------------ drop and slowdown
-        public static void Drop(GumSpot prefab, Vector3 above)
+        public static void Drop(GumSpot prefab, Vector3 above, bool puddle = false)
         {
             if (prefab == null
                 || !Physics.Raycast(above + Vector3.up * 0.1f, Vector3.down, out RaycastHit hit, 8f, Layers.EnvironmentMask,
@@ -360,17 +388,21 @@ namespace Bouncer.Core
                 return;
             // без случайного поворота: блик у всех пятен с одной стороны, как от одного солнца
             var rotation = Quaternion.FromToRotation(Vector3.up, hit.normal);
-            PoolService.Spawn(prefab, hit.point + hit.normal * SurfaceOffset, rotation);
-            Dropped?.Invoke(prefab, above);
+            var spot = PoolService.Spawn(prefab, hit.point + hit.normal * SurfaceOffset, rotation);
+            if (puddle)
+                spot.MakePuddle();
+            Dropped?.Invoke(prefab, above, puddle);
         }
 
-        public static event System.Action<GumSpot, Vector3> Dropped;
+        public static event System.Action<GumSpot, Vector3, bool> Dropped;
 
         public static float EnemyMoveMultiplierAt(Vector3 position)
         {
             float multiplier = 1f;
             foreach (var spot in s_all)
             {
+                if (!spot._puddle)
+                    continue;
                 Vector3 delta = position - spot.transform.position;
                 float r = spot.CurrentRadius;
                 if (delta.x * delta.x + delta.z * delta.z <= r * r && Mathf.Abs(delta.y) < 1.5f)

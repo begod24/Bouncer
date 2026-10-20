@@ -107,6 +107,10 @@ namespace Bouncer.Balls
         int _floorBouncesLeft;
         bool _blastDone;
         float _gumDistance;
+        float _gumNext;
+        int _gumPuddles;
+        bool _hasPuddle;
+        Vector3 _lastPuddle;
         float _travel;
         bool _yoyoBack;
         GameObject _owner;
@@ -300,7 +304,10 @@ namespace Bouncer.Balls
             _lobLanded = false;
             _bonusFor = null;
             ResetCardState();
-            _gumDistance = definition.gumSpacing * 0.5f;
+            _gumDistance = 0f;
+            _gumNext = definition.gumSpacing * 0.5f;
+            _gumPuddles = 0;
+            _hasPuddle = false;
 
             Vector3 direction = Flat(t.Direction);
             if (direction.sqrMagnitude < 1e-6f)
@@ -979,6 +986,7 @@ namespace Bouncer.Balls
                 Vanish();
                 return;
             }
+            GumPuddle(position, true);
             if (!IsOwn)
                 TrimForeign(definition.maxForeignLoose);
             while (s_loose.Count > definition.maxLooseBalls)
@@ -1122,6 +1130,7 @@ namespace Bouncer.Balls
                 Blast(point, direct);
             if (Perks.splitOnHit && !_splitDone)
                 Split(normal, struck, position);
+            GumPuddle(point, false);
         }
 
         void DamageArea(Vector3 point, IDamageable direct)
@@ -1286,12 +1295,36 @@ namespace Bouncer.Balls
                 return;
             float length = Flat(to - from).magnitude;
             _gumDistance += length;
-            while (_gumDistance >= definition.gumSpacing)
+            while (_gumDistance >= _gumNext)
             {
-                _gumDistance -= definition.gumSpacing;
+                _gumDistance -= _gumNext;
+                _gumNext = definition.gumSpacing * UnityEngine.Random.Range(0.7f, 1.3f);
                 float back = length > 1e-4f ? Mathf.Clamp01(_gumDistance / length) : 0f;
-                GumSpot.Drop(gumSpot, Vector3.Lerp(to, from, back));
+                Vector3 at = Vector3.Lerp(to, from, back);
+                Vector3 heading = Flat(to - from);
+                if (heading.sqrMagnitude > 1e-6f)
+                    at += Vector3.Cross(Vector3.up, heading.normalized) * UnityEngine.Random.Range(-definition.gumDropSideJitter, definition.gumDropSideJitter);
+                GumSpot.Drop(gumSpot, at);
             }
+        }
+
+        /// <summary>Лужа жвачки там, где мяч попал, отскочил от пола или лёг; <paramref name="final"/> — лёг (сверх лимита).</summary>
+        void GumPuddle(Vector3 at, bool final)
+        {
+            if (!Perks.gumTrail || gumSpot == null || IsPhantom)
+                return;
+            float spacing = definition.gumPuddleSpacing * (final ? 0.5f : 1f);
+            if (_hasPuddle && Flat(at - _lastPuddle).sqrMagnitude < spacing * spacing)
+                return;
+            if (!final)
+            {
+                if (_gumPuddles >= definition.gumMaxPuddles)
+                    return;
+                _gumPuddles++;
+            }
+            _lastPuddle = at;
+            _hasPuddle = true;
+            GumSpot.Drop(gumSpot, at, true);
         }
 
         bool TryFloorBounce(Vector3 point, ref float remaining)
@@ -1308,6 +1341,7 @@ namespace Bouncer.Balls
             GameEvents.PlaySound(SoundCue.BallWall, point);
             if (Perks.bounceBlastRadius > 0f && Perks.bounceBlastDamage > 0 && !IsPhantom)
                 BounceBlast(point);
+            GumPuddle(point, false);
             return true;
         }
 

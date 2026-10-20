@@ -93,8 +93,14 @@ namespace Bouncer.Balls
         [Min(0.1f)] public float floorBounceHeight = 1f;
         [Tooltip("Попрыгунчик: какую долю скорости мяч сохраняет при отскоке от асфальта")]
         [Range(0.3f, 1f)] public float floorBounceSpeedKeep = 0.85f;
-        [Tooltip("Жвачка: через сколько метров полёта мяч оставляет новое пятно")]
-        [Min(0.2f)] public float gumSpacing = 1.2f;
+        [Tooltip("Жвачка: через сколько метров полёта мяч роняет мелкую каплю (шаг каждый раз ±30%)")]
+        [Min(0.2f)] public float gumSpacing = 2.5f;
+        [Tooltip("Жвачка: на сколько метров вбок капля сдвигается от пути мяча")]
+        [Min(0f)] public float gumDropSideJitter = 0.3f;
+        [Tooltip("Жвачка: сколько луж мяч оставляет за бросок на ударах и отскоках (лужа там, где он лёг, — сверх этого)")]
+        [Min(0)] public int gumMaxPuddles = 3;
+        [Tooltip("Жвачка: ближе стольких метров к прошлой луже новая не ставится")]
+        [Min(0f)] public float gumPuddleSpacing = 1.8f;
         [Tooltip("Горячая картошка: сила отброса от взрыва")]
         public float blastKnockback = 10f;
         [Tooltip("Футбольный: какая доля отброса достаётся задетым врагам")]
